@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MessageCircle, SendHorizontal } from 'lucide-react';
+import { useAppContext } from '@/context/AppContext';
+import { toast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
@@ -11,19 +13,102 @@ interface Message {
 }
 
 const ChatUI = () => {
+  const {
+    setViewMode,
+    setCurrentFile,
+    files,
+    setCurrentTable,
+    databaseTables
+  } = useAppContext();
+
   const [isOpen, setIsOpen] = useState(false);
-  const [messages] = useState<Message[]>([
+  const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       type: 'assistant',
-      content: "Hello! I'm your office assistant. How can I help you today?"
+      content: "Hello! I'm your office assistant. I can help you create and navigate documents, schedules, and more. Just tell me what you'd like to do!"
     }
   ]);
   const [input, setInput] = useState('');
 
+  const handleCommand = (command: string) => {
+    const lowercaseCommand = command.toLowerCase();
+    
+    // Handle document creation
+    if (lowercaseCommand.includes('create document') || lowercaseCommand.includes('new document')) {
+      const newFile = {
+        id: Date.now().toString(),
+        name: 'New Document',
+        type: 'document' as const,
+        content: '# New Document\n\nStart writing here...'
+      };
+      setCurrentFile(newFile);
+      setViewMode('document');
+      toast({
+        title: "Document Created",
+        description: "Opening new document for editing"
+      });
+    }
+    
+    // Handle schedule creation
+    else if (lowercaseCommand.includes('create schedule') || lowercaseCommand.includes('new schedule')) {
+      setViewMode('document');
+      toast({
+        title: "Schedule Creation",
+        description: "Opening schedule creator"
+      });
+    }
+    
+    // Handle file navigation
+    else if (lowercaseCommand.includes('open')) {
+      const fileName = command.toLowerCase().replace('open', '').trim();
+      const file = files.find(f => f.name.toLowerCase().includes(fileName));
+      if (file) {
+        setCurrentFile(file);
+        setViewMode('document');
+        toast({
+          title: "Opening File",
+          description: `Opening ${file.name}`
+        });
+      }
+    }
+    
+    // Handle database table navigation
+    else if (lowercaseCommand.includes('show table') || lowercaseCommand.includes('open table')) {
+      const tableName = command.toLowerCase().replace('show table', '').replace('open table', '').trim();
+      const table = databaseTables.find(t => t.name.toLowerCase().includes(tableName));
+      if (table) {
+        setCurrentTable(table);
+        setViewMode('database');
+        toast({
+          title: "Opening Table",
+          description: `Opening ${table.name} table`
+        });
+      }
+    }
+  };
+
   const handleSendMessage = () => {
     if (!input.trim()) return;
-    // In a real implementation, this would send the message to your RAG agent
+    
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: input
+    };
+    
+    // Process the command
+    handleCommand(input);
+    
+    // Add assistant response
+    const assistantMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      type: 'assistant',
+      content: `I'll help you with that! Processing your request: "${input}"`
+    };
+    
+    setMessages(prev => [...prev, userMessage, assistantMessage]);
     setInput('');
   };
 
