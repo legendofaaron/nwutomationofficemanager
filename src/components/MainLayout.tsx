@@ -5,6 +5,7 @@ import AppSidebar, { SidebarToggle } from './AppSidebar';
 import DocumentViewer from './DocumentViewer';
 import DatabaseViewer from './DatabaseViewer';
 import AiAssistant from './AiAssistant';
+import ChatUI from './ChatUI';
 import { cn } from '@/lib/utils';
 
 const MainLayout = () => {
@@ -33,6 +34,7 @@ const MainLayout = () => {
       </main>
       
       <AiAssistant />
+      <ChatUI />
     </div>
   );
 };
