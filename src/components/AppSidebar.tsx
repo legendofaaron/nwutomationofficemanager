@@ -100,7 +100,7 @@ const AppSidebar = () => {
 
   return (
     <>
-      <SidebarHeader className="p-4 border-b">
+      <SidebarHeader className="p-6 border-b">
         <div className="flex items-center justify-between">
           <Logo />
           <Button
