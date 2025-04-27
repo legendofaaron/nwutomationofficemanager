@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import AppSidebar, { SidebarToggle } from './AppSidebar';
@@ -10,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { FileText, Calendar, Receipt, FilePlus, Brain, Database, File } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Logo } from './Logo';
 
 const MainLayout = () => {
   const {
@@ -26,7 +28,10 @@ const MainLayout = () => {
       <main className={cn("min-h-screen transition-all duration-300 pt-16", sidebarOpen ? "ml-64" : "ml-0")}>
         <div className="max-w-7xl mx-auto p-4 bg-white shadow-sm min-h-[calc(100vh-64px)] rounded-md">
           <div className="flex items-center justify-between mb-6 border-b pb-4">
-            <h1 className="text-xl font-semibold">Office Manager</h1>
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setViewMode('files')}>
+              <Logo />
+              <h1 className="text-xl font-semibold hover:text-app-blue transition-colors">Office Manager</h1>
+            </div>
             
             <div className="flex items-center gap-4">
               {/* Files Section */}
