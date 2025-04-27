@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Robot, Calendar, FileText, Receipt, ScanSearch, Info } from 'lucide-react';
+import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -38,11 +37,9 @@ Just click one of the quick actions below or type your request in the chat. I'm 
   ];
 
   const handleQuickAction = (action: string) => {
-    // Add user message
     const userMessageId = Date.now().toString();
     setMessages(prev => [...prev, { id: userMessageId, type: 'user', content: action }]);
     
-    // Generate response based on action
     let response = '';
     switch (action) {
       case 'create document':
@@ -72,7 +69,6 @@ Need anything specific? Just ask!`;
         response = "I'll help you with that request.";
     }
     
-    // Add AI response
     setTimeout(() => {
       setMessages(prev => [
         ...prev, 
@@ -84,11 +80,9 @@ Need anything specific? Just ask!`;
   const handleSendMessage = () => {
     if (!input.trim()) return;
     
-    // Add user message
     const userMessageId = Date.now().toString();
     setMessages([...messages, { id: userMessageId, type: 'user', content: input }]);
     
-    // Process natural language commands
     const lowercaseInput = input.toLowerCase();
     if (lowercaseInput.includes('document')) {
       handleQuickAction('create document');
@@ -101,7 +95,6 @@ Need anything specific? Just ask!`;
     } else if (lowercaseInput.includes('help') || lowercaseInput.includes('how')) {
       handleQuickAction('explain how to use');
     } else {
-      // Default response for other queries
       setTimeout(() => {
         setMessages(current => [
           ...current, 
@@ -123,7 +116,7 @@ Need anything specific? Just ask!`;
     <div className="fixed right-4 bottom-4 w-96 bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col h-[600px] z-20">
       <div className="flex items-center justify-between p-3 border-b">
         <div className="flex items-center gap-2">
-          <Robot className="h-5 w-5 text-app-blue" />
+          <Bot className="h-5 w-5 text-app-blue" />
           <h3 className="font-medium">Office Assistant</h3>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setAiAssistantOpen(false)} className="h-6 w-6">
