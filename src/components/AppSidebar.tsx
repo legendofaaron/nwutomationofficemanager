@@ -1,14 +1,21 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { ChevronLeft, ChevronRight, Database, File, Folder, FolderOpen, X, Building2 } from 'lucide-react';
+import { Brain, Building2, Database, File, FileText, Folder, FolderOpen, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+} from "@/components/ui/sidebar";
 
 const AppSidebar = () => {
   const {
@@ -19,7 +26,9 @@ const AppSidebar = () => {
     databaseTables,
     setCurrentTable,
     sidebarOpen,
-    setSidebarOpen
+    setSidebarOpen,
+    setAiAssistantOpen,
+    aiAssistantOpen
   } = useAppContext();
 
   const handleFileClick = (file: any) => {
@@ -36,117 +45,133 @@ const AppSidebar = () => {
 
   const renderFileTree = (files: any[], level = 0) => {
     return files.map(file => (
-      <div key={file.id} className="ml-4">
-        <button
+      <SidebarMenuItem key={file.id}>
+        <SidebarMenuButton
           onClick={() => handleFileClick(file)}
-          className={cn(
-            "flex items-center py-1 px-2 w-full text-left rounded hover:bg-app-gray-light transition-colors",
-            file.type !== 'folder' && "text-sm"
-          )}
+          className="w-full text-left"
         >
           {file.type === 'folder' ? (
             file.children && file.children.length > 0 ? (
-              <FolderOpen className="w-4 h-4 mr-2 text-app-blue" />
+              <FolderOpen className="w-4 h-4 mr-2" />
             ) : (
-              <Folder className="w-4 h-4 mr-2 text-app-blue" />
+              <Folder className="w-4 h-4 mr-2" />
             )
           ) : (
-            <File className="w-4 h-4 mr-2 text-app-blue" />
+            <File className="w-4 h-4 mr-2" />
           )}
           <span>{file.name}</span>
-        </button>
-        {file.type === 'folder' && file.children && renderFileTree(file.children, level + 1)}
-      </div>
+        </SidebarMenuButton>
+        {file.type === 'folder' && file.children && (
+          <div className="ml-4">
+            {renderFileTree(file.children, level + 1)}
+          </div>
+        )}
+      </SidebarMenuItem>
     ));
   };
 
+  const mainMenuItems = [
+    {
+      title: "Office Manager",
+      icon: Building2,
+      onClick: () => setViewMode('office'),
+      isActive: viewMode === 'office'
+    },
+    {
+      title: "Knowledge Base",
+      icon: Brain,
+      onClick: () => setViewMode('knowledge'),
+      isActive: viewMode === 'knowledge'
+    },
+    {
+      title: "AI Assistant",
+      icon: FileText,
+      onClick: () => setAiAssistantOpen(!aiAssistantOpen),
+      isActive: aiAssistantOpen
+    }
+  ];
+
   return (
-    <div className={cn(
-      "fixed top-0 left-0 h-screen bg-white border-r border-gray-200 transition-all duration-300 z-10",
-      sidebarOpen ? "w-64" : "w-0 overflow-hidden"
-    )}>
-      <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setSidebarOpen(false)}
-          className="h-6 w-6 hover:bg-app-gray-light"
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <div className="overflow-y-auto h-[calc(100vh-60px)]">
-        <div className="p-4 border-b border-gray-200">
+    <Sidebar>
+      <SidebarHeader className="p-4 border-b">
+        <div className="flex items-center justify-between">
           <Logo />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(false)}
+            className="h-6 w-6 hover:bg-app-gray-light"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
+      </SidebarHeader>
 
-        <div className="p-3">
-          <Collapsible defaultOpen>
-            <CollapsibleTrigger className="flex items-center w-full text-xs font-medium uppercase text-gray-500 tracking-wider mb-2">
-              <Building2 className="w-4 h-4 mr-2 text-app-blue" />
-              Office Manager
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="mt-2 space-y-1">
-                <button 
-                  onClick={() => setViewMode('office')} 
-                  className="flex items-center py-1 px-2 w-full text-left rounded hover:bg-app-gray-light transition-colors text-sm"
-                >
-                  <span>Dashboard</span>
-                </button>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
-
-        <div className="p-3">
-          <Collapsible defaultOpen>
-            <CollapsibleTrigger className="flex items-center w-full text-xs font-medium uppercase text-gray-500 tracking-wider mb-2">
-              <File className="w-4 h-4 mr-2 text-app-blue" />
-              Files
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              {renderFileTree(files)}
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
-
-        <div className="p-3 border-t border-gray-200">
-          <Collapsible defaultOpen>
-            <CollapsibleTrigger className="flex items-center w-full text-xs font-medium uppercase text-gray-500 tracking-wider mb-2">
-              <Database className="w-4 h-4 mr-2 text-app-blue" />
-              Database
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div>
-                {databaseTables.map(table => (
-                  <button
-                    key={table.id}
-                    onClick={() => handleTableClick(table)}
-                    className="flex items-center py-1 px-2 w-full text-left rounded hover:bg-app-gray-light transition-colors text-sm"
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mainMenuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    onClick={item.onClick}
+                    data-active={item.isActive}
                   >
-                    <Database className="w-4 h-4 mr-2 text-app-blue" />
+                    <item.icon className="w-4 h-4 mr-2" />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Files</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {renderFileTree(files)}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Database</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {databaseTables.map(table => (
+                <SidebarMenuItem key={table.id}>
+                  <SidebarMenuButton
+                    onClick={() => handleTableClick(table)}
+                    data-active={viewMode === 'database' && table.id === currentTable?.id}
+                  >
+                    <Database className="w-4 h-4 mr-2" />
                     <span>{table.name}</span>
-                  </button>
-                ))}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
-      </div>
-    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
   );
 };
 
 export const SidebarToggle = () => {
-  const {
-    sidebarOpen,
-    setSidebarOpen
-  } = useAppContext();
-  return <Button variant="outline" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className="fixed top-4 left-4 z-20 h-8 w-8">
-      {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-    </Button>;
+  const { sidebarOpen, setSidebarOpen } = useAppContext();
+  
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      onClick={() => setSidebarOpen(!sidebarOpen)}
+      className="fixed top-4 left-4 z-20 h-8 w-8"
+    >
+      {sidebarOpen ? <X className="h-4 w-4" /> : <File className="h-4 w-4" />}
+    </Button>
+  );
 };
 
 export default AppSidebar;
