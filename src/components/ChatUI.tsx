@@ -17,6 +17,7 @@ const ChatUI = () => {
     setViewMode,
     setCurrentFile,
     files,
+    currentFile,
     setCurrentTable,
     databaseTables
   } = useAppContext();
@@ -26,7 +27,7 @@ const ChatUI = () => {
     {
       id: '1',
       type: 'assistant',
-      content: "Hello! I'm your office assistant. I can help you create and navigate documents, schedules, and more. Just tell me what you'd like to do!"
+      content: "Hello! I'm your office assistant. I can help you create, edit, and manage documents, schedules, and more. Just tell me what you'd like to do!"
     }
   ]);
   const [input, setInput] = useState('');
@@ -50,13 +51,46 @@ const ChatUI = () => {
       });
     }
     
+    // Handle writing to current document
+    else if (lowercaseCommand.includes('write') && currentFile) {
+      const content = command.replace(/write|in document|in file/gi, '').trim();
+      setCurrentFile({
+        ...currentFile,
+        content: currentFile.content ? `${currentFile.content}\n${content}` : content
+      });
+      toast({
+        title: "Content Added",
+        description: "The content has been added to the document"
+      });
+    }
+    
     // Handle schedule creation
     else if (lowercaseCommand.includes('create schedule') || lowercaseCommand.includes('new schedule')) {
+      const newSchedule = {
+        id: Date.now().toString(),
+        name: 'New Schedule',
+        type: 'document' as const,
+        content: '# Schedule\n\n## Tasks\n\n'
+      };
+      setCurrentFile(newSchedule);
       setViewMode('document');
       toast({
-        title: "Schedule Creation",
+        title: "Schedule Created",
         description: "Opening schedule creator"
       });
+    }
+    
+    // Handle file deletion
+    else if (lowercaseCommand.includes('delete')) {
+      const fileName = command.toLowerCase().replace('delete', '').trim();
+      const file = files.find(f => f.name.toLowerCase().includes(fileName));
+      if (file) {
+        // In a real implementation, you would call an API to delete the file
+        toast({
+          title: "File Deleted",
+          description: `${file.name} has been deleted`
+        });
+      }
     }
     
     // Handle file navigation
@@ -70,6 +104,22 @@ const ChatUI = () => {
           title: "Opening File",
           description: `Opening ${file.name}`
         });
+      }
+    }
+    
+    // Handle file search
+    else if (lowercaseCommand.includes('find') || lowercaseCommand.includes('search')) {
+      const searchTerm = command.replace(/find|search|file/gi, '').trim();
+      const foundFiles = files.filter(f => 
+        f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (f.content && f.content.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      
+      if (foundFiles.length > 0) {
+        const fileList = foundFiles.map(f => f.name).join(', ');
+        return `I found these files matching "${searchTerm}": ${fileList}`;
+      } else {
+        return `I couldn't find any files matching "${searchTerm}"`;
       }
     }
     
@@ -98,14 +148,14 @@ const ChatUI = () => {
       content: input
     };
     
-    // Process the command
-    handleCommand(input);
+    // Process the command and get potential response
+    const commandResponse = handleCommand(input);
     
     // Add assistant response
     const assistantMessage: Message = {
       id: (Date.now() + 1).toString(),
       type: 'assistant',
-      content: `I'll help you with that! Processing your request: "${input}"`
+      content: commandResponse || `I've processed your request: "${input}"`
     };
     
     setMessages(prev => [...prev, userMessage, assistantMessage]);
