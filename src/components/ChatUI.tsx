@@ -11,6 +11,7 @@ interface Message {
 }
 
 const ChatUI = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const [messages] = useState<Message[]>([
     {
       id: '1',
@@ -26,11 +27,42 @@ const ChatUI = () => {
     setInput('');
   };
 
+  if (!isOpen) {
+    return (
+      <Button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-4 right-4 h-12 w-12 rounded-full p-0 shadow-lg hover:shadow-xl transition-shadow"
+      >
+        <MessageCircle className="h-6 w-6" />
+      </Button>
+    );
+  }
+
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col z-20">
-      <div className="flex items-center gap-2 p-3 border-b">
-        <MessageCircle className="w-5 h-5 text-app-blue" />
-        <h3 className="font-medium">Office Assistant</h3>
+    <div className="fixed bottom-4 right-4 w-[400px] h-[500px] bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col z-20 animate-in slide-in-from-bottom-5">
+      <div className="flex items-center justify-between gap-2 p-3 border-b">
+        <div className="flex items-center gap-2">
+          <MessageCircle className="w-5 h-5 text-app-blue" />
+          <h3 className="font-medium">Office Assistant</h3>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setIsOpen(false)}
+          className="h-8 w-8 p-0"
+        >
+          <span className="sr-only">Close</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-4 h-4"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </Button>
       </div>
       
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
