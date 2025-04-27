@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 import {
-  Sidebar,
   SidebarContent,
   SidebarHeader,
   SidebarGroup,
@@ -25,6 +24,7 @@ const AppSidebar = () => {
     setCurrentFile,
     databaseTables,
     setCurrentTable,
+    currentTable,
     sidebarOpen,
     setSidebarOpen,
     setAiAssistantOpen,
@@ -92,7 +92,7 @@ const AppSidebar = () => {
   ];
 
   return (
-    <Sidebar>
+    <>
       <SidebarHeader className="p-4 border-b">
         <div className="flex items-center justify-between">
           <Logo />
@@ -155,7 +155,7 @@ const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-    </Sidebar>
+    </>
   );
 };
 
