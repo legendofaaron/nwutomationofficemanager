@@ -7,9 +7,10 @@ import DatabaseViewer from './DatabaseViewer';
 import KnowledgeBase from './KnowledgeBase';
 import AiAssistant from './AiAssistant';
 import ChatUI from './ChatUI';
+import OfficeManagerDashboard from './OfficeManagerDashboard';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { FileText, Calendar, Receipt, FilePlus, Brain, Database, File } from 'lucide-react';
+import { FileText, Calendar, Receipt, FilePlus, Brain, Database, File, Building2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Logo } from './Logo';
 
@@ -22,7 +23,8 @@ const MainLayout = () => {
     setAiAssistantOpen
   } = useAppContext();
 
-  return <div className="min-h-screen bg-app-gray-lightest">
+  return (
+    <div className="min-h-screen bg-app-gray-lightest">
       <AppSidebar />
       <SidebarToggle />
       
@@ -34,8 +36,15 @@ const MainLayout = () => {
             </div>
             
             <div className="flex items-center gap-4">
-              {/* Files Section */}
-              
+              {/* Office Manager Section */}
+              <Button 
+                size="sm" 
+                variant={viewMode === 'office' ? "default" : "outline"}
+                onClick={() => setViewMode('office')}
+              >
+                <Building2 className="mr-2 h-4 w-4" />
+                Office Manager
+              </Button>
 
               {/* Database & Knowledge Section */}
               <div className="flex items-center gap-2">
@@ -88,15 +97,19 @@ const MainLayout = () => {
           {viewMode === 'document' && <DocumentViewer />}
           {viewMode === 'database' && <DatabaseViewer />}
           {viewMode === 'knowledge' && <KnowledgeBase />}
-          {viewMode === 'files' && <div className="flex items-center justify-center h-full">
+          {viewMode === 'office' && <OfficeManagerDashboard />}
+          {viewMode === 'files' && (
+            <div className="flex items-center justify-center h-full">
               <p className="text-gray-400">Select a file or database table to view</p>
-            </div>}
+            </div>
+          )}
         </div>
       </main>
       
       <AiAssistant />
       <ChatUI />
-    </div>;
+    </div>
+  );
 };
 
 export default MainLayout;
