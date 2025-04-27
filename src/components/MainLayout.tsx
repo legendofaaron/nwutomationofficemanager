@@ -6,22 +6,18 @@ import DatabaseViewer from './DatabaseViewer';
 import KnowledgeBase from './KnowledgeBase';
 import AiAssistant from './AiAssistant';
 import ChatUI from './ChatUI';
-import OfficeManagerDashboard from './OfficeManagerDashboard';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { FileText, Calendar, Receipt, FilePlus, Brain, Database, File } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Logo } from './Logo';
-
 const MainLayout = () => {
   const {
     viewMode,
     setViewMode,
     sidebarOpen
   } = useAppContext();
-
-  return (
-    <div className="min-h-screen bg-app-gray-lightest">
+  return <div className="min-h-screen bg-app-gray-lightest">
       <AppSidebar />
       <SidebarToggle />
       
@@ -30,42 +26,26 @@ const MainLayout = () => {
           <div className="flex items-center justify-between mb-6 border-b pb-4">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setViewMode('files')}>
               <Logo />
-              <h1 className="text-xl font-semibold hover:text-app-blue transition-colors">Office Manager</h1>
+              
             </div>
             
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                >
-                  <File className="mr-2 h-4 w-4" />
-                  Files
-                </Button>
-                <Button size="sm" variant="outline">
-                  <FilePlus className="mr-2 h-4 w-4" />
-                  Add Files
-                </Button>
-              </div>
+              {/* Files Section */}
+              
 
+              {/* Database & Knowledge Section */}
               <div className="flex items-center gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                >
+                <Button size="sm" variant="outline">
                   <Database className="mr-2 h-4 w-4" />
                   Database
                 </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => setViewMode('knowledge')}
-                >
+                <Button size="sm" variant="outline" onClick={() => setViewMode('knowledge')}>
                   <Brain className="mr-2 h-4 w-4" />
                   Knowledge Base
                 </Button>
               </div>
 
+              {/* Document Creation */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button size="sm" variant="outline">
@@ -89,10 +69,8 @@ const MainLayout = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Button size="sm" variant="outline">
-                <Calendar className="mr-2 h-4 w-4" />
-                Schedules
-              </Button>
+              {/* Schedule & Invoice Quick Access */}
+              
               <Button size="sm" variant="outline">
                 <Receipt className="mr-2 h-4 w-4" />
                 Invoices
@@ -103,19 +81,14 @@ const MainLayout = () => {
           {viewMode === 'document' && <DocumentViewer />}
           {viewMode === 'database' && <DatabaseViewer />}
           {viewMode === 'knowledge' && <KnowledgeBase />}
-          {viewMode === 'office' && <OfficeManagerDashboard />}
-          {viewMode === 'files' && (
-            <div className="flex items-center justify-center h-full">
+          {viewMode === 'files' && <div className="flex items-center justify-center h-full">
               <p className="text-gray-400">Select a file or database table to view</p>
-            </div>
-          )}
+            </div>}
         </div>
       </main>
       
       <AiAssistant />
       <ChatUI />
-    </div>
-  );
+    </div>;
 };
-
 export default MainLayout;
