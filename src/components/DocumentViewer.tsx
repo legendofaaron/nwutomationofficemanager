@@ -4,6 +4,7 @@ import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { MessageSquare, Save } from 'lucide-react';
+import ScheduleView from './ScheduleView';
 
 const DocumentViewer = () => {
   const { currentFile, aiAssistantOpen, setAiAssistantOpen } = useAppContext();
@@ -16,6 +17,8 @@ const DocumentViewer = () => {
       </div>
     );
   }
+
+  const isSchedule = currentFile.name.toLowerCase().includes('schedule');
 
   return (
     <div className="relative h-full">
@@ -37,12 +40,16 @@ const DocumentViewer = () => {
       </div>
       
       <div className="p-6 pb-20">
-        <Textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="min-h-[500px] resize-none p-4 font-mono text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-          placeholder="Start typing..."
-        />
+        {isSchedule ? (
+          <ScheduleView content={content} />
+        ) : (
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="min-h-[500px] resize-none p-4 font-mono text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+            placeholder="Start typing..."
+          />
+        )}
       </div>
     </div>
   );
