@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info } from 'lucide-react';
+import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings } from 'lucide-react';
+import { LlmSettings } from './LlmSettings';
 
 interface Message {
   id: string;
@@ -14,6 +14,8 @@ interface Message {
 const AiAssistant = () => {
   const { aiAssistantOpen, setAiAssistantOpen } = useAppContext();
   const [input, setInput] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+  
   const [messages, setMessages] = useState<Message[]>([
     { 
       id: '1', 
@@ -142,56 +144,77 @@ Need anything specific? Just ask!`;
           <Bot className="h-5 w-5 text-app-blue" />
           <h3 className="font-medium">Office Assistant</h3>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => setAiAssistantOpen(false)} className="h-6 w-6">
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-2 p-3 border-b">
-        {quickActions.map((action, index) => (
-          <Button
-            key={index}
-            variant="outline"
-            size="sm"
-            className="w-full justify-start"
-            onClick={action.action}
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setShowSettings(!showSettings)}
+            className="h-6 w-6"
           >
-            <action.icon className="mr-2 h-4 w-4" />
-            {action.label}
+            <Settings className="h-4 w-4" />
           </Button>
-        ))}
-      </div>
-      
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map(message => (
-          <div 
-            key={message.id} 
-            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setAiAssistantOpen(false)}
+            className="h-6 w-6"
           >
-            <div 
-              className={`max-w-[80%] p-3 rounded-lg whitespace-pre-wrap ${
-                message.type === 'user' 
-                  ? 'bg-app-blue text-white' 
-                  : 'bg-gray-100 text-gray-800'
-              }`}
-            >
-              {message.content}
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="p-3 border-t">
-        <div className="flex gap-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-          />
-          <Button onClick={handleSendMessage}>Send</Button>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       </div>
+      
+      {showSettings ? (
+        <LlmSettings />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-2 p-3 border-b">
+            {quickActions.map((action, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+                onClick={action.action}
+              >
+                <action.icon className="mr-2 h-4 w-4" />
+                {action.label}
+              </Button>
+            ))}
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.map(message => (
+              <div 
+                key={message.id} 
+                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div 
+                  className={`max-w-[80%] p-3 rounded-lg whitespace-pre-wrap ${
+                    message.type === 'user' 
+                      ? 'bg-app-blue text-white' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}
+                >
+                  {message.content}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="p-3 border-t">
+            <div className="flex gap-2">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type your message..."
+                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              />
+              <Button onClick={handleSendMessage}>Send</Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
