@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -17,14 +18,36 @@ const AiAssistant = () => {
     { 
       id: '1', 
       type: 'ai', 
-      content: `👋 Hi! I'm your Office Assistant. I can help you with:
+      content: `👋 Welcome to your Office Assistant!
 
-- Creating new documents
-- Setting up schedules
-- Generating invoices
-- Analyzing receipts
+I'm here to help you manage your office tasks efficiently. Here's what I can do:
 
-Just click one of the quick actions below or type your request in the chat. I'm here to help you stay organized and efficient!`
+📄 Create Documents
+- New text documents
+- Reports and memos
+- Custom templates
+
+📅 Manage Schedules
+- Create daily/weekly schedules
+- Set up meetings
+- Organize tasks
+
+💵 Handle Invoices
+- Generate new invoices
+- Track payments
+- Manage billing
+
+🧾 Process Receipts
+- Analyze receipt details
+- Extract information
+- Store receipt data
+
+You can:
+1. Use the quick action buttons above
+2. Type natural commands like "create a new document"
+3. Ask me questions about any feature
+
+Need help? Just click 'How to use' or ask me anything!`
     }
   ]);
 
