@@ -1,10 +1,15 @@
 
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { ChevronLeft, ChevronRight, Database, File, Folder, FolderOpen, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Database, File, Folder, FolderOpen, X, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const AppSidebar = () => {
   const {
@@ -78,24 +83,57 @@ const AppSidebar = () => {
         </div>
 
         <div className="p-3">
-          <h3 className="text-xs font-medium uppercase text-gray-500 tracking-wider mb-2">Files</h3>
-          {renderFileTree(files)}
+          <Collapsible defaultOpen>
+            <CollapsibleTrigger className="flex items-center w-full text-xs font-medium uppercase text-gray-500 tracking-wider mb-2">
+              <Building2 className="w-4 h-4 mr-2 text-app-blue" />
+              Office Manager
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="mt-2 space-y-1">
+                <button className="flex items-center py-1 px-2 w-full text-left rounded hover:bg-app-gray-light transition-colors text-sm">
+                  <span>Dashboard</span>
+                </button>
+                <button className="flex items-center py-1 px-2 w-full text-left rounded hover:bg-app-gray-light transition-colors text-sm">
+                  <span>Settings</span>
+                </button>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+
+        <div className="p-3">
+          <Collapsible defaultOpen>
+            <CollapsibleTrigger className="flex items-center w-full text-xs font-medium uppercase text-gray-500 tracking-wider mb-2">
+              <File className="w-4 h-4 mr-2 text-app-blue" />
+              Files
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              {renderFileTree(files)}
+            </CollapsibleContent>
+          </Collapsible>
         </div>
 
         <div className="p-3 border-t border-gray-200">
-          <h3 className="text-xs font-medium uppercase text-gray-500 tracking-wider mb-2">Database</h3>
-          <div>
-            {databaseTables.map(table => (
-              <button
-                key={table.id}
-                onClick={() => handleTableClick(table)}
-                className="flex items-center py-1 px-2 w-full text-left rounded hover:bg-app-gray-light transition-colors text-sm"
-              >
-                <Database className="w-4 h-4 mr-2 text-app-blue" />
-                <span>{table.name}</span>
-              </button>
-            ))}
-          </div>
+          <Collapsible defaultOpen>
+            <CollapsibleTrigger className="flex items-center w-full text-xs font-medium uppercase text-gray-500 tracking-wider mb-2">
+              <Database className="w-4 h-4 mr-2 text-app-blue" />
+              Database
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div>
+                {databaseTables.map(table => (
+                  <button
+                    key={table.id}
+                    onClick={() => handleTableClick(table)}
+                    className="flex items-center py-1 px-2 w-full text-left rounded hover:bg-app-gray-light transition-colors text-sm"
+                  >
+                    <Database className="w-4 h-4 mr-2 text-app-blue" />
+                    <span>{table.name}</span>
+                  </button>
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </div>
     </div>
