@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { Brain, Building2, Database, File, FileText, Folder, FolderOpen, Table, X } from 'lucide-react';
+import { Brain, Building2, Database, File, FileText, Folder, FolderOpen, Menu, Table, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Logo } from './Logo';
 import {
   SidebarContent,
   SidebarHeader,
@@ -12,6 +14,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarTrigger
 } from "@/components/ui/sidebar";
 
 const AppSidebar = () => {
@@ -23,6 +26,7 @@ const AppSidebar = () => {
     databaseTables,
     setCurrentTable,
     currentTable,
+    sidebarOpen,
     setSidebarOpen,
     setAiAssistantOpen,
     aiAssistantOpen
@@ -97,7 +101,8 @@ const AppSidebar = () => {
   return (
     <>
       <SidebarHeader className="p-6 border-b">
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-between">
+          <Logo />
           <Button
             variant="ghost"
             size="icon"
@@ -158,6 +163,21 @@ const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
     </>
+  );
+};
+
+export const SidebarToggle = () => {
+  const { setSidebarOpen } = useAppContext();
+  
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      onClick={() => setSidebarOpen(true)}
+      className="fixed top-4 left-4 z-20 h-8 w-8 bg-white shadow-sm"
+    >
+      <Menu className="h-4 w-4" />
+    </Button>
   );
 };
 
