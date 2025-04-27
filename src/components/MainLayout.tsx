@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import AppSidebar, { SidebarToggle } from './AppSidebar';
@@ -11,12 +12,16 @@ import { Button } from '@/components/ui/button';
 import { FileText, Calendar, Receipt, FilePlus, Brain, Database, File } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Logo } from './Logo';
+
 const MainLayout = () => {
   const {
     viewMode,
     setViewMode,
-    sidebarOpen
+    sidebarOpen,
+    aiAssistantOpen,
+    setAiAssistantOpen
   } = useAppContext();
+
   return <div className="min-h-screen bg-app-gray-lightest">
       <AppSidebar />
       <SidebarToggle />
@@ -26,7 +31,6 @@ const MainLayout = () => {
           <div className="flex items-center justify-between mb-6 border-b pb-4">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setViewMode('files')}>
               <Logo />
-              
             </div>
             
             <div className="flex items-center gap-4">
@@ -69,11 +73,14 @@ const MainLayout = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Schedule & Invoice Quick Access */}
-              
-              <Button size="sm" variant="outline">
+              {/* AI Assistant Button */}
+              <Button 
+                size="sm" 
+                variant={aiAssistantOpen ? "default" : "outline"}
+                onClick={() => setAiAssistantOpen(!aiAssistantOpen)}
+              >
                 <Receipt className="mr-2 h-4 w-4" />
-                Invoices
+                AI Assistant
               </Button>
             </div>
           </div>
@@ -91,4 +98,5 @@ const MainLayout = () => {
       <ChatUI />
     </div>;
 };
+
 export default MainLayout;
