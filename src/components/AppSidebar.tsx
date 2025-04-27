@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Brain, Building2, Database, File, FileText, Folder, FolderOpen, X } from 'lucide-react';
@@ -24,6 +23,7 @@ const AppSidebar = () => {
     files,
     setCurrentFile,
     databaseTables,
+    currentTable,
     setCurrentTable,
     sidebarOpen,
     setSidebarOpen,
