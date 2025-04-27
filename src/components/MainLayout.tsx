@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import AppSidebar, { SidebarToggle } from './AppSidebar';
@@ -7,6 +6,7 @@ import DatabaseViewer from './DatabaseViewer';
 import KnowledgeBase from './KnowledgeBase';
 import AiAssistant from './AiAssistant';
 import ChatUI from './ChatUI';
+import OfficeManagerDashboard from './OfficeManagerDashboard';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { FileText, Calendar, Receipt, FilePlus, Brain, Database, File } from 'lucide-react';
@@ -34,7 +34,6 @@ const MainLayout = () => {
             </div>
             
             <div className="flex items-center gap-4">
-              {/* Files Section */}
               <div className="flex items-center gap-2">
                 <Button 
                   size="sm" 
@@ -49,7 +48,6 @@ const MainLayout = () => {
                 </Button>
               </div>
 
-              {/* Database & Knowledge Section */}
               <div className="flex items-center gap-2">
                 <Button 
                   size="sm" 
@@ -68,7 +66,6 @@ const MainLayout = () => {
                 </Button>
               </div>
 
-              {/* Document Creation */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button size="sm" variant="outline">
@@ -92,7 +89,6 @@ const MainLayout = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Schedule & Invoice Quick Access */}
               <Button size="sm" variant="outline">
                 <Calendar className="mr-2 h-4 w-4" />
                 Schedules
@@ -107,6 +103,7 @@ const MainLayout = () => {
           {viewMode === 'document' && <DocumentViewer />}
           {viewMode === 'database' && <DatabaseViewer />}
           {viewMode === 'knowledge' && <KnowledgeBase />}
+          {viewMode === 'office' && <OfficeManagerDashboard />}
           {viewMode === 'files' && (
             <div className="flex items-center justify-center h-full">
               <p className="text-gray-400">Select a file or database table to view</p>

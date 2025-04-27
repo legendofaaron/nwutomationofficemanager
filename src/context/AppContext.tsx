@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-type ViewMode = 'files' | 'database' | 'document' | 'knowledge';
+type ViewMode = 'files' | 'database' | 'document' | 'knowledge' | 'office';
 type FileType = 'folder' | 'document' | 'image';
 
 interface File {

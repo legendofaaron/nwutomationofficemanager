@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { ChevronLeft, ChevronRight, Database, File, Folder, FolderOpen, X, Building2 } from 'lucide-react';
@@ -90,11 +89,11 @@ const AppSidebar = () => {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="mt-2 space-y-1">
-                <button className="flex items-center py-1 px-2 w-full text-left rounded hover:bg-app-gray-light transition-colors text-sm">
+                <button 
+                  onClick={() => setViewMode('office')} 
+                  className="flex items-center py-1 px-2 w-full text-left rounded hover:bg-app-gray-light transition-colors text-sm"
+                >
                   <span>Dashboard</span>
-                </button>
-                <button className="flex items-center py-1 px-2 w-full text-left rounded hover:bg-app-gray-light transition-colors text-sm">
-                  <span>Settings</span>
                 </button>
               </div>
             </CollapsibleContent>
