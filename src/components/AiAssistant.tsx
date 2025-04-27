@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings } from 'lucide-react';
 import { LlmSettings } from './LlmSettings';
+import { queryLlm } from '@/utils/llm';
+import { toast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
@@ -61,6 +63,11 @@ Need help? Just click 'How to use' or ask me anything!`
     { icon: Info, label: 'How to use', action: () => handleQuickAction('explain how to use') }
   ];
 
+  const [config, setConfig] = useState({
+    endpoint: 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk',
+    enabled: false
+  });
+
   const handleQuickAction = (action: string) => {
     const userMessageId = Date.now().toString();
     setMessages(prev => [...prev, { id: userMessageId, type: 'user', content: action }]);
@@ -102,34 +109,29 @@ Need anything specific? Just ask!`;
     }, 500);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!input.trim()) return;
     
     const userMessageId = Date.now().toString();
     setMessages([...messages, { id: userMessageId, type: 'user', content: input }]);
     
-    const lowercaseInput = input.toLowerCase();
-    if (lowercaseInput.includes('document')) {
-      handleQuickAction('create document');
-    } else if (lowercaseInput.includes('schedule')) {
-      handleQuickAction('create schedule');
-    } else if (lowercaseInput.includes('invoice')) {
-      handleQuickAction('create invoice');
-    } else if (lowercaseInput.includes('receipt')) {
-      handleQuickAction('analyze receipt');
-    } else if (lowercaseInput.includes('help') || lowercaseInput.includes('how')) {
-      handleQuickAction('explain how to use');
-    } else {
-      setTimeout(() => {
-        setMessages(current => [
-          ...current, 
-          { 
-            id: (Date.now() + 1).toString(), 
-            type: 'ai', 
-            content: `I understand you'd like to "${input}". How can I best help you with that?` 
-          }
-        ]);
-      }, 500);
+    try {
+      const response = await queryLlm(input, config.endpoint);
+      
+      setMessages(current => [
+        ...current,
+        {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: response.message
+        }
+      ]);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to get response from n8n RAG agent. Please check your connection.',
+        variant: 'destructive'
+      });
     }
     
     setInput('');
