@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
-import AppSidebar, { SidebarToggle } from './AppSidebar';
+import AppSidebar from './AppSidebar';
 import DocumentViewer from './DocumentViewer';
 import DatabaseViewer from './DatabaseViewer';
 import KnowledgeBase from './KnowledgeBase';
@@ -11,6 +11,7 @@ import OfficeManagerDashboard from './OfficeManagerDashboard';
 import SpreadsheetViewer from './SpreadsheetViewer';
 import { cn } from '@/lib/utils';
 import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
+import { Logo } from './Logo';
 
 const MainLayout = () => {
   const {
@@ -44,7 +45,7 @@ const MainLayout = () => {
         <AiAssistant />
         <ChatUI />
       </div>
-      <SidebarTrigger className="fixed top-4 left-4 z-20 h-8 w-8 bg-white shadow-sm" />
+      <SidebarTrigger className="fixed top-1/2 -translate-y-1/2 left-0 z-20 h-24 w-6 bg-white shadow-md rounded-r-lg flex items-center justify-center hover:bg-gray-50 transition-colors" />
     </SidebarProvider>
   );
 };
