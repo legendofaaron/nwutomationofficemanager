@@ -1,7 +1,8 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-type ViewMode = 'files' | 'database' | 'document' | 'knowledge' | 'office';
-type FileType = 'folder' | 'document' | 'image';
+type ViewMode = 'files' | 'database' | 'document' | 'knowledge' | 'office' | 'spreadsheet';
+type FileType = 'folder' | 'document' | 'image' | 'spreadsheet';
 
 interface File {
   id: string;
@@ -9,6 +10,12 @@ interface File {
   type: FileType;
   children?: File[];
   content?: string;
+  spreadsheetData?: SpreadsheetData;
+}
+
+interface SpreadsheetData {
+  headers: string[];
+  rows: Record<string, any>[];
 }
 
 interface DatabaseTable {
@@ -22,6 +29,7 @@ interface AppContextType {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
   files: File[];
+  setFiles: (files: File[]) => void;
   currentFile: File | null;
   setCurrentFile: (file: File | null) => void;
   databaseTables: DatabaseTable[];
@@ -64,6 +72,39 @@ const defaultFiles: File[] = [
         type: 'image'
       }
     ]
+  },
+  {
+    id: '6',
+    name: 'Spreadsheets',
+    type: 'folder',
+    children: [
+      {
+        id: '7',
+        name: 'Sales Data.xlsx',
+        type: 'spreadsheet',
+        spreadsheetData: {
+          headers: ['Product', 'Quantity', 'Price', 'Total'],
+          rows: [
+            { Product: 'Widget A', Quantity: 5, Price: 10, Total: 50 },
+            { Product: 'Widget B', Quantity: 3, Price: 20, Total: 60 },
+            { Product: 'Widget C', Quantity: 7, Price: 15, Total: 105 }
+          ]
+        }
+      },
+      {
+        id: '8',
+        name: 'Budget.xlsx',
+        type: 'spreadsheet',
+        spreadsheetData: {
+          headers: ['Category', 'Allocated', 'Spent', 'Remaining'],
+          rows: [
+            { Category: 'Marketing', Allocated: 5000, Spent: 3500, Remaining: 1500 },
+            { Category: 'Development', Allocated: 10000, Spent: 8500, Remaining: 1500 },
+            { Category: 'Operations', Allocated: 7500, Spent: 6000, Remaining: 1500 }
+          ]
+        }
+      }
+    ]
   }
 ];
 
@@ -103,7 +144,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('files');
-  const [files] = useState<File[]>(defaultFiles);
+  const [files, setFiles] = useState<File[]>(defaultFiles);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [databaseTables] = useState<DatabaseTable[]>(defaultDatabaseTables);
   const [currentTable, setCurrentTable] = useState<DatabaseTable | null>(null);
@@ -116,6 +157,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         viewMode,
         setViewMode,
         files,
+        setFiles,
         currentFile,
         setCurrentFile,
         databaseTables,

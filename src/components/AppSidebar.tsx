@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { Brain, Building2, Database, File, FileText, Folder, FolderOpen, X } from 'lucide-react';
+import { Brain, Building2, Database, File, FileText, Folder, FolderOpen, Table, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
@@ -32,8 +32,12 @@ const AppSidebar = () => {
   } = useAppContext();
 
   const handleFileClick = (file: any) => {
-    if (file.type !== 'folder') {
-      setCurrentFile(file);
+    if (file.type === 'folder') return;
+    
+    setCurrentFile(file);
+    if (file.type === 'spreadsheet') {
+      setViewMode('spreadsheet');
+    } else {
       setViewMode('document');
     }
   };
@@ -56,6 +60,8 @@ const AppSidebar = () => {
             ) : (
               <Folder className="w-4 h-4 mr-2" />
             )
+          ) : file.type === 'spreadsheet' ? (
+            <Table className="w-4 h-4 mr-2" />
           ) : (
             <File className="w-4 h-4 mr-2" />
           )}

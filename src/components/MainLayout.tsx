@@ -8,8 +8,8 @@ import KnowledgeBase from './KnowledgeBase';
 import AiAssistant from './AiAssistant';
 import ChatUI from './ChatUI';
 import OfficeManagerDashboard from './OfficeManagerDashboard';
+import SpreadsheetViewer from './SpreadsheetViewer';
 import { cn } from '@/lib/utils';
-import { Brain, Building2, Database, FileText } from 'lucide-react';
 import { SidebarProvider, Sidebar } from '@/components/ui/sidebar';
 
 const MainLayout = () => {
@@ -32,6 +32,7 @@ const MainLayout = () => {
             {viewMode === 'database' && <DatabaseViewer />}
             {viewMode === 'knowledge' && <KnowledgeBase />}
             {viewMode === 'office' && <OfficeManagerDashboard />}
+            {viewMode === 'spreadsheet' && <SpreadsheetViewer />}
             {viewMode === 'files' && (
               <div className="flex items-center justify-center h-full">
                 <p className="text-gray-400">Select a file or database table to view</p>

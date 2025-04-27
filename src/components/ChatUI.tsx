@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +16,7 @@ const ChatUI = () => {
     setViewMode,
     setCurrentFile,
     files,
+    setFiles,
     currentFile,
     setCurrentTable,
     databaseTables
@@ -27,7 +27,7 @@ const ChatUI = () => {
     {
       id: '1',
       type: 'assistant',
-      content: "Hello! I'm your office assistant. I can help you create, edit, and manage documents, schedules, and more. Just tell me what you'd like to do!"
+      content: "Hello! I'm your office assistant. I can help you create, edit, and manage documents, spreadsheets, and more. Just tell me what you'd like to do!"
     }
   ]);
   const [input, setInput] = useState('');
@@ -35,8 +35,66 @@ const ChatUI = () => {
   const handleCommand = (command: string) => {
     const lowercaseCommand = command.toLowerCase();
     
+    // Handle spreadsheet creation
+    if (lowercaseCommand.includes('create spreadsheet') || lowercaseCommand.includes('new spreadsheet') || lowercaseCommand.includes('new excel')) {
+      const spreadsheetData = {
+        headers: ['Column 1', 'Column 2', 'Column 3'],
+        rows: [
+          { 'Column 1': '', 'Column 2': '', 'Column 3': '' },
+          { 'Column 1': '', 'Column 2': '', 'Column 3': '' }
+        ]
+      };
+      
+      const newSpreadsheet = {
+        id: Date.now().toString(),
+        name: 'New Spreadsheet.xlsx',
+        type: 'spreadsheet' as const,
+        spreadsheetData
+      };
+      
+      // Find Spreadsheets folder or create it
+      const updateFiles = (filesArray: any[]): any[] => {
+        const spreadsheetFolder = filesArray.find(file => 
+          file.type === 'folder' && file.name === 'Spreadsheets'
+        );
+        
+        if (spreadsheetFolder) {
+          return filesArray.map(file => {
+            if (file.id === spreadsheetFolder.id) {
+              return {
+                ...file,
+                children: [...(file.children || []), newSpreadsheet]
+              };
+            }
+            return file;
+          });
+        }
+        
+        return [
+          ...filesArray,
+          {
+            id: 'spreadsheets-folder',
+            name: 'Spreadsheets',
+            type: 'folder',
+            children: [newSpreadsheet]
+          }
+        ];
+      };
+      
+      setFiles(updateFiles(files));
+      setCurrentFile(newSpreadsheet);
+      setViewMode('spreadsheet');
+      
+      toast({
+        title: "Spreadsheet Created",
+        description: "Opening new spreadsheet for editing"
+      });
+      
+      return "I've created a new spreadsheet for you. Opening it now.";
+    }
+    
     // Handle document creation
-    if (lowercaseCommand.includes('create document') || lowercaseCommand.includes('new document')) {
+    else if (lowercaseCommand.includes('create document') || lowercaseCommand.includes('new document')) {
       const newFile = {
         id: Date.now().toString(),
         name: 'New Document',
@@ -49,6 +107,8 @@ const ChatUI = () => {
         title: "Document Created",
         description: "Opening new document for editing"
       });
+      
+      return "I've created a new document for you. Opening it now.";
     }
     
     // Handle writing to current document
@@ -136,6 +196,98 @@ const ChatUI = () => {
         });
       }
     }
+    
+    // Handle spreadsheet-specific commands
+    else if (currentFile && currentFile.type === 'spreadsheet' && lowercaseCommand.includes('add row')) {
+      if (currentFile.spreadsheetData) {
+        const newRow: Record<string, any> = {};
+        currentFile.spreadsheetData.headers.forEach(header => {
+          newRow[header] = '';
+        });
+        
+        const updatedSpreadsheetData = {
+          ...currentFile.spreadsheetData,
+          rows: [...currentFile.spreadsheetData.rows, newRow]
+        };
+        
+        const updatedFile = {
+          ...currentFile,
+          spreadsheetData: updatedSpreadsheetData
+        };
+        
+        setCurrentFile(updatedFile);
+        
+        // Update in files array
+        const updateFilesWithNewRow = (filesArray: any[]): any[] => {
+          return filesArray.map(file => {
+            if (file.id === updatedFile.id) {
+              return updatedFile;
+            } else if (file.children) {
+              return { ...file, children: updateFilesWithNewRow(file.children) };
+            }
+            return file;
+          });
+        };
+        
+        setFiles(updateFilesWithNewRow(files));
+        
+        toast({
+          title: "Row Added",
+          description: "A new row has been added to your spreadsheet"
+        });
+        
+        return "I've added a new row to your spreadsheet.";
+      }
+    }
+    
+    else if (currentFile && currentFile.type === 'spreadsheet' && lowercaseCommand.includes('add column')) {
+      if (currentFile.spreadsheetData) {
+        const columnName = `Column ${currentFile.spreadsheetData.headers.length + 1}`;
+        
+        const newHeaders = [...currentFile.spreadsheetData.headers, columnName];
+        
+        const newRows = currentFile.spreadsheetData.rows.map(row => ({
+          ...row,
+          [columnName]: ''
+        }));
+        
+        const updatedSpreadsheetData = {
+          headers: newHeaders,
+          rows: newRows
+        };
+        
+        const updatedFile = {
+          ...currentFile,
+          spreadsheetData: updatedSpreadsheetData
+        };
+        
+        setCurrentFile(updatedFile);
+        
+        // Update in files array
+        const updateFilesWithNewColumn = (filesArray: any[]): any[] => {
+          return filesArray.map(file => {
+            if (file.id === updatedFile.id) {
+              return updatedFile;
+            } else if (file.children) {
+              return { ...file, children: updateFilesWithNewColumn(file.children) };
+            }
+            return file;
+          });
+        };
+        
+        setFiles(updateFilesWithNewColumn(files));
+        
+        toast({
+          title: "Column Added",
+          description: `A new column "${columnName}" has been added to your spreadsheet`
+        });
+        
+        return `I've added a new column "${columnName}" to your spreadsheet.`;
+      }
+    }
+    
+    // Default response
+    return `I'll help you with "${command}" right away.`;
   };
 
   const handleSendMessage = () => {
