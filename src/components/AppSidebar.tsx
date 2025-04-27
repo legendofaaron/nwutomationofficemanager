@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { Brain, Building2, Database, File, FileText, Folder, FolderOpen, Table, X } from 'lucide-react';
+import { Brain, Building2, Database, File, FileText, Folder, FolderOpen, Menu, Table, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
@@ -14,6 +14,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarTrigger
 } from "@/components/ui/sidebar";
 
 const AppSidebar = () => {
@@ -166,16 +167,16 @@ const AppSidebar = () => {
 };
 
 export const SidebarToggle = () => {
-  const { sidebarOpen, setSidebarOpen } = useAppContext();
+  const { setSidebarOpen } = useAppContext();
   
   return (
     <Button
       variant="outline"
       size="icon"
-      onClick={() => setSidebarOpen(!sidebarOpen)}
-      className="fixed top-4 left-4 z-20 h-8 w-8"
+      onClick={() => setSidebarOpen(true)}
+      className="fixed top-4 left-4 z-20 h-8 w-8 bg-white shadow-sm"
     >
-      {sidebarOpen ? <X className="h-4 w-4" /> : <File className="h-4 w-4" />}
+      <Menu className="h-4 w-4" />
     </Button>
   );
 };

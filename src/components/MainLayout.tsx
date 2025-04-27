@@ -10,7 +10,7 @@ import ChatUI from './ChatUI';
 import OfficeManagerDashboard from './OfficeManagerDashboard';
 import SpreadsheetViewer from './SpreadsheetViewer';
 import { cn } from '@/lib/utils';
-import { SidebarProvider, Sidebar } from '@/components/ui/sidebar';
+import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
 
 const MainLayout = () => {
   const {
@@ -44,7 +44,7 @@ const MainLayout = () => {
         <AiAssistant />
         <ChatUI />
       </div>
-      <SidebarToggle />
+      <SidebarTrigger className="fixed top-4 left-4 z-20 h-8 w-8 bg-white shadow-sm" />
     </SidebarProvider>
   );
 };
