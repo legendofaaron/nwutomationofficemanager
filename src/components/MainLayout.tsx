@@ -8,7 +8,7 @@ import AiAssistant from './AiAssistant';
 import ChatUI from './ChatUI';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { FileText, Calendar, Receipt, List, FilePlus, Brain } from 'lucide-react';
+import { FileText, Calendar, Receipt, FilePlus, Brain, Database, File } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const MainLayout = () => {
@@ -27,20 +27,43 @@ const MainLayout = () => {
         <div className="max-w-7xl mx-auto p-4 bg-white shadow-sm min-h-[calc(100vh-64px)] rounded-md">
           <div className="flex items-center justify-between mb-6 border-b pb-4">
             <h1 className="text-xl font-semibold">Office Manager</h1>
-            <div className="flex items-center space-x-2">
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => setViewMode('knowledge')}
-              >
-                <Brain className="mr-2 h-4 w-4" />
-                Knowledge Base
-              </Button>
-              <Button size="sm" variant="outline">
-                <FilePlus className="mr-2 h-4 w-4" />
-                Add File
-              </Button>
-              
+            
+            <div className="flex items-center gap-4">
+              {/* Files Section */}
+              <div className="flex items-center gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                >
+                  <File className="mr-2 h-4 w-4" />
+                  Files
+                </Button>
+                <Button size="sm" variant="outline">
+                  <FilePlus className="mr-2 h-4 w-4" />
+                  Add Files
+                </Button>
+              </div>
+
+              {/* Database & Knowledge Section */}
+              <div className="flex items-center gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                >
+                  <Database className="mr-2 h-4 w-4" />
+                  Database
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => setViewMode('knowledge')}
+                >
+                  <Brain className="mr-2 h-4 w-4" />
+                  Knowledge Base
+                </Button>
+              </div>
+
+              {/* Document Creation */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button size="sm" variant="outline">
@@ -63,32 +86,16 @@ const MainLayout = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              
+
+              {/* Schedule & Invoice Quick Access */}
               <Button size="sm" variant="outline">
                 <Calendar className="mr-2 h-4 w-4" />
                 Schedules
               </Button>
-              
               <Button size="sm" variant="outline">
                 <Receipt className="mr-2 h-4 w-4" />
                 Invoices
               </Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="outline">
-                    <List className="mr-2 h-4 w-4" />
-                    Select LLM
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>Ollama3b</DropdownMenuItem>
-                  <DropdownMenuItem>Granite</DropdownMenuItem>
-                  <DropdownMenuItem>
-                    GPT-4.5-preview
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
           
