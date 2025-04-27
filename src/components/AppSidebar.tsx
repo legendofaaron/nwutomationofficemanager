@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { ChevronLeft, ChevronRight, Database, File, Folder, FolderOpen, X } from 'lucide-react';
@@ -60,19 +61,22 @@ const AppSidebar = () => {
       "fixed top-0 left-0 h-screen bg-white border-r border-gray-200 transition-all duration-300 z-10",
       sidebarOpen ? "w-64" : "w-0 overflow-hidden"
     )}>
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-app-blue">
-        <Logo />
+      <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setSidebarOpen(false)}
-          className="h-6 w-6 text-white hover:bg-app-blue-dark"
+          className="h-6 w-6 hover:bg-app-gray-light"
         >
           <X className="h-4 w-4" />
         </Button>
       </div>
 
       <div className="overflow-y-auto h-[calc(100vh-60px)]">
+        <div className="p-4 border-b border-gray-200">
+          <Logo />
+        </div>
+
         <div className="p-3">
           <h3 className="text-xs font-medium uppercase text-gray-500 tracking-wider mb-2">Files</h3>
           {renderFileTree(files)}
