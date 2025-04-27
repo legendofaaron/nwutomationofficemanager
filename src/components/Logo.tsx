@@ -9,7 +9,7 @@ export const Logo = () => {
           <Hexagon className="h-6 w-6 text-white" />
         </div>
       </div>
+      <span className="font-semibold text-white">NWautomations</span>
     </div>
   );
 };
-
