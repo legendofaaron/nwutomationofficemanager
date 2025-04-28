@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -7,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { FilePlus, MessageCircle } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { queryLlm } from '@/utils/llm';
+import { toast } from '@/hooks/use-toast';
 
 interface NewDocumentDialogProps {
   className?: string;
@@ -16,6 +19,7 @@ const NewDocumentDialog = ({ className }: NewDocumentDialogProps) => {
   const { setFiles, files, setCurrentFile, setViewMode } = useAppContext();
   const [isOpen, setIsOpen] = React.useState(false);
   const [documentName, setDocumentName] = React.useState("");
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleCreateDocument = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +35,25 @@ const NewDocumentDialog = ({ className }: NewDocumentDialogProps) => {
     setViewMode('document');
     setIsOpen(false);
     setDocumentName("");
+  };
+
+  const handleGetAiSuggestion = async () => {
+    try {
+      setIsLoading(true);
+      const prompt = "Suggest a creative and professional name for a new document. Return only the name, no explanations.";
+      const response = await queryLlm(prompt, 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk');
+      if (response.message) {
+        setDocumentName(response.message.trim());
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to get AI suggestion. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -60,8 +83,10 @@ const NewDocumentDialog = ({ className }: NewDocumentDialogProps) => {
                       variant="ghost" 
                       size="icon" 
                       className="h-8 w-8 rounded-full"
+                      onClick={handleGetAiSuggestion}
+                      disabled={isLoading}
                     >
-                      <MessageCircle className="h-4 w-4" />
+                      <MessageCircle className={cn("h-4 w-4", isLoading && "animate-spin")} />
                       <span className="sr-only">AI Help</span>
                     </Button>
                   </TooltipTrigger>
