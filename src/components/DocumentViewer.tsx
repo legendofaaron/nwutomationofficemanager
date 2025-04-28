@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageSquare, Save, Table } from 'lucide-react';
+import { MessageSquare, Save, Table, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, List, ListOrdered, Image, Link } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import ScheduleView from './ScheduleView';
 
 const DocumentViewer = () => {
@@ -83,7 +84,7 @@ const DocumentViewer = () => {
   };
 
   return (
-    <div className="relative h-full">
+    <div className="relative h-full bg-white shadow-sm">
       <div className="flex items-center justify-between p-4 border-b">
         <h2 className="text-lg font-medium">{currentFile.name}</h2>
         <div className="flex space-x-2">
@@ -108,15 +109,60 @@ const DocumentViewer = () => {
           </Button>
         </div>
       </div>
+
+      {/* Word-like toolbar */}
+      <div className="border-b px-4 py-2 flex items-center gap-1 bg-gray-50">
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon">
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon">
+            <Italic className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon">
+            <Underline className="h-4 w-4" />
+          </Button>
+        </div>
+        <Separator orientation="vertical" className="mx-2 h-6" />
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon">
+            <AlignLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon">
+            <AlignCenter className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon">
+            <AlignRight className="h-4 w-4" />
+          </Button>
+        </div>
+        <Separator orientation="vertical" className="mx-2 h-6" />
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon">
+            <List className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon">
+            <ListOrdered className="h-4 w-4" />
+          </Button>
+        </div>
+        <Separator orientation="vertical" className="mx-2 h-6" />
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon">
+            <Image className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon">
+            <Link className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
       
-      <div className="p-6 pb-20">
+      <div className="p-6 pb-20 max-w-4xl mx-auto">
         {isSchedule ? (
           <ScheduleView content={content} />
         ) : (
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="min-h-[500px] resize-none p-4 font-mono text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="min-h-[500px] resize-none p-4 font-sans text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
             placeholder="Start typing..."
           />
         )}
