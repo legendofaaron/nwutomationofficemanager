@@ -209,7 +209,7 @@ const AppSidebar = () => {
               </SidebarMenuAction>
               <SidebarMenuAction
                 onClick={(e) => handleDeleteFile(e, file)}
-                className="hover:bg-red-50"
+                className="hover:bg-red-50 -mt-[0.4cm]"
                 showOnHover
               >
                 <Trash2 className="w-4 h-4 text-blue-500" />
