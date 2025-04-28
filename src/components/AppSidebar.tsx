@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import NewDocumentDialog from './NewDocumentDialog';
-import { Brain, Building2, Database, File, FileText, FilePen, Trash2, Folder, FolderOpen, Menu, Table, X, FilePlus, FolderPlus, Plus, ChevronRight, ChevronDown, Settings } from 'lucide-react';
+import { Brain, Building2, Database, File, FileText, FilePen, Trash2, Folder, FolderOpen, Menu, Table, X, FilePlus, FolderPlus, Plus, ChevronRight, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { cn } from '@/lib/utils';
@@ -9,7 +9,6 @@ import { Logo } from './Logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarContent, SidebarHeader, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuAction, SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from '@/hooks/use-toast';
-
 const AppSidebar = () => {
   const {
     viewMode,
@@ -29,7 +28,6 @@ const AppSidebar = () => {
   const {
     toast
   } = useToast();
-
   const handleFileClick = (file: any) => {
     if (file.type === 'folder') return;
     setCurrentFile(file);
@@ -39,7 +37,6 @@ const AppSidebar = () => {
       setViewMode('document');
     }
   };
-
   const handleEditFile = (e: React.MouseEvent, file: any) => {
     e.stopPropagation();
     setCurrentFile(file);
@@ -53,7 +50,6 @@ const AppSidebar = () => {
       description: `Editing ${file.name}`
     });
   };
-
   const handleDeleteFile = (e: React.MouseEvent, fileToDelete: any) => {
     e.stopPropagation();
     const deleteFileRecursively = (files: any[], targetId: string): any[] => {
@@ -78,12 +74,10 @@ const AppSidebar = () => {
       description: `${fileToDelete.name} has been deleted`
     });
   };
-
   const handleTableClick = (table: any) => {
     setCurrentTable(table);
     setViewMode('database');
   };
-
   const createNewItem = (type: 'document' | 'spreadsheet' | 'folder') => {
     const newId = `new-${Date.now()}`;
     const newName = type === 'folder' ? 'New Folder' : type === 'spreadsheet' ? 'New Spreadsheet' : 'New Document';
@@ -109,7 +103,6 @@ const AppSidebar = () => {
     setCurrentFile(newFile);
     setViewMode(type === 'spreadsheet' ? 'spreadsheet' : type === 'document' ? 'document' : 'files');
   };
-
   const handleDeleteAllFiles = () => {
     setFiles([]);
     setCurrentFile(null);
@@ -119,7 +112,6 @@ const AppSidebar = () => {
       description: "All files have been removed"
     });
   };
-
   const renderFileTree = (files: any[], level = 0) => {
     return files.map(file => <SidebarMenuItem key={file.id}>
         {file.type === 'folder' ? <Collapsible>
@@ -154,7 +146,6 @@ const AppSidebar = () => {
           </div>}
       </SidebarMenuItem>);
   };
-
   const mainMenuItems = [{
     title: "Office Manager",
     icon: Building2,
@@ -166,16 +157,11 @@ const AppSidebar = () => {
     onClick: () => setViewMode('knowledge'),
     isActive: viewMode === 'knowledge'
   }, {
-    title: "AI Assistant Settings",
-    icon: Settings,
-    onClick: () => {
-      setViewMode('office');
-      const event = new CustomEvent('set-office-tab', { detail: { tab: 'settings' } });
-      document.dispatchEvent(event);
-    },
-    isActive: false
+    title: "AI Assistant",
+    icon: FileText,
+    onClick: () => setAiAssistantOpen(!aiAssistantOpen),
+    isActive: aiAssistantOpen
   }];
-
   return <>
       <SidebarHeader className="p-6 border-b">
         <div className="flex items-center justify-between">
@@ -210,8 +196,8 @@ const AppSidebar = () => {
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <SidebarMenuButton className="text-destructive hover:text-destructive">
-                      <Trash2 className="w-4 h-4 mr-2 text-red-500" />
-                      <span className="text-red-500">Delete All</span>
+                      
+                      
                     </SidebarMenuButton>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -274,7 +260,6 @@ const AppSidebar = () => {
       </SidebarContent>
     </>;
 };
-
 export const SidebarToggle = () => {
   const {
     setSidebarOpen
@@ -283,5 +268,4 @@ export const SidebarToggle = () => {
       <Menu className="h-4 w-4" />
     </Button>;
 };
-
 export default AppSidebar;
