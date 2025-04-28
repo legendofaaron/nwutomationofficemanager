@@ -15,9 +15,9 @@ const WelcomeDashboard = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-app-blue mb-3">Welcome to NorthwesternAI Dashboard</h1>
+        <h1 className="text-3xl font-bold text-app-blue mb-3">Welcome to Office Assistant</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Your intelligent workplace companion for document management, knowledge organization, and office productivity.
+          Your intelligent workplace companion by Northwestern Automation for document management, knowledge organization, and office productivity.
         </p>
       </div>
 
