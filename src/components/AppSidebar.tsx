@@ -6,11 +6,13 @@ import {
   Building2, 
   Database, 
   File, 
-  FileText, 
+  FileText,
+  FilePen,
+  FileX,
   Folder, 
   FolderOpen, 
   Menu, 
-  Table, 
+  Table,
   X,
   FilePlus,
   FolderPlus,
@@ -35,8 +37,10 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuAction,
   SidebarTrigger
 } from "@/components/ui/sidebar";
+import { useToast } from '@/hooks/use-toast';
 
 const AppSidebar = () => {
   const {
@@ -54,6 +58,8 @@ const AppSidebar = () => {
     aiAssistantOpen
   } = useAppContext();
 
+  const { toast } = useToast();
+
   const handleFileClick = (file: any) => {
     if (file.type === 'folder') return;
     
@@ -63,6 +69,48 @@ const AppSidebar = () => {
     } else {
       setViewMode('document');
     }
+  };
+
+  const handleEditFile = (e: React.MouseEvent, file: any) => {
+    e.stopPropagation();
+    setCurrentFile(file);
+    if (file.type === 'spreadsheet') {
+      setViewMode('spreadsheet');
+    } else {
+      setViewMode('document');
+    }
+    toast({
+      title: "Edit mode",
+      description: `Editing ${file.name}`,
+    });
+  };
+
+  const handleDeleteFile = (e: React.MouseEvent, fileToDelete: any) => {
+    e.stopPropagation();
+    const deleteFileRecursively = (files: any[], targetId: string): any[] => {
+      return files.filter(file => {
+        if (file.id === targetId) {
+          return false;
+        }
+        if (file.children) {
+          file.children = deleteFileRecursively(file.children, targetId);
+        }
+        return true;
+      });
+    };
+
+    const updatedFiles = deleteFileRecursively(files, fileToDelete.id);
+    setFiles(updatedFiles);
+    
+    if (fileToDelete.id === currentFile?.id) {
+      setCurrentFile(null);
+      setViewMode('files');
+    }
+
+    toast({
+      title: "File deleted",
+      description: `${fileToDelete.name} has been deleted`,
+    });
   };
 
   const handleTableClick = (table: any) => {
@@ -117,17 +165,35 @@ const AppSidebar = () => {
             )}
           </Collapsible>
         ) : (
-          <SidebarMenuButton
-            onClick={() => handleFileClick(file)}
-            className="w-full text-left"
-          >
-            {file.type === 'spreadsheet' ? (
-              <Table className="w-4 h-4 mr-2" />
-            ) : (
-              <File className="w-4 h-4 mr-2" />
-            )}
-            <span>{file.name}</span>
-          </SidebarMenuButton>
+          <div className="group/menu-item relative">
+            <SidebarMenuButton
+              onClick={() => handleFileClick(file)}
+              className="w-full text-left"
+            >
+              {file.type === 'spreadsheet' ? (
+                <Table className="w-4 h-4 mr-2" />
+              ) : (
+                <File className="w-4 h-4 mr-2" />
+              )}
+              <span>{file.name}</span>
+            </SidebarMenuButton>
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover/menu-item:opacity-100 transition-opacity">
+              <SidebarMenuAction
+                onClick={(e) => handleEditFile(e, file)}
+                className="hover:bg-blue-50"
+                showOnHover
+              >
+                <FilePen className="w-4 h-4 text-blue-500" />
+              </SidebarMenuAction>
+              <SidebarMenuAction
+                onClick={(e) => handleDeleteFile(e, file)}
+                className="hover:bg-red-50"
+                showOnHover
+              >
+                <FileX className="w-4 h-4 text-red-500" />
+              </SidebarMenuAction>
+            </div>
+          </div>
         )}
       </SidebarMenuItem>
     ));
