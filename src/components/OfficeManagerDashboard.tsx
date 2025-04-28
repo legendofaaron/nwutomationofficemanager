@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Building2, Calendar, Receipt, Settings, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ const OfficeManagerDashboard = () => {
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-2">
           <Building2 className="h-5 w-5 text-app-blue" />
-          <h2 className="text-lg font-medium">Office Operations</h2>
+          <h2 className="text-lg font-medium">Office Manager</h2>
         </div>
       </div>
 
@@ -26,7 +25,7 @@ const OfficeManagerDashboard = () => {
             onClick={() => setActiveTab('employees')}
           >
             <Users className="h-4 w-4" />
-            Personnel
+            Employees
           </Button>
           <Button 
             variant={activeTab === 'schedule' ? 'default' : 'outline'} 
@@ -44,7 +43,7 @@ const OfficeManagerDashboard = () => {
             onClick={() => setActiveTab('invoices')}
           >
             <Receipt className="h-4 w-4" />
-            Financial
+            Invoices
           </Button>
           <Button 
             variant={activeTab === 'settings' ? 'default' : 'outline'} 
@@ -53,7 +52,7 @@ const OfficeManagerDashboard = () => {
             onClick={() => setActiveTab('settings')}
           >
             <Settings className="h-4 w-4" />
-            Configuration
+            Settings
           </Button>
         </div>
       </div>
@@ -61,8 +60,8 @@ const OfficeManagerDashboard = () => {
       <div className="p-4">
         {activeTab === 'employees' && <EmployeesView />}
         {activeTab === 'schedule' && <ScheduleView />}
-        {activeTab === 'invoices' && <p className="text-gray-500">Financial management module will be available in the next update.</p>}
-        {activeTab === 'settings' && <p className="text-gray-500">System configuration options will be available in the next update.</p>}
+        {activeTab === 'invoices' && <p className="text-gray-500">Invoices view coming soon</p>}
+        {activeTab === 'settings' && <p className="text-gray-500">Settings view coming soon</p>}
       </div>
     </div>
   );

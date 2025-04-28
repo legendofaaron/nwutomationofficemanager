@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { ArrowRight, Brain, Building2, Database, FileText, Shield } from 'lucide-react';
+import { ArrowRight, Brain, Building2, Database, FileText, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
@@ -20,9 +20,9 @@ const Home = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       <div className="text-center mb-16">
-        <h1 className="text-4xl font-bold text-app-blue mb-4">Welcome to Office Manager</h1>
+        <h1 className="text-4xl font-bold text-app-blue mb-4">Welcome to Office Assistant</h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          A lightweight, locally-hosted Retrieval Augmented Generation (RAG) solution by Northwestern Automation for document creation, knowledge management, and office operations.
+          Your intelligent workplace assistant by Northwestern Automation for managing documents, databases, and office operations.
         </p>
       </div>
 
@@ -36,10 +36,10 @@ const Home = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">
-              Create and organize documents with intelligent assistance, while maintaining complete data privacy and security.
+              Efficiently organize and access your documents with our intelligent document management system.
             </p>
             <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard')}>
-              Access Documents <ArrowRight className="ml-2" />
+              View Documents <ArrowRight className="ml-2" />
             </Button>
           </CardContent>
         </Card>
@@ -48,15 +48,15 @@ const Home = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="h-5 w-5 text-app-blue" />
-              Local Database
+              Database Access
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">
-              All data remains local to your system, ensuring complete control and confidentiality of your information.
+              Access and manage your database tables with an intuitive interface.
             </p>
             <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard')}>
-              Explore Database <ArrowRight className="ml-2" />
+              Access Database <ArrowRight className="ml-2" />
             </Button>
           </CardContent>
         </Card>
@@ -65,15 +65,15 @@ const Home = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-app-blue" />
-              AI-Powered Assistant
+              Knowledge Base
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">
-              Leverage configurable language models to enhance productivity without compromising your data security.
+              Build and maintain your organization's knowledge with our AI-powered knowledge base.
             </p>
             <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard')}>
-              Configure Assistant <ArrowRight className="ml-2" />
+              Explore Knowledge Base <ArrowRight className="ml-2" />
             </Button>
           </CardContent>
         </Card>
@@ -81,16 +81,16 @@ const Home = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-app-blue" />
-              Privacy-Focused
+              <Building2 className="h-5 w-5 text-app-blue" />
+              Office Management
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">
-              No data collection, no cloud dependencies, complete privacy. Your information never leaves your system.
+              Streamline your office operations with our comprehensive management tools.
             </p>
             <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard')}>
-              Learn More <ArrowRight className="ml-2" />
+              Manage Office <ArrowRight className="ml-2" />
             </Button>
           </CardContent>
         </Card>

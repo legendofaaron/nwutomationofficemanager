@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings, Shield } from 'lucide-react';
+import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings } from 'lucide-react';
 import { LlmSettings } from './LlmSettings';
 import { queryLlm } from '@/utils/llm';
 import { toast } from '@/hooks/use-toast';
@@ -23,45 +22,45 @@ const AiAssistant = () => {
     { 
       id: '1', 
       type: 'ai', 
-      content: `👋 Welcome to Office Manager RAG Assistant!
+      content: `👋 Welcome to your Office Assistant!
 
-I'm a locally-hosted Retrieval Augmented Generation (RAG) agent designed to help you with office tasks while maintaining complete data privacy. I can assist with:
+I'm here to help you manage your office tasks efficiently. Here's what I can do:
 
-📄 Document Creation
-- Professional text documents
+📄 Create Documents
+- New text documents
 - Reports and memos
 - Custom templates
 
-📅 Schedule Management
-- Calendar planning
-- Meeting organization
-- Task scheduling
+📅 Manage Schedules
+- Create daily/weekly schedules
+- Set up meetings
+- Organize tasks
 
-💼 Office Administration
-- Resource management
-- Process optimization
-- Administrative support
+💵 Handle Invoices
+- Generate new invoices
+- Track payments
+- Manage billing
 
-🛡️ Privacy-Focused
-- All data remains local
-- No external data collection
-- Configurable language models
+🧾 Process Receipts
+- Analyze receipt details
+- Extract information
+- Store receipt data
 
 You can:
 1. Use the quick action buttons above
-2. Type natural language commands
-3. Configure my settings to match your preferences
+2. Type natural commands like "create a new document"
+3. Ask me questions about any feature
 
-How can I assist you with your office tasks today?`
+Need help? Just click 'How to use' or ask me anything!`
     }
   ]);
 
   const quickActions = [
     { icon: FileText, label: 'Create Document', action: () => handleQuickAction('create document') },
-    { icon: Calendar, label: 'Manage Schedule', action: () => handleQuickAction('manage schedule') },
-    { icon: Receipt, label: 'Office Admin', action: () => handleQuickAction('office administration') },
-    { icon: Shield, label: 'Privacy Info', action: () => handleQuickAction('privacy information') },
-    { icon: Info, label: 'How to Use', action: () => handleQuickAction('explain capabilities') }
+    { icon: Calendar, label: 'Create Schedule', action: () => handleQuickAction('create schedule') },
+    { icon: Receipt, label: 'Create Invoice', action: () => handleQuickAction('create invoice') },
+    { icon: ScanSearch, label: 'Analyze Receipt', action: () => handleQuickAction('analyze receipt') },
+    { icon: Info, label: 'How to use', action: () => handleQuickAction('explain how to use') }
   ];
 
   const [config, setConfig] = useState({
@@ -76,42 +75,30 @@ How can I assist you with your office tasks today?`
     let response = '';
     switch (action) {
       case 'create document':
-        response = "I'll assist you with document creation. What type of document would you like to generate?";
+        response = "I'll help you create a new document. What type of document would you like to create?";
         break;
-      case 'manage schedule':
-        response = "Let's organize your schedule. Would you like to create a new schedule, review existing appointments, or set up a recurring event?";
+      case 'create schedule':
+        response = "Let's create a schedule. What kind of schedule would you like to set up?";
         break;
-      case 'office administration':
-        response = "I can help with office administration tasks. Would you like assistance with resource management, process optimization, or administrative support?";
+      case 'create invoice':
+        response = "I'll help you generate an invoice. Who is this invoice for?";
         break;
-      case 'privacy information':
-        response = `Office Manager is designed with privacy as a core principle:
-
-1. Local Processing: All data processing occurs on your local system
-2. No Data Collection: Your information is never sent to external servers
-3. Configurable Models: You control which language model is used
-4. Secure Storage: All data remains within your network
-
-Your data remains entirely under your control at all times.`;
+      case 'analyze receipt':
+        response = "I can help analyze your receipt. Please upload or share the receipt details with me.";
         break;
-      case 'explain capabilities':
-        response = `As a RAG (Retrieval Augmented Generation) assistant, I can help you with:
+      case 'explain how to use':
+        response = `Here's how you can use me effectively:
 
-1. Document Management: Create, edit, and organize documents with intelligent assistance
-2. Schedule Organization: Manage calendars, appointments, and recurring events
-3. Office Administration: Streamline processes and manage resources efficiently
-4. Knowledge Retrieval: Access information from your knowledge base to enhance responses
+1. Quick Actions: Use the buttons above for common tasks
+2. Chat Commands: Type natural requests like "create a new document" or "set up a meeting schedule"
+3. Document Management: I can help organize and create various types of documents
+4. Receipt Analysis: Upload receipts and I'll help extract important information
+5. Scheduling: I can help you create and manage schedules
 
-To use me effectively:
-- Be specific with your requests
-- Configure my settings to select your preferred language model
-- Use the quick action buttons for common tasks
-- Provide context when needed for more accurate assistance
-
-How can I help you today?`;
+Need anything specific? Just ask!`;
         break;
       default:
-        response = "I'll assist you with that request.";
+        response = "I'll help you with that request.";
     }
     
     setTimeout(() => {
@@ -142,7 +129,7 @@ How can I help you today?`;
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to get response from local RAG agent. Please check your connection to the selected language model.',
+        description: 'Failed to get response from n8n RAG agent. Please check your connection.',
         variant: 'destructive'
       });
     }
@@ -157,7 +144,7 @@ How can I help you today?`;
       <div className="flex items-center justify-between p-3 border-b">
         <div className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-app-blue" />
-          <h3 className="font-medium">Office Manager</h3>
+          <h3 className="font-medium">Office Assistant</h3>
         </div>
         <div className="flex items-center gap-2">
           <Button 
@@ -165,7 +152,6 @@ How can I help you today?`;
             size="icon" 
             onClick={() => setShowSettings(!showSettings)}
             className="h-6 w-6"
-            title="Configure Language Model"
           >
             <Settings className="h-4 w-4" />
           </Button>
