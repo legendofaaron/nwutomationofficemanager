@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
+import NewDocumentDialog from './NewDocumentDialog';
 import { 
   Brain, 
   Building2, 
@@ -175,10 +176,7 @@ const AppSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => createNewItem('document')}>
-                  <FilePlus className="w-4 h-4 mr-2" />
-                  <span>New Document</span>
-                </SidebarMenuButton>
+                <NewDocumentDialog />
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton onClick={() => createNewItem('spreadsheet')}>
