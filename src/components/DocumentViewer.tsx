@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -211,7 +212,7 @@ const DocumentViewer = () => {
         ) : (
           <div className="bg-white rounded-lg shadow-sm min-h-[70vh]">
             {isSchedule ? (
-              <ScheduleView content={content} />
+              <ScheduleView />
             ) : (
               <Textarea
                 value={content}
