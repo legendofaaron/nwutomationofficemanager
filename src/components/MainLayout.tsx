@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import AppSidebar from './AppSidebar';
@@ -31,8 +32,8 @@ const MainLayout = () => {
           </SidebarTrigger>
         </div>
         
-        <main className={cn("h-screen transition-all duration-300 pt-16 flex-1 overflow-hidden", sidebarOpen ? "ml-64" : "ml-0")}>
-          <div className="w-full p-2 bg-white shadow-sm h-[calc(100vh-64px)] rounded-md overflow-hidden">
+        <main className={cn("h-screen transition-all duration-300 pt-8 flex-1 overflow-hidden", sidebarOpen ? "ml-64 pl-4" : "ml-2")}>
+          <div className="w-full bg-white shadow-sm h-[calc(100vh-64px)] rounded-md overflow-hidden">
             {viewMode === 'document' && <DocumentViewer />}
             {viewMode === 'database' && <DatabaseViewer />}
             {viewMode === 'knowledge' && <KnowledgeBase />}
