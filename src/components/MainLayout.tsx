@@ -10,7 +10,7 @@ import ChatUI from './ChatUI';
 import OfficeManagerDashboard from './OfficeManagerDashboard';
 import SpreadsheetViewer from './SpreadsheetViewer';
 import { cn } from '@/lib/utils';
-import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider, Sidebar } from '@/components/ui/sidebar';
 import { Logo } from './Logo';
 
 const MainLayout = () => {
@@ -27,11 +27,6 @@ const MainLayout = () => {
           <Sidebar>
             <AppSidebar />
           </Sidebar>
-          <SidebarTrigger className="absolute -right-12 top-4 z-20 h-16 w-12 bg-white shadow-md rounded-r-lg flex items-center justify-center hover:bg-gray-50 transition-colors">
-            <div className="scale-75">
-              <Logo />
-            </div>
-          </SidebarTrigger>
         </div>
         
         <main className={cn("min-h-screen transition-all duration-300 pt-16 flex-1", sidebarOpen ? "ml-64" : "ml-0")}>
