@@ -17,7 +17,9 @@ const ChatUI = () => {
     setCurrentFile,
     files,
     setFiles,
-    currentFile
+    currentFile,
+    databaseTables,
+    setCurrentTable
   } = useAppContext();
 
   const [isOpen, setIsOpen] = useState(false);
