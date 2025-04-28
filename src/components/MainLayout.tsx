@@ -45,9 +45,10 @@ const MainLayout = () => {
         <AiAssistant />
         <ChatUI />
       </div>
-      <SidebarTrigger className="fixed top-1/2 -translate-y-1/2 left-0 z-20 h-24 w-6 bg-white shadow-md rounded-r-lg flex items-center justify-center hover:bg-gray-50 transition-colors" />
+      <SidebarTrigger className="fixed top-1/2 -translate-y-1/2 -right-6 z-20 h-24 w-6 bg-white shadow-md rounded-l-lg flex items-center justify-center hover:bg-gray-50 transition-colors rotate-180" />
     </SidebarProvider>
   );
 };
 
 export default MainLayout;
+
