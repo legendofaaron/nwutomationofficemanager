@@ -1,12 +1,12 @@
-
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FilePlus } from "lucide-react";
+import { FilePlus, MessageCircle } from "lucide-react";
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface NewDocumentDialogProps {
   className?: string;
@@ -51,7 +51,26 @@ const NewDocumentDialog = ({ className }: NewDocumentDialogProps) => {
         </DialogHeader>
         <form onSubmit={handleCreateDocument} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="documentName">Document Name</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="documentName">Document Name</Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 rounded-full"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      <span className="sr-only">AI Help</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Need help naming your document? Click to get AI suggestions</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Input
               id="documentName"
               placeholder="Enter document name"
