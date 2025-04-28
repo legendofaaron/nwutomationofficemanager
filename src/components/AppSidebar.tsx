@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Brain, Building2, Database, File, FileText, Folder, FolderOpen, Menu, Table, X } from 'lucide-react';
@@ -87,8 +88,7 @@ const AppSidebar = () => {
       title: "Knowledge Base",
       icon: Brain,
       onClick: () => setViewMode('knowledge'),
-      isActive: viewMode === 'knowledge',
-      showTrigger: true
+      isActive: viewMode === 'knowledge'
     },
     {
       title: "AI Assistant",
@@ -121,23 +121,13 @@ const AppSidebar = () => {
             <SidebarMenu>
               {mainMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <div className="relative">
-                    <SidebarMenuButton
-                      onClick={item.onClick}
-                      data-active={item.isActive}
-                    >
-                      <item.icon className="w-4 h-4 mr-2" />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                    
-                    {item.showTrigger && (
-                      <SidebarTrigger className="absolute -right-12 top-0 z-20 h-10 w-12 bg-white shadow-md rounded-r-lg flex items-center justify-center hover:bg-gray-50 transition-colors">
-                        <div className="scale-75">
-                          <Logo />
-                        </div>
-                      </SidebarTrigger>
-                    )}
-                  </div>
+                  <SidebarMenuButton
+                    onClick={item.onClick}
+                    data-active={item.isActive}
+                  >
+                    <item.icon className="w-4 h-4 mr-2" />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -173,6 +163,21 @@ const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
     </>
+  );
+};
+
+export const SidebarToggle = () => {
+  const { setSidebarOpen } = useAppContext();
+  
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      onClick={() => setSidebarOpen(true)}
+      className="fixed top-4 left-4 z-20 h-8 w-8 bg-white shadow-sm"
+    >
+      <Menu className="h-4 w-4" />
+    </Button>
   );
 };
 
