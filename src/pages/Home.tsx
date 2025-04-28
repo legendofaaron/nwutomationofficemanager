@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { ArrowRight, Brain, Building2, Database, FileText } from 'lucide-react';
+import { ArrowRight, Brain, Building2, Database, FileText, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
