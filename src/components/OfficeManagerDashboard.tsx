@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Building2, Calendar, Receipt, Settings, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -60,8 +61,8 @@ const OfficeManagerDashboard = () => {
       <div className="p-4">
         {activeTab === 'employees' && <EmployeesView />}
         {activeTab === 'schedule' && <ScheduleView />}
-        {activeTab === 'invoices' && <p className="text-gray-500">Invoices view coming soon</p>}
-        {activeTab === 'settings' && <p className="text-gray-500">Settings view coming soon</p>}
+        {activeTab === 'invoices' && <p className="text-gray-500">Invoices management features coming soon</p>}
+        {activeTab === 'settings' && <p className="text-gray-500">System configuration options coming soon</p>}
       </div>
     </div>
   );

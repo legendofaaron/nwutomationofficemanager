@@ -20,9 +20,9 @@ const Home = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       <div className="text-center mb-16">
-        <h1 className="text-4xl font-bold text-app-blue mb-4">Welcome to Office Assistant</h1>
+        <h1 className="text-4xl font-bold text-app-blue mb-4">Welcome to Office Manager</h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Your intelligent workplace assistant by Northwestern Automation for managing documents, databases, and office operations.
+          A secure, lightweight solution by Northwestern Automation for managing documents, schedules, and office operations—all on your local system.
         </p>
       </div>
 
@@ -36,7 +36,7 @@ const Home = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">
-              Efficiently organize and access your documents with our intelligent document management system.
+              Create and organize documents with an intelligent system that helps you maintain your files locally.
             </p>
             <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard')}>
               View Documents <ArrowRight className="ml-2" />
@@ -53,7 +53,7 @@ const Home = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">
-              Access and manage your database tables with an intuitive interface.
+              Access and manage your database tables with a secure interface that keeps your data on your system.
             </p>
             <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard')}>
               Access Database <ArrowRight className="ml-2" />
@@ -70,7 +70,7 @@ const Home = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">
-              Build and maintain your organization's knowledge with our AI-powered knowledge base.
+              Build and maintain your organization's knowledge with intelligent tools that enhance productivity.
             </p>
             <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard')}>
               Explore Knowledge Base <ArrowRight className="ml-2" />
@@ -87,7 +87,7 @@ const Home = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">
-              Streamline your office operations with our comprehensive management tools.
+              Streamline operations with comprehensive management tools that operate locally on your system.
             </p>
             <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard')}>
               Manage Office <ArrowRight className="ml-2" />

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -22,36 +23,36 @@ const AiAssistant = () => {
     { 
       id: '1', 
       type: 'ai', 
-      content: `👋 Welcome to your Office Assistant!
+      content: `👋 Welcome to Office Manager by Northwestern Automation
 
-I'm here to help you manage your office tasks efficiently. Here's what I can do:
+I'm your intelligent assistant designed to help you streamline office tasks efficiently. Here's what I can do for you:
 
-📄 Create Documents
-- New text documents
-- Reports and memos
-- Custom templates
+📄 Document Creation
+- Draft new documents
+- Create reports and memos
+- Generate templates
 
-📅 Manage Schedules
-- Create daily/weekly schedules
-- Set up meetings
-- Organize tasks
+📅 Schedule Management
+- Organize daily/weekly schedules
+- Set up meeting arrangements
+- Prioritize tasks
 
-💵 Handle Invoices
-- Generate new invoices
-- Track payments
-- Manage billing
+💵 Invoice Management
+- Generate professional invoices
+- Track payment statuses
+- Maintain billing records
 
-🧾 Process Receipts
-- Analyze receipt details
-- Extract information
-- Store receipt data
+🧾 Receipt Processing
+- Extract data from receipts
+- Organize receipt information
+- Maintain financial records
 
 You can:
 1. Use the quick action buttons above
-2. Type natural commands like "create a new document"
-3. Ask me questions about any feature
+2. Type natural language requests like "create a new document"
+3. Ask questions about any feature
 
-Need help? Just click 'How to use' or ask me anything!`
+Your data remains secure on your local system. Need assistance? Just ask me anything!`
     }
   ]);
 
@@ -75,27 +76,27 @@ Need help? Just click 'How to use' or ask me anything!`
     let response = '';
     switch (action) {
       case 'create document':
-        response = "I'll help you create a new document. What type of document would you like to create?";
+        response = "I'd be happy to help you create a new document. What type of document would you like to create?";
         break;
       case 'create schedule':
-        response = "Let's create a schedule. What kind of schedule would you like to set up?";
+        response = "Let's organize a schedule for you. What type of schedule would you like to create?";
         break;
       case 'create invoice':
-        response = "I'll help you generate an invoice. Who is this invoice for?";
+        response = "I can help you generate a professional invoice. Who will be the recipient of this invoice?";
         break;
       case 'analyze receipt':
-        response = "I can help analyze your receipt. Please upload or share the receipt details with me.";
+        response = "I can assist with receipt analysis. Please upload or share the receipt details so I can process the information.";
         break;
       case 'explain how to use':
-        response = `Here's how you can use me effectively:
+        response = `Here's how to make the most of Office Manager:
 
 1. Quick Actions: Use the buttons above for common tasks
-2. Chat Commands: Type natural requests like "create a new document" or "set up a meeting schedule"
-3. Document Management: I can help organize and create various types of documents
-4. Receipt Analysis: Upload receipts and I'll help extract important information
-5. Scheduling: I can help you create and manage schedules
+2. Natural Language: Type requests like "create a new document" or "set up a meeting schedule"
+3. Document Management: Create, organize, and manage various document types
+4. Receipt Processing: Upload receipts for information extraction and organization
+5. Schedule Management: Create and organize calendars and schedules
 
-Need anything specific? Just ask!`;
+Your data remains secure on your local system. How can I assist you today?`;
         break;
       default:
         response = "I'll help you with that request.";
@@ -128,8 +129,8 @@ Need anything specific? Just ask!`;
       ]);
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to get response from n8n RAG agent. Please check your connection.',
+        title: 'Connection Error',
+        description: 'Unable to connect to the language model. Please check your connection settings.',
         variant: 'destructive'
       });
     }
@@ -144,7 +145,7 @@ Need anything specific? Just ask!`;
       <div className="flex items-center justify-between p-3 border-b">
         <div className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-app-blue" />
-          <h3 className="font-medium">Office Assistant</h3>
+          <h3 className="font-medium">Office Manager</h3>
         </div>
         <div className="flex items-center gap-2">
           <Button 

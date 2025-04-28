@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ArrowRight, MessageSquare, BookOpenText, PlayIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,9 +14,9 @@ const WelcomeDashboard = () => {
   };
   return <div className="container mx-auto px-4 py-8 max-w-5xl">
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-app-blue mb-3">Welcome to your office manager</h1>
+        <h1 className="text-3xl font-bold text-app-blue mb-3">Welcome to Office Manager</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Your intelligent workplace companion by Northwestern Automation for document management, knowledge organization, and office productivity.
+          A secure, lightweight solution by Northwestern Automation for document management, schedule organization, and enhanced workplace productivity.
         </p>
       </div>
 
@@ -24,16 +25,16 @@ const WelcomeDashboard = () => {
         <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
           <CardTitle className="text-2xl flex items-center gap-2">
             <MessageSquare className="h-6 w-6 text-app-blue" />
-            AI Assistant
+            Intelligent Assistant
           </CardTitle>
           <CardDescription>
-            Your personal AI-powered assistant ready to help with documents, databases, and more
+            A locally-hosted assistant that helps you create documents, manage schedules, and optimize workflow
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
           <p className="mb-6">
-            The AI Assistant can help you create documents, analyze data, organize your knowledge base, 
-            and provide insights about your office operations.
+            Our intelligent assistant can help you draft documents, organize schedules, manage your knowledge base, 
+            and provide insights for your office operations—all while keeping your data secure on your local system.
           </p>
           <div className="flex justify-center">
             <Button onClick={startAssistant} size="lg" className="gap-2">
@@ -55,7 +56,7 @@ const WelcomeDashboard = () => {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600">
-              Create, edit and manage your documents and spreadsheets with ease
+              Create, edit, and manage your documents with intelligent assistance
             </p>
           </CardContent>
           <CardFooter>
@@ -74,7 +75,7 @@ const WelcomeDashboard = () => {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600">
-              Access and expand your organization's collective knowledge
+              Organize and access your company's information efficiently
             </p>
           </CardContent>
           <CardFooter>
@@ -93,7 +94,7 @@ const WelcomeDashboard = () => {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600">
-              Manage office operations, schedules, and productivity tracking
+              Streamline operations, schedules, and productivity tracking
             </p>
           </CardContent>
           <CardFooter>
@@ -105,7 +106,7 @@ const WelcomeDashboard = () => {
       </div>
       
       <div className="text-center text-gray-500 text-sm mt-8">
-        <p>Choose a feature from the sidebar or use the AI Assistant to get started</p>
+        <p>Select a feature from the sidebar or use the Intelligent Assistant to get started</p>
       </div>
     </div>;
 };
