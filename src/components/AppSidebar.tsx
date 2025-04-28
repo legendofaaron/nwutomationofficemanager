@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { 
@@ -80,12 +79,15 @@ const AppSidebar = () => {
       content: type === 'document' ? '# New Document\n\nStart writing here...' : undefined,
       spreadsheetData: type === 'spreadsheet' ? {
         headers: ['Column 1', 'Column 2', 'Column 3'],
-        rows: []
+        rows: [
+          { 'Column 1': '', 'Column 2': '', 'Column 3': '' },
+          { 'Column 1': '', 'Column 2': '', 'Column 3': '' }
+        ]
       } : undefined
     };
     setFiles([...files, newFile]);
     setCurrentFile(newFile);
-    setViewMode(type === 'spreadsheet' ? 'spreadsheet' : 'document');
+    setViewMode(type === 'spreadsheet' ? 'spreadsheet' : type === 'document' ? 'document' : 'files');
   };
 
   const renderFileTree = (files: any[], level = 0) => {
