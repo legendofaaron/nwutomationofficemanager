@@ -27,7 +27,11 @@ const MainLayout = () => {
           <Sidebar>
             <AppSidebar />
           </Sidebar>
-          <SidebarTrigger className="absolute -right-6 top-1/2 -translate-y-1/2 z-20 h-24 w-6 bg-white shadow-md rounded-l-lg flex items-center justify-center hover:bg-gray-50 transition-colors rotate-180" />
+          <SidebarTrigger className="absolute -right-12 top-1/2 -translate-y-1/2 z-20 h-16 w-12 bg-white shadow-md rounded-r-lg flex items-center justify-center hover:bg-gray-50 transition-colors">
+            <div className="scale-75">
+              <Logo />
+            </div>
+          </SidebarTrigger>
         </div>
         
         <main className={cn("min-h-screen transition-all duration-300 pt-16 flex-1", sidebarOpen ? "ml-64" : "ml-0")}>
