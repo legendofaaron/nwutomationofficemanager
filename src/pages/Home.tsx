@@ -29,7 +29,7 @@ const Home = () => {
             <p className="text-gray-600 mb-4">
               Efficiently organize and access your documents with our intelligent document management system.
             </p>
-            <Button variant="outline" className="w-full" onClick={() => navigate('/')}>
+            <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard')}>
               View Documents <ArrowRight className="ml-2" />
             </Button>
           </CardContent>
@@ -46,7 +46,7 @@ const Home = () => {
             <p className="text-gray-600 mb-4">
               Access and manage your database tables with an intuitive interface.
             </p>
-            <Button variant="outline" className="w-full" onClick={() => navigate('/')}>
+            <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard')}>
               Access Database <ArrowRight className="ml-2" />
             </Button>
           </CardContent>
@@ -63,7 +63,7 @@ const Home = () => {
             <p className="text-gray-600 mb-4">
               Build and maintain your organization's knowledge with our AI-powered knowledge base.
             </p>
-            <Button variant="outline" className="w-full" onClick={() => navigate('/')}>
+            <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard')}>
               Explore Knowledge Base <ArrowRight className="ml-2" />
             </Button>
           </CardContent>
@@ -80,7 +80,7 @@ const Home = () => {
             <p className="text-gray-600 mb-4">
               Streamline your office operations with our comprehensive management tools.
             </p>
-            <Button variant="outline" className="w-full" onClick={() => navigate('/')}>
+            <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard')}>
               Manage Office <ArrowRight className="ml-2" />
             </Button>
           </CardContent>
@@ -88,7 +88,7 @@ const Home = () => {
       </div>
 
       <div className="text-center">
-        <Button size="lg" onClick={() => navigate('/')}>
+        <Button size="lg" onClick={() => navigate('/dashboard')}>
           Get Started <ArrowRight className="ml-2" />
         </Button>
       </div>
