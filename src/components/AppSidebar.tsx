@@ -18,9 +18,21 @@ import {
   FolderPlus,
   Plus,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 import {
@@ -48,6 +60,7 @@ const AppSidebar = () => {
     setViewMode,
     files,
     setFiles,
+    currentFile: activeFile,
     setCurrentFile,
     databaseTables,
     setCurrentTable,
@@ -102,7 +115,7 @@ const AppSidebar = () => {
     const updatedFiles = deleteFileRecursively(files, fileToDelete.id);
     setFiles(updatedFiles);
     
-    if (fileToDelete.id === currentFile?.id) {
+    if (fileToDelete.id === activeFile?.id) {
       setCurrentFile(null);
       setViewMode('files');
     }
@@ -137,6 +150,16 @@ const AppSidebar = () => {
     setFiles([...files, newFile]);
     setCurrentFile(newFile);
     setViewMode(type === 'spreadsheet' ? 'spreadsheet' : type === 'document' ? 'document' : 'files');
+  };
+
+  const handleDeleteAllFiles = () => {
+    setFiles([]);
+    setCurrentFile(null);
+    setViewMode('files');
+    toast({
+      title: "All files deleted",
+      description: "All files have been removed",
+    });
   };
 
   const renderFileTree = (files: any[], level = 0) => {
@@ -255,6 +278,34 @@ const AppSidebar = () => {
                   <FolderPlus className="w-4 h-4 mr-2" />
                   <span>New Folder</span>
                 </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <SidebarMenuButton className="text-destructive hover:text-destructive">
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      <span>Remove All Files</span>
+                    </SidebarMenuButton>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete all your files
+                        and remove your data from the system.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteAllFiles}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete All
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
