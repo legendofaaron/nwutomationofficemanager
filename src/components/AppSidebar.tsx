@@ -120,7 +120,7 @@ const AppSidebar = () => {
     }
 
     toast({
-      title: "File deleted",
+      title: "Item deleted",
       description: `${fileToDelete.name} has been deleted`,
     });
   };
@@ -166,7 +166,7 @@ const AppSidebar = () => {
       <SidebarMenuItem key={file.id}>
         {file.type === 'folder' ? (
           <Collapsible>
-            <CollapsibleTrigger className="flex items-center w-full text-left p-2 hover:bg-sidebar-accent rounded-md">
+            <CollapsibleTrigger className="flex items-center w-full text-left p-2 hover:bg-sidebar-accent rounded-md group/menu-item relative">
               {file.children && file.children.length > 0 ? (
                 <>
                   <ChevronRight className="w-4 h-4 mr-2 transition-transform duration-200 transform group-data-[state=open]:rotate-90" />
@@ -179,6 +179,15 @@ const AppSidebar = () => {
                 </>
               )}
               <span>{file.name}</span>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover/menu-item:opacity-100 transition-opacity">
+                <SidebarMenuAction
+                  onClick={(e) => handleDeleteFile(e, file)}
+                  className="hover:bg-red-50 -mt-[0.4cm]"
+                  showOnHover
+                >
+                  <Trash2 className="w-4 h-4 text-blue-500" />
+                </SidebarMenuAction>
+              </div>
             </CollapsibleTrigger>
             {file.children && (
               <CollapsibleContent className="ml-4">
