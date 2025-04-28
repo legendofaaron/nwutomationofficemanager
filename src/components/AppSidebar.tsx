@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { 
@@ -13,11 +14,18 @@ import {
   X,
   FilePlus,
   FolderPlus,
-  Plus
+  Plus,
+  ChevronRight,
+  ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import {
   SidebarContent,
   SidebarHeader,
@@ -83,27 +91,40 @@ const AppSidebar = () => {
   const renderFileTree = (files: any[], level = 0) => {
     return files.map(file => (
       <SidebarMenuItem key={file.id}>
-        <SidebarMenuButton
-          onClick={() => handleFileClick(file)}
-          className="w-full text-left"
-        >
-          {file.type === 'folder' ? (
-            file.children && file.children.length > 0 ? (
-              <FolderOpen className="w-4 h-4 mr-2" />
+        {file.type === 'folder' ? (
+          <Collapsible>
+            <CollapsibleTrigger className="flex items-center w-full text-left p-2 hover:bg-sidebar-accent rounded-md">
+              {file.children && file.children.length > 0 ? (
+                <>
+                  <ChevronRight className="w-4 h-4 mr-2 transition-transform duration-200 transform group-data-[state=open]:rotate-90" />
+                  <FolderOpen className="w-4 h-4 mr-2" />
+                </>
+              ) : (
+                <>
+                  <ChevronRight className="w-4 h-4 mr-2" />
+                  <Folder className="w-4 h-4 mr-2" />
+                </>
+              )}
+              <span>{file.name}</span>
+            </CollapsibleTrigger>
+            {file.children && (
+              <CollapsibleContent className="ml-4">
+                {renderFileTree(file.children, level + 1)}
+              </CollapsibleContent>
+            )}
+          </Collapsible>
+        ) : (
+          <SidebarMenuButton
+            onClick={() => handleFileClick(file)}
+            className="w-full text-left"
+          >
+            {file.type === 'spreadsheet' ? (
+              <Table className="w-4 h-4 mr-2" />
             ) : (
-              <Folder className="w-4 h-4 mr-2" />
-            )
-          ) : file.type === 'spreadsheet' ? (
-            <Table className="w-4 h-4 mr-2" />
-          ) : (
-            <File className="w-4 h-4 mr-2" />
-          )}
-          <span>{file.name}</span>
-        </SidebarMenuButton>
-        {file.type === 'folder' && file.children && (
-          <div className="ml-4">
-            {renderFileTree(file.children, level + 1)}
-          </div>
+              <File className="w-4 h-4 mr-2" />
+            )}
+            <span>{file.name}</span>
+          </SidebarMenuButton>
         )}
       </SidebarMenuItem>
     ));
