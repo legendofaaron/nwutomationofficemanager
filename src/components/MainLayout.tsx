@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import AppSidebar from './AppSidebar';
@@ -28,9 +27,7 @@ const MainLayout = () => {
             <AppSidebar />
           </Sidebar>
           <SidebarTrigger className="absolute -right-12 top-24 z-20 h-16 w-12 bg-white shadow-md rounded-r-lg flex items-center justify-center hover:bg-gray-50 transition-colors">
-            <div className="scale-75">
-              <Logo />
-            </div>
+            <Logo />
           </SidebarTrigger>
         </div>
         
