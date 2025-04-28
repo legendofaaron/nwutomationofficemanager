@@ -22,17 +22,20 @@ const DocumentCreationForm = ({
     <form onSubmit={onSubmit} className="space-y-4 mt-4">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="documentName">Document Name (Optional)</Label>
+          <Label htmlFor="documentName">Document Name</Label>
           <DocumentNameAiSuggestion onSuggestion={onNameChange} />
         </div>
         <Input
           id="documentName"
-          placeholder="Enter document name (optional)"
+          placeholder="Enter document name (or skip to use default)"
           value={documentName}
           onChange={(e) => onNameChange(e.target.value)}
           className="col-span-3"
           autoFocus
         />
+        <p className="text-xs text-gray-500">
+          You can create a document without naming it by clicking "Skip"
+        </p>
       </div>
       <div className="flex justify-end space-x-2">
         <Button variant="outline" type="button" onClick={onSkip}>

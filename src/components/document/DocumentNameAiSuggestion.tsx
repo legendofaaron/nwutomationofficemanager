@@ -18,15 +18,38 @@ const DocumentNameAiSuggestion = ({ onSuggestion }: DocumentNameAiSuggestionProp
     try {
       setIsLoading(true);
       const prompt = "Suggest a creative and professional name for a new document. Return only the name, no explanations.";
-      const response = await queryLlm(prompt, 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk');
-      if (response.message) {
+      
+      // Use a timeout to handle potential connection issues
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Request timed out")), 5000)
+      );
+      
+      const responsePromise = queryLlm(prompt, 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk');
+      const response = await Promise.race([responsePromise, timeoutPromise]) as any;
+      
+      if (response && response.message) {
         onSuggestion(response.message.trim());
+      } else {
+        // Fallback to a generic suggestion if no message
+        onSuggestion("Project Document " + new Date().toISOString().slice(0, 10));
       }
     } catch (error) {
+      console.error("AI suggestion failed:", error);
+      // Provide a fallback suggestion
+      const fallbackNames = [
+        "Strategic Overview",
+        "Quarterly Report",
+        "Project Proposal",
+        "Meeting Minutes",
+        "Action Plan"
+      ];
+      const randomName = fallbackNames[Math.floor(Math.random() * fallbackNames.length)];
+      onSuggestion(randomName);
+      
       toast({
-        title: "Error",
-        description: "Failed to get AI suggestion. Please try again.",
-        variant: "destructive",
+        title: "Using offline suggestion",
+        description: "Could not connect to AI service. Using a generated name instead.",
+        variant: "default",
       });
     } finally {
       setIsLoading(false);
@@ -44,7 +67,7 @@ const DocumentNameAiSuggestion = ({ onSuggestion }: DocumentNameAiSuggestionProp
             onClick={handleGetAiSuggestion}
             disabled={isLoading}
           >
-            <MessageCircle className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            <MessageCircle className={cn("h-4 w-4", isLoading && "animate-pulse")} />
             <span className="sr-only">AI Help</span>
           </Button>
         </TooltipTrigger>
