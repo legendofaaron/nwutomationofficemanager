@@ -1,12 +1,27 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building2, Calendar, Receipt, Settings, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import EmployeesView from './EmployeesView';
 import ScheduleView from './ScheduleView';
+import { LlmSettings } from './LlmSettings';
 
 const OfficeManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState<'employees' | 'schedule' | 'invoices' | 'settings'>('employees');
+
+  useEffect(() => {
+    const handleSetTab = (event: CustomEvent<{ tab: string }>) => {
+      if (event.detail && event.detail.tab) {
+        setActiveTab(event.detail.tab as any);
+      }
+    };
+
+    document.addEventListener('set-office-tab', handleSetTab as EventListener);
+    
+    return () => {
+      document.removeEventListener('set-office-tab', handleSetTab as EventListener);
+    };
+  }, []);
 
   return (
     <div className="h-full">
@@ -62,7 +77,7 @@ const OfficeManagerDashboard = () => {
         {activeTab === 'employees' && <EmployeesView />}
         {activeTab === 'schedule' && <ScheduleView />}
         {activeTab === 'invoices' && <p className="text-gray-500">Invoices management features coming soon</p>}
-        {activeTab === 'settings' && <p className="text-gray-500">System configuration options coming soon</p>}
+        {activeTab === 'settings' && <LlmSettings />}
       </div>
     </div>
   );
