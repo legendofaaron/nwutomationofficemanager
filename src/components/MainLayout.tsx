@@ -23,9 +23,12 @@ const MainLayout = () => {
   return (
     <SidebarProvider defaultOpen={sidebarOpen}>
       <div className="min-h-screen bg-app-gray-lightest flex w-full">
-        <Sidebar>
-          <AppSidebar />
-        </Sidebar>
+        <div className="relative">
+          <Sidebar>
+            <AppSidebar />
+          </Sidebar>
+          <SidebarTrigger className="absolute -right-6 top-1/2 -translate-y-1/2 z-20 h-24 w-6 bg-white shadow-md rounded-l-lg flex items-center justify-center hover:bg-gray-50 transition-colors rotate-180" />
+        </div>
         
         <main className={cn("min-h-screen transition-all duration-300 pt-16 flex-1", sidebarOpen ? "ml-64" : "ml-0")}>
           <div className="max-w-7xl mx-auto p-4 bg-white shadow-sm min-h-[calc(100vh-64px)] rounded-md">
@@ -45,10 +48,8 @@ const MainLayout = () => {
         <AiAssistant />
         <ChatUI />
       </div>
-      <SidebarTrigger className="fixed top-1/2 -translate-y-1/2 -right-6 z-20 h-24 w-6 bg-white shadow-md rounded-l-lg flex items-center justify-center hover:bg-gray-50 transition-colors rotate-180" />
     </SidebarProvider>
   );
 };
 
 export default MainLayout;
-
