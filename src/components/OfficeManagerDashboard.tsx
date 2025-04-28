@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { Building2, Calendar, Receipt, Settings, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import EmployeesView from './EmployeesView';
+import ScheduleView from './ScheduleView';
 
 const OfficeManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState<'employees' | 'schedule' | 'invoices' | 'settings'>('employees');
@@ -59,7 +59,7 @@ const OfficeManagerDashboard = () => {
 
       <div className="p-4">
         {activeTab === 'employees' && <EmployeesView />}
-        {activeTab === 'schedule' && <p className="text-gray-500">Schedule view coming soon</p>}
+        {activeTab === 'schedule' && <ScheduleView />}
         {activeTab === 'invoices' && <p className="text-gray-500">Invoices view coming soon</p>}
         {activeTab === 'settings' && <p className="text-gray-500">Settings view coming soon</p>}
       </div>
