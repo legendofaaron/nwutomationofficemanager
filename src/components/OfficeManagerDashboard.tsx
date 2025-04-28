@@ -4,6 +4,7 @@ import { Building2, Calendar, Receipt, Settings, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import EmployeesView from './EmployeesView';
 import ScheduleView from './ScheduleView';
+import { Logo } from './Logo';
 
 const OfficeManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState<'employees' | 'schedule' | 'invoices' | 'settings'>('employees');
@@ -12,7 +13,7 @@ const OfficeManagerDashboard = () => {
     <div className="h-full">
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-app-blue" />
+          <Logo small />
           <h2 className="text-lg font-medium">Office Manager</h2>
         </div>
       </div>
