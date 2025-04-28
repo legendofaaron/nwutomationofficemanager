@@ -4,15 +4,24 @@ import { ArrowRight, MessageSquare, BookOpenText, PlayIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
+import { Logo } from './Logo';
+
 const WelcomeDashboard = () => {
   const {
     setAiAssistantOpen,
     setViewMode
   } = useAppContext();
+
   const startAssistant = () => {
     setAiAssistantOpen(true);
   };
-  return <div className="container mx-auto px-4 py-8 max-w-5xl">
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="flex justify-center mb-8">
+        <Logo />
+      </div>
+      
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold text-app-blue mb-3">Welcome to Office Manager</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
@@ -60,7 +69,7 @@ const WelcomeDashboard = () => {
             </p>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" className="w-full text-sm" onClick={() => setViewMode('files')}>
+            <Button variant="outline" className="w-full text-sm" onClick={() => setViewMode('document')}>
               View Files <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </CardFooter>
@@ -108,6 +117,8 @@ const WelcomeDashboard = () => {
       <div className="text-center text-gray-500 text-sm mt-8">
         <p>Select a feature from the sidebar or use the Intelligent Assistant to get started</p>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default WelcomeDashboard;

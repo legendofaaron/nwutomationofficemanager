@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-type ViewMode = 'files' | 'database' | 'document' | 'knowledge' | 'office' | 'spreadsheet';
+type ViewMode = 'welcome' | 'files' | 'database' | 'document' | 'knowledge' | 'office' | 'spreadsheet';
 type FileType = 'folder' | 'document' | 'image' | 'spreadsheet';
 
 interface File {
@@ -143,7 +143,7 @@ const defaultDatabaseTables: DatabaseTable[] = [
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('files');
+  const [viewMode, setViewMode] = useState<ViewMode>('welcome');
   const [files, setFiles] = useState<File[]>(defaultFiles);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [databaseTables] = useState<DatabaseTable[]>(defaultDatabaseTables);
