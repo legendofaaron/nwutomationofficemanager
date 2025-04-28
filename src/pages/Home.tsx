@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ArrowRight, Brain, Building2, Database, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,15 @@ import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const hasVisited = localStorage.getItem('hasVisitedBefore');
+    if (hasVisited) {
+      navigate('/dashboard');
+    } else {
+      localStorage.setItem('hasVisitedBefore', 'true');
+    }
+  }, [navigate]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
