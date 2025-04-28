@@ -1,7 +1,20 @@
-
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { Brain, Building2, Database, File, FileText, Folder, FolderOpen, Menu, Table, X } from 'lucide-react';
+import { 
+  Brain, 
+  Building2, 
+  Database, 
+  File, 
+  FileText, 
+  Folder, 
+  FolderOpen, 
+  Menu, 
+  Table, 
+  X,
+  FilePlus,
+  FolderPlus,
+  Plus
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
@@ -22,6 +35,7 @@ const AppSidebar = () => {
     viewMode,
     setViewMode,
     files,
+    setFiles,
     setCurrentFile,
     databaseTables,
     setCurrentTable,
@@ -46,6 +60,24 @@ const AppSidebar = () => {
   const handleTableClick = (table: any) => {
     setCurrentTable(table);
     setViewMode('database');
+  };
+
+  const createNewItem = (type: 'document' | 'spreadsheet' | 'folder') => {
+    const newId = `new-${Date.now()}`;
+    const newName = type === 'folder' ? 'New Folder' : type === 'spreadsheet' ? 'New Spreadsheet' : 'New Document';
+    const newFile = {
+      id: newId,
+      name: newName,
+      type: type,
+      content: type === 'document' ? '# New Document\n\nStart writing here...' : undefined,
+      spreadsheetData: type === 'spreadsheet' ? {
+        headers: ['Column 1', 'Column 2', 'Column 3'],
+        rows: []
+      } : undefined
+    };
+    setFiles([...files, newFile]);
+    setCurrentFile(newFile);
+    setViewMode(type === 'spreadsheet' ? 'spreadsheet' : 'document');
   };
 
   const renderFileTree = (files: any[], level = 0) => {
@@ -115,6 +147,32 @@ const AppSidebar = () => {
       </SidebarHeader>
 
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Create New</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => createNewItem('document')}>
+                  <FilePlus className="w-4 h-4 mr-2" />
+                  <span>New Document</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => createNewItem('spreadsheet')}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  <span>New Spreadsheet</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => createNewItem('folder')}>
+                  <FolderPlus className="w-4 h-4 mr-2" />
+                  <span>New Folder</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         <SidebarGroup>
           <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
           <SidebarGroupContent>
