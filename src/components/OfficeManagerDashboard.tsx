@@ -1,9 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Building2, Calendar, Receipt, Settings, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import EmployeesView from './EmployeesView';
 
 const OfficeManagerDashboard = () => {
+  const [activeTab, setActiveTab] = useState<'employees' | 'schedule' | 'invoices' | 'settings'>('employees');
+
   return (
     <div className="h-full">
       <div className="flex items-center justify-between p-4 border-b">
@@ -15,19 +18,39 @@ const OfficeManagerDashboard = () => {
 
       <div className="p-4 border-b bg-gray-50">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button 
+            variant={activeTab === 'employees' ? 'default' : 'outline'} 
+            size="sm" 
+            className="gap-2"
+            onClick={() => setActiveTab('employees')}
+          >
             <Users className="h-4 w-4" />
             Employees
           </Button>
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button 
+            variant={activeTab === 'schedule' ? 'default' : 'outline'} 
+            size="sm" 
+            className="gap-2"
+            onClick={() => setActiveTab('schedule')}
+          >
             <Calendar className="h-4 w-4" />
             Schedule
           </Button>
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button 
+            variant={activeTab === 'invoices' ? 'default' : 'outline'} 
+            size="sm" 
+            className="gap-2"
+            onClick={() => setActiveTab('invoices')}
+          >
             <Receipt className="h-4 w-4" />
             Invoices
           </Button>
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button 
+            variant={activeTab === 'settings' ? 'default' : 'outline'} 
+            size="sm" 
+            className="gap-2"
+            onClick={() => setActiveTab('settings')}
+          >
             <Settings className="h-4 w-4" />
             Settings
           </Button>
@@ -35,7 +58,10 @@ const OfficeManagerDashboard = () => {
       </div>
 
       <div className="p-4">
-        <p className="text-gray-500">Welcome to the Office Manager Dashboard</p>
+        {activeTab === 'employees' && <EmployeesView />}
+        {activeTab === 'schedule' && <p className="text-gray-500">Schedule view coming soon</p>}
+        {activeTab === 'invoices' && <p className="text-gray-500">Invoices view coming soon</p>}
+        {activeTab === 'settings' && <p className="text-gray-500">Settings view coming soon</p>}
       </div>
     </div>
   );
