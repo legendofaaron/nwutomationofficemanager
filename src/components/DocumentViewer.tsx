@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -159,7 +158,7 @@ const DocumentViewer = () => {
       </div>
       
       {/* Content area */}
-      <div className="max-w-3xl mx-auto px-6 py-8">
+      <div className="max-w-3xl mx-12 px-6 py-8">
         {!currentFile ? (
           <div className="flex items-center justify-center h-[60vh]">
             <p className="text-gray-400">Select a document to view or edit</p>
