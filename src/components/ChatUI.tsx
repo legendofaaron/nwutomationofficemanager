@@ -17,9 +17,7 @@ const ChatUI = () => {
     setCurrentFile,
     files,
     setFiles,
-    currentFile,
-    setCurrentTable,
-    databaseTables
+    currentFile
   } = useAppContext();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -34,6 +32,138 @@ const ChatUI = () => {
 
   const handleCommand = (command: string) => {
     const lowercaseCommand = command.toLowerCase();
+    
+    // Handle document naming
+    if (lowercaseCommand.startsWith('name document') || lowercaseCommand.startsWith('rename document')) {
+      const newName = command.replace(/name document|rename document/i, '').trim();
+      if (!currentFile || !newName) {
+        return "Please specify a name for the document or open a document first.";
+      }
+
+      const updatedFile = { ...currentFile, name: newName };
+      setCurrentFile(updatedFile);
+      
+      const updateFiles = (filesArray: any[]): any[] => {
+        return filesArray.map(file => {
+          if (file.id === currentFile.id) {
+            return updatedFile;
+          }
+          if (file.children) {
+            return { ...file, children: updateFiles(file.children) };
+          }
+          return file;
+        });
+      };
+      
+      setFiles(updateFiles(files));
+      toast({
+        title: "Document Renamed",
+        description: `Document renamed to "${newName}"`
+      });
+      
+      return `I've renamed the document to "${newName}"`;
+    }
+    
+    // Handle writing content to document
+    if (lowercaseCommand.startsWith('write') || lowercaseCommand.startsWith('add content')) {
+      const content = command.replace(/write|add content/i, '').trim();
+      if (!currentFile) {
+        return "Please open or create a document first.";
+      }
+      
+      const updatedFile = {
+        ...currentFile,
+        content: currentFile.content 
+          ? `${currentFile.content}\n${content}`
+          : content
+      };
+      
+      setCurrentFile(updatedFile);
+      
+      const updateFiles = (filesArray: any[]): any[] => {
+        return filesArray.map(file => {
+          if (file.id === currentFile.id) {
+            return updatedFile;
+          }
+          if (file.children) {
+            return { ...file, children: updateFiles(file.children) };
+          }
+          return file;
+        });
+      };
+      
+      setFiles(updateFiles(files));
+      toast({
+        title: "Content Added",
+        description: "Content has been added to the document"
+      });
+      
+      return "I've added the content to your document.";
+    }
+    
+    // Create new document with name and content
+    if (lowercaseCommand.startsWith('create document')) {
+      const input = command.replace(/create document/i, '').trim();
+      let documentName = 'New Document';
+      let content = '';
+      
+      // Check if the command includes "named" to separate name and content
+      if (input.includes('named')) {
+        const [beforeNamed, afterNamed] = input.split(/named/i);
+        content = beforeNamed.trim();
+        documentName = afterNamed.trim() || 'New Document';
+      } else {
+        content = input;
+      }
+      
+      const newDocument = {
+        id: Date.now().toString(),
+        name: documentName,
+        type: 'document' as const,
+        content: content || '# New Document\n\nStart writing here...'
+      };
+      
+      // Find Documents folder or create it
+      const updateFiles = (filesArray: any[]): any[] => {
+        const documentsFolder = filesArray.find(file => 
+          file.type === 'folder' && file.name === 'Documents'
+        );
+        
+        if (documentsFolder) {
+          return filesArray.map(file => {
+            if (file.id === documentsFolder.id) {
+              return {
+                ...file,
+                children: [...(file.children || []), newDocument]
+              };
+            }
+            return file;
+          });
+        }
+        
+        return [
+          ...filesArray,
+          {
+            id: 'documents-folder',
+            name: 'Documents',
+            type: 'folder' as const,
+            children: [newDocument]
+          }
+        ];
+      };
+      
+      const updatedFiles = updateFiles(files);
+      setFiles(updatedFiles);
+      setCurrentFile(newDocument);
+      setViewMode('document');
+      
+      toast({
+        title: "Document Created",
+        description: `Created document "${documentName}"`
+      });
+      
+      return `I've created a new document named "${documentName}" with your content. Opening it now.`;
+    }
     
     // Handle spreadsheet creation
     if (lowercaseCommand.includes('create spreadsheet') || lowercaseCommand.includes('new spreadsheet') || lowercaseCommand.includes('new excel')) {
@@ -286,7 +416,6 @@ const ChatUI = () => {
       }
     }
     
-    // Default response
     return `I'll help you with "${command}" right away.`;
   };
 
