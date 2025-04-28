@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import NewDocumentDialog from './NewDocumentDialog';
@@ -213,7 +214,7 @@ const AppSidebar = () => {
                 className="hover:bg-red-50"
                 showOnHover
               >
-                <FileX className="w-4 h-4 text-red-500" />
+                <FileX className="w-4 h-4 text-[#8E9196]" />
               </SidebarMenuAction>
             </div>
           </div>
