@@ -3,6 +3,12 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Task {
@@ -10,24 +16,63 @@ interface Task {
   title: string;
   date: Date;
   completed: boolean;
+  assignedTo?: string;
+  startTime?: string;
+  endTime?: string;
 }
 
-const ScheduleView = ({ content }: { content?: string }) => {
+const mockEmployees = [
+  { id: '1', name: 'John Smith' },
+  { id: '2', name: 'Sarah Johnson' },
+  { id: '3', name: 'Michael Brown' },
+];
+
+const ScheduleView = () => {
   const [selectedDate, setSelectedDate] = React.useState<Date>(new Date());
-  const [tasks] = React.useState<Task[]>([
+  const [tasks, setTasks] = React.useState<Task[]>([
     {
       id: '1',
       title: 'Team Meeting',
       date: new Date(),
       completed: false,
+      assignedTo: 'John Smith',
+      startTime: '09:00',
+      endTime: '10:00'
     },
     {
       id: '2',
       title: 'Project Review',
       date: new Date(),
       completed: true,
+      assignedTo: 'Sarah Johnson',
+      startTime: '14:00',
+      endTime: '15:00'
     },
   ]);
+
+  const [newTask, setNewTask] = React.useState({
+    title: '',
+    assignedTo: '',
+    startTime: '',
+    endTime: ''
+  });
+
+  const handleAddTask = () => {
+    if (newTask.title && newTask.assignedTo && newTask.startTime && newTask.endTime) {
+      const task: Task = {
+        id: Date.now().toString(),
+        title: newTask.title,
+        date: selectedDate,
+        completed: false,
+        assignedTo: newTask.assignedTo,
+        startTime: newTask.startTime,
+        endTime: newTask.endTime
+      };
+      
+      setTasks([...tasks, task]);
+      setNewTask({ title: '', assignedTo: '', startTime: '', endTime: '' });
+    }
+  };
 
   return (
     <div className="p-4">
@@ -40,8 +85,72 @@ const ScheduleView = ({ content }: { content?: string }) => {
         <TabsContent value="calendar" className="mt-4">
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Calendar</CardTitle>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Schedule
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add New Schedule</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Task Title</Label>
+                        <Input
+                          id="title"
+                          value={newTask.title}
+                          onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="employee">Assign To</Label>
+                        <Select
+                          value={newTask.assignedTo}
+                          onValueChange={(value) => setNewTask({ ...newTask, assignedTo: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select employee" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {mockEmployees.map((employee) => (
+                              <SelectItem key={employee.id} value={employee.name}>
+                                {employee.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="startTime">Start Time</Label>
+                          <Input
+                            id="startTime"
+                            type="time"
+                            value={newTask.startTime}
+                            onChange={(e) => setNewTask({ ...newTask, startTime: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="endTime">End Time</Label>
+                          <Input
+                            id="endTime"
+                            type="time"
+                            value={newTask.endTime}
+                            onChange={(e) => setNewTask({ ...newTask, endTime: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <Button onClick={handleAddTask} className="w-full">
+                        Add Schedule
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </CardHeader>
               <CardContent>
                 <Calendar
@@ -59,25 +168,39 @@ const ScheduleView = ({ content }: { content?: string }) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {tasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className={cn(
-                        "flex items-center justify-between p-4 rounded-lg",
-                        task.completed ? "bg-muted/50" : "bg-card"
-                      )}
-                    >
-                      <span className={cn(task.completed && "line-through text-muted-foreground")}>
-                        {task.title}
-                      </span>
-                      <input
-                        type="checkbox"
-                        checked={task.completed}
-                        className="h-4 w-4"
-                        readOnly
-                      />
-                    </div>
-                  ))}
+                  {tasks
+                    .filter(task => 
+                      task.date.toDateString() === selectedDate.toDateString()
+                    )
+                    .map((task) => (
+                      <div
+                        key={task.id}
+                        className={cn(
+                          "flex items-center justify-between p-4 rounded-lg",
+                          task.completed ? "bg-muted/50" : "bg-card"
+                        )}
+                      >
+                        <div className="space-y-1">
+                          <span className={cn(task.completed && "line-through text-muted-foreground")}>
+                            {task.title}
+                          </span>
+                          <div className="text-sm text-muted-foreground">
+                            <p>Assigned to: {task.assignedTo}</p>
+                            <p>{task.startTime} - {task.endTime}</p>
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={task.completed}
+                          onChange={() => {
+                            setTasks(tasks.map(t =>
+                              t.id === task.id ? { ...t, completed: !t.completed } : t
+                            ));
+                          }}
+                          className="h-4 w-4"
+                        />
+                      </div>
+                    ))}
                 </div>
               </CardContent>
             </Card>
@@ -99,19 +222,25 @@ const ScheduleView = ({ content }: { content?: string }) => {
                       task.completed ? "bg-muted/50" : "bg-card"
                     )}
                   >
-                    <div>
+                    <div className="space-y-1">
                       <span className={cn("block", task.completed && "line-through text-muted-foreground")}>
                         {task.title}
                       </span>
-                      <span className="text-sm text-muted-foreground">
-                        {task.date.toLocaleDateString()}
-                      </span>
+                      <div className="text-sm text-muted-foreground">
+                        <p>Date: {task.date.toLocaleDateString()}</p>
+                        <p>Assigned to: {task.assignedTo}</p>
+                        <p>{task.startTime} - {task.endTime}</p>
+                      </div>
                     </div>
                     <input
                       type="checkbox"
                       checked={task.completed}
+                      onChange={() => {
+                        setTasks(tasks.map(t =>
+                          t.id === task.id ? { ...t, completed: !t.completed } : t
+                        ));
+                      }}
                       className="h-4 w-4"
-                      readOnly
                     />
                   </div>
                 ))}
