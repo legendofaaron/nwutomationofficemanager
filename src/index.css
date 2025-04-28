@@ -88,6 +88,18 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground overflow-hidden;
+  }
+
+  html {
+    @apply overflow-hidden;
+  }
 }
 
 @layer base {
@@ -97,5 +109,28 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .cm-editor {
+    @apply rounded-md border;
+  }
+}
+
+@layer utilities {
+  .h-screen-minus-header {
+    height: calc(100vh - 64px);
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none; /* Firefox */
   }
 }

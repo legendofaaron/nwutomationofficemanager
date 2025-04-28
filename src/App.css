@@ -3,6 +3,7 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  overflow: hidden;
 }
 
 .logo {
@@ -39,4 +40,8 @@
 
 .read-the-docs {
   color: #888;
+}
+
+* {
+  transition: all 0.3s ease-in-out;
 }
