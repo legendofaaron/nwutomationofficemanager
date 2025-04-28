@@ -201,13 +201,6 @@ const AppSidebar = () => {
             </SidebarMenuButton>
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover/menu-item:opacity-100 transition-opacity">
               <SidebarMenuAction
-                onClick={(e) => handleEditFile(e, file)}
-                className="hover:bg-blue-50"
-                showOnHover
-              >
-                <FilePen className="w-4 h-4 text-blue-500" />
-              </SidebarMenuAction>
-              <SidebarMenuAction
                 onClick={(e) => handleDeleteFile(e, file)}
                 className="hover:bg-red-50 -mt-[0.4cm]"
                 showOnHover
