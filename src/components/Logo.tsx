@@ -34,7 +34,7 @@ export const Logo = () => {
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <button className="rounded-full p-2 hover:bg-gray-100 transition-colors">
-            <Trash2 className="h-6 w-6 text-gray-500" />
+            <Trash2 className="h-6 w-6 text-[#8E9196]" />
           </button>
         </AlertDialogTrigger>
         <AlertDialogContent>
