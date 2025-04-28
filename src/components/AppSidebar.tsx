@@ -212,7 +212,7 @@ const AppSidebar = () => {
                 className="hover:bg-red-50"
                 showOnHover
               >
-                <Trash2 className="w-4 h-4 text-red-500" />
+                <Trash2 className="w-4 h-4 text-blue-500" />
               </SidebarMenuAction>
             </div>
           </div>
