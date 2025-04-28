@@ -8,7 +8,7 @@ import {
   File, 
   FileText,
   FilePen,
-  FileX,
+  Trash2,
   Folder, 
   FolderOpen, 
   Menu, 
@@ -19,7 +19,6 @@ import {
   Plus,
   ChevronRight,
   ChevronDown,
-  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -213,7 +212,7 @@ const AppSidebar = () => {
                 className="hover:bg-red-50"
                 showOnHover
               >
-                <FileX className="w-4 h-4 text-red-500" />
+                <Trash2 className="w-4 h-4 text-red-500" />
               </SidebarMenuAction>
             </div>
           </div>
