@@ -21,13 +21,13 @@ const NewDocumentDialog = ({ className }: NewDocumentDialogProps) => {
   const [documentName, setDocumentName] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleCreateDocument = (e: React.FormEvent) => {
-    e.preventDefault();
+  const createDocument = (name: string = "New Document") => {
+    const finalName = name.trim() || "New Document";
     const newDoc = {
       id: `doc-${Date.now()}`,
-      name: documentName.trim() || "New Document",
+      name: finalName,
       type: "document" as const,
-      content: `# ${documentName.trim() || "New Document"}\n\nStart writing here...`
+      content: `# ${finalName}\n\nStart writing here...`
     };
 
     setFiles([...files, newDoc]);
@@ -35,6 +35,11 @@ const NewDocumentDialog = ({ className }: NewDocumentDialogProps) => {
     setViewMode('document');
     setIsOpen(false);
     setDocumentName("");
+  };
+
+  const handleCreateDocument = (e: React.FormEvent) => {
+    e.preventDefault();
+    createDocument(documentName);
   };
 
   const handleGetAiSuggestion = async () => {
@@ -63,6 +68,12 @@ const NewDocumentDialog = ({ className }: NewDocumentDialogProps) => {
           variant="ghost" 
           size="sm"
           className={cn("w-full justify-start hover:bg-sidebar-accent", className)}
+          onClick={() => {
+            // If user just clicks the button without wanting to name the document
+            if (!isOpen) {
+              createDocument();
+            }
+          }}
         >
           <FilePlus className="h-4 w-4 mr-2" />
           New Document
@@ -75,7 +86,7 @@ const NewDocumentDialog = ({ className }: NewDocumentDialogProps) => {
         <form onSubmit={handleCreateDocument} className="space-y-4 mt-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="documentName">Document Name</Label>
+              <Label htmlFor="documentName">Document Name (Optional)</Label>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -98,7 +109,7 @@ const NewDocumentDialog = ({ className }: NewDocumentDialogProps) => {
             </div>
             <Input
               id="documentName"
-              placeholder="Enter document name"
+              placeholder="Enter document name (optional)"
               value={documentName}
               onChange={(e) => setDocumentName(e.target.value)}
               className="col-span-3"
@@ -106,8 +117,8 @@ const NewDocumentDialog = ({ className }: NewDocumentDialogProps) => {
             />
           </div>
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" type="button" onClick={() => setIsOpen(false)}>
-              Cancel
+            <Button variant="outline" type="button" onClick={() => createDocument()}>
+              Skip
             </Button>
             <Button type="submit">Create Document</Button>
           </div>
