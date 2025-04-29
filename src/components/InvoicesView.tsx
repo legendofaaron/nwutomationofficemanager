@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Plus, Trash2, FileEdit, FileSearch, Download, Send } from 'lucide-react';
+import { Plus, Trash2, FileEdit, FileSearch, Download, Send, Upload, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -16,7 +15,8 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
+  CardFooter
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -82,6 +82,10 @@ const InvoicesView = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analyzedInvoiceData, setAnalyzedInvoiceData] = useState<Partial<Invoice> | null>(null);
+
   const filteredInvoices = invoices.filter(invoice => 
     invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     invoice.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -153,6 +157,67 @@ const InvoicesView = () => {
       case 'overdue': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+      setAnalyzedInvoiceData(null);
+    }
+  };
+
+  const handleAnalyzeFile = () => {
+    if (!selectedFile) {
+      toast({
+        title: "No File Selected",
+        description: "Please select a file to analyze",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+
+    setTimeout(() => {
+      setIsAnalyzing(false);
+      setAnalyzedInvoiceData({
+        id: `INV-${String(invoices.length + 1).padStart(3, '0')}`,
+        clientName: 'XYZ Corporation',
+        date: new Date().toISOString().split('T')[0],
+        amount: 1850.75,
+        status: 'draft',
+        dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        description: 'Consulting services'
+      });
+      
+      toast({
+        title: "Analysis Complete",
+        description: "Invoice data extracted successfully",
+      });
+    }, 2000);
+  };
+
+  const handleApplyInvoiceData = () => {
+    if (!analyzedInvoiceData) return;
+    
+    const newInvoiceFromFile: Invoice = {
+      id: analyzedInvoiceData.id || `INV-${String(invoices.length + 1).padStart(3, '0')}`,
+      clientName: analyzedInvoiceData.clientName || 'Unknown Client',
+      date: analyzedInvoiceData.date || new Date().toISOString().split('T')[0],
+      amount: analyzedInvoiceData.amount || 0,
+      status: 'draft',
+      dueDate: analyzedInvoiceData.dueDate || new Date().toISOString().split('T')[0],
+      description: analyzedInvoiceData.description || ''
+    };
+    
+    setInvoices([...invoices, newInvoiceFromFile]);
+    setSelectedFile(null);
+    setAnalyzedInvoiceData(null);
+    
+    toast({
+      title: "Invoice Created",
+      description: `Invoice ${newInvoiceFromFile.id} has been created from the uploaded file`,
+    });
   };
 
   return (
@@ -315,6 +380,65 @@ const InvoicesView = () => {
             .toFixed(2)}
         </span>
       </div>
+
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Upload & Analyze Invoices</CardTitle>
+          <CardDescription>Upload invoice documents or images to extract information automatically</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="invoice-file-upload">Select Invoice File</Label>
+            <div className="flex gap-4">
+              <Input 
+                id="invoice-file-upload" 
+                type="file" 
+                onChange={handleFileChange}
+                accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.csv"
+              />
+              <Button 
+                onClick={handleAnalyzeFile} 
+                disabled={!selectedFile || isAnalyzing}
+                variant="secondary"
+                className="whitespace-nowrap"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Analyze
+                  </>
+                )}
+              </Button>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {selectedFile ? `Selected: ${selectedFile.name}` : "No file selected"}
+            </div>
+          </div>
+
+          {analyzedInvoiceData && (
+            <div className="mt-4 space-y-4">
+              <h3 className="font-medium">Extracted Invoice Data:</h3>
+              <div className="bg-muted rounded-md p-3">
+                <pre className="text-sm whitespace-pre-wrap">
+                  {JSON.stringify(analyzedInvoiceData, null, 2)}
+                </pre>
+              </div>
+              <Button 
+                onClick={handleApplyInvoiceData}
+                className="gap-2"
+              >
+                <CheckCircle className="h-4 w-4" />
+                Add as New Invoice
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

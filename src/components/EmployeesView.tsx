@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +10,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, Upload, CheckCircle } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 const mockEmployees = [
   { id: 1, name: 'John Smith', role: 'Software Engineer', department: 'Engineering', status: 'Active' },
@@ -19,6 +29,46 @@ const mockEmployees = [
 ];
 
 const EmployeesView = () => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analyzedData, setAnalyzedData] = useState<any>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+      setAnalyzedData(null);
+    }
+  };
+
+  const handleAnalyzeFile = () => {
+    if (!selectedFile) {
+      toast.error("Please select a file first");
+      return;
+    }
+
+    setIsAnalyzing(true);
+
+    // Simulate analyzing the file
+    setTimeout(() => {
+      setIsAnalyzing(false);
+      setAnalyzedData({
+        name: "Jennifer Wilson",
+        role: "Marketing Specialist",
+        department: "Marketing",
+        status: "Active"
+      });
+      toast.success("File analyzed successfully");
+    }, 1500);
+  };
+
+  const handleApplyData = () => {
+    if (!analyzedData) return;
+    
+    toast.success("Employee data has been added to the system");
+    setSelectedFile(null);
+    setAnalyzedData(null);
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
@@ -65,6 +115,55 @@ const EmployeesView = () => {
           </TableBody>
         </Table>
       </div>
+
+      {/* Upload and Analyze Section at the bottom */}
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Upload & Analyze</CardTitle>
+          <CardDescription>Upload employee documents or images to extract information automatically</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="file-upload">Select Employee File</Label>
+            <div className="flex gap-4">
+              <Input 
+                id="file-upload" 
+                type="file" 
+                onChange={handleFileChange}
+                accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.csv"
+              />
+              <Button 
+                onClick={handleAnalyzeFile} 
+                disabled={!selectedFile || isAnalyzing}
+                variant="secondary"
+              >
+                {isAnalyzing ? "Analyzing..." : "Analyze"}
+              </Button>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {selectedFile ? `Selected: ${selectedFile.name}` : "No file selected"}
+            </div>
+          </div>
+
+          {analyzedData && (
+            <div className="mt-4 space-y-4">
+              <h3 className="font-medium">Extracted Employee Data:</h3>
+              <div className="bg-muted rounded-md p-3">
+                <pre className="text-sm whitespace-pre-wrap">
+                  {JSON.stringify(analyzedData, null, 2)}
+                </pre>
+              </div>
+              <Button 
+                onClick={handleApplyData}
+                className="gap-2"
+              >
+                <CheckCircle className="h-4 w-4" />
+                Apply to Employees
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
