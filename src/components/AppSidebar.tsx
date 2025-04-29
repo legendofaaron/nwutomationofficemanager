@@ -4,7 +4,7 @@ import { useAppContext } from '@/context/AppContext';
 import NewDocumentDialog from './NewDocumentDialog';
 import NewFolderDialog from './NewFolderDialog';
 import RenameItemDialog from './RenameItemDialog';
-import { FilePen, Brain, Building2, Database, File, FileText, Trash2, Folder, FolderOpen, Menu, Table, X, ChevronRight, ChevronDown } from 'lucide-react';
+import { FilePen, Brain, Building2, Database, File, FileText, Trash2, Folder, FolderOpen, Menu, Table, X, ChevronRight, ChevronDown, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Logo } from './Logo';
@@ -153,6 +153,11 @@ const AppSidebar = () => {
   };
   
   const mainMenuItems = [{
+    title: "Dashboard",
+    icon: LayoutDashboard,
+    onClick: () => setViewMode('welcome'),
+    isActive: viewMode === 'welcome' || !viewMode
+  }, {
     title: "Office Manager",
     icon: Building2,
     onClick: () => setViewMode('office'),
