@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight, MessageSquare, BookOpenText, PlayIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -7,13 +7,11 @@ import { useAppContext } from '@/context/AppContext';
 import { Logo } from './Logo';
 
 const WelcomeDashboard = () => {
-  const {
-    setAiAssistantOpen,
-    setViewMode
-  } = useAppContext();
+  const { setViewMode } = useAppContext();
+  const navigate = useNavigate();
 
-  const startAssistant = () => {
-    setAiAssistantOpen(true);
+  const startAssistantSetup = () => {
+    navigate('/setup-assistant');
   };
 
   return (
@@ -46,8 +44,8 @@ const WelcomeDashboard = () => {
             and provide insights for your office operations—all while keeping your data secure on your local system.
           </p>
           <div className="flex justify-center">
-            <Button onClick={startAssistant} size="lg" className="gap-2">
-              Start Your Assistant <PlayIcon className="h-5 w-5" />
+            <Button onClick={startAssistantSetup} size="lg" className="gap-2">
+              Set Up Your Assistant <PlayIcon className="h-5 w-5" />
             </Button>
           </div>
         </CardContent>
