@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type ViewMode = 'welcome' | 'files' | 'database' | 'document' | 'knowledge' | 'office' | 'spreadsheet';
@@ -29,6 +30,7 @@ interface AssistantConfig {
   companyName?: string;
   companyDescription?: string;
   purpose?: string;
+  defaultTheme?: 'office' | 'bible';
 }
 
 interface AppContextType {
@@ -159,7 +161,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
   const [assistantConfig, setAssistantConfig] = useState<AssistantConfig>({
-    name: 'Office Manager'
+    name: 'Office Manager',
+    defaultTheme: 'office'
   });
 
   return (

@@ -3,13 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings, Building } from 'lucide-react';
+import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings, Building, Book, ScrollText, Church, Cross, PenLine } from 'lucide-react';
 import { LlmSettings, LlmConfig } from './LlmSettings';
 import { queryLlm } from '@/utils/llm';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Message {
   id: string;
@@ -17,7 +18,7 @@ interface Message {
   content: string;
 }
 
-type SetupStep = 'welcome' | 'name' | 'company' | 'purpose' | 'complete' | null;
+type SetupStep = 'welcome' | 'name' | 'company' | 'purpose' | 'theme' | 'complete' | null;
 
 const AiAssistant = () => {
   const { aiAssistantOpen, setAiAssistantOpen, assistantConfig, setAssistantConfig } = useAppContext();
@@ -25,19 +26,18 @@ const AiAssistant = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [isSetupMode, setIsSetupMode] = useState(false);
   const [currentSetupStep, setCurrentSetupStep] = useState<SetupStep>(null);
+  const [activeTheme, setActiveTheme] = useState<'office' | 'bible'>(assistantConfig?.defaultTheme || 'office');
   const [setupData, setSetupData] = useState({
     name: assistantConfig?.name || 'My Assistant',
     companyName: assistantConfig?.companyName || '',
     companyDescription: assistantConfig?.companyDescription || '',
-    purpose: assistantConfig?.purpose || ''
+    purpose: assistantConfig?.purpose || '',
+    defaultTheme: assistantConfig?.defaultTheme || 'office'
   });
   const navigate = useNavigate();
   
-  const [messages, setMessages] = useState<Message[]>([
-    { 
-      id: '1', 
-      type: 'ai', 
-      content: `👋 Welcome to Office Manager by Northwestern Automation
+  const welcomeMessages = {
+    office: `👋 Welcome to Office Manager by Northwestern Automation
 
 I'm your intelligent assistant designed to help you streamline office tasks efficiently. Here's what I can do for you:
 
@@ -66,7 +66,44 @@ You can:
 2. Type natural language requests like "create a new document"
 3. Ask questions about any feature
 
-Your data remains secure on your local system. Need assistance? Just ask me anything!`
+Your data remains secure on your local system. Need assistance? Just ask me anything!`,
+    bible: `✝️ Welcome to Bible Study Assistant
+
+I'm here to help you deepen your understanding of scripture and strengthen your faith journey. Here are ways I can assist you:
+
+📖 Scripture Lookup
+- Find verses by theme or keyword
+- Cross-reference passages
+- Compare different translations
+
+🔍 Biblical Study
+- Explore historical context
+- Understand theological concepts
+- Learn about biblical figures
+
+✍️ Devotional Support
+- Get daily verse recommendations
+- Create prayer lists
+- Find inspirational messages
+
+📚 Learning Resources
+- Access study guides
+- Find commentaries on passages
+- Explore topical studies
+
+You can:
+1. Use the quick actions above
+2. Ask questions about any passage
+3. Request guidance for your spiritual journey
+
+I'm here to assist your faith journey. How may I help you today?`
+  };
+  
+  const [messages, setMessages] = useState<Message[]>([
+    { 
+      id: '1', 
+      type: 'ai', 
+      content: welcomeMessages[activeTheme]
     }
   ]);
 
@@ -79,6 +116,20 @@ Your data remains secure on your local system. Need assistance? Just ask me anyt
       }
     }
   }, [aiAssistantOpen, assistantConfig]);
+
+  // Update messages when theme changes
+  useEffect(() => {
+    if (!isSetupMode) {
+      setMessages(prev => {
+        // Replace the first AI welcome message
+        const filtered = prev.filter(msg => msg.id !== '1');
+        return [
+          { id: '1', type: 'ai', content: welcomeMessages[activeTheme] },
+          ...filtered
+        ];
+      });
+    }
+  }, [activeTheme]);
 
   const startSetupProcess = () => {
     setIsSetupMode(true);
@@ -142,6 +193,18 @@ Would you like to:
         
       case 'purpose':
         setSetupData(prev => ({ ...prev, purpose: response }));
+        processNextSetupStep('theme');
+        break;
+        
+      case 'theme':
+        const lowerResponse = response.toLowerCase();
+        if (lowerResponse.includes('bible') || lowerResponse.includes('study') || lowerResponse.includes('religious')) {
+          setSetupData(prev => ({ ...prev, defaultTheme: 'bible' }));
+          setActiveTheme('bible');
+        } else {
+          setSetupData(prev => ({ ...prev, defaultTheme: 'office' }));
+          setActiveTheme('office');
+        }
         processNextSetupStep('complete');
         break;
         
@@ -170,14 +233,18 @@ Would you like to:
         message = "Great! What's the name of your company or organization?";
         break;
       case 'purpose':
-        message = "What kind of tasks would you like me to help you with primarily? (e.g., document creation, schedule management, invoice processing)";
+        message = "What kind of tasks would you like me to help you with primarily? (e.g., document creation, schedule management, bible study)";
+        break;
+      case 'theme':
+        message = "Would you prefer an Office Management assistant or a Bible Study assistant? (Type 'office' or 'bible')";
         break;
       case 'complete':
         message = `Thank you! I've saved your basic setup:
 
 - Assistant name: ${setupData.name}
-- Company: ${setupData.companyName}
+- Organization: ${setupData.companyName}
 - Primary tasks: ${setupData.purpose}
+- Theme: ${setupData.defaultTheme === 'bible' ? 'Bible Study' : 'Office Management'}
 
 Would you like to go to the full setup page for more detailed configuration?`;
         break;
@@ -196,7 +263,8 @@ Would you like to go to the full setup page for more detailed configuration?`;
       setAssistantConfig({
         name: setupData.name,
         companyName: setupData.companyName,
-        purpose: setupData.purpose
+        purpose: setupData.purpose,
+        defaultTheme: setupData.defaultTheme as 'office' | 'bible'
       });
     }
     
@@ -214,12 +282,20 @@ How can I assist you today?`
     }]);
   };
 
-  const quickActions = [
+  const officeQuickActions = [
     { icon: FileText, label: 'Create Document', action: () => handleQuickAction('create document') },
     { icon: Calendar, label: 'Create Schedule', action: () => handleQuickAction('create schedule') },
     { icon: Receipt, label: 'Create Invoice', action: () => handleQuickAction('create invoice') },
     { icon: ScanSearch, label: 'Analyze Receipt', action: () => handleQuickAction('analyze receipt') },
     { icon: Info, label: 'How to use', action: () => handleQuickAction('explain how to use') }
+  ];
+  
+  const bibleQuickActions = [
+    { icon: Book, label: 'Find Verse', action: () => handleQuickAction('find verse') },
+    { icon: ScrollText, label: 'Daily Devotion', action: () => handleQuickAction('daily devotion') },
+    { icon: Church, label: 'Study Guide', action: () => handleQuickAction('bible study guide') },
+    { icon: Cross, label: 'Prayer Help', action: () => handleQuickAction('prayer assistance') },
+    { icon: PenLine, label: 'Take Notes', action: () => handleQuickAction('bible notes') }
   ];
 
   const [config, setConfig] = useState<LlmConfig>({
@@ -235,21 +311,22 @@ How can I assist you today?`
     setMessages(prev => [...prev, { id: userMessageId, type: 'user', content: action }]);
     
     let response = '';
-    switch (action) {
-      case 'create document':
-        response = "I'd be happy to help you create a new document. What type of document would you like to create?";
-        break;
-      case 'create schedule':
-        response = "Let's organize a schedule for you. What type of schedule would you like to create?";
-        break;
-      case 'create invoice':
-        response = "I can help you generate a professional invoice. Who will be the recipient of this invoice?";
-        break;
-      case 'analyze receipt':
-        response = "I can assist with receipt analysis. Please upload or share the receipt details so I can process the information.";
-        break;
-      case 'explain how to use':
-        response = `Here's how to make the most of ${assistantConfig?.name || 'Office Manager'}:
+    if (activeTheme === 'office') {
+      switch (action) {
+        case 'create document':
+          response = "I'd be happy to help you create a new document. What type of document would you like to create?";
+          break;
+        case 'create schedule':
+          response = "Let's organize a schedule for you. What type of schedule would you like to create?";
+          break;
+        case 'create invoice':
+          response = "I can help you generate a professional invoice. Who will be the recipient of this invoice?";
+          break;
+        case 'analyze receipt':
+          response = "I can assist with receipt analysis. Please upload or share the receipt details so I can process the information.";
+          break;
+        case 'explain how to use':
+          response = `Here's how to make the most of ${assistantConfig?.name || 'Office Manager'}:
 
 1. Quick Actions: Use the buttons above for common tasks
 2. Natural Language: Type requests like "create a new document" or "set up a meeting schedule"
@@ -258,9 +335,30 @@ How can I assist you today?`
 5. Schedule Management: Create and organize calendars and schedules
 
 Your data remains secure on your local system. How can I assist you today?`;
-        break;
-      default:
-        response = "I'll help you with that request.";
+          break;
+        default:
+          response = "I'll help you with that request.";
+      }
+    } else { // Bible theme
+      switch (action) {
+        case 'find verse':
+          response = "I'd be happy to help you find a verse. What topic or keyword are you looking for?";
+          break;
+        case 'daily devotion':
+          response = "Let me suggest a verse for your daily devotion. What theme would you like to focus on today?";
+          break;
+        case 'bible study guide':
+          response = "I can provide a study guide. Which book or passage would you like to study?";
+          break;
+        case 'prayer assistance':
+          response = "I can help with prayer guidance. What would you like to pray about today?";
+          break;
+        case 'bible notes':
+          response = "I can help you take notes on scripture. Which passage are you studying?";
+          break;
+        default:
+          response = "I'll help you with your Bible study request.";
+      }
     }
     
     setTimeout(() => {
@@ -306,14 +404,28 @@ Your data remains secure on your local system. How can I assist you today?`;
     setInput('');
   };
 
+  const switchTheme = (theme: 'office' | 'bible') => {
+    setActiveTheme(theme);
+    if (setAssistantConfig && assistantConfig) {
+      setAssistantConfig({
+        ...assistantConfig,
+        defaultTheme: theme
+      });
+    }
+  };
+
   if (!aiAssistantOpen) return null;
 
   return (
     <div className="fixed right-4 bottom-4 w-96 bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col h-[600px] z-20">
       <div className="flex items-center justify-between p-3 border-b">
         <div className="flex items-center gap-2">
-          <Bot className="h-5 w-5 text-app-blue" />
-          <h3 className="font-medium">{assistantConfig?.name || 'Office Manager'}</h3>
+          {activeTheme === 'office' ? (
+            <Building className="h-5 w-5 text-app-blue" />
+          ) : (
+            <Book className="h-5 w-5 text-app-blue" />
+          )}
+          <h3 className="font-medium">{assistantConfig?.name || 'Assistant'}</h3>
           {assistantConfig?.companyName && (
             <span className="text-xs text-gray-500">for {assistantConfig.companyName}</span>
           )}
@@ -339,23 +451,53 @@ Your data remains secure on your local system. How can I assist you today?`;
       </div>
       
       {showSettings ? (
-        <LlmSettings />
+        <div className="p-4 flex flex-col gap-4 h-full">
+          <Tabs defaultValue={activeTheme} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="office" onClick={() => switchTheme('office')}>Office</TabsTrigger>
+              <TabsTrigger value="bible" onClick={() => switchTheme('bible')}>Bible</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <LlmSettings />
+          <Button 
+            variant="outline" 
+            onClick={() => setShowSettings(false)}
+            className="mt-auto"
+          >
+            Back to Assistant
+          </Button>
+        </div>
       ) : (
         <>
           {!isSetupMode && (
             <div className="grid grid-cols-2 gap-2 p-3 border-b">
-              {quickActions.map((action, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-start"
-                  onClick={action.action}
-                >
-                  <action.icon className="mr-2 h-4 w-4" />
-                  {action.label}
-                </Button>
-              ))}
+              {activeTheme === 'office' ? (
+                officeQuickActions.map((action, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={action.action}
+                  >
+                    <action.icon className="mr-2 h-4 w-4" />
+                    {action.label}
+                  </Button>
+                ))
+              ) : (
+                bibleQuickActions.map((action, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={action.action}
+                  >
+                    <action.icon className="mr-2 h-4 w-4" />
+                    {action.label}
+                  </Button>
+                ))
+              )}
             </div>
           )}
           
