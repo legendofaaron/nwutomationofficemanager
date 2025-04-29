@@ -100,16 +100,6 @@ const AppSidebar = () => {
     setIsRenameDialogOpen(false);
     setRenameItem(null);
   };
-
-  const handleDeleteAllFiles = () => {
-    setFiles([]);
-    setCurrentFile(null);
-    setViewMode('files');
-    toast({
-      title: "All files deleted",
-      description: "All files have been removed"
-    });
-  };
   
   const renderFileTree = (files: any[], level = 0) => {
     return files.map(file => <SidebarMenuItem key={file.id}>
@@ -194,31 +184,6 @@ const AppSidebar = () => {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <NewFolderDialog />
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive">
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      <span>Delete All Files</span>
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete all your files
-                        and remove your data from the system.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDeleteAllFiles} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                        Delete All
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
