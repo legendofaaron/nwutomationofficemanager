@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Building2, Calendar, Receipt, Settings, Users, BookOpen } from 'lucide-react';
+import { Building2, Calendar, Receipt, Settings, Users, BookOpen, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import EmployeesView from './EmployeesView';
 import ScheduleView from './ScheduleView';
@@ -8,9 +8,10 @@ import InvoicesView from './InvoicesView';
 import { Logo } from './Logo';
 import SystemSettings from './SystemSettings';
 import BookingView from './BookingView';
+import UploadAnalyzeView from './UploadAnalyzeView';
 
 const OfficeManagerDashboard = () => {
-  const [activeTab, setActiveTab] = useState<'employees' | 'schedule' | 'invoices' | 'bookings' | 'settings'>('employees');
+  const [activeTab, setActiveTab] = useState<'employees' | 'schedule' | 'invoices' | 'bookings' | 'settings' | 'upload'>('employees');
 
   return (
     <div className="h-full">
@@ -22,7 +23,7 @@ const OfficeManagerDashboard = () => {
       </div>
 
       <div className="p-4 border-b bg-gray-50">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <Button 
             variant={activeTab === 'employees' ? 'default' : 'outline'} 
             size="sm" 
@@ -60,6 +61,15 @@ const OfficeManagerDashboard = () => {
             Bookings
           </Button>
           <Button 
+            variant={activeTab === 'upload' ? 'default' : 'outline'} 
+            size="sm" 
+            className="gap-2"
+            onClick={() => setActiveTab('upload')}
+          >
+            <Upload className="h-4 w-4" />
+            Upload & Analyze
+          </Button>
+          <Button 
             variant={activeTab === 'settings' ? 'default' : 'outline'} 
             size="sm" 
             className="gap-2"
@@ -76,6 +86,7 @@ const OfficeManagerDashboard = () => {
         {activeTab === 'schedule' && <ScheduleView />}
         {activeTab === 'invoices' && <InvoicesView />}
         {activeTab === 'bookings' && <BookingView />}
+        {activeTab === 'upload' && <UploadAnalyzeView />}
         {activeTab === 'settings' && <SystemSettings />}
       </div>
     </div>
