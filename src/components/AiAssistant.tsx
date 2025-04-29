@@ -3,13 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings, Building } from 'lucide-react';
-import { LlmSettings, LlmConfig } from './LlmSettings';
+import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings } from 'lucide-react';
+import { LlmSettings } from './LlmSettings';
 import { queryLlm } from '@/utils/llm';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
 
 interface Message {
   id: string;
@@ -26,7 +24,7 @@ const AiAssistant = () => {
   const [isSetupMode, setIsSetupMode] = useState(false);
   const [currentSetupStep, setCurrentSetupStep] = useState<SetupStep>(null);
   const [setupData, setSetupData] = useState({
-    name: assistantConfig?.name || 'My Assistant',
+    name: assistantConfig?.name || 'Office Manager',
     companyName: assistantConfig?.companyName || '',
     companyDescription: assistantConfig?.companyDescription || '',
     purpose: assistantConfig?.purpose || ''
@@ -37,7 +35,7 @@ const AiAssistant = () => {
     { 
       id: '1', 
       type: 'ai', 
-      content: `👋 Welcome to Office Manager by Northwestern Automation
+      content: `👋 Welcome to Office Manager
 
 I'm your intelligent assistant designed to help you streamline office tasks efficiently. Here's what I can do for you:
 
@@ -222,12 +220,6 @@ How can I assist you today?`
     { icon: Info, label: 'How to use', action: () => handleQuickAction('explain how to use') }
   ];
 
-  const [config, setConfig] = useState<LlmConfig>({
-    endpoint: 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk',
-    enabled: false,
-    model: 'default'
-  });
-
   const handleQuickAction = (action: string) => {
     if (isSetupMode) return;
     
@@ -285,20 +277,21 @@ Your data remains secure on your local system. How can I assist you today?`;
     setMessages([...messages, { id: userMessageId, type: 'user', content: input }]);
     
     try {
-      const response = await queryLlm(input, config.endpoint, config.model);
-      
-      setMessages(current => [
-        ...current,
-        {
-          id: (Date.now() + 1).toString(),
-          type: 'ai',
-          content: response.message
-        }
-      ]);
+      // Simple AI response simulation for immediate feedback
+      setTimeout(() => {
+        setMessages(current => [
+          ...current,
+          {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: `I'll help you with "${input}". How would you like to proceed?`
+          }
+        ]);
+      }, 800);
     } catch (error) {
       toast({
         title: 'Connection Error',
-        description: 'Unable to connect to the language model. Please check your connection settings.',
+        description: 'Unable to connect to the assistant. Please try again later.',
         variant: 'destructive'
       });
     }
@@ -312,8 +305,8 @@ Your data remains secure on your local system. How can I assist you today?`;
     <div className="fixed right-4 bottom-4 w-96 bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col h-[600px] z-20">
       <div className="flex items-center justify-between p-3 border-b">
         <div className="flex items-center gap-2">
-          <Bot className="h-5 w-5 text-app-blue" />
-          <h3 className="font-medium">{assistantConfig?.name || 'Office Manager'}</h3>
+          <Bot className="h-5 w-5 text-blue-600" />
+          <h3 className="font-medium">Office Manager</h3>
           {assistantConfig?.companyName && (
             <span className="text-xs text-gray-500">for {assistantConfig.companyName}</span>
           )}
@@ -374,7 +367,7 @@ Your data remains secure on your local system. How can I assist you today?`;
                 <div 
                   className={`${
                     message.type === 'user' 
-                      ? 'bg-app-blue text-white max-w-[80%] p-3 rounded-lg' 
+                      ? 'bg-blue-600 text-white max-w-[80%] p-3 rounded-lg' 
                       : message.type === 'system'
                         ? 'bg-gray-200 text-gray-800 px-4 py-1 rounded-full text-xs font-medium'
                         : 'bg-gray-100 text-gray-800 max-w-[80%] p-3 rounded-lg'
