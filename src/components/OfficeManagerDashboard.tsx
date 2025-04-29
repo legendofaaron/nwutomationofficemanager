@@ -4,6 +4,7 @@ import { Building2, Calendar, Receipt, Settings, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import EmployeesView from './EmployeesView';
 import ScheduleView from './ScheduleView';
+import InvoicesView from './InvoicesView';
 import { Logo } from './Logo';
 
 const OfficeManagerDashboard = () => {
@@ -62,7 +63,7 @@ const OfficeManagerDashboard = () => {
       <div className="p-4">
         {activeTab === 'employees' && <EmployeesView />}
         {activeTab === 'schedule' && <ScheduleView />}
-        {activeTab === 'invoices' && <p className="text-gray-500">Invoices management features coming soon</p>}
+        {activeTab === 'invoices' && <InvoicesView />}
         {activeTab === 'settings' && <p className="text-gray-500">System configuration options coming soon</p>}
       </div>
     </div>
