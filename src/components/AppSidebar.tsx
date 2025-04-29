@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import NewDocumentDialog from './NewDocumentDialog';
@@ -249,7 +248,7 @@ const AppSidebar = () => {
                   <Folder className="w-4 h-4 mr-2" />
                 </>}
               <span>{file.name}</span>
-              <SidebarMenuAction onClick={e => handleDeleteFile(e, file)} className="hover:bg-red-50 -mt-[0.2cm] opacity-0 group-hover/menu-item:opacity-100 transition-opacity" showOnHover>
+              <SidebarMenuAction onClick={e => handleDeleteFile(e, file)} className="hover:bg-red-50 opacity-0 group-hover/menu-item:opacity-100 transition-opacity absolute right-2" showOnHover>
                 <Trash2 className="w-4 h-4 text-app-blue" />
               </SidebarMenuAction>
             </CollapsibleTrigger>
@@ -265,10 +264,10 @@ const AppSidebar = () => {
             <SidebarMenuButton onClick={() => handleFileClick(file)} className="w-full text-left">
               {file.type === 'spreadsheet' ? <Table className="w-4 h-4 mr-2" /> : <File className="w-4 h-4 mr-2" />}
               <span>{file.name}</span>
+              <SidebarMenuAction onClick={e => handleDeleteFile(e, file)} className="hover:bg-red-50 opacity-0 group-hover/menu-item:opacity-100 transition-opacity absolute right-2" showOnHover>
+                <Trash2 className="w-4 h-4 text-app-blue" />
+              </SidebarMenuAction>
             </SidebarMenuButton>
-            <SidebarMenuAction onClick={e => handleDeleteFile(e, file)} className="hover:bg-red-50 -mt-[0.2cm] opacity-0 group-hover/menu-item:opacity-100 transition-opacity" showOnHover>
-              <Trash2 className="w-4 h-4 text-app-blue" />
-            </SidebarMenuAction>
           </div>}
       </SidebarMenuItem>);
   };
