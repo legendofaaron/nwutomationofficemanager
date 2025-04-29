@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import NewDocumentDialog from './NewDocumentDialog';
@@ -102,7 +101,6 @@ const AppSidebar = () => {
     setRenameItem(null);
   };
   
-  // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, item: any) => {
     e.stopPropagation();
     setDraggedItem(item);
@@ -143,52 +141,80 @@ const AppSidebar = () => {
       return;
     }
     
-    // Copy files structure and remove dragged item from its original location
-    const removeItemAndGetUpdated = (filesList: any[], itemId: string, isRoot = true): [any[], any | null] => {
-      let removedItem = null;
-      const newList = filesList.filter(file => {
-        if (file.id === itemId) {
-          removedItem = {...file};
-          return false;
+    const deepCopyFiles = JSON.parse(JSON.stringify(files));
+    
+    const findItemPath = (filesList: any[], itemId: string, path: number[] = []): number[] | null => {
+      for (let i = 0; i < filesList.length; i++) {
+        if (filesList[i].id === itemId) {
+          return [...path, i];
         }
-        if (file.children) {
-          const [updatedChildren, foundItem] = removeItemAndGetUpdated(file.children, itemId, false);
-          if (foundItem) removedItem = foundItem;
-          file.children = updatedChildren;
+        if (filesList[i].children) {
+          const result = findItemPath(filesList[i].children, itemId, [...path, i, 'children']);
+          if (result) return result;
         }
-        return true;
-      });
-      
-      return [isRoot ? newList : filesList, removedItem];
+      }
+      return null;
     };
     
-    // Add item to target folder
-    const addItemToFolder = (filesList: any[], folderId: string, newItem: any): any[] => {
-      return filesList.map(file => {
-        if (file.id === folderId) {
-          return {
-            ...file,
-            children: [...(file.children || []), newItem]
-          };
+    const findFolderPath = (filesList: any[], folderId: string, path: number[] = []): number[] | null => {
+      for (let i = 0; i < filesList.length; i++) {
+        if (filesList[i].id === folderId) {
+          return [...path, i];
         }
-        if (file.children) {
-          file.children = addItemToFolder(file.children, folderId, newItem);
+        if (filesList[i].children) {
+          const result = findFolderPath(filesList[i].children, folderId, [...path, i, 'children']);
+          if (result) return result;
         }
-        return file;
-      });
+      }
+      return null;
     };
     
-    const [updatedFilesAfterRemoval, removedItem] = removeItemAndGetUpdated(files, draggedItem.id);
+    const itemPath = findItemPath(deepCopyFiles, draggedItem.id);
+    const folderPath = findFolderPath(deepCopyFiles, targetFolder.id);
     
-    if (removedItem) {
-      const finalFiles = addItemToFolder(updatedFilesAfterRemoval, targetFolder.id, removedItem);
-      setFiles(finalFiles);
-      
-      toast({
-        title: "Item moved",
-        description: `${removedItem.name} moved to ${targetFolder.name}`
-      });
+    if (!itemPath || !folderPath) {
+      return;
     }
+    
+    let currentLevel = deepCopyFiles;
+    let itemToMove = null;
+    let parentArray = null;
+    let indexInParent = -1;
+    
+    for (let i = 0; i < itemPath.length; i++) {
+      const pathPart = itemPath[i];
+      if (i === itemPath.length - 1) {
+        indexInParent = pathPart as number;
+        itemToMove = currentLevel[pathPart];
+        parentArray = currentLevel;
+      } else {
+        currentLevel = typeof pathPart === 'string' ? currentLevel[pathPart as keyof typeof currentLevel] : currentLevel[pathPart];
+      }
+    }
+    
+    let targetLevel = deepCopyFiles;
+    for (let i = 0; i < folderPath.length; i++) {
+      const pathPart = folderPath[i];
+      targetLevel = typeof pathPart === 'string' ? targetLevel[pathPart as keyof typeof targetLevel] : targetLevel[pathPart];
+    }
+    
+    if (!itemToMove || !targetLevel || !parentArray || indexInParent === -1) {
+      return;
+    }
+    
+    parentArray.splice(indexInParent, 1);
+    
+    if (!targetLevel.children) {
+      targetLevel.children = [];
+    }
+    targetLevel.children.push(itemToMove);
+    
+    setFiles(deepCopyFiles);
+    
+    toast({
+      title: "Item moved",
+      description: `${itemToMove.name} moved to ${targetLevel.name}`
+    });
     
     setDraggedItem(null);
     setDragOverItem(null);
