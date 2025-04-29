@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Database, Server, Memory, FolderPlus, Brain, Save } from 'lucide-react';
+import { ArrowLeft, Database, Server, FolderPlus, Brain, Save, HardDrive } from 'lucide-react';
 import { 
   Card,
   CardContent,
@@ -134,7 +134,7 @@ const SetupAssistant = () => {
                       </SelectItem>
                       <SelectItem value="redis">
                         <div className="flex items-center gap-2">
-                          <Memory className="h-4 w-4" />
+                          <HardDrive className="h-4 w-4" />
                           <span>Redis</span>
                         </div>
                       </SelectItem>
