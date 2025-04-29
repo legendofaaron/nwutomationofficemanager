@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Database, Server, FolderPlus, Brain, Save, HardDrive } from 'lucide-react';
+import { ArrowLeft, Database, Server, FolderPlus, Brain, Save, HardDrive, Building, FileText } from 'lucide-react';
 import { 
   Card,
   CardContent,
@@ -23,12 +23,13 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { Logo } from '@/components/Logo';
 import { useToast } from '@/hooks/use-toast';
 import { useAppContext } from '@/context/AppContext';
 
 const SetupAssistant = () => {
-  const { setAiAssistantOpen } = useAppContext();
+  const { setAiAssistantOpen, setAssistantConfig } = useAppContext();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('general');
@@ -41,12 +42,25 @@ const SetupAssistant = () => {
     enableSharedFolder: true,
     folderPath: '/shared',
     endpoint: 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk',
+    companyName: '',
+    companyDescription: '',
+    assistantPurpose: 'General office tasks and document management'
   });
   
   const handleSave = () => {
     // Here you would save the configuration to your state management or backend
     
-    // For now, we'll just show a success toast and redirect
+    // Update global assistant configuration
+    if (setAssistantConfig) {
+      setAssistantConfig({
+        name: config.name,
+        companyName: config.companyName,
+        companyDescription: config.companyDescription,
+        purpose: config.assistantPurpose
+      });
+    }
+    
+    // Show success toast
     toast({
       title: 'Setup complete',
       description: 'Your assistant has been configured successfully!'
@@ -95,6 +109,7 @@ const SetupAssistant = () => {
           <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-6">
               <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="company">Company Details</TabsTrigger>
               <TabsTrigger value="memory">Memory Storage</TabsTrigger>
               <TabsTrigger value="llm">Language Model</TabsTrigger>
               <TabsTrigger value="sharing">Sharing</TabsTrigger>
@@ -110,6 +125,48 @@ const SetupAssistant = () => {
                     onChange={(e) => setConfig({...config, name: e.target.value})}
                     placeholder="My Office Assistant" 
                   />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="assistant-purpose">Assistant Purpose</Label>
+                  <Textarea 
+                    id="assistant-purpose" 
+                    value={config.assistantPurpose} 
+                    onChange={(e) => setConfig({...config, assistantPurpose: e.target.value})}
+                    placeholder="Describe what you'd like your assistant to help you with..." 
+                    className="min-h-[80px]"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Describe the main tasks and responsibilities you want your assistant to handle
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="company">
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="company-name">Company Name</Label>
+                  <Input 
+                    id="company-name" 
+                    value={config.companyName} 
+                    onChange={(e) => setConfig({...config, companyName: e.target.value})}
+                    placeholder="Acme Inc." 
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="company-description">Company Description</Label>
+                  <Textarea 
+                    id="company-description" 
+                    value={config.companyDescription} 
+                    onChange={(e) => setConfig({...config, companyDescription: e.target.value})}
+                    placeholder="Tell us about your company..." 
+                    className="min-h-[100px]"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Provide information about your company to help the assistant better understand your context
+                  </p>
                 </div>
               </div>
             </TabsContent>

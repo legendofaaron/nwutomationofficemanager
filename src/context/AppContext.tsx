@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type ViewMode = 'welcome' | 'files' | 'database' | 'document' | 'knowledge' | 'office' | 'spreadsheet';
@@ -25,6 +24,13 @@ interface DatabaseTable {
   rows: Record<string, any>[];
 }
 
+interface AssistantConfig {
+  name: string;
+  companyName?: string;
+  companyDescription?: string;
+  purpose?: string;
+}
+
 interface AppContextType {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
@@ -39,6 +45,8 @@ interface AppContextType {
   setSidebarOpen: (open: boolean) => void;
   aiAssistantOpen: boolean;
   setAiAssistantOpen: (open: boolean) => void;
+  assistantConfig: AssistantConfig;
+  setAssistantConfig: (config: AssistantConfig) => void;
 }
 
 const defaultFiles: File[] = [
@@ -150,6 +158,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [currentTable, setCurrentTable] = useState<DatabaseTable | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
+  const [assistantConfig, setAssistantConfig] = useState<AssistantConfig>({
+    name: 'Office Manager'
+  });
 
   return (
     <AppContext.Provider
@@ -166,7 +177,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         sidebarOpen,
         setSidebarOpen,
         aiAssistantOpen,
-        setAiAssistantOpen
+        setAiAssistantOpen,
+        assistantConfig,
+        setAssistantConfig
       }}
     >
       {children}
