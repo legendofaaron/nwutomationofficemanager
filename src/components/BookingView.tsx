@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -81,7 +80,6 @@ const BookingView = () => {
 
   const handleAddBooking = () => {
     if (newBooking.resourceId && newBooking.title && newBooking.startTime && newBooking.endTime && newBooking.bookedBy) {
-      // Find the resource name based on the selected resourceId
       const selectedResource = resources.find(resource => resource.id === newBooking.resourceId);
       
       if (selectedResource) {
@@ -118,7 +116,6 @@ const BookingView = () => {
     toast.success("Booking deleted successfully!");
   };
 
-  // Filter bookings for the selected date
   const selectedDateBookings = bookings.filter(
     booking => booking.date.toDateString() === selectedDate.toDateString()
   );
@@ -149,7 +146,6 @@ const BookingView = () => {
                     <SelectValue placeholder="Select a resource" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="" disabled>Select a resource</SelectItem>
                     {resources.map((resource) => (
                       <SelectItem key={resource.id} value={resource.id}>
                         {resource.name}{resource.capacity ? ` (Capacity: ${resource.capacity})` : ''}
