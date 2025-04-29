@@ -143,7 +143,7 @@ const AppSidebar = () => {
     
     const deepCopyFiles = JSON.parse(JSON.stringify(files));
     
-    const findItemPath = (filesList: any[], itemId: string, path: number[] = []): number[] | null => {
+    const findItemPath = (filesList: any[], itemId: string, path: (number | string)[] = []): (number | string)[] | null => {
       for (let i = 0; i < filesList.length; i++) {
         if (filesList[i].id === itemId) {
           return [...path, i];
@@ -156,7 +156,7 @@ const AppSidebar = () => {
       return null;
     };
     
-    const findFolderPath = (filesList: any[], folderId: string, path: number[] = []): number[] | null => {
+    const findFolderPath = (filesList: any[], folderId: string, path: (number | string)[] = []): (number | string)[] | null => {
       for (let i = 0; i < filesList.length; i++) {
         if (filesList[i].id === folderId) {
           return [...path, i];
@@ -176,7 +176,7 @@ const AppSidebar = () => {
       return;
     }
     
-    let currentLevel = deepCopyFiles;
+    let currentLevel: any = deepCopyFiles;
     let itemToMove = null;
     let parentArray = null;
     let indexInParent = -1;
@@ -185,17 +185,25 @@ const AppSidebar = () => {
       const pathPart = itemPath[i];
       if (i === itemPath.length - 1) {
         indexInParent = pathPart as number;
-        itemToMove = currentLevel[pathPart];
+        itemToMove = currentLevel[pathPart as number];
         parentArray = currentLevel;
       } else {
-        currentLevel = typeof pathPart === 'string' ? currentLevel[pathPart as keyof typeof currentLevel] : currentLevel[pathPart];
+        if (typeof pathPart === 'string') {
+          currentLevel = currentLevel[pathPart as keyof typeof currentLevel];
+        } else {
+          currentLevel = currentLevel[pathPart as number];
+        }
       }
     }
     
-    let targetLevel = deepCopyFiles;
+    let targetLevel: any = deepCopyFiles;
     for (let i = 0; i < folderPath.length; i++) {
       const pathPart = folderPath[i];
-      targetLevel = typeof pathPart === 'string' ? targetLevel[pathPart as keyof typeof targetLevel] : targetLevel[pathPart];
+      if (typeof pathPart === 'string') {
+        targetLevel = targetLevel[pathPart as keyof typeof targetLevel];
+      } else {
+        targetLevel = targetLevel[pathPart as number];
+      }
     }
     
     if (!itemToMove || !targetLevel || !parentArray || indexInParent === -1) {
@@ -240,14 +248,9 @@ const AppSidebar = () => {
                   <Folder className="w-4 h-4 mr-2" />
                 </>}
               <span>{file.name}</span>
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover/menu-item:opacity-100 transition-opacity">
-                <SidebarMenuAction onClick={e => handleRenameClick(e, file)} className="-mt-[0.4cm]" showOnHover>
-                  <FilePen className="w-4 h-4 text-blue-500" />
-                </SidebarMenuAction>
-                <SidebarMenuAction onClick={e => handleDeleteFile(e, file)} className="hover:bg-red-50 -mt-[0.4cm]" showOnHover>
-                  <Trash2 className="w-4 h-4 text-blue-500" />
-                </SidebarMenuAction>
-              </div>
+              <SidebarMenuAction onClick={e => handleDeleteFile(e, file)} className="hover:bg-red-50 -mt-[0.4cm] opacity-0 group-hover/menu-item:opacity-100 transition-opacity" showOnHover>
+                <Trash2 className="w-4 h-4 text-red-500" />
+              </SidebarMenuAction>
             </CollapsibleTrigger>
             {file.children && <CollapsibleContent className="ml-4">
                 {renderFileTree(file.children, level + 1)}
@@ -262,14 +265,9 @@ const AppSidebar = () => {
               {file.type === 'spreadsheet' ? <Table className="w-4 h-4 mr-2" /> : <File className="w-4 h-4 mr-2" />}
               <span>{file.name}</span>
             </SidebarMenuButton>
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover/menu-item:opacity-100 transition-opacity">
-              <SidebarMenuAction onClick={e => handleRenameClick(e, file)} className="-mt-[0.4cm]" showOnHover>
-                <FilePen className="w-4 h-4 text-blue-500" />
-              </SidebarMenuAction>
-              <SidebarMenuAction onClick={e => handleDeleteFile(e, file)} className="hover:bg-red-50 -mt-[0.4cm]" showOnHover>
-                <Trash2 className="w-4 h-4 text-blue-500" />
-              </SidebarMenuAction>
-            </div>
+            <SidebarMenuAction onClick={e => handleDeleteFile(e, file)} className="hover:bg-red-50 -mt-[0.4cm] opacity-0 group-hover/menu-item:opacity-100 transition-opacity" showOnHover>
+              <Trash2 className="w-4 h-4 text-red-500" />
+            </SidebarMenuAction>
           </div>}
       </SidebarMenuItem>);
   };
