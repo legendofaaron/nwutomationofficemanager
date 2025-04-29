@@ -5,16 +5,25 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
-interface LlmConfig {
+export interface LlmConfig {
   endpoint: string;
   enabled: boolean;
+  model: string;
 }
 
 export const LlmSettings = () => {
   const [config, setConfig] = useState<LlmConfig>({
     endpoint: 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk',
-    enabled: false
+    enabled: false,
+    model: 'default'
   });
 
   const testConnection = async () => {
@@ -26,6 +35,7 @@ export const LlmSettings = () => {
         },
         body: JSON.stringify({
           message: "Test connection",
+          model: config.model
         }),
       });
       
@@ -70,6 +80,29 @@ export const LlmSettings = () => {
           />
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="model">LLM Model</Label>
+          <Select
+            value={config.model}
+            onValueChange={(value) => setConfig(prev => ({ ...prev, model: value }))}
+          >
+            <SelectTrigger id="model" className="w-full">
+              <SelectValue placeholder="Select a model" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default</SelectItem>
+              <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+              <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
+              <SelectItem value="gpt-4.5-preview">GPT-4.5 Preview</SelectItem>
+              <SelectItem value="llama-3.1-8b">Llama 3.1 (8B)</SelectItem>
+              <SelectItem value="llama-3.1-70b">Llama 3.1 (70B)</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-gray-500 mt-1">
+            Select the language model you want to use with your n8n workflow
+          </p>
+        </div>
+
         <Button onClick={testConnection}>
           Test Connection
         </Button>
@@ -77,4 +110,3 @@ export const LlmSettings = () => {
     </div>
   );
 };
-

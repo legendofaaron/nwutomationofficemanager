@@ -1,9 +1,11 @@
 
+import { LlmConfig } from '@/components/LlmSettings';
+
 interface LlmResponse {
   message: string;
 }
 
-export async function queryLlm(prompt: string, endpoint: string): Promise<LlmResponse> {
+export async function queryLlm(prompt: string, endpoint: string, model: string = 'default'): Promise<LlmResponse> {
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -12,6 +14,7 @@ export async function queryLlm(prompt: string, endpoint: string): Promise<LlmRes
       },
       body: JSON.stringify({
         message: prompt,
+        model: model
       }),
     });
 
@@ -28,4 +31,3 @@ export async function queryLlm(prompt: string, endpoint: string): Promise<LlmRes
     throw error;
   }
 }
-

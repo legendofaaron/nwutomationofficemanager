@@ -4,7 +4,7 @@ import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings } from 'lucide-react';
-import { LlmSettings } from './LlmSettings';
+import { LlmSettings, LlmConfig } from './LlmSettings';
 import { queryLlm } from '@/utils/llm';
 import { toast } from '@/hooks/use-toast';
 
@@ -64,9 +64,10 @@ Your data remains secure on your local system. Need assistance? Just ask me anyt
     { icon: Info, label: 'How to use', action: () => handleQuickAction('explain how to use') }
   ];
 
-  const [config, setConfig] = useState({
+  const [config, setConfig] = useState<LlmConfig>({
     endpoint: 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk',
-    enabled: false
+    enabled: false,
+    model: 'default'
   });
 
   const handleQuickAction = (action: string) => {
@@ -117,7 +118,7 @@ Your data remains secure on your local system. How can I assist you today?`;
     setMessages([...messages, { id: userMessageId, type: 'user', content: input }]);
     
     try {
-      const response = await queryLlm(input, config.endpoint);
+      const response = await queryLlm(input, config.endpoint, config.model);
       
       setMessages(current => [
         ...current,
