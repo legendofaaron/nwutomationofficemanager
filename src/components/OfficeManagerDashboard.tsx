@@ -6,6 +6,7 @@ import EmployeesView from './EmployeesView';
 import ScheduleView from './ScheduleView';
 import InvoicesView from './InvoicesView';
 import { Logo } from './Logo';
+import SystemSettings from './SystemSettings';
 
 const OfficeManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState<'employees' | 'schedule' | 'invoices' | 'settings'>('employees');
@@ -64,7 +65,7 @@ const OfficeManagerDashboard = () => {
         {activeTab === 'employees' && <EmployeesView />}
         {activeTab === 'schedule' && <ScheduleView />}
         {activeTab === 'invoices' && <InvoicesView />}
-        {activeTab === 'settings' && <p className="text-gray-500">System configuration options coming soon</p>}
+        {activeTab === 'settings' && <SystemSettings />}
       </div>
     </div>
   );
