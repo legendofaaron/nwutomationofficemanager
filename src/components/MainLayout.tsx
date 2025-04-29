@@ -29,7 +29,7 @@ const MainLayout = () => {
             <AppSidebar />
           </Sidebar>
           <SidebarTrigger className="absolute -right-12 top-24 z-20 h-16 w-12 bg-white shadow-md rounded-r-lg flex items-center justify-center hover:bg-gray-50 transition-colors group">
-            <div className="transition-transform duration-500 ease-in-out group-hover:rotate-[360deg] group-hover:scale-110">
+            <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
               <Logo small />
             </div>
           </SidebarTrigger>
