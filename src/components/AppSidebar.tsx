@@ -1,12 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import NewDocumentDialog from './NewDocumentDialog';
 import NewFolderDialog from './NewFolderDialog';
 import RenameItemDialog from './RenameItemDialog';
 import { FilePen, Brain, Building2, Database, File, FileText, Trash2, Folder, FolderOpen, Menu, Table, X, ChevronRight, ChevronDown, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Logo } from './Logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarContent, SidebarHeader, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuAction, SidebarTrigger } from "@/components/ui/sidebar";
@@ -33,6 +32,8 @@ const AppSidebar = () => {
   
   const [renameItem, setRenameItem] = useState<{ id: string; name: string; type: string } | null>(null);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<any>(null);
+  const [dragOverItem, setDragOverItem] = useState<any>(null);
 
   const handleFileClick = (file: any) => {
     if (file.type === 'folder') return;
@@ -101,10 +102,110 @@ const AppSidebar = () => {
     setRenameItem(null);
   };
   
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, item: any) => {
+    e.stopPropagation();
+    setDraggedItem(item);
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.classList.add('opacity-50');
+  };
+  
+  const handleDragOver = (e: React.DragEvent, item: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (item.type === 'folder') {
+      e.dataTransfer.dropEffect = 'move';
+      setDragOverItem(item);
+      e.currentTarget.classList.add('bg-sidebar-accent', 'bg-opacity-30');
+    }
+  };
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('bg-sidebar-accent', 'bg-opacity-30');
+  };
+  
+  const handleDragEnd = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('opacity-50');
+    setDraggedItem(null);
+    setDragOverItem(null);
+  };
+  
+  const handleDrop = (e: React.DragEvent, targetFolder: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('bg-sidebar-accent', 'bg-opacity-30');
+    
+    if (!draggedItem || targetFolder.id === draggedItem.id || !targetFolder.type || targetFolder.type !== 'folder') {
+      return;
+    }
+    
+    // Copy files structure and remove dragged item from its original location
+    const removeItemAndGetUpdated = (filesList: any[], itemId: string, isRoot = true): [any[], any | null] => {
+      let removedItem = null;
+      const newList = filesList.filter(file => {
+        if (file.id === itemId) {
+          removedItem = {...file};
+          return false;
+        }
+        if (file.children) {
+          const [updatedChildren, foundItem] = removeItemAndGetUpdated(file.children, itemId, false);
+          if (foundItem) removedItem = foundItem;
+          file.children = updatedChildren;
+        }
+        return true;
+      });
+      
+      return [isRoot ? newList : filesList, removedItem];
+    };
+    
+    // Add item to target folder
+    const addItemToFolder = (filesList: any[], folderId: string, newItem: any): any[] => {
+      return filesList.map(file => {
+        if (file.id === folderId) {
+          return {
+            ...file,
+            children: [...(file.children || []), newItem]
+          };
+        }
+        if (file.children) {
+          file.children = addItemToFolder(file.children, folderId, newItem);
+        }
+        return file;
+      });
+    };
+    
+    const [updatedFilesAfterRemoval, removedItem] = removeItemAndGetUpdated(files, draggedItem.id);
+    
+    if (removedItem) {
+      const finalFiles = addItemToFolder(updatedFilesAfterRemoval, targetFolder.id, removedItem);
+      setFiles(finalFiles);
+      
+      toast({
+        title: "Item moved",
+        description: `${removedItem.name} moved to ${targetFolder.name}`
+      });
+    }
+    
+    setDraggedItem(null);
+    setDragOverItem(null);
+  };
+  
   const renderFileTree = (files: any[], level = 0) => {
     return files.map(file => <SidebarMenuItem key={file.id}>
         {file.type === 'folder' ? <Collapsible>
-            <CollapsibleTrigger className="flex items-center w-full text-left p-2 hover:bg-sidebar-accent rounded-md group/menu-item relative">
+            <CollapsibleTrigger 
+              className={`flex items-center w-full text-left p-2 hover:bg-sidebar-accent rounded-md group/menu-item relative ${dragOverItem?.id === file.id ? 'bg-sidebar-accent bg-opacity-30' : ''}`}
+              draggable
+              onDragStart={(e) => handleDragStart(e, file)}
+              onDragOver={(e) => handleDragOver(e, file)}
+              onDragLeave={handleDragLeave}
+              onDragEnd={handleDragEnd}
+              onDrop={(e) => handleDrop(e, file)}
+            >
               {file.children && file.children.length > 0 ? <>
                   <ChevronRight className="w-4 h-4 mr-2 transition-transform duration-200 transform group-data-[state=open]:rotate-90" />
                   <FolderOpen className="w-4 h-4 mr-2" />
@@ -125,7 +226,12 @@ const AppSidebar = () => {
             {file.children && <CollapsibleContent className="ml-4">
                 {renderFileTree(file.children, level + 1)}
               </CollapsibleContent>}
-          </Collapsible> : <div className="group/menu-item relative">
+          </Collapsible> : <div 
+              className="group/menu-item relative"
+              draggable
+              onDragStart={(e) => handleDragStart(e, file)}
+              onDragEnd={handleDragEnd}
+            >
             <SidebarMenuButton onClick={() => handleFileClick(file)} className="w-full text-left">
               {file.type === 'spreadsheet' ? <Table className="w-4 h-4 mr-2" /> : <File className="w-4 h-4 mr-2" />}
               <span>{file.name}</span>
