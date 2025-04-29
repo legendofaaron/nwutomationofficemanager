@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings } from 
 import { LlmSettings } from './LlmSettings';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Message {
   id: string;
@@ -30,6 +31,7 @@ const ChatUI = () => {
     purpose: assistantConfig?.purpose || ''
   });
   const navigate = useNavigate();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const [messages, setMessages] = useState<Message[]>([
     { 
@@ -67,6 +69,15 @@ You can:
 Your data remains secure on your local system. Need assistance? Just ask me anything!`
     }
   ]);
+
+  // Scroll to bottom whenever messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   // Check if setup is needed when assistant opens
   useEffect(() => {
@@ -390,6 +401,7 @@ Your data remains secure on your local system. How can I assist you today?`;
                 </div>
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
           
           <div className="p-3 border-t">
