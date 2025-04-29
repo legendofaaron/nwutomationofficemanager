@@ -1,14 +1,17 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import NewDocumentDialog from './NewDocumentDialog';
-import { Brain, Building2, Database, File, FileText, FilePen, Trash2, Folder, FolderOpen, Menu, Table, X, FilePlus, FolderPlus, Plus, ChevronRight, ChevronDown } from 'lucide-react';
+import NewFolderDialog from './NewFolderDialog';
+import RenameItemDialog from './RenameItemDialog';
+import { FilePen, Brain, Building2, Database, File, FileText, Trash2, Folder, FolderOpen, Menu, Table, X, ChevronRight, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarContent, SidebarHeader, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuAction, SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from '@/hooks/use-toast';
+
 const AppSidebar = () => {
   const {
     viewMode,
@@ -25,9 +28,12 @@ const AppSidebar = () => {
     setAiAssistantOpen,
     aiAssistantOpen
   } = useAppContext();
-  const {
-    toast
-  } = useToast();
+  
+  const { toast } = useToast();
+  
+  const [renameItem, setRenameItem] = useState<{ id: string; name: string; type: string } | null>(null);
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+
   const handleFileClick = (file: any) => {
     if (file.type === 'folder') return;
     setCurrentFile(file);
@@ -37,6 +43,13 @@ const AppSidebar = () => {
       setViewMode('document');
     }
   };
+
+  const handleRenameClick = (e: React.MouseEvent, item: any) => {
+    e.stopPropagation();
+    setRenameItem(item);
+    setIsRenameDialogOpen(true);
+  };
+
   const handleEditFile = (e: React.MouseEvent, file: any) => {
     e.stopPropagation();
     setCurrentFile(file);
@@ -50,6 +63,7 @@ const AppSidebar = () => {
       description: `Editing ${file.name}`
     });
   };
+
   const handleDeleteFile = (e: React.MouseEvent, fileToDelete: any) => {
     e.stopPropagation();
     const deleteFileRecursively = (files: any[], targetId: string): any[] => {
@@ -63,46 +77,30 @@ const AppSidebar = () => {
         return true;
       });
     };
+    
     const updatedFiles = deleteFileRecursively(files, fileToDelete.id);
     setFiles(updatedFiles);
     if (fileToDelete.id === activeFile?.id) {
       setCurrentFile(null);
       setViewMode('files');
     }
+    
     toast({
       title: "Item deleted",
       description: `${fileToDelete.name} has been deleted`
     });
   };
+  
   const handleTableClick = (table: any) => {
     setCurrentTable(table);
     setViewMode('database');
   };
-  const createNewItem = (type: 'document' | 'spreadsheet' | 'folder') => {
-    const newId = `new-${Date.now()}`;
-    const newName = type === 'folder' ? 'New Folder' : type === 'spreadsheet' ? 'New Spreadsheet' : 'New Document';
-    const newFile = {
-      id: newId,
-      name: newName,
-      type: type,
-      content: type === 'document' ? '# New Document\n\nStart writing here...' : undefined,
-      spreadsheetData: type === 'spreadsheet' ? {
-        headers: ['Column 1', 'Column 2', 'Column 3'],
-        rows: [{
-          'Column 1': '',
-          'Column 2': '',
-          'Column 3': ''
-        }, {
-          'Column 1': '',
-          'Column 2': '',
-          'Column 3': ''
-        }]
-      } : undefined
-    };
-    setFiles([...files, newFile]);
-    setCurrentFile(newFile);
-    setViewMode(type === 'spreadsheet' ? 'spreadsheet' : type === 'document' ? 'document' : 'files');
+
+  const handleCloseRenameDialog = () => {
+    setIsRenameDialogOpen(false);
+    setRenameItem(null);
   };
+
   const handleDeleteAllFiles = () => {
     setFiles([]);
     setCurrentFile(null);
@@ -112,6 +110,7 @@ const AppSidebar = () => {
       description: "All files have been removed"
     });
   };
+  
   const renderFileTree = (files: any[], level = 0) => {
     return files.map(file => <SidebarMenuItem key={file.id}>
         {file.type === 'folder' ? <Collapsible>
@@ -125,6 +124,9 @@ const AppSidebar = () => {
                 </>}
               <span>{file.name}</span>
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover/menu-item:opacity-100 transition-opacity">
+                <SidebarMenuAction onClick={e => handleRenameClick(e, file)} className="-mt-[0.4cm]" showOnHover>
+                  <FilePen className="w-4 h-4 text-blue-500" />
+                </SidebarMenuAction>
                 <SidebarMenuAction onClick={e => handleDeleteFile(e, file)} className="hover:bg-red-50 -mt-[0.4cm]" showOnHover>
                   <Trash2 className="w-4 h-4 text-blue-500" />
                 </SidebarMenuAction>
@@ -139,6 +141,9 @@ const AppSidebar = () => {
               <span>{file.name}</span>
             </SidebarMenuButton>
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover/menu-item:opacity-100 transition-opacity">
+              <SidebarMenuAction onClick={e => handleRenameClick(e, file)} className="-mt-[0.4cm]" showOnHover>
+                <FilePen className="w-4 h-4 text-blue-500" />
+              </SidebarMenuAction>
               <SidebarMenuAction onClick={e => handleDeleteFile(e, file)} className="hover:bg-red-50 -mt-[0.4cm]" showOnHover>
                 <Trash2 className="w-4 h-4 text-blue-500" />
               </SidebarMenuAction>
@@ -146,6 +151,7 @@ const AppSidebar = () => {
           </div>}
       </SidebarMenuItem>);
   };
+  
   const mainMenuItems = [{
     title: "Office Manager",
     icon: Building2,
@@ -162,6 +168,7 @@ const AppSidebar = () => {
     onClick: () => setAiAssistantOpen(!aiAssistantOpen),
     isActive: aiAssistantOpen
   }];
+
   return <>
       <SidebarHeader className="p-6 border-b">
         <div className="flex items-center justify-between">
@@ -181,24 +188,15 @@ const AppSidebar = () => {
                 <NewDocumentDialog />
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => createNewItem('spreadsheet')}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  <span>New Spreadsheet</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => createNewItem('folder')}>
-                  <FolderPlus className="w-4 h-4 mr-2" />
-                  <span>New Folder</span>
-                </SidebarMenuButton>
+                <NewFolderDialog />
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <SidebarMenuButton className="text-destructive hover:text-destructive">
-                      
-                      
-                    </SidebarMenuButton>
+                    <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive">
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      <span>Delete All Files</span>
+                    </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
@@ -258,8 +256,18 @@ const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* Rename Dialog */}
+      {renameItem && (
+        <RenameItemDialog 
+          item={renameItem} 
+          isOpen={isRenameDialogOpen} 
+          onClose={handleCloseRenameDialog} 
+        />
+      )}
     </>;
 };
+
 export const SidebarToggle = () => {
   const {
     setSidebarOpen
@@ -268,4 +276,5 @@ export const SidebarToggle = () => {
       <Menu className="h-4 w-4" />
     </Button>;
 };
+
 export default AppSidebar;
