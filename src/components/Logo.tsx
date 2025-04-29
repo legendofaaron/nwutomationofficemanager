@@ -14,3 +14,4 @@ export const Logo = ({ small }: { small?: boolean }) => {
     </Link>
   );
 };
+
