@@ -19,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Switch } from '@/components/ui/switch';
+import { useTheme } from '@/context/ThemeContext';
 
 const generalFormSchema = z.object({
   companyName: z.string().min(2, {
@@ -27,7 +28,6 @@ const generalFormSchema = z.object({
   companyAddress: z.string().optional(),
   emailSignature: z.string().optional(),
   enableNotifications: z.boolean().default(true),
-  darkMode: z.boolean().default(false),
 });
 
 type GeneralFormValues = z.infer<typeof generalFormSchema>;
@@ -37,7 +37,6 @@ const defaultValues: Partial<GeneralFormValues> = {
   companyAddress: "123 Business Ave, Suite 200, Corporate City",
   emailSignature: "Regards,\nThe Acme Team",
   enableNotifications: true,
-  darkMode: false,
 };
 
 const SystemSettings = () => {
@@ -45,6 +44,8 @@ const SystemSettings = () => {
     resolver: zodResolver(generalFormSchema),
     defaultValues,
   });
+  
+  const { theme, setTheme } = useTheme();
 
   function onSubmit(data: GeneralFormValues) {
     toast({
@@ -162,41 +163,33 @@ const SystemSettings = () => {
         </TabsContent>
         
         <TabsContent value="appearance" className="space-y-4 py-4">
-          <Form {...form}>
-            <form className="space-y-4">
-              <FormField
-                control={form.control}
-                name="darkMode"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">
-                        Dark Mode
-                      </FormLabel>
-                      <FormDescription>
-                        Enable dark mode for the entire application.
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              
-              <Button onClick={() => {
+          <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <h3 className="text-base font-medium">Dark Mode</h3>
+              <p className="text-sm text-muted-foreground">
+                Enable dark mode for the entire application.
+              </p>
+            </div>
+            <Switch
+              checked={theme === 'dark'}
+              onCheckedChange={(checked) => {
+                setTheme(checked ? 'dark' : 'light');
                 toast({
-                  title: "Appearance settings saved",
-                  description: "Your appearance preferences have been updated."
+                  title: "Appearance updated",
+                  description: `Theme changed to ${checked ? 'dark' : 'light'} mode.`,
                 });
-              }}>
-                Save Preferences
-              </Button>
-            </form>
-          </Form>
+              }}
+            />
+          </div>
+              
+          <Button onClick={() => {
+            toast({
+              title: "Appearance settings saved",
+              description: "Your appearance preferences have been updated."
+            });
+          }}>
+            Save Preferences
+          </Button>
         </TabsContent>
       </Tabs>
     </div>
