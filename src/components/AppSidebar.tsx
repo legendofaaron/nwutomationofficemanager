@@ -1,14 +1,13 @@
-
 import React, { useState, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import NewDocumentDialog from './NewDocumentDialog';
 import NewFolderDialog from './NewFolderDialog';
 import RenameItemDialog from './RenameItemDialog';
-import { FilePen, Brain, Building2, Database, File, FileText, Trash2, Folder, FolderOpen, Menu, Table, X, ChevronRight, ChevronDown, LayoutDashboard } from 'lucide-react';
+import { FilePen, Brain, Building2, Database, File, FileText, Trash2, Folder, FolderOpen, Menu, Table, X, ChevronRight, ChevronDown, LayoutDashboard, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Logo } from './Logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { SidebarContent, SidebarHeader, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuAction, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarContent, SidebarHeader, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuAction, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
 import { useToast } from '@/hooks/use-toast';
 
 const AppSidebar = () => {
@@ -357,6 +356,18 @@ const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* Added Settings button at the bottom */}
+      <SidebarFooter className="p-4 border-t mt-auto">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={() => setViewMode('settings')} data-active={viewMode === 'settings'}>
+              <Settings className="w-4 h-4 mr-2" />
+              <span>Settings</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
 
       {/* Rename Dialog */}
       {renameItem && (
