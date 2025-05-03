@@ -1,12 +1,15 @@
+
 import React, { useEffect } from 'react';
 import { ArrowRight, Brain, Building2, Database, FileText, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/Logo';
+import { useAppContext } from '@/context/AppContext';
 
 const Home = () => {
   const navigate = useNavigate();
+  const { branding } = useAppContext();
 
   useEffect(() => {
     const hasVisited = localStorage.getItem('hasVisitedBefore');
@@ -25,7 +28,7 @@ const Home = () => {
       <div className="text-center mb-16">
         <h1 className="text-4xl font-bold text-app-blue mb-4">Welcome to Office Manager</h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          A secure, lightweight solution by Northwestern Automation for managing documents, schedules, and office operations—all on your local system.
+          A secure, lightweight solution by {branding.companyName} for managing documents, schedules, and office operations—all on your local system.
         </p>
       </div>
 

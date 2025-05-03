@@ -5,6 +5,7 @@ import { LlmSettings } from './LlmSettings';
 import { toast } from '@/hooks/use-toast';
 import { GeneralSettingsTab } from './settings/GeneralSettingsTab';
 import { AppearanceSettingsTab } from './settings/AppearanceSettingsTab';
+import { BrandingSettingsTab } from './settings/BrandingSettingsTab';
 
 const SystemSettings = () => {
   return (
@@ -17,14 +18,19 @@ const SystemSettings = () => {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
         </TabsList>
         
         <TabsContent value="general" className="space-y-4 py-4">
           <GeneralSettingsTab />
+        </TabsContent>
+        
+        <TabsContent value="branding" className="space-y-4 py-4">
+          <BrandingSettingsTab />
         </TabsContent>
         
         <TabsContent value="integrations" className="py-4">

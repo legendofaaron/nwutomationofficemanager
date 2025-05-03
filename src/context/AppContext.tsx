@@ -32,6 +32,13 @@ interface AssistantConfig {
   purpose?: string;
 }
 
+interface BrandingConfig {
+  companyName: string;
+  logoType: 'default' | 'text' | 'image';
+  logoUrl?: string;
+  primaryColor?: string;
+}
+
 interface AppContextType {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
@@ -48,6 +55,8 @@ interface AppContextType {
   setAiAssistantOpen: (open: boolean) => void;
   assistantConfig: AssistantConfig;
   setAssistantConfig: (config: AssistantConfig) => void;
+  branding: BrandingConfig;
+  setBranding: (config: BrandingConfig) => void;
 }
 
 const defaultFiles: File[] = [
@@ -162,6 +171,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [assistantConfig, setAssistantConfig] = useState<AssistantConfig>({
     name: 'Office Manager'
   });
+  const [branding, setBranding] = useState<BrandingConfig>({
+    companyName: 'Northwestern Automation',
+    logoType: 'default'
+  });
 
   return (
     <AppContext.Provider
@@ -180,7 +193,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         aiAssistantOpen,
         setAiAssistantOpen,
         assistantConfig,
-        setAssistantConfig
+        setAssistantConfig,
+        branding,
+        setBranding
       }}
     >
       {children}

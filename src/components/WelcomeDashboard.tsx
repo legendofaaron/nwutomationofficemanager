@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, MessageSquare, BookOpenText, PlayIcon } from 'lucide-react';
@@ -7,7 +8,7 @@ import { useAppContext } from '@/context/AppContext';
 import { Logo } from './Logo';
 
 const WelcomeDashboard = () => {
-  const { setViewMode } = useAppContext();
+  const { setViewMode, branding } = useAppContext();
   const navigate = useNavigate();
 
   const startAssistantSetup = () => {
@@ -23,7 +24,7 @@ const WelcomeDashboard = () => {
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold text-app-blue mb-3">Welcome to Office Manager</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          A secure, lightweight solution by Northwestern Automation for document management, schedule organization, and enhanced workplace productivity.
+          A secure, lightweight solution by {branding.companyName} for document management, schedule organization, and enhanced workplace productivity.
         </p>
       </div>
 
