@@ -3,11 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings } from 'lucide-react';
+import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings, Edit } from 'lucide-react';
 import { LlmSettings } from './LlmSettings';
 import { queryLlm } from '@/utils/llm';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { Logo } from './Logo';
 
 interface Message {
   id: string;
@@ -18,16 +19,18 @@ interface Message {
 type SetupStep = 'welcome' | 'name' | 'company' | 'purpose' | 'complete' | null;
 
 const AiAssistant = () => {
-  const { aiAssistantOpen, setAiAssistantOpen, assistantConfig, setAssistantConfig } = useAppContext();
+  const { aiAssistantOpen, setAiAssistantOpen, assistantConfig, setAssistantConfig, branding, setBranding } = useAppContext();
   const [input, setInput] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [isSetupMode, setIsSetupMode] = useState(false);
   const [currentSetupStep, setCurrentSetupStep] = useState<SetupStep>(null);
   const [setupData, setSetupData] = useState({
     name: assistantConfig?.name || 'Office Manager',
-    companyName: assistantConfig?.companyName || '',
+    companyName: branding.companyName || '',
     companyDescription: assistantConfig?.companyDescription || '',
-    purpose: assistantConfig?.purpose || ''
+    purpose: assistantConfig?.purpose || '',
+    logoType: branding.logoType || 'default',
+    logoUrl: branding.logoUrl || ''
   });
   const navigate = useNavigate();
   
@@ -135,6 +138,7 @@ Would you like to:
         
       case 'company':
         setSetupData(prev => ({ ...prev, companyName: response }));
+        setBranding(prev => ({ ...prev, companyName: response }));
         processNextSetupStep('purpose');
         break;
         
@@ -165,7 +169,7 @@ Would you like to:
         message = "What would you like to name your assistant?";
         break;
       case 'company':
-        message = "Great! What's the name of your company or organization?";
+        message = "Great! What's the name of your company or organization? This will be used for branding throughout the application.";
         break;
       case 'purpose':
         message = "What kind of tasks would you like me to help you with primarily? (e.g., document creation, schedule management, invoice processing)";
@@ -177,7 +181,7 @@ Would you like to:
 - Company: ${setupData.companyName}
 - Primary tasks: ${setupData.purpose}
 
-Would you like to go to the full setup page for more detailed configuration?`;
+Would you like to go to the full setup page for more detailed configuration, including logo selection?`;
         break;
     }
     
@@ -198,6 +202,14 @@ Would you like to go to the full setup page for more detailed configuration?`;
       });
     }
     
+    // Update branding if company name was changed
+    if (setupData.companyName && setupData.companyName !== branding.companyName) {
+      setBranding({
+        ...branding,
+        companyName: setupData.companyName
+      });
+    }
+    
     // Exit setup mode
     setIsSetupMode(false);
     setCurrentSetupStep(null);
@@ -207,6 +219,8 @@ Would you like to go to the full setup page for more detailed configuration?`;
       id: (Date.now() + 1).toString(), 
       type: 'ai', 
       content: `Perfect! Your assistant is now set up as "${setupData.name}" for ${setupData.companyName}. I'll focus on helping you with ${setupData.purpose}.
+
+You can always update your branding settings including company logo by clicking the Settings button in the assistant header.
 
 How can I assist you today?` 
     }]);
@@ -299,24 +313,38 @@ Your data remains secure on your local system. How can I assist you today?`;
     setInput('');
   };
 
+  const handleEditBranding = () => {
+    navigate('/setup-assistant');
+    setAiAssistantOpen(false);
+  };
+
   if (!aiAssistantOpen) return null;
 
   return (
     <div className="fixed right-4 bottom-4 w-96 bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col h-[600px] z-20">
       <div className="flex items-center justify-between p-3 border-b">
         <div className="flex items-center gap-2">
-          <Bot className="h-5 w-5 text-blue-600" />
-          <h3 className="font-medium">Office Manager</h3>
-          {assistantConfig?.companyName && (
-            <span className="text-xs text-gray-500">for {assistantConfig.companyName}</span>
+          <Logo small />
+          {assistantConfig?.name && (
+            <span className="text-sm font-medium">{assistantConfig.name}</span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleEditBranding}
+            className="h-6 w-6"
+            title="Edit branding and settings"
+          >
+            <Edit className="h-3.5 w-3.5" />
+          </Button>
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={() => setShowSettings(!showSettings)}
             className="h-6 w-6"
+            title="AI settings"
           >
             <Settings className="h-4 w-4" />
           </Button>

@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Database, Server, FolderPlus, Brain, Save, HardDrive, Building, FileText } from 'lucide-react';
+import { ArrowLeft, Database, Server, FolderPlus, Brain, Save, HardDrive, Building, FileText, Image } from 'lucide-react';
 import { 
   Card,
   CardContent,
@@ -27,9 +27,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Logo } from '@/components/Logo';
 import { useToast } from '@/hooks/use-toast';
 import { useAppContext } from '@/context/AppContext';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Hexagon } from 'lucide-react';
 
 const SetupAssistant = () => {
-  const { setAiAssistantOpen, setAssistantConfig } = useAppContext();
+  const { setAiAssistantOpen, setAssistantConfig, branding, setBranding } = useAppContext();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('general');
@@ -42,28 +44,43 @@ const SetupAssistant = () => {
     enableSharedFolder: true,
     folderPath: '/shared',
     endpoint: 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk',
-    companyName: '',
+    companyName: branding.companyName || '',
     companyDescription: '',
-    assistantPurpose: 'General office tasks and document management'
+    assistantPurpose: 'General office tasks and document management',
+    logoType: branding.logoType || 'default',
+    logoUrl: branding.logoUrl || ''
   });
   
+  useEffect(() => {
+    // Sync the company name from branding to form when component mounts
+    setConfig(prev => ({
+      ...prev,
+      companyName: branding.companyName || prev.companyName,
+      logoType: branding.logoType || prev.logoType,
+      logoUrl: branding.logoUrl || prev.logoUrl
+    }));
+  }, [branding]);
+
   const handleSave = () => {
-    // Here you would save the configuration to your state management or backend
-    
     // Update global assistant configuration
-    if (setAssistantConfig) {
-      setAssistantConfig({
-        name: config.name,
-        companyName: config.companyName,
-        companyDescription: config.companyDescription,
-        purpose: config.assistantPurpose
-      });
-    }
+    setAssistantConfig({
+      name: config.name,
+      companyName: config.companyName,
+      companyDescription: config.companyDescription,
+      purpose: config.assistantPurpose
+    });
+    
+    // Update branding configuration
+    setBranding({
+      companyName: config.companyName,
+      logoType: config.logoType,
+      logoUrl: config.logoUrl
+    });
     
     // Show success toast
     toast({
       title: 'Setup complete',
-      description: 'Your assistant has been configured successfully!'
+      description: 'Your assistant and branding have been configured successfully!'
     });
     
     // Open the assistant
@@ -75,6 +92,33 @@ const SetupAssistant = () => {
   
   const handleCancel = () => {
     navigate('/dashboard');
+  };
+
+  // Logo preview component
+  const LogoPreview = ({ type, url, name }: { type: string, url: string, name: string }) => {
+    return (
+      <div className="mt-4 p-4 border rounded-md">
+        <h4 className="text-sm font-medium mb-2">Logo Preview:</h4>
+        <div className="flex items-center gap-2">
+          {type === 'image' && url ? (
+            <img 
+              src={url} 
+              alt={`${name} logo`} 
+              className="h-6 w-auto"
+              onError={(e) => {
+                e.currentTarget.src = '';
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          ) : type === 'default' ? (
+            <div className="rounded-full border-2 border-app-blue p-1">
+              <Hexagon className="h-6 w-6 text-app-blue" />
+            </div>
+          ) : null}
+          <span className="font-semibold text-app-blue">{name}</span>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -109,6 +153,7 @@ const SetupAssistant = () => {
           <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-6">
               <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="branding">Branding</TabsTrigger>
               <TabsTrigger value="company">Company Details</TabsTrigger>
               <TabsTrigger value="memory">Memory Storage</TabsTrigger>
               <TabsTrigger value="llm">Language Model</TabsTrigger>
@@ -142,8 +187,8 @@ const SetupAssistant = () => {
                 </div>
               </div>
             </TabsContent>
-            
-            <TabsContent value="company">
+
+            <TabsContent value="branding">
               <div className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="company-name">Company Name</Label>
@@ -153,8 +198,69 @@ const SetupAssistant = () => {
                     onChange={(e) => setConfig({...config, companyName: e.target.value})}
                     placeholder="Acme Inc." 
                   />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    This name will appear throughout the application and in the logo
+                  </p>
                 </div>
                 
+                <div className="space-y-4">
+                  <Label>Logo Type</Label>
+                  <RadioGroup
+                    value={config.logoType}
+                    onValueChange={(value) => setConfig({...config, logoType: value})}
+                    className="space-y-4"
+                  >
+                    <div className="flex items-center space-x-3 space-y-0">
+                      <RadioGroupItem value="default" id="default-logo" />
+                      <Label htmlFor="default-logo" className="font-normal flex items-center gap-2">
+                        <div className="rounded-full border-2 border-app-blue p-1">
+                          <Hexagon className="h-4 w-4 text-app-blue" />
+                        </div>
+                        Default Logo
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 space-y-0">
+                      <RadioGroupItem value="text" id="text-logo" />
+                      <Label htmlFor="text-logo" className="font-normal">
+                        Text Only (No Logo)
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 space-y-0">
+                      <RadioGroupItem value="image" id="image-logo" />
+                      <Label htmlFor="image-logo" className="font-normal">
+                        Custom Image
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {config.logoType === 'image' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="logo-url">Logo URL</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        id="logo-url" 
+                        value={config.logoUrl || ''} 
+                        onChange={(e) => setConfig({...config, logoUrl: e.target.value})}
+                        placeholder="https://example.com/logo.png" 
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Enter the URL of your company logo. Recommended size: 64x64px.
+                    </p>
+                  </div>
+                )}
+
+                <LogoPreview 
+                  type={config.logoType} 
+                  url={config.logoUrl || ''} 
+                  name={config.companyName} 
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="company">
+              <div className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="company-description">Company Description</Label>
                   <Textarea 
