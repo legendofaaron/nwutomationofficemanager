@@ -13,7 +13,7 @@ import TodoCalendarBubble from './TodoCalendarBubble';
 import { cn } from '@/lib/utils';
 import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from './Logo';
-import { FileText } from 'lucide-react';
+import { Bot } from 'lucide-react';
 
 const MainLayout = () => {
   const {
@@ -55,9 +55,12 @@ const MainLayout = () => {
         <div className="fixed bottom-6 right-6 z-50">
           <button 
             onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
-            className="bg-app-blue text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors"
+            className="h-12 w-12 rounded-full shadow-lg bg-primary relative flex items-center justify-center hover:bg-primary/90 transition-colors text-primary-foreground"
           >
-            <FileText className="h-6 w-6" />
+            <Bot className="h-5 w-5" />
+            {aiAssistantOpen && (
+              <span className="absolute top-0 right-0 h-3 w-3 bg-destructive rounded-full border-2 border-background"></span>
+            )}
           </button>
         </div>
         
