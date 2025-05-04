@@ -43,7 +43,8 @@ const MainLayout = () => {
             {viewMode === 'knowledge' && <KnowledgeBase />}
             {viewMode === 'office' && <OfficeManagerDashboard />}
             {viewMode === 'spreadsheet' && <SpreadsheetViewer />}
-            {(viewMode === 'welcome' || !viewMode) && <WelcomeDashboard />}
+            {viewMode === 'welcome' && <WelcomeDashboard />}
+            {!viewMode && <WelcomeDashboard />}
           </div>
         </main>
         

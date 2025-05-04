@@ -1,14 +1,9 @@
 
 import React from 'react';
-import { AppProvider } from '@/context/AppContext';
-import MainLayout from '@/components/MainLayout';
+import App from '@/App';
 
 const Index = () => {
-  return (
-    <AppProvider>
-      <MainLayout />
-    </AppProvider>
-  );
+  return <App />;
 };
 
 export default Index;
