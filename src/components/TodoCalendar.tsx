@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronDown, ChevronUp, Plus, ListTodo, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, ListTodo, Calendar as CalendarIcon, CircleDot } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 interface Todo {
   id: string;
@@ -21,6 +22,7 @@ const TodoCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(true);
   const [newTodoText, setNewTodoText] = useState('');
+  const [draggedTodo, setDraggedTodo] = useState<Todo | null>(null);
   const [todos, setTodos] = useState<Todo[]>([
     { id: '1', text: 'Team meeting', completed: false, date: new Date() },
     { id: '2', text: 'Review project proposal', completed: true, date: new Date() },
@@ -30,6 +32,11 @@ const TodoCalendar = () => {
   const todaysTodos = todos.filter(
     todo => todo.date.toDateString() === selectedDate.toDateString()
   );
+
+  // Count tasks for each day
+  const getTaskCountForDay = (date: Date): number => {
+    return todos.filter(todo => todo.date.toDateString() === date.toDateString()).length;
+  };
 
   const addTodo = () => {
     if (newTodoText.trim() === '') return;
@@ -55,6 +62,57 @@ const TodoCalendar = () => {
 
   const deleteTodo = (id: string) => {
     setTodos(todos.filter(todo => todo.id !== id));
+  };
+
+  // Drag and drop functionality
+  const handleDragStart = (todo: Todo) => {
+    setDraggedTodo(todo);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTodo(null);
+  };
+
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+      
+      // If there's a todo being dragged, update its date
+      if (draggedTodo) {
+        const updatedTodos = todos.map(todo => 
+          todo.id === draggedTodo.id 
+            ? { ...todo, date } 
+            : todo
+        );
+        setTodos(updatedTodos);
+        setDraggedTodo(null);
+      }
+    }
+  };
+
+  // Custom day render to show task indicators
+  const customDayRender = (date: Date, isSelected: boolean) => {
+    const taskCount = getTaskCountForDay(date);
+    const dateValue = date.getDate();
+    
+    return (
+      <div className="relative w-full h-full flex items-center justify-center">
+        <div className={cn(
+          "flex flex-col items-center justify-center",
+          isSelected && "font-bold"
+        )}>
+          {dateValue}
+          {taskCount > 0 && (
+            <Badge 
+              variant="secondary" 
+              className="absolute -bottom-1 px-1 py-0 min-w-5 h-4 text-[0.65rem] flex items-center justify-center"
+            >
+              {taskCount}
+            </Badge>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -84,8 +142,11 @@ const TodoCalendar = () => {
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
+                onSelect={handleDateChange}
                 className={cn("rounded-md border", "pointer-events-auto")}
+                components={{
+                  Day: ({ date, selected }) => customDayRender(date, selected)
+                }}
               />
               
               <div className="mt-4 space-y-2">
@@ -112,7 +173,14 @@ const TodoCalendar = () => {
                 <div className="space-y-1 max-h-36 overflow-y-auto py-1">
                   {todaysTodos.length > 0 ? (
                     todaysTodos.map((todo) => (
-                      <div key={todo.id} className="flex items-center justify-between space-x-2 text-sm">
+                      <div 
+                        key={todo.id} 
+                        className="flex items-center justify-between space-x-2 text-sm"
+                        draggable
+                        onDragStart={() => handleDragStart(todo)}
+                        onDragEnd={handleDragEnd}
+                        style={{ cursor: 'grab' }}
+                      >
                         <div className="flex items-center space-x-2">
                           <Checkbox 
                             id={`todo-${todo.id}`}
