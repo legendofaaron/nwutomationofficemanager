@@ -12,7 +12,7 @@ export async function queryLlm(prompt: string, endpoint: string, model: string =
       model: model
     };
     
-    // Add webhook URL if available
+    // Only add webhook URL if explicitly provided
     if (webhookUrl) {
       payload.webhookUrl = webhookUrl;
       payload.callbackEnabled = true;

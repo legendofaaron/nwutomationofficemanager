@@ -18,12 +18,13 @@ const AiSuggestions: React.FC<AiSuggestionsProps> = ({ content, onSuggestionAppl
     setLoading(true);
     try {
       const prompt = `Please suggest improvements for this text: ${content}`;
-      const webhookUrl = 'http://localhost:5678/webhook-test/bf4dd093-bb02-472c-9454-7ab9af97bd1d';
+      // Only use webhook for important document processing operations
+      // For regular suggestion operations, don't trigger the webhook
       const response = await queryLlm(
         prompt, 
         'http://localhost:5678/workflow/EQL62DuHvzL2PmBk', 
-        'default',
-        webhookUrl
+        'default'
+        // Webhook removed from here
       );
       onSuggestionApply(response.message);
     } catch (error) {
