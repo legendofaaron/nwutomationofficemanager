@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Database, Server, FolderPlus, Brain, Save, HardDrive, Building, FileText, Image } from 'lucide-react';
@@ -47,7 +46,7 @@ const SetupAssistant = () => {
     companyName: branding.companyName || '',
     companyDescription: '',
     assistantPurpose: 'General office tasks and document management',
-    logoType: branding.logoType || 'default',
+    logoType: branding.logoType || 'default' as 'default' | 'text' | 'image',
     logoUrl: branding.logoUrl || ''
   });
   
@@ -56,7 +55,7 @@ const SetupAssistant = () => {
     setConfig(prev => ({
       ...prev,
       companyName: branding.companyName || prev.companyName,
-      logoType: branding.logoType || prev.logoType,
+      logoType: (branding.logoType || prev.logoType) as 'default' | 'text' | 'image',
       logoUrl: branding.logoUrl || prev.logoUrl
     }));
   }, [branding]);
@@ -70,10 +69,10 @@ const SetupAssistant = () => {
       purpose: config.assistantPurpose
     });
     
-    // Update branding configuration
+    // Update branding configuration with proper type checking
     setBranding({
       companyName: config.companyName,
-      logoType: config.logoType,
+      logoType: config.logoType as 'default' | 'text' | 'image',
       logoUrl: config.logoUrl
     });
     
@@ -119,6 +118,14 @@ const SetupAssistant = () => {
         </div>
       </div>
     );
+  };
+
+  // Ensure we handle logoType properly in RadioGroup value changes
+  const handleLogoTypeChange = (value: string) => {
+    setConfig({
+      ...config, 
+      logoType: value as 'default' | 'text' | 'image'
+    });
   };
 
   return (
@@ -207,7 +214,7 @@ const SetupAssistant = () => {
                   <Label>Logo Type</Label>
                   <RadioGroup
                     value={config.logoType}
-                    onValueChange={(value) => setConfig({...config, logoType: value})}
+                    onValueChange={handleLogoTypeChange}
                     className="space-y-4"
                   >
                     <div className="flex items-center space-x-3 space-y-0">

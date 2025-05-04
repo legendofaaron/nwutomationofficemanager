@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -138,7 +137,11 @@ Would you like to:
         
       case 'company':
         setSetupData(prev => ({ ...prev, companyName: response }));
-        setBranding(prev => ({ ...prev, companyName: response }));
+        // Fix: update the branding with proper type checking
+        setBranding({
+          ...branding,
+          companyName: response
+        });
         processNextSetupStep('purpose');
         break;
         
