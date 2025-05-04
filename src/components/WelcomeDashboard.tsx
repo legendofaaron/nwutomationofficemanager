@@ -8,6 +8,7 @@ import { useAppContext } from '@/context/AppContext';
 import { Logo } from './Logo';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from './ui/scroll-area';
+import TodoCalendar from './TodoCalendar';
 
 const WelcomeDashboard = () => {
   const { setViewMode, branding } = useAppContext();
@@ -41,16 +42,11 @@ const WelcomeDashboard = () => {
                 My Dashboard
               </CardTitle>
             </CardHeader>
-            <CardContent className="py-2 px-3">
-              <p className="text-xs text-gray-600 mb-2">
-                Access your personalized dashboard with all your important information
-              </p>
+            <CardContent className="py-0 px-0 h-[360px] overflow-hidden">
+              <div className="h-full">
+                <TodoCalendar />
+              </div>
             </CardContent>
-            <CardFooter className="p-3 pt-0">
-              <Button onClick={() => setViewMode('welcome')} size="sm" className="w-full gap-1 text-xs">
-                Go to Dashboard <ArrowRight className="h-3 w-3" />
-              </Button>
-            </CardFooter>
           </Card>
 
           <Card className="hover:shadow-md transition-shadow border-app-blue/10">
