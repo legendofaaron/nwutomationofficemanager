@@ -10,6 +10,7 @@ import { ChevronDown, ChevronUp, Plus, ListTodo, Calendar as CalendarIcon, Circl
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { DayProps } from 'react-day-picker';
 
 interface Todo {
   id: string;
@@ -91,7 +92,9 @@ const TodoCalendar = () => {
   };
 
   // Custom day render to show task indicators
-  const customDayRender = (date: Date, isSelected: boolean) => {
+  const customDayRender = (props: DayProps) => {
+    const { date, disabled, onSelect, activeModifiers } = props;
+    const isSelected = Boolean(activeModifiers?.selected);
     const taskCount = getTaskCountForDay(date);
     const dateValue = date.getDate();
     
@@ -145,7 +148,7 @@ const TodoCalendar = () => {
                 onSelect={handleDateChange}
                 className={cn("rounded-md border", "pointer-events-auto")}
                 components={{
-                  Day: ({ date, selected }) => customDayRender(date, selected)
+                  Day: customDayRender
                 }}
               />
               
