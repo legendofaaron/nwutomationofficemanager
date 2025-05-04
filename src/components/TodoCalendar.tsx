@@ -104,7 +104,7 @@ const TodoCalendar = () => {
       </div>;
   };
   return <div className="fixed top-4 right-4 w-80 z-50">
-      <Card className="shadow-lg">
+      <Card className="shadow-lg mx-[69px]">
         <Collapsible open={isCalendarOpen} onOpenChange={setIsCalendarOpen} className="rounded my-0 py-0 bg-transparent mx-[3px] px-0">
           <CardHeader className="p-3 bg-primary/10 py-[13px] my-[5px] mx-[32px] px-[36px]">
             <div className="flex justify-between items-center">
