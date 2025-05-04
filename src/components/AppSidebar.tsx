@@ -1,15 +1,18 @@
+
 import React, { useState, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import NewDocumentDialog from './NewDocumentDialog';
 import NewFolderDialog from './NewFolderDialog';
 import RenameItemDialog from './RenameItemDialog';
-import { FilePen, Brain, Building2, Database, File, Trash2, Folder, FolderOpen, Menu, Table, X, ChevronRight, ChevronDown, LayoutDashboard, Settings } from 'lucide-react';
+import { FilePen, Brain, Building2, Database, File, Trash2, Folder, FolderOpen, Menu, Table, X, ChevronRight, ChevronDown, LayoutDashboard, Settings, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Logo } from './Logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarContent, SidebarHeader, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuAction, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
 import { useToast } from '@/hooks/use-toast';
 import { MobileSettingsDrawer } from './settings/MobileSettingsDrawer';
+import { Dialog, DialogContent } from './ui/dialog';
+import DashboardCalendar from './DashboardCalendar';
 
 const AppSidebar = () => {
   const {
@@ -35,6 +38,7 @@ const AppSidebar = () => {
   const [draggedItem, setDraggedItem] = useState<any>(null);
   const [dragOverItem, setDragOverItem] = useState<any>(null);
   const [isSettingsDrawerOpen, setIsSettingsDrawerOpen] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handleFileClick = (file: any) => {
     if (file.type === 'folder') return;
@@ -289,6 +293,11 @@ const AppSidebar = () => {
     icon: Brain,
     onClick: () => setViewMode('knowledge'),
     isActive: viewMode === 'knowledge'
+  }, {
+    title: "Calendar",
+    icon: Calendar,
+    onClick: () => setIsCalendarOpen(true),
+    isActive: false
   }];
 
   return <>
@@ -383,6 +392,15 @@ const AppSidebar = () => {
         open={isSettingsDrawerOpen} 
         onClose={() => setIsSettingsDrawerOpen(false)} 
       />
+
+      {/* Calendar Dialog */}
+      <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+        <DialogContent className="max-w-3xl">
+          <div className="h-[500px] p-4">
+            <DashboardCalendar />
+          </div>
+        </DialogContent>
+      </Dialog>
     </>;
 };
 

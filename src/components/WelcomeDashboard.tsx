@@ -8,7 +8,6 @@ import { useAppContext } from '@/context/AppContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from './ui/scroll-area';
 import { Logo } from './Logo';
-import DashboardCalendar from './DashboardCalendar';
 
 const WelcomeDashboard = () => {
   const { setViewMode, branding } = useAppContext();
@@ -159,15 +158,6 @@ const WelcomeDashboard = () => {
             </Card>
           </div>
         </div>
-
-        {/* Calendar Card - Moved below database section */}
-        <Card className="hover:shadow-md transition-shadow border-app-blue/10">
-          <CardContent className="py-0 px-0 h-[360px] overflow-hidden">
-            <div className="h-full p-3">
-              <DashboardCalendar />
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </ScrollArea>
   );
