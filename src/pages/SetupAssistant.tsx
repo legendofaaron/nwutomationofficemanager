@@ -86,11 +86,11 @@ const SetupAssistant = () => {
     setAiAssistantOpen(true);
     
     // Navigate back to dashboard
-    navigate('/dashboard');
+    navigate('/');
   };
   
   const handleCancel = () => {
-    navigate('/dashboard');
+    navigate('/');
   };
 
   // Logo preview component
