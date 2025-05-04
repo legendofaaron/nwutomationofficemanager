@@ -122,7 +122,7 @@ const TodoCalendarBubble = () => {
   const totalTaskCount = todos.length;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed top-4 right-4 z-50">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button 
