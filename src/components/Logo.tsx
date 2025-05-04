@@ -1,13 +1,13 @@
 
+import React from 'react';
 import { Hexagon } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 
 export const Logo = ({ small }: { small?: boolean }) => {
   const { branding } = useAppContext();
   
   return (
-    <Link to="/dashboard" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+    <div className="flex items-center gap-2 hover:opacity-90 transition-opacity">
       {branding.logoType === 'image' && branding.logoUrl ? (
         <img 
           src={branding.logoUrl} 
@@ -22,6 +22,6 @@ export const Logo = ({ small }: { small?: boolean }) => {
         </div>
       )}
       {!small && <span className="font-semibold text-app-blue">{branding.companyName}</span>}
-    </Link>
+    </div>
   );
 };

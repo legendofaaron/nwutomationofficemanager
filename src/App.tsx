@@ -7,6 +7,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import AiAssistant from '@/components/AiAssistant';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { BrowserRouter } from 'react-router-dom';
 
 import TodoCalendarBubble from './components/TodoCalendarBubble';
 
@@ -49,9 +50,11 @@ const AppContent = () => {
 // Main App component that provides the context
 const App = () => {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <BrowserRouter>
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </BrowserRouter>
   );
 };
 
