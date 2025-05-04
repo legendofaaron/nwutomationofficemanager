@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -121,9 +120,9 @@ const TodoCalendar = () => {
 
   return (
     <div className="fixed top-4 right-4 w-80 z-50">
-      <Card className="shadow-lg">
+      <Card className="shadow-lg bg-background border-2">
         <Collapsible open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-          <CardHeader className="p-3 bg-primary/10">
+          <CardHeader className="p-3 bg-card">
             <div className="flex justify-between items-center">
               <CardTitle className="text-base flex items-center">
                 <CalendarIcon className="h-4 w-4 mr-2" />
@@ -142,12 +141,12 @@ const TodoCalendar = () => {
           </CardHeader>
           
           <CollapsibleContent>
-            <CardContent className="p-3">
+            <CardContent className="p-3 bg-background">
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={handleDateChange}
-                className={cn("rounded-md border", "pointer-events-auto")}
+                className={cn("rounded-md border bg-card shadow-sm", "pointer-events-auto")}
                 components={{
                   Day: customDayRender
                 }}
@@ -167,19 +166,19 @@ const TodoCalendar = () => {
                     value={newTodoText}
                     onChange={(e) => setNewTodoText(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && addTodo()}
-                    className="h-8 text-sm"
+                    className="h-8 text-sm bg-background"
                   />
                   <Button onClick={addTodo} size="sm" className="h-8 px-2">
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
                 
-                <div className="space-y-1 max-h-36 overflow-y-auto py-1">
+                <div className="space-y-1 max-h-36 overflow-y-auto py-1 bg-card rounded-md p-2">
                   {todaysTodos.length > 0 ? (
                     todaysTodos.map((todo) => (
                       <div 
                         key={todo.id} 
-                        className="flex items-center justify-between space-x-2 text-sm"
+                        className="flex items-center justify-between space-x-2 text-sm bg-background rounded-sm p-1"
                         draggable
                         onDragStart={() => handleDragStart(todo)}
                         onDragEnd={handleDragEnd}
@@ -212,7 +211,7 @@ const TodoCalendar = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-muted-foreground text-center py-2">
+                    <div className="text-sm text-muted-foreground text-center py-2 bg-background rounded-sm">
                       No tasks for today
                     </div>
                   )}
