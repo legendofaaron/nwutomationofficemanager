@@ -5,16 +5,24 @@ import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, ListTodo } from 'lucide-react';
+import { Plus, ListTodo, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { type DayProps } from 'react-day-picker';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
 
 interface Todo {
   id: string;
   text: string;
   completed: boolean;
+  date: Date;
+}
+
+interface TaskFormValues {
+  text: string;
   date: Date;
 }
 
@@ -28,7 +36,15 @@ const DashboardCalendar = () => {
     { id: '3', text: 'Call with client', completed: false, date: new Date() },
   ]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
+
+  const form = useForm<TaskFormValues>({
+    defaultValues: {
+      text: '',
+      date: new Date(),
+    },
+  });
 
   const todaysTodos = todos.filter(
     todo => todo.date.toDateString() === selectedDate.toDateString()
@@ -51,6 +67,20 @@ const DashboardCalendar = () => {
     
     setTodos([...todos, newTodo]);
     setNewTodoText('');
+    toast.success("Task created successfully");
+  };
+
+  const onSubmitNewTask = (values: TaskFormValues) => {
+    const newTodo: Todo = {
+      id: Date.now().toString(),
+      text: values.text,
+      completed: false,
+      date: values.date || selectedDate
+    };
+    
+    setTodos([...todos, newTodo]);
+    setIsDialogOpen(false);
+    form.reset();
     toast.success("Task created successfully");
   };
 
@@ -125,8 +155,17 @@ const DashboardCalendar = () => {
       <div 
         className={cn(
           "relative w-full h-full flex items-center justify-center",
-          isDragging && "cursor-copy drop-shadow-sm"
+          isDragging && "cursor-copy drop-shadow-sm",
+          "hover:bg-accent/10 transition-colors cursor-pointer"
         )}
+        onClick={() => {
+          setSelectedDate(date);
+        }}
+        onDoubleClick={() => {
+          setSelectedDate(date);
+          form.setValue('date', date);
+          setIsDialogOpen(true);
+        }}
         onDragOver={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -171,24 +210,75 @@ const DashboardCalendar = () => {
       <div 
         ref={calendarRef}
         onDragOver={handleCalendarDragOver}
+        className="flex-shrink-0 w-full"
       >
         <Calendar
           mode="single"
           selected={selectedDate}
           onSelect={handleDateChange}
-          className={cn("rounded-md border bg-card shadow-sm", "pointer-events-auto")}
+          className={cn("rounded-md border bg-card shadow-sm w-full", "pointer-events-auto")}
           components={{
             Day: customDayRender
           }}
         />
       </div>
       
-      <div className="flex-grow overflow-auto mt-2">
-        <div className="mb-1.5 flex items-center">
-          <ListTodo className="h-4 w-4 mr-1.5" />
-          <h3 className="text-sm font-medium">
-            Tasks for {format(selectedDate, 'MMM d, yyyy')}
-          </h3>
+      <div className="flex-grow overflow-auto mt-2 min-h-0">
+        <div className="mb-1.5 flex items-center justify-between">
+          <div className="flex items-center">
+            <ListTodo className="h-4 w-4 mr-1.5" />
+            <h3 className="text-sm font-medium">
+              Tasks for {format(selectedDate, 'MMM d, yyyy')}
+            </h3>
+          </div>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="h-7 px-2">
+                <Plus className="h-3.5 w-3.5" />
+                <span className="sr-only">Add Task</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Add New Task</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={form.handleSubmit(onSubmitNewTask)} className="space-y-4 mt-2">
+                <FormField
+                  control={form.control}
+                  name="text"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Task</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter task description..." {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Date</FormLabel>
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        className="rounded-md border"
+                      />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end">
+                  <Button type="submit">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    Create Task
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
         
         <div className="flex space-x-1.5 mb-1.5">
