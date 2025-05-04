@@ -294,7 +294,7 @@ const AppSidebar = () => {
   return <>
       <SidebarHeader className="p-6 border-b">
         <div className="flex items-center justify-between">
-          <Logo />
+          <Logo onClick={() => setViewMode('welcome')} />
           <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)} className="h-6 w-6 hover:bg-app-gray-light">
             <X className="h-4 w-4" />
           </Button>

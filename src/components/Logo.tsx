@@ -3,11 +3,14 @@ import React from 'react';
 import { Hexagon } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 
-export const Logo = ({ small }: { small?: boolean }) => {
+export const Logo = ({ small, onClick }: { small?: boolean; onClick?: () => void }) => {
   const { branding } = useAppContext();
   
   return (
-    <div className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+    <div 
+      className="flex items-center gap-2 hover:opacity-90 transition-opacity cursor-pointer"
+      onClick={onClick}
+    >
       {branding.logoType === 'image' && branding.logoUrl ? (
         <img 
           src={branding.logoUrl} 

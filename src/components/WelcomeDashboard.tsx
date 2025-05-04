@@ -22,7 +22,7 @@ const WelcomeDashboard = () => {
     <ScrollArea className="h-full">
       <div className={`mx-auto px-3 pt-4 pb-6 max-w-5xl`}>
         <div className="flex justify-center mb-4">
-          <Logo />
+          <Logo onClick={() => setViewMode('welcome')} />
         </div>
         
         <div className="text-center mb-6">

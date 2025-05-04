@@ -20,7 +20,8 @@ const MainLayout = () => {
     viewMode,
     sidebarOpen,
     aiAssistantOpen,
-    setAiAssistantOpen
+    setAiAssistantOpen,
+    setViewMode
   } = useAppContext();
 
   return (
@@ -32,7 +33,7 @@ const MainLayout = () => {
           </Sidebar>
           <SidebarTrigger className="absolute -right-12 top-24 z-20 h-16 w-12 bg-white shadow-md rounded-r-lg flex items-center justify-center hover:bg-gray-50 transition-colors group">
             <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
-              <Logo small />
+              <Logo small onClick={() => setViewMode('welcome')} />
             </div>
           </SidebarTrigger>
         </div>
