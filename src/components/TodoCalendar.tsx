@@ -92,9 +92,9 @@ const TodoCalendar = () => {
   };
 
   // Custom day render to show task indicators
-  const customDayRender = (props: DayProps) => {
-    const { date, disabled, onSelect, activeModifiers } = props;
-    const isSelected = Boolean(activeModifiers?.selected);
+  const customDayRender = (day: DayProps) => {
+    const date = day.date;
+    const isSelected = Boolean(day.selected);
     const taskCount = getTaskCountForDay(date);
     const dateValue = date.getDate();
     
