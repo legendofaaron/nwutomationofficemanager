@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Plus, ListTodo } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { type DayProps } from 'react-day-picker';
+import { toast } from 'sonner';
 
 interface Todo {
   id: string;
@@ -26,6 +27,8 @@ const DashboardCalendar = () => {
     { id: '2', text: 'Review project proposal', completed: true, date: new Date() },
     { id: '3', text: 'Call with client', completed: false, date: new Date() },
   ]);
+  const [isDragging, setIsDragging] = useState(false);
+  const calendarRef = useRef<HTMLDivElement>(null);
 
   const todaysTodos = todos.filter(
     todo => todo.date.toDateString() === selectedDate.toDateString()
@@ -48,6 +51,7 @@ const DashboardCalendar = () => {
     
     setTodos([...todos, newTodo]);
     setNewTodoText('');
+    toast.success("Task created successfully");
   };
 
   const toggleTodoCompletion = (id: string) => {
@@ -60,15 +64,35 @@ const DashboardCalendar = () => {
 
   const deleteTodo = (id: string) => {
     setTodos(todos.filter(todo => todo.id !== id));
+    toast.info("Task removed");
   };
 
-  // Drag and drop functionality
-  const handleDragStart = (todo: Todo) => {
+  // Enhanced drag and drop functionality
+  const handleDragStart = (todo: Todo, e: React.DragEvent) => {
     setDraggedTodo(todo);
+    setIsDragging(true);
+    
+    // Set a custom drag image (optional)
+    const dragImage = document.createElement('div');
+    dragImage.innerHTML = `<div class="bg-primary text-white px-2 py-1 rounded text-xs">${todo.text}</div>`;
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+    
+    // Clean up after drag operation starts
+    setTimeout(() => {
+      document.body.removeChild(dragImage);
+    }, 0);
   };
 
   const handleDragEnd = () => {
     setDraggedTodo(null);
+    setIsDragging(false);
+  };
+
+  // Allow calendar to receive dragged tasks
+  const handleCalendarDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const handleDateChange = (date: Date | undefined) => {
@@ -84,11 +108,12 @@ const DashboardCalendar = () => {
         );
         setTodos(updatedTodos);
         setDraggedTodo(null);
+        toast.success("Task moved to " + format(date, 'MMM d, yyyy'));
       }
     }
   };
 
-  // Custom day render to show task indicators
+  // Custom day render to show task indicators and handle drops
   const customDayRender = (day: DayProps) => {
     const date = day.date;
     // Check if the current day is selected by comparing dates
@@ -97,7 +122,32 @@ const DashboardCalendar = () => {
     const dateValue = date.getDate();
     
     return (
-      <div className="relative w-full h-full flex items-center justify-center">
+      <div 
+        className={cn(
+          "relative w-full h-full flex items-center justify-center",
+          isDragging && "cursor-copy drop-shadow-sm"
+        )}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (draggedTodo) {
+            const updatedTodos = todos.map(todo => 
+              todo.id === draggedTodo.id 
+                ? { ...todo, date } 
+                : todo
+            );
+            setTodos(updatedTodos);
+            setDraggedTodo(null);
+            setIsDragging(false);
+            // Update selected date to the drop target date
+            setSelectedDate(date);
+            toast.success("Task moved to " + format(date, 'MMM d, yyyy'));
+          }
+        }}
+      >
         <div className={cn(
           "flex flex-col items-center justify-center",
           isSelected && "font-bold"
@@ -118,7 +168,10 @@ const DashboardCalendar = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div>
+      <div 
+        ref={calendarRef}
+        onDragOver={handleCalendarDragOver}
+      >
         <Calendar
           mode="single"
           selected={selectedDate}
@@ -156,9 +209,12 @@ const DashboardCalendar = () => {
             todaysTodos.map((todo) => (
               <div 
                 key={todo.id} 
-                className="flex items-center justify-between space-x-1.5 text-xs bg-background rounded-sm p-1"
+                className={cn(
+                  "flex items-center justify-between space-x-1.5 text-xs bg-background rounded-sm p-1",
+                  "hover:bg-accent/20 transition-colors"
+                )}
                 draggable
-                onDragStart={() => handleDragStart(todo)}
+                onDragStart={(e) => handleDragStart(todo, e)}
                 onDragEnd={handleDragEnd}
                 style={{ cursor: 'grab' }}
               >
