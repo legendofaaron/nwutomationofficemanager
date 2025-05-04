@@ -104,11 +104,13 @@ const TodoCalendarBubble = () => {
           "flex flex-col items-center justify-center",
           isSelected && "font-bold"
         )}>
-          {dateValue}
+          <span className="text-xs overflow-hidden text-center w-full">
+            {dateValue}
+          </span>
           {taskCount > 0 && (
             <Badge 
               variant="secondary" 
-              className="absolute -bottom-1 px-1 py-0 min-w-5 h-4 text-[0.65rem] flex items-center justify-center"
+              className="absolute -bottom-1 px-1 py-0 min-w-4 h-3 text-[0.6rem] flex items-center justify-center"
             >
               {taskCount}
             </Badge>

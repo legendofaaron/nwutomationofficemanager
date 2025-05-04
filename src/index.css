@@ -118,6 +118,14 @@
   .cursor-move {
     cursor: move;
   }
+
+  .calendar-day-cell {
+    @apply h-8 w-8 flex-shrink-0 relative flex items-center justify-center;
+  }
+  
+  .calendar-day-number {
+    @apply text-xs overflow-hidden text-center flex-shrink-0;
+  }
 }
 
 @layer utilities {
@@ -134,5 +142,11 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none; /* Firefox */
+  }
+  
+  .truncate-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
