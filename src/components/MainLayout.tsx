@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import AppSidebar from './AppSidebar';
 import DocumentViewer from './DocumentViewer';
@@ -24,18 +24,53 @@ const MainLayout = () => {
     setViewMode
   } = useAppContext();
 
+  const [triggerPosition, setTriggerPosition] = useState(24); // Default position (top: 24)
+  const isDragging = useRef(false);
+
+  const handleDragStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isDragging.current = true;
+    document.addEventListener('mousemove', handleDrag);
+    document.addEventListener('mouseup', handleDragEnd);
+  };
+
+  const handleDrag = (e: MouseEvent) => {
+    if (isDragging.current) {
+      const sidebarElement = document.querySelector('.sidebar-container');
+      if (sidebarElement) {
+        const sidebarRect = sidebarElement.getBoundingClientRect();
+        const newPosition = Math.max(16, Math.min(e.clientY - sidebarRect.top, sidebarRect.height - 80));
+        setTriggerPosition(newPosition);
+      }
+    }
+  };
+
+  const handleDragEnd = () => {
+    isDragging.current = false;
+    document.removeEventListener('mousemove', handleDrag);
+    document.removeEventListener('mouseup', handleDragEnd);
+  };
+
   return (
     <SidebarProvider defaultOpen={sidebarOpen}>
       <div className="h-screen bg-app-gray-lightest flex w-full overflow-hidden">
-        <div className="relative">
+        <div className="relative sidebar-container">
           <Sidebar>
             <AppSidebar />
           </Sidebar>
-          <SidebarTrigger className="absolute -right-12 top-24 z-20 h-16 w-12 bg-white shadow-md rounded-r-lg flex items-center justify-center hover:bg-gray-50 transition-colors group">
-            <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
-              <Logo small onClick={() => setViewMode('welcome')} />
-            </div>
-          </SidebarTrigger>
+          <div 
+            className="absolute -right-12 z-20" 
+            style={{ top: `${triggerPosition}px` }}
+          >
+            <SidebarTrigger 
+              className="h-16 w-12 bg-white shadow-md rounded-r-lg flex items-center justify-center hover:bg-gray-50 transition-colors group cursor-move"
+              onMouseDown={handleDragStart}
+            >
+              <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
+                <Logo small onClick={() => setViewMode('welcome')} />
+              </div>
+            </SidebarTrigger>
+          </div>
         </div>
         
         <main className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", sidebarOpen ? "ml-0" : "ml-0")}>

@@ -110,6 +110,14 @@
   .cm-editor {
     @apply rounded-md border;
   }
+  
+  .cursor-ns-resize {
+    cursor: ns-resize;
+  }
+  
+  .cursor-move {
+    cursor: move;
+  }
 }
 
 @layer utilities {
