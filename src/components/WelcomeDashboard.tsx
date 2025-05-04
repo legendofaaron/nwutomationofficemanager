@@ -1,14 +1,13 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, MessageSquare, BookOpenText, PlayIcon, Building2, Brain, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
-import { Logo } from './Logo';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from './ui/scroll-area';
-import TodoCalendar from './TodoCalendar';
+import { Logo } from './Logo';
+import DashboardCalendar from './DashboardCalendar';
 
 const WelcomeDashboard = () => {
   const { setViewMode, branding } = useAppContext();
@@ -26,7 +25,7 @@ const WelcomeDashboard = () => {
           <Logo onClick={() => setViewMode('welcome')} />
         </div>
         
-        <div className="text-center mb-6">
+        <div className="text-center mb-5">
           <h1 className="text-2xl font-bold text-app-blue mb-2">Welcome to Office Manager</h1>
           <p className="text-gray-600 text-sm max-w-2xl mx-auto">
             A secure solution by {branding.companyName} for document management and workplace productivity.
@@ -36,15 +35,9 @@ const WelcomeDashboard = () => {
         {/* Main Nav Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
           <Card className="hover:shadow-md transition-shadow border-app-blue/10">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-white p-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <LayoutDashboard className="h-4 w-4 text-app-blue" />
-                My Dashboard
-              </CardTitle>
-            </CardHeader>
             <CardContent className="py-0 px-0 h-[360px] overflow-hidden">
-              <div className="h-full">
-                <TodoCalendar />
+              <div className="h-full p-3">
+                <DashboardCalendar />
               </div>
             </CardContent>
           </Card>

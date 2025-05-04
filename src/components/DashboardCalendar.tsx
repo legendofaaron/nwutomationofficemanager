@@ -5,7 +5,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, ListTodo, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, ListTodo } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { type DayProps } from 'react-day-picker';
@@ -117,61 +117,62 @@ const DashboardCalendar = () => {
   };
 
   return (
-    <div className="h-full flex flex-col p-2">
-      <div className="mb-2">
+    <div className="h-full flex flex-col">
+      <div>
         <Calendar
           mode="single"
           selected={selectedDate}
           onSelect={handleDateChange}
-          className={cn("rounded-md border bg-white shadow-sm", "pointer-events-auto")}
+          className={cn("rounded-md border bg-card shadow-sm", "pointer-events-auto")}
           components={{
             Day: customDayRender
           }}
         />
       </div>
       
-      <div className="flex-grow overflow-y-auto">
-        <div className="mb-2 flex items-center">
-          <ListTodo className="h-4 w-4 mr-2" />
+      <div className="flex-grow overflow-auto mt-2">
+        <div className="mb-1.5 flex items-center">
+          <ListTodo className="h-4 w-4 mr-1.5" />
           <h3 className="text-sm font-medium">
             Tasks for {format(selectedDate, 'MMM d, yyyy')}
           </h3>
         </div>
         
-        <div className="flex space-x-2 mb-2">
+        <div className="flex space-x-1.5 mb-1.5">
           <Input
             placeholder="Add new task..."
             value={newTodoText}
             onChange={(e) => setNewTodoText(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && addTodo()}
-            className="h-8 text-sm"
+            className="h-7 text-xs"
           />
-          <Button onClick={addTodo} size="sm" className="h-8 px-2">
-            <Plus className="h-4 w-4" />
+          <Button onClick={addTodo} size="sm" className="h-7 px-1.5">
+            <Plus className="h-3.5 w-3.5" />
           </Button>
         </div>
         
-        <div className="space-y-1 max-h-[80px] bg-card rounded-md p-2 overflow-y-auto">
+        <div className="space-y-0.5 max-h-[100px] bg-card rounded-md p-1.5 overflow-y-auto">
           {todaysTodos.length > 0 ? (
             todaysTodos.map((todo) => (
               <div 
                 key={todo.id} 
-                className="flex items-center justify-between space-x-2 text-sm bg-background rounded-sm p-1"
+                className="flex items-center justify-between space-x-1.5 text-xs bg-background rounded-sm p-1"
                 draggable
                 onDragStart={() => handleDragStart(todo)}
                 onDragEnd={handleDragEnd}
                 style={{ cursor: 'grab' }}
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1.5">
                   <Checkbox 
                     id={`todo-${todo.id}`}
                     checked={todo.completed}
                     onCheckedChange={() => toggleTodoCompletion(todo.id)}
+                    className="h-3.5 w-3.5"
                   />
                   <label
                     htmlFor={`todo-${todo.id}`}
                     className={cn(
-                      "text-sm cursor-pointer",
+                      "text-xs cursor-pointer",
                       todo.completed && "line-through text-muted-foreground"
                     )}
                   >
@@ -181,7 +182,7 @@ const DashboardCalendar = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0"
+                  className="h-5 w-5 p-0"
                   onClick={() => deleteTodo(todo.id)}
                 >
                   &times;
@@ -189,7 +190,7 @@ const DashboardCalendar = () => {
               </div>
             ))
           ) : (
-            <div className="text-sm text-muted-foreground text-center py-2 bg-background rounded-sm">
+            <div className="text-xs text-muted-foreground text-center py-1.5 bg-background rounded-sm">
               No tasks for today
             </div>
           )}
