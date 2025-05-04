@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -5,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronDown, ChevronUp, Plus, ListTodo, Calendar as CalendarIcon, CircleDot } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, ListTodo, Calendar as CalendarIcon } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { DayProps } from 'react-day-picker';
+import { type DayProps } from 'react-day-picker';
 
 interface Todo {
   id: string;
@@ -93,8 +94,8 @@ const TodoCalendar = () => {
   // Custom day render to show task indicators
   const customDayRender = (day: DayProps) => {
     const date = day.date;
-    // Access selection through modifiers instead of directly using 'selected' property
-    const isSelected = day.modifiers?.selected === true;
+    // Check if the current day is selected by comparing dates
+    const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
     const taskCount = getTaskCountForDay(date);
     const dateValue = date.getDate();
     
