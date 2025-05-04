@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,18 @@ interface Message {
 type SetupStep = 'welcome' | 'name' | 'company' | 'purpose' | 'complete' | null;
 
 const AiAssistant = () => {
-  const { aiAssistantOpen, setAiAssistantOpen, assistantConfig, setAssistantConfig, branding, setBranding } = useAppContext();
+  const { 
+    aiAssistantOpen, 
+    setAiAssistantOpen, 
+    assistantConfig, 
+    setAssistantConfig, 
+    branding, 
+    setBranding,
+    setViewMode,
+    setCurrentFile,
+    files,
+    setFiles
+  } = useAppContext();
   const [input, setInput] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [isSetupMode, setIsSetupMode] = useState(false);
@@ -244,19 +256,161 @@ How can I assist you today?`
     setMessages(prev => [...prev, { id: userMessageId, type: 'user', content: action }]);
     
     let response = '';
+    
     switch (action) {
       case 'create document':
         response = "I'd be happy to help you create a new document. What type of document would you like to create?";
+        
+        // Add options for document types
+        setTimeout(() => {
+          setMessages(prev => [
+            ...prev, 
+            { 
+              id: (Date.now() + 2).toString(), 
+              type: 'ai', 
+              content: `Here are some common document types:
+1. Project Proposal
+2. Meeting Minutes
+3. Business Report
+4. Company Memo
+5. Custom Document
+
+Which would you like to create? Or describe your custom document needs.`
+            }
+          ]);
+          
+          // Set up listener for next user input
+          setActiveAction({
+            type: 'document',
+            step: 'select-type'
+          });
+        }, 800);
         break;
+        
       case 'create schedule':
         response = "Let's organize a schedule for you. What type of schedule would you like to create?";
+        
+        // Switch to schedule view after response
+        setTimeout(() => {
+          setViewMode('document');
+          
+          // Create a new schedule document
+          const newSchedule = {
+            id: Date.now().toString(),
+            name: 'New Schedule',
+            type: 'document' as const,
+            content: '# Schedule\n\n## Daily Tasks\n\n- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3\n\n## Weekly Goals\n\n- Goal 1\n- Goal 2'
+          };
+          
+          // Find Documents folder or create it
+          let documentsFolder = files.find(f => f.type === 'folder' && f.name === 'Documents');
+          if (!documentsFolder) {
+            documentsFolder = {
+              id: 'documents-folder',
+              name: 'Documents',
+              type: 'folder',
+              children: []
+            };
+            setFiles([...files, documentsFolder]);
+          }
+          
+          // Add schedule to documents folder
+          const updatedFiles = files.map(file => {
+            if (file.id === documentsFolder?.id) {
+              return {
+                ...file,
+                children: [...(file.children || []), newSchedule]
+              };
+            }
+            return file;
+          });
+          
+          setFiles(updatedFiles);
+          setCurrentFile(newSchedule);
+          
+          setMessages(prev => [
+            ...prev, 
+            { 
+              id: (Date.now() + 2).toString(), 
+              type: 'ai', 
+              content: `I've created a new schedule document for you. You can now edit it in the document viewer.
+
+Would you like me to help customize this schedule further? For example:
+1. Add specific time blocks
+2. Set recurring meetings
+3. Add deadline reminders`
+            }
+          ]);
+          
+          setActiveAction({
+            type: 'schedule',
+            step: 'customize',
+            documentId: newSchedule.id
+          });
+        }, 800);
         break;
+        
       case 'create invoice':
-        response = "I can help you generate a professional invoice. Who will be the recipient of this invoice?";
+        response = "I can help you generate a professional invoice. Let's get started with the basic details.";
+        
+        // Navigate to invoice view
+        setTimeout(() => {
+          setViewMode('office');
+          
+          setMessages(prev => [
+            ...prev, 
+            { 
+              id: (Date.now() + 2).toString(), 
+              type: 'ai', 
+              content: `I've opened the Office Manager where you can create and manage invoices.
+
+Please provide the following details to create your invoice:
+1. Client Name
+2. Invoice Amount
+3. Due Date
+4. Service Description
+
+Or you can simply fill out the invoice form directly in the Office Manager panel.`
+            }
+          ]);
+          
+          setActiveAction({
+            type: 'invoice',
+            step: 'create'
+          });
+        }, 800);
         break;
+        
       case 'analyze receipt':
         response = "I can assist with receipt analysis. Please upload or share the receipt details so I can process the information.";
+        
+        // Switch to receipt analyzer
+        setTimeout(() => {
+          setViewMode('office');
+          
+          setMessages(prev => [
+            ...prev, 
+            { 
+              id: (Date.now() + 2).toString(), 
+              type: 'ai', 
+              content: `I've opened the Office Manager where you can upload and analyze receipts.
+
+You can:
+1. Upload a receipt image or PDF
+2. Enter receipt details manually
+3. Use the receipt scanning tool
+
+The system will extract key information such as vendor, date, amount, and items purchased.`
+            }
+          ]);
+          
+          setActiveAction({
+            type: 'receipt',
+            step: 'analyze'
+          });
+        }, 800);
         break;
+        
       case 'explain how to use':
         response = `Here's how to make the most of ${assistantConfig?.name || 'Office Manager'}:
 
@@ -280,6 +434,462 @@ Your data remains secure on your local system. How can I assist you today?`;
     }, 500);
   };
 
+  // Active action tracking for multi-step processes
+  const [activeAction, setActiveAction] = useState<{
+    type: 'document' | 'schedule' | 'invoice' | 'receipt' | null;
+    step: string;
+    documentId?: string;
+    data?: any;
+  }>({
+    type: null,
+    step: ''
+  });
+
+  // Process user input based on active action
+  const processActionInput = (userInput: string) => {
+    if (!activeAction.type) return false;
+    
+    switch (activeAction.type) {
+      case 'document':
+        if (activeAction.step === 'select-type') {
+          // Create document based on selected type
+          const documentType = getDocumentTypeFromInput(userInput);
+          const content = generateDocumentTemplate(documentType);
+          
+          // Create new document
+          const newDocument = {
+            id: Date.now().toString(),
+            name: `New ${documentType}`,
+            type: 'document' as const,
+            content
+          };
+          
+          // Find Documents folder or create it
+          let documentsFolder = files.find(f => f.type === 'folder' && f.name === 'Documents');
+          if (!documentsFolder) {
+            documentsFolder = {
+              id: 'documents-folder',
+              name: 'Documents',
+              type: 'folder' as const,
+              children: []
+            };
+            setFiles([...files, documentsFolder]);
+          }
+          
+          // Add document to documents folder
+          const updatedFiles = files.map(file => {
+            if (file.id === documentsFolder?.id) {
+              return {
+                ...file,
+                children: [...(file.children || []), newDocument]
+              };
+            }
+            return file;
+          });
+          
+          setFiles(updatedFiles);
+          setCurrentFile(newDocument);
+          setViewMode('document');
+          
+          // Respond to user
+          setMessages(prev => [
+            ...prev, 
+            { 
+              id: (Date.now() + 1).toString(), 
+              type: 'ai', 
+              content: `I've created a new ${documentType} for you and opened it in the document viewer. You can now edit it.
+
+Would you like me to help you fill in any specific sections of this document?`
+            }
+          ]);
+          
+          // Update action state
+          setActiveAction({
+            type: 'document',
+            step: 'editing',
+            documentId: newDocument.id
+          });
+          
+          return true;
+        }
+        break;
+        
+      case 'schedule':
+        if (activeAction.step === 'customize' && activeAction.documentId) {
+          // Update schedule based on customization request
+          const updatedContent = customizeSchedule(userInput, files, activeAction.documentId);
+          
+          // Update file content
+          const updatedFiles = updateFileContent(files, activeAction.documentId, updatedContent);
+          setFiles(updatedFiles);
+          
+          // Find the current file and update it if it's the active one
+          const currentDocumentFile = findFileById(files, activeAction.documentId);
+          if (currentDocumentFile && currentFile?.id === activeAction.documentId) {
+            setCurrentFile({
+              ...currentDocumentFile,
+              content: updatedContent
+            });
+          }
+          
+          // Respond to user
+          setMessages(prev => [
+            ...prev, 
+            { 
+              id: (Date.now() + 1).toString(), 
+              type: 'ai', 
+              content: `I've updated your schedule with the requested customizations. You can continue editing it in the document viewer.
+
+Is there anything else you'd like to add to your schedule?`
+            }
+          ]);
+          
+          return true;
+        }
+        break;
+        
+      case 'invoice':
+      case 'receipt':
+        // These are handled in the Office Manager views
+        setMessages(prev => [
+          ...prev, 
+          { 
+            id: (Date.now() + 1).toString(), 
+            type: 'ai', 
+            content: `I've opened the appropriate tool in the Office Manager panel. You can now interact with it directly.
+
+Let me know if you need help with any specific part of the ${activeAction.type === 'invoice' ? 'invoice creation' : 'receipt analysis'} process.`
+          }
+        ]);
+        
+        // Clear active action after redirecting
+        setActiveAction({
+          type: null,
+          step: ''
+        });
+        
+        return true;
+    }
+    
+    return false;
+  };
+
+  // Helper function to determine document type from user input
+  const getDocumentTypeFromInput = (input: string): string => {
+    input = input.toLowerCase();
+    
+    if (input.includes('1') || input.includes('proposal') || input.includes('project proposal')) {
+      return 'Project Proposal';
+    } else if (input.includes('2') || input.includes('minutes') || input.includes('meeting minutes')) {
+      return 'Meeting Minutes';
+    } else if (input.includes('3') || input.includes('report') || input.includes('business report')) {
+      return 'Business Report';
+    } else if (input.includes('4') || input.includes('memo') || input.includes('company memo')) {
+      return 'Company Memo';
+    } else {
+      return 'Custom Document';
+    }
+  };
+
+  // Generate document template based on type
+  const generateDocumentTemplate = (type: string): string => {
+    switch(type) {
+      case 'Project Proposal':
+        return `# Project Proposal: [Project Name]
+
+## Executive Summary
+
+[Brief overview of the project and its objectives]
+
+## Project Scope
+
+### Objectives
+- Objective 1
+- Objective 2
+- Objective 3
+
+### Deliverables
+- Deliverable 1
+- Deliverable 2
+- Deliverable 3
+
+## Timeline
+
+| Phase | Start Date | End Date | Key Milestones |
+|-------|------------|----------|----------------|
+| Planning | | | |
+| Development | | | |
+| Testing | | | |
+| Deployment | | | |
+
+## Budget
+
+| Category | Estimated Cost |
+|----------|----------------|
+| Personnel | $ |
+| Equipment | $ |
+| Software | $ |
+| Other | $ |
+| **Total** | $ |
+
+## Team
+
+- Project Manager:
+- Team Members:
+  - [Name], [Role]
+  - [Name], [Role]
+
+## Risks and Mitigation
+
+| Risk | Probability | Impact | Mitigation Strategy |
+|------|------------|--------|---------------------|
+| | | | |
+| | | | |
+
+## Approval
+
+- Requested by: [Name], [Position]
+- Approved by: [Name], [Position]
+- Date:
+
+`;
+      case 'Meeting Minutes':
+        return `# Meeting Minutes
+
+## Meeting Details
+
+- **Date:** ${new Date().toLocaleDateString()}
+- **Time:** ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+- **Location:** 
+- **Meeting Type:** 
+
+## Attendees
+
+- [Name], [Position]
+- [Name], [Position]
+- [Name], [Position]
+
+## Agenda
+
+1. 
+2. 
+3. 
+
+## Discussions
+
+### Topic 1
+- 
+- 
+- 
+
+### Topic 2
+- 
+- 
+- 
+
+## Action Items
+
+| Action | Responsible | Due Date | Status |
+|--------|-------------|----------|--------|
+| | | | |
+| | | | |
+| | | | |
+
+## Next Meeting
+
+- **Date:** 
+- **Time:** 
+- **Location:** 
+
+## Notes
+
+[Additional notes or information]
+
+`;
+      case 'Business Report':
+        return `# Business Report: [Title]
+
+## Executive Summary
+
+[Brief summary of the report and key findings]
+
+## Introduction
+
+[Context and purpose of the report]
+
+## Methodology
+
+[How the information was gathered and analyzed]
+
+## Findings
+
+### Key Finding 1
+- 
+- 
+- 
+
+### Key Finding 2
+- 
+- 
+- 
+
+### Key Finding 3
+- 
+- 
+- 
+
+## Financial Summary
+
+| Category | Amount | % Change |
+|----------|--------|----------|
+| Revenue | $ | |
+| Expenses | $ | |
+| Profit | $ | |
+
+## Recommendations
+
+1. 
+2. 
+3. 
+
+## Conclusion
+
+[Summary of report and final thoughts]
+
+## Appendices
+
+### Appendix A: [Title]
+- 
+- 
+
+### Appendix B: [Title]
+- 
+- 
+
+`;
+      case 'Company Memo':
+        return `# MEMORANDUM
+
+**Date:** ${new Date().toLocaleDateString()}
+**To:** [Recipient(s)]
+**From:** [Sender]
+**Subject:** [Subject of Memo]
+
+## Purpose
+
+[Brief statement of the memo's purpose]
+
+## Background
+
+[Relevant background information]
+
+## Details
+
+[Main content of the memo]
+
+## Action Items
+
+- 
+- 
+- 
+
+## Timeline
+
+[Deadlines or timeline information]
+
+## Contact
+
+For questions or further information, please contact [Name] at [Contact Information].
+
+`;
+      default:
+        return `# New Document
+
+[Start typing your content here]
+
+`;
+    }
+  };
+
+  // Customize schedule based on user input
+  const customizeSchedule = (input: string, files: any[], documentId: string): string => {
+    const file = findFileById(files, documentId);
+    let content = file?.content || '';
+    
+    const lowerInput = input.toLowerCase();
+    
+    // Add time blocks if requested
+    if (lowerInput.includes('time') || lowerInput.includes('block') || lowerInput.includes('1')) {
+      content += `
+
+## Time Blocks
+
+### Morning
+- 9:00 - 10:00: [Task]
+- 10:00 - 11:30: [Task]
+- 11:30 - 12:00: [Task]
+
+### Afternoon
+- 13:00 - 14:30: [Task]
+- 14:30 - 16:00: [Task]
+- 16:00 - 17:00: [Task]
+`;
+    }
+    
+    // Add recurring meetings if requested
+    if (lowerInput.includes('meeting') || lowerInput.includes('recurring') || lowerInput.includes('2')) {
+      content += `
+
+## Recurring Meetings
+
+- Monday 10:00 - Weekly Planning
+- Wednesday 14:00 - Team Sync
+- Friday 16:00 - Week Review
+`;
+    }
+    
+    // Add deadline reminders if requested
+    if (lowerInput.includes('deadline') || lowerInput.includes('reminder') || lowerInput.includes('3')) {
+      content += `
+
+## Deadlines & Reminders
+
+- [ ] Project proposal due on ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+- [ ] Client meeting preparation by ${new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+- [ ] Review quarterly results by ${new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+`;
+    }
+    
+    return content;
+  };
+
+  // Find a file by ID in the file tree
+  const findFileById = (files: any[], id: string): any => {
+    for (const file of files) {
+      if (file.id === id) {
+        return file;
+      }
+      if (file.children) {
+        const found = findFileById(file.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  // Update file content in the file tree
+  const updateFileContent = (files: any[], id: string, content: string): any[] => {
+    return files.map(file => {
+      if (file.id === id) {
+        return { ...file, content };
+      }
+      if (file.children) {
+        return { ...file, children: updateFileContent(file.children, id, content) };
+      }
+      return file;
+    });
+  };
+
   const handleSendMessage = async () => {
     if (!input.trim()) return;
     
@@ -294,17 +904,22 @@ Your data remains secure on your local system. How can I assist you today?`;
     setMessages([...messages, { id: userMessageId, type: 'user', content: input }]);
     
     try {
-      // Simple AI response simulation for immediate feedback
-      setTimeout(() => {
-        setMessages(current => [
-          ...current,
-          {
-            id: (Date.now() + 1).toString(),
-            type: 'ai',
-            content: `I'll help you with "${input}". How would you like to proceed?`
-          }
-        ]);
-      }, 800);
+      // First check if this is part of an active action flow
+      const wasProcessed = processActionInput(input);
+      
+      if (!wasProcessed) {
+        // Simple AI response simulation for immediate feedback
+        setTimeout(() => {
+          setMessages(current => [
+            ...current,
+            {
+              id: (Date.now() + 1).toString(),
+              type: 'ai',
+              content: `I'll help you with "${input}". How would you like to proceed?`
+            }
+          ]);
+        }, 800);
+      }
     } catch (error) {
       toast({
         title: 'Connection Error',
