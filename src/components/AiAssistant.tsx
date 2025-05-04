@@ -28,7 +28,8 @@ const AiAssistant = () => {
     setViewMode,
     setCurrentFile,
     files,
-    setFiles
+    setFiles,
+    currentFile
   } = useAppContext();
   const [input, setInput] = useState('');
   const [showSettings, setShowSettings] = useState(false);
@@ -454,8 +455,67 @@ Your data remains secure on your local system. How can I assist you today?`;
     step: ''
   });
 
+  // Add a function to detect and update document title
+  const updateDocumentTitle = (userInput: string) => {
+    // Only process if we're in document mode and have a current file
+    if (currentFile && currentFile.type === 'document') {
+      // Check if the message contains something like "title should be" or "change title to"
+      const titleRegex = /(?:title|name|call it|rename to|change to|make it)(?:\s+(?:the|a|an|this))?(?:\s+document)?\s+(?:to|as|be)?\s+["']?([^"'.!?]+)["']?/i;
+      const match = userInput.match(titleRegex);
+      
+      if (match && match[1]) {
+        // Extract the requested title
+        const newTitle = match[1].trim();
+        
+        if (newTitle) {
+          // Update document content only if it starts with a markdown header
+          if (currentFile.content && currentFile.content.startsWith('# ')) {
+            // Replace the first header line with the new title
+            const updatedContent = currentFile.content.replace(/^# .*$/m, `# ${newTitle}`);
+            
+            // Update the document content
+            const updatedFile = { ...currentFile, content: updatedContent };
+            setCurrentFile(updatedFile);
+            
+            // Update in files tree
+            const updateFiles = (filesArray: any[]): any[] => {
+              return filesArray.map(file => {
+                if (file.id === currentFile.id) {
+                  return updatedFile;
+                }
+                if (file.children) {
+                  return { ...file, children: updateFiles(file.children) };
+                }
+                return file;
+              });
+            };
+            
+            setFiles(updateFiles(files));
+            
+            // Add confirmation message
+            setMessages(prev => [
+              ...prev, 
+              { 
+                id: (Date.now() + 2).toString(), 
+                type: 'ai', 
+                content: `I've updated your document title to "${newTitle}".`
+              }
+            ]);
+            
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  };
+
   // Process user input based on active action
   const processActionInput = (userInput: string) => {
+    // First check if it's a document title update request
+    const titleUpdated = updateDocumentTitle(userInput);
+    if (titleUpdated) return true;
+    
     if (!activeAction.type) return false;
     
     switch (activeAction.type) {
@@ -913,7 +973,7 @@ For questions or further information, please contact [Name] at [Contact Informat
     setMessages([...messages, { id: userMessageId, type: 'user', content: input }]);
     
     try {
-      // First check if this is part of an active action flow
+      // First check if this is part of an active action flow or a document title request
       const wasProcessed = processActionInput(input);
       
       if (!wasProcessed) {

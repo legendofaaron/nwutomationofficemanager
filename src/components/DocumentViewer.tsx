@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Textarea } from '@/components/ui/textarea';
 import DocumentHeader from './document/DocumentHeader';
@@ -10,6 +11,13 @@ const DocumentViewer = () => {
   const { currentFile, files, setFiles, setCurrentFile, setViewMode } = useAppContext();
   const [content, setContent] = useState(currentFile?.content || '');
   
+  // Update content when currentFile changes
+  useEffect(() => {
+    if (currentFile?.content) {
+      setContent(currentFile.content);
+    }
+  }, [currentFile]);
+
   if (!currentFile) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -92,8 +100,33 @@ const DocumentViewer = () => {
     setViewMode('spreadsheet');
   };
 
+  const handleContentChange = (newContent: string) => {
+    setContent(newContent);
+    
+    // Update the current file with new content
+    if (currentFile) {
+      const updatedFile = { ...currentFile, content: newContent };
+      setCurrentFile(updatedFile);
+      
+      // Update in files tree
+      const updateFiles = (filesArray: any[]): any[] => {
+        return filesArray.map(file => {
+          if (file.id === currentFile.id) {
+            return updatedFile;
+          }
+          if (file.children) {
+            return { ...file, children: updateFiles(file.children) };
+          }
+          return file;
+        });
+      };
+      
+      setFiles(updateFiles(files));
+    }
+  };
+
   const handleSuggestionApply = (suggestion: string) => {
-    setContent(suggestion);
+    handleContentChange(suggestion);
   };
 
   return (
@@ -113,7 +146,7 @@ const DocumentViewer = () => {
             <>
               <Textarea
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => handleContentChange(e.target.value)}
                 className="min-h-[70vh] w-full resize-none p-6 font-sans text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-lg"
                 placeholder="Start typing..."
               />
