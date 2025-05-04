@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -94,7 +93,8 @@ const TodoCalendar = () => {
   // Custom day render to show task indicators
   const customDayRender = (day: DayProps) => {
     const date = day.date;
-    const isSelected = Boolean(day.selected);
+    // Access selection through modifiers instead of directly using 'selected' property
+    const isSelected = day.modifiers?.selected === true;
     const taskCount = getTaskCountForDay(date);
     const dateValue = date.getDate();
     
