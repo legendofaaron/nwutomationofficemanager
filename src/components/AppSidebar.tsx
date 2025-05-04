@@ -9,6 +9,7 @@ import { Logo } from './Logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarContent, SidebarHeader, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuAction, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
 import { useToast } from '@/hooks/use-toast';
+import { MobileSettingsDrawer } from './settings/MobileSettingsDrawer';
 
 const AppSidebar = () => {
   const {
@@ -33,6 +34,7 @@ const AppSidebar = () => {
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [draggedItem, setDraggedItem] = useState<any>(null);
   const [dragOverItem, setDragOverItem] = useState<any>(null);
+  const [isSettingsDrawerOpen, setIsSettingsDrawerOpen] = useState(false);
 
   const handleFileClick = (file: any) => {
     if (file.type === 'folder') return;
@@ -357,11 +359,14 @@ const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Added Settings button at the bottom */}
+      {/* Settings button at the bottom */}
       <SidebarFooter className="p-4 border-t mt-auto">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => setViewMode('settings')} data-active={viewMode === 'settings'}>
+            <SidebarMenuButton 
+              onClick={() => setIsSettingsDrawerOpen(true)} 
+              data-active={viewMode === 'settings'}
+            >
               <Settings className="w-4 h-4 mr-2" />
               <span>Settings</span>
             </SidebarMenuButton>
@@ -377,6 +382,12 @@ const AppSidebar = () => {
           onClose={handleCloseRenameDialog} 
         />
       )}
+      
+      {/* Settings Drawer */}
+      <MobileSettingsDrawer 
+        open={isSettingsDrawerOpen} 
+        onClose={() => setIsSettingsDrawerOpen(false)} 
+      />
     </>;
 };
 
