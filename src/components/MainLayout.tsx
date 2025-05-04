@@ -6,7 +6,6 @@ import DocumentViewer from './DocumentViewer';
 import DatabaseViewer from './DatabaseViewer';
 import KnowledgeBase from './KnowledgeBase';
 import AiAssistant from './AiAssistant';
-import ChatUI from './ChatUI';
 import OfficeManagerDashboard from './OfficeManagerDashboard';
 import SpreadsheetViewer from './SpreadsheetViewer';
 import WelcomeDashboard from './WelcomeDashboard';
@@ -50,7 +49,6 @@ const MainLayout = () => {
         
         <TodoCalendarBubble />
         <AiAssistant />
-        <ChatUI />
       </div>
     </SidebarProvider>
   );
