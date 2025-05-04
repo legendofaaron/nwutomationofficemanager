@@ -10,7 +10,7 @@ import ChatUI from './ChatUI';
 import OfficeManagerDashboard from './OfficeManagerDashboard';
 import SpreadsheetViewer from './SpreadsheetViewer';
 import WelcomeDashboard from './WelcomeDashboard';
-import TodoCalendar from './TodoCalendar';
+import TodoCalendarBubble from './TodoCalendarBubble';
 import { cn } from '@/lib/utils';
 import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from './Logo';
@@ -48,7 +48,7 @@ const MainLayout = () => {
           </div>
         </main>
         
-        <TodoCalendar />
+        <TodoCalendarBubble />
         <AiAssistant />
         <ChatUI />
       </div>
