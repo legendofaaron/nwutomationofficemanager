@@ -60,26 +60,25 @@ const TodoCalendar = () => {
   return (
     <div className="fixed top-4 right-4 w-80 z-50">
       <Card className="shadow-lg">
-        <CardHeader className="p-3 bg-primary/10">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-base flex items-center">
-              <CalendarIcon className="h-4 w-4 mr-2" />
-              Calendar & Tasks
-            </CardTitle>
-            <CollapsibleTrigger
-              onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-              className="rounded-full p-1 hover:bg-primary/10"
-            >
-              {isCalendarOpen ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </CollapsibleTrigger>
-          </div>
-        </CardHeader>
-        
         <Collapsible open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+          <CardHeader className="p-3 bg-primary/10">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-base flex items-center">
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                Calendar & Tasks
+              </CardTitle>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
+                  {isCalendarOpen ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+          </CardHeader>
+          
           <CollapsibleContent>
             <CardContent className="p-3">
               <Calendar
