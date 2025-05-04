@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Bot, FileText } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import { queryLlm } from '@/utils/llm';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,7 +18,13 @@ const AiSuggestions: React.FC<AiSuggestionsProps> = ({ content, onSuggestionAppl
     setLoading(true);
     try {
       const prompt = `Please suggest improvements for this text: ${content}`;
-      const response = await queryLlm(prompt, 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk');
+      const webhookUrl = 'http://localhost:5678/webhook-test/bf4dd093-bb02-472c-9454-7ab9af97bd1d';
+      const response = await queryLlm(
+        prompt, 
+        'http://localhost:5678/workflow/EQL62DuHvzL2PmBk', 
+        'default',
+        webhookUrl
+      );
       onSuggestionApply(response.message);
     } catch (error) {
       toast({

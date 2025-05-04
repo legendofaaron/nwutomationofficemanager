@@ -18,13 +18,19 @@ const DocumentNameAiSuggestion = ({ onSuggestion }: DocumentNameAiSuggestionProp
     try {
       setIsLoading(true);
       const prompt = "Suggest a creative and professional name for a new document. Return only the name, no explanations.";
+      const webhookUrl = 'http://localhost:5678/webhook-test/bf4dd093-bb02-472c-9454-7ab9af97bd1d';
       
       // Use a timeout to handle potential connection issues
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error("Request timed out")), 5000)
       );
       
-      const responsePromise = queryLlm(prompt, 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk');
+      const responsePromise = queryLlm(
+        prompt, 
+        'http://localhost:5678/workflow/EQL62DuHvzL2PmBk',
+        'default',
+        webhookUrl
+      );
       const response = await Promise.race([responsePromise, timeoutPromise]) as any;
       
       if (response && response.message) {

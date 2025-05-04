@@ -17,13 +17,15 @@ export interface LlmConfig {
   endpoint: string;
   enabled: boolean;
   model: string;
+  webhookUrl?: string;
 }
 
 export const LlmSettings = () => {
   const [config, setConfig] = useState<LlmConfig>({
     endpoint: 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk',
     enabled: false,
-    model: 'default'
+    model: 'default',
+    webhookUrl: 'http://localhost:5678/webhook-test/bf4dd093-bb02-472c-9454-7ab9af97bd1d'
   });
 
   const testConnection = async () => {
@@ -56,6 +58,45 @@ export const LlmSettings = () => {
     }
   };
 
+  const testWebhook = async () => {
+    if (!config.webhookUrl) {
+      toast({
+        title: 'Missing Webhook URL',
+        description: 'Please enter a webhook URL to test',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(config.webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: "Test webhook connection",
+          timestamp: new Date().toISOString()
+        }),
+      });
+      
+      if (response.ok) {
+        toast({
+          title: 'Webhook Test Successful',
+          description: 'Successfully connected to webhook endpoint'
+        });
+      } else {
+        throw new Error('Failed to connect to webhook');
+      }
+    } catch (error) {
+      toast({
+        title: 'Webhook Test Failed',
+        description: 'Could not connect to webhook. Please check your URL and ensure the endpoint is running.',
+        variant: 'destructive'
+      });
+    }
+  };
+
   return (
     <div className="space-y-6 p-4">
       <div className="flex items-center justify-between">
@@ -81,6 +122,19 @@ export const LlmSettings = () => {
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="webhookUrl">Webhook URL</Label>
+          <Input
+            id="webhookUrl"
+            value={config.webhookUrl}
+            onChange={(e) => setConfig(prev => ({ ...prev, webhookUrl: e.target.value }))}
+            placeholder="http://localhost:5678/webhook-test/[ID]"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Enter the webhook URL for bidirectional communication
+          </p>
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="model">LLM Model</Label>
           <Select
             value={config.model}
@@ -103,9 +157,14 @@ export const LlmSettings = () => {
           </p>
         </div>
 
-        <Button onClick={testConnection}>
-          Test Connection
-        </Button>
+        <div className="flex space-x-2">
+          <Button onClick={testConnection}>
+            Test Connection
+          </Button>
+          <Button onClick={testWebhook} variant="outline">
+            Test Webhook
+          </Button>
+        </div>
       </div>
     </div>
   );
