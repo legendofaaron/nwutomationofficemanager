@@ -13,12 +13,14 @@ import TodoCalendarBubble from './TodoCalendarBubble';
 import { cn } from '@/lib/utils';
 import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from './Logo';
+import { FileText } from 'lucide-react';
 
 const MainLayout = () => {
   const {
     viewMode,
     sidebarOpen,
-    aiAssistantOpen
+    aiAssistantOpen,
+    setAiAssistantOpen
   } = useAppContext();
 
   return (
@@ -48,6 +50,18 @@ const MainLayout = () => {
         </main>
         
         <TodoCalendarBubble />
+        
+        {/* AI Assistant Floating Button */}
+        <div className="fixed bottom-6 right-6 z-50">
+          <button 
+            onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
+            className="bg-app-blue text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors"
+          >
+            <FileText className="h-6 w-6" />
+          </button>
+        </div>
+        
+        {/* AI Assistant Panel */}
         <AiAssistant />
       </div>
     </SidebarProvider>
