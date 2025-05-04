@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, MessageSquare, BookOpenText, PlayIcon } from 'lucide-react';
+import { ArrowRight, MessageSquare, BookOpenText, PlayIcon, Building2, Brain, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
@@ -28,7 +28,67 @@ const WelcomeDashboard = () => {
         </p>
       </div>
 
-      {/* Main Feature Card */}
+      {/* Main Nav Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="hover:shadow-md transition-shadow border-app-blue/10">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <LayoutDashboard className="h-5 w-5 text-app-blue" />
+              My Dashboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <p className="text-sm text-gray-600 mb-4">
+              Access your personalized dashboard with all your important information in one place
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={() => setViewMode('welcome')} className="w-full gap-2">
+              Go to Dashboard <ArrowRight className="h-4 w-4" />
+            </Button>
+          </CardFooter>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow border-app-blue/10">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-app-blue" />
+              Office Manager
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <p className="text-sm text-gray-600 mb-4">
+              Manage employees, schedules, invoices and bookings in one centralized location
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={() => setViewMode('office')} className="w-full gap-2">
+              Open Office Manager <ArrowRight className="h-4 w-4" />
+            </Button>
+          </CardFooter>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow border-app-blue/10">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Brain className="h-5 w-5 text-app-blue" />
+              Knowledge Base
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <p className="text-sm text-gray-600 mb-4">
+              Access, update and organize your company's knowledge and information resources
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={() => setViewMode('knowledge')} className="w-full gap-2">
+              Open Knowledge Base <ArrowRight className="h-4 w-4" />
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+
+      {/* Intelligent Assistant Card */}
       <Card className="mb-8 border-app-blue/20 shadow-lg">
         <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
           <CardTitle className="text-2xl flex items-center gap-2">
