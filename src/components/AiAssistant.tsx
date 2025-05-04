@@ -308,7 +308,7 @@ Which would you like to create? Or describe your custom document needs.`
             id: Date.now().toString(),
             name: 'New Schedule',
             type: 'document' as const,
-            content: '# Schedule\n\n## Daily Tasks\n\n- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3\n\n## Weekly Goals\n\n- Goal 1\n- Goal 2'
+            content: '# Schedule\n\n## Daily Tasks\n\n- [ ] Task 1\n\n- [ ] Task 2\n\n- [ ] Task 3\n\n## Weekly Goals\n\n- Goal 1\n- Goal 2'
           };
           
           // Find Documents folder or create it
@@ -533,10 +533,10 @@ Would you like me to help you fill in any specific sections of this document?`
           setFiles(updatedFiles);
           
           // Find the current file and update it if it's the active one
-          const currentDocumentFile = findFileById(files, activeAction.documentId);
-          if (currentDocumentFile && currentFile?.id === activeAction.documentId) {
+          const updatedFile = findFileById(files, activeAction.documentId);
+          if (updatedFile) {
             setCurrentFile({
-              ...currentDocumentFile,
+              ...updatedFile,
               content: updatedContent
             });
           }
