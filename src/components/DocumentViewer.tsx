@@ -6,6 +6,7 @@ import DocumentHeader from './document/DocumentHeader';
 import DocumentToolbar from './document/DocumentToolbar';
 import ScheduleView from './ScheduleView';
 import AiSuggestions from './document/AiSuggestions';
+import { ScrollArea } from './ui/scroll-area';
 
 const DocumentViewer = () => {
   const { currentFile, files, setFiles, setCurrentFile, setViewMode } = useAppContext();
@@ -138,26 +139,28 @@ const DocumentViewer = () => {
       />
       <DocumentToolbar />
       
-      <div className="max-w-3xl mx-12 px-6 py-8">
-        <div className="bg-white rounded-lg shadow-sm min-h-[70vh]">
-          {isSchedule ? (
-            <ScheduleView />
-          ) : (
-            <>
-              <Textarea
-                value={content}
-                onChange={(e) => handleContentChange(e.target.value)}
-                className="min-h-[70vh] w-full resize-none p-6 font-sans text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-lg"
-                placeholder="Start typing..."
-              />
-              <AiSuggestions 
-                content={content}
-                onSuggestionApply={handleSuggestionApply}
-              />
-            </>
-          )}
+      <ScrollArea className="h-[calc(100%-96px)]">
+        <div className="max-w-3xl mx-auto px-6 py-4">
+          <div className="bg-white rounded-lg shadow-sm min-h-[50vh]">
+            {isSchedule ? (
+              <ScheduleView />
+            ) : (
+              <>
+                <Textarea
+                  value={content}
+                  onChange={(e) => handleContentChange(e.target.value)}
+                  className="min-h-[50vh] w-full resize-none p-6 font-sans text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-lg"
+                  placeholder="Start typing..."
+                />
+                <AiSuggestions 
+                  content={content}
+                  onSuggestionApply={handleSuggestionApply}
+                />
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      </ScrollArea>
     </div>
   );
 };

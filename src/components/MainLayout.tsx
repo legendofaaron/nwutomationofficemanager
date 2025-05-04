@@ -38,7 +38,7 @@ const MainLayout = () => {
         </div>
         
         <main className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", sidebarOpen ? "ml-0" : "ml-0")}>
-          <div className="w-full bg-white shadow-sm h-[calc(100vh-64px)] rounded-md overflow-auto">
+          <div className="w-full bg-white shadow-sm h-full rounded-md overflow-auto">
             {viewMode === 'document' && <DocumentViewer />}
             {viewMode === 'database' && <DatabaseViewer />}
             {viewMode === 'knowledge' && <KnowledgeBase />}

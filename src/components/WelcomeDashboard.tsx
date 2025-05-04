@@ -6,177 +6,164 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
 import { Logo } from './Logo';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from './ui/scroll-area';
 
 const WelcomeDashboard = () => {
   const { setViewMode, branding } = useAppContext();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const startAssistantSetup = () => {
     navigate('/setup-assistant');
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <div className="flex justify-center mb-8">
-        <Logo />
-      </div>
-      
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-app-blue mb-3">Welcome to Office Manager</h1>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          A secure, lightweight solution by {branding.companyName} for document management, schedule organization, and enhanced workplace productivity.
-        </p>
-      </div>
-
-      {/* Main Nav Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="hover:shadow-md transition-shadow border-app-blue/10">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-            <CardTitle className="text-xl flex items-center gap-2">
-              <LayoutDashboard className="h-5 w-5 text-app-blue" />
-              My Dashboard
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <p className="text-sm text-gray-600 mb-4">
-              Access your personalized dashboard with all your important information in one place
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button onClick={() => setViewMode('welcome')} className="w-full gap-2">
-              Go to Dashboard <ArrowRight className="h-4 w-4" />
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow border-app-blue/10">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-            <CardTitle className="text-xl flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-app-blue" />
-              Office Manager
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <p className="text-sm text-gray-600 mb-4">
-              Manage employees, schedules, invoices and bookings in one centralized location
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button onClick={() => setViewMode('office')} className="w-full gap-2">
-              Open Office Manager <ArrowRight className="h-4 w-4" />
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow border-app-blue/10">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-            <CardTitle className="text-xl flex items-center gap-2">
-              <Brain className="h-5 w-5 text-app-blue" />
-              Knowledge Base
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <p className="text-sm text-gray-600 mb-4">
-              Access, update and organize your company's knowledge and information resources
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button onClick={() => setViewMode('knowledge')} className="w-full gap-2">
-              Open Knowledge Base <ArrowRight className="h-4 w-4" />
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-
-      {/* Intelligent Assistant Card */}
-      <Card className="mb-8 border-app-blue/20 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-          <CardTitle className="text-2xl flex items-center gap-2">
-            <MessageSquare className="h-6 w-6 text-app-blue" />
-            Intelligent Assistant
-          </CardTitle>
-          <CardDescription>
-            A locally-hosted assistant that helps you create documents, manage schedules, and optimize workflow
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <p className="mb-6">
-            Our intelligent assistant can help you draft documents, organize schedules, manage your knowledge base, 
-            and provide insights for your office operations—all while keeping your data secure on your local system.
+    <ScrollArea className="h-full">
+      <div className={`mx-auto px-3 pt-4 pb-6 max-w-5xl`}>
+        <div className="flex justify-center mb-4">
+          <Logo />
+        </div>
+        
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-app-blue mb-2">Welcome to Office Manager</h1>
+          <p className="text-gray-600 text-sm max-w-2xl mx-auto">
+            A secure solution by {branding.companyName} for document management and workplace productivity.
           </p>
-          <div className="flex justify-center">
-            <Button onClick={startAssistantSetup} size="lg" className="gap-2">
-              Set Up Your Assistant <PlayIcon className="h-5 w-5" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Features Grid */}
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">Explore Features</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <BookOpenText className="h-5 w-5 text-app-blue" />
-              Documents
+        {/* Main Nav Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+          <Card className="hover:shadow-md transition-shadow border-app-blue/10">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-white p-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <LayoutDashboard className="h-4 w-4 text-app-blue" />
+                My Dashboard
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-2 px-3">
+              <p className="text-xs text-gray-600 mb-2">
+                Access your personalized dashboard with all your important information
+              </p>
+            </CardContent>
+            <CardFooter className="p-3 pt-0">
+              <Button onClick={() => setViewMode('welcome')} size="sm" className="w-full gap-1 text-xs">
+                Go to Dashboard <ArrowRight className="h-3 w-3" />
+              </Button>
+            </CardFooter>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow border-app-blue/10">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-white p-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-app-blue" />
+                Office Manager
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-2 px-3">
+              <p className="text-xs text-gray-600 mb-2">
+                Manage employees, schedules and invoices in one centralized location
+              </p>
+            </CardContent>
+            <CardFooter className="p-3 pt-0">
+              <Button onClick={() => setViewMode('office')} size="sm" className="w-full gap-1 text-xs">
+                Open Manager <ArrowRight className="h-3 w-3" />
+              </Button>
+            </CardFooter>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow border-app-blue/10">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-white p-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Brain className="h-4 w-4 text-app-blue" />
+                Knowledge Base
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-2 px-3">
+              <p className="text-xs text-gray-600 mb-2">
+                Access and organize your company's information resources
+              </p>
+            </CardContent>
+            <CardFooter className="p-3 pt-0">
+              <Button onClick={() => setViewMode('knowledge')} size="sm" className="w-full gap-1 text-xs">
+                Open KB <ArrowRight className="h-3 w-3" />
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+
+        {/* Intelligent Assistant Card */}
+        <Card className="mb-6 border-app-blue/20 shadow-sm">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-white p-3">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-app-blue" />
+              Intelligent Assistant
             </CardTitle>
+            <CardDescription className="text-xs">
+              A locally-hosted assistant that helps manage your workflow
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600">
-              Create, edit, and manage your documents with intelligent assistance
+          <CardContent className="py-3 px-4">
+            <p className="text-sm mb-3">
+              Our intelligent assistant can help you draft documents, organize schedules, and provide insights—all while keeping your data secure.
             </p>
+            <div className="flex justify-center">
+              <Button onClick={startAssistantSetup} size="sm" className="gap-2">
+                Set Up Assistant <PlayIcon className="h-4 w-4" />
+              </Button>
+            </div>
           </CardContent>
-          <CardFooter>
-            <Button variant="outline" className="w-full text-sm" onClick={() => setViewMode('document')}>
-              View Files <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          </CardFooter>
         </Card>
-        
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <BookOpenText className="h-5 w-5 text-app-blue" />
-              Knowledge Base
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600">
-              Organize and access your company's information efficiently
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" className="w-full text-sm" onClick={() => setViewMode('knowledge')}>
-              Open Knowledge Base <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          </CardFooter>
-        </Card>
-        
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <BookOpenText className="h-5 w-5 text-app-blue" />
-              Office Manager
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600">
-              Streamline operations, schedules, and productivity tracking
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" className="w-full text-sm" onClick={() => setViewMode('office')}>
-              Open Office Manager <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          </CardFooter>
-        </Card>
+
+        {/* Features Grid */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-gray-800">Explore Features</h2>
+          <div className="grid grid-cols-3 gap-3">
+            <Card className="hover:shadow-sm transition-shadow">
+              <CardHeader className="p-3">
+                <CardTitle className="text-sm flex items-center gap-1">
+                  <BookOpenText className="h-4 w-4 text-app-blue" />
+                  Documents
+                </CardTitle>
+              </CardHeader>
+              <CardFooter className="p-3 pt-0">
+                <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => setViewMode('document')}>
+                  View Files
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            <Card className="hover:shadow-sm transition-shadow">
+              <CardHeader className="p-3">
+                <CardTitle className="text-sm flex items-center gap-1">
+                  <Brain className="h-4 w-4 text-app-blue" />
+                  Knowledge
+                </CardTitle>
+              </CardHeader>
+              <CardFooter className="p-3 pt-0">
+                <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => setViewMode('knowledge')}>
+                  Open KB
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            <Card className="hover:shadow-sm transition-shadow">
+              <CardHeader className="p-3">
+                <CardTitle className="text-sm flex items-center gap-1">
+                  <Building2 className="h-4 w-4 text-app-blue" />
+                  Office
+                </CardTitle>
+              </CardHeader>
+              <CardFooter className="p-3 pt-0">
+                <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => setViewMode('office')}>
+                  Manager
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
       </div>
-      
-      <div className="text-center text-gray-500 text-sm mt-8">
-        <p>Select a feature from the sidebar or use the Intelligent Assistant to get started</p>
-      </div>
-    </div>
+    </ScrollArea>
   );
 };
 
