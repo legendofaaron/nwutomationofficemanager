@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +43,7 @@ const AiAssistant = () => {
     logoUrl: branding.logoUrl || ''
   });
   const navigate = useNavigate();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const [messages, setMessages] = useState<Message[]>([
     { 
@@ -81,6 +81,15 @@ You can:
 Your data remains secure on your local system. Need assistance? Just ask me anything!`
     }
   ]);
+
+  // Scroll to bottom whenever messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   // Check if setup is needed when assistant opens
   useEffect(() => {
@@ -1023,6 +1032,7 @@ For questions or further information, please contact [Name] at [Contact Informat
                 </div>
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
           
           <div className="p-3 border-t">
