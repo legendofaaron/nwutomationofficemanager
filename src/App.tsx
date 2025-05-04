@@ -1,38 +1,50 @@
+import React, { useState } from 'react';
+import { Toaster } from '@/components/ui/toaster';
+import AppSidebar, { SidebarToggle } from '@/components/AppSidebar';
+import { AppProvider } from '@/context/AppContext';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
+import AiAssistant from '@/components/AiAssistant';
+import { ThemeProvider } from '@/context/ThemeContext';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AppProvider } from "@/context/AppContext";
-import { ThemeProvider } from "@/context/ThemeContext";
-import Index from "./pages/Index";
-import Home from "./pages/Home";
-import NotFound from "./pages/NotFound";
-import SetupAssistant from "./pages/SetupAssistant";
+import TodoCalendarBubble from './components/TodoCalendarBubble';
 
-const queryClient = new QueryClient();
+const App = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { aiAssistantOpen } = useAppContext();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <TooltipProvider>
+  // Add TodoCalendarBubble to the layout
+  return (
+    <AppProvider>
+      <ThemeProvider>
         <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppProvider>
-            <Routes>
-              <Route path="/welcome" element={<Home />} />
-              <Route path="/dashboard" element={<Index />} />
-              <Route path="/setup-assistant" element={<SetupAssistant />} />
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AppProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+        <div className="flex min-h-screen">
+          <SidebarProvider defaultOpen={sidebarOpen}>
+            <Sidebar
+              side="left"
+              variant="sidebar"
+              collapsible="offcanvas"
+            >
+              <AppSidebar />
+            </Sidebar>
+            
+            <SidebarInset className="relative">
+              <div className="h-screen overflow-auto">
+                <div className="container mx-auto p-4">
+                  <SidebarToggle />
+                  {/* Your main content goes here */}
+                </div>
+              </div>
+              
+              {/* Floating UI components */}
+              <TodoCalendarBubble />
+              {aiAssistantOpen && <AiAssistant />}
+            </SidebarInset>
+          </SidebarProvider>
+        </div>
+      </ThemeProvider>
+    </AppProvider>
+  );
+};
 
 export default App;

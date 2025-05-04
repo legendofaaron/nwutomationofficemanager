@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Drawer,
   DrawerClose,
@@ -12,7 +12,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { GeneralSettingsTab } from './GeneralSettingsTab';
+import { AppearanceSettingsTab } from './AppearanceSettingsTab';
 import { useAppContext } from '@/context/AppContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LlmSettings } from '@/components/LlmSettings';
+import { DatabaseSettingsTab } from './DatabaseSettingsTab';
+import { StorageSettingsTab } from './StorageSettingsTab';
 
 interface MobileSettingsDrawerProps {
   open: boolean;
@@ -21,6 +26,7 @@ interface MobileSettingsDrawerProps {
 
 export const MobileSettingsDrawer = ({ open, onClose }: MobileSettingsDrawerProps) => {
   const { branding } = useAppContext();
+  const [activeTab, setActiveTab] = useState("general");
   
   return (
     <Drawer open={open} onClose={onClose}>
@@ -41,8 +47,38 @@ export const MobileSettingsDrawer = ({ open, onClose }: MobileSettingsDrawerProp
           </div>
         </DrawerHeader>
         
-        <div className="p-6 overflow-auto flex-1">
-          <GeneralSettingsTab />
+        <div className="p-4 overflow-auto flex-1">
+          <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="appearance">Appearance</TabsTrigger>
+              <TabsTrigger value="integrations">Integrations</TabsTrigger>
+            </TabsList>
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="database">Database</TabsTrigger>
+              <TabsTrigger value="storage">Storage</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="general" className="space-y-4">
+              <GeneralSettingsTab />
+            </TabsContent>
+            
+            <TabsContent value="appearance" className="space-y-4">
+              <AppearanceSettingsTab />
+            </TabsContent>
+            
+            <TabsContent value="integrations" className="space-y-4">
+              <LlmSettings />
+            </TabsContent>
+            
+            <TabsContent value="database" className="space-y-4">
+              <DatabaseSettingsTab />
+            </TabsContent>
+            
+            <TabsContent value="storage" className="space-y-4">
+              <StorageSettingsTab />
+            </TabsContent>
+          </Tabs>
         </div>
         
         <DrawerFooter className="border-t">
