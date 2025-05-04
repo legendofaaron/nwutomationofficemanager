@@ -32,14 +32,6 @@ const WelcomeDashboard = () => {
         {/* Main Nav Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
           <Card className="hover:shadow-md transition-shadow border-app-blue/10">
-            <CardContent className="py-0 px-0 h-[360px] overflow-hidden">
-              <div className="h-full p-3">
-                <DashboardCalendar />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow border-app-blue/10">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-white p-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-app-blue" />
@@ -76,6 +68,25 @@ const WelcomeDashboard = () => {
               </Button>
             </CardFooter>
           </Card>
+          
+          <Card className="hover:shadow-md transition-shadow border-app-blue/10">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-white p-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <LayoutDashboard className="h-4 w-4 text-app-blue" />
+                Dashboard
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-2 px-3">
+              <p className="text-xs text-gray-600 mb-2">
+                View your overview dashboard with all key metrics
+              </p>
+            </CardContent>
+            <CardFooter className="p-3 pt-0">
+              <Button onClick={() => setViewMode('welcome')} size="sm" className="w-full gap-1 text-xs" disabled>
+                Current View <ArrowRight className="h-3 w-3" />
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
 
         {/* Intelligent Assistant Card */}
@@ -102,7 +113,7 @@ const WelcomeDashboard = () => {
         </Card>
 
         {/* Features Grid */}
-        <div className="space-y-4">
+        <div className="space-y-4 mb-6">
           <h2 className="text-lg font-semibold text-gray-800">Explore Features</h2>
           <div className="grid grid-cols-3 gap-3">
             <Card className="hover:shadow-sm transition-shadow">
@@ -148,6 +159,15 @@ const WelcomeDashboard = () => {
             </Card>
           </div>
         </div>
+
+        {/* Calendar Card - Moved below database section */}
+        <Card className="hover:shadow-md transition-shadow border-app-blue/10">
+          <CardContent className="py-0 px-0 h-[360px] overflow-hidden">
+            <div className="h-full p-3">
+              <DashboardCalendar />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </ScrollArea>
   );
