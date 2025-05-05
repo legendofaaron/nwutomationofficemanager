@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from './Logo';
 import { Bot } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
 
 const MainLayout = () => {
   const {
@@ -26,6 +27,8 @@ const MainLayout = () => {
 
   const [triggerPosition, setTriggerPosition] = useState(24); // Default position (top: 24)
   const isDragging = useRef(false);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
 
   const handleDragStart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -53,7 +56,7 @@ const MainLayout = () => {
 
   return (
     <SidebarProvider defaultOpen={sidebarOpen}>
-      <div className="h-screen bg-app-gray-lightest flex w-full overflow-hidden">
+      <div className="h-screen bg-app-gray-lightest dark:bg-[#111318] flex w-full overflow-hidden">
         <div className="relative sidebar-container">
           <Sidebar>
             <AppSidebar />
@@ -63,7 +66,7 @@ const MainLayout = () => {
             style={{ top: `${triggerPosition}px` }}
           >
             <SidebarTrigger 
-              className="h-16 w-12 bg-white shadow-md rounded-r-lg flex items-center justify-center hover:bg-gray-50 transition-colors group cursor-move"
+              className={`h-16 w-12 ${isDark ? 'bg-[#1a1e25] border border-[#2a2f38]' : 'bg-white'} shadow-md rounded-r-lg flex items-center justify-center hover:bg-gray-50 dark:hover:bg-[#222733] transition-colors group cursor-move`}
               onMouseDown={handleDragStart}
             >
               <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
@@ -74,7 +77,7 @@ const MainLayout = () => {
         </div>
         
         <main className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", sidebarOpen ? "ml-0" : "ml-0")}>
-          <div className="w-full bg-white shadow-sm h-full rounded-md overflow-auto">
+          <div className={`w-full ${isDark ? 'bg-[#111318]' : 'bg-white'} shadow-sm h-full rounded-md overflow-auto`}>
             {viewMode === 'document' && <DocumentViewer />}
             {viewMode === 'database' && <DatabaseViewer />}
             {viewMode === 'knowledge' && <KnowledgeBase />}
@@ -91,7 +94,7 @@ const MainLayout = () => {
         <div className="fixed bottom-6 right-6 z-50">
           <button 
             onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
-            className="h-12 w-12 rounded-full shadow-lg bg-primary relative flex items-center justify-center hover:bg-primary/90 transition-colors text-primary-foreground"
+            className={`h-12 w-12 rounded-full shadow-lg ${isDark ? 'bg-blue-500 hover:bg-blue-600' : 'bg-primary hover:bg-primary/90'} relative flex items-center justify-center transition-colors text-primary-foreground`}
           >
             <Bot className="h-5 w-5" />
             {aiAssistantOpen && (

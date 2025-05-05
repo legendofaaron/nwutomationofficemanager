@@ -8,37 +8,41 @@ import { useAppContext } from '@/context/AppContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from './ui/scroll-area';
 import { Logo } from './Logo';
+import { useTheme } from '@/context/ThemeContext';
 
 const WelcomeDashboard = () => {
   const { setViewMode, branding } = useAppContext();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { resolvedTheme } = useTheme();
 
   const startAssistantSetup = () => {
     navigate('/setup-assistant');
   };
+  
+  const isDark = resolvedTheme === 'dark';
 
   return (
     <ScrollArea className="h-full">
       <div className={`mx-auto px-3 pt-4 pb-6 max-w-5xl`}>
         <div className="text-center mb-5">
-          <h1 className="text-2xl font-bold text-app-blue mb-2">Welcome to Office Manager</h1>
-          <p className="text-gray-600 text-sm max-w-2xl mx-auto">
+          <h1 className={`text-2xl font-bold ${isDark ? 'text-blue-400' : 'text-app-blue'} mb-2`}>Welcome to Office Manager</h1>
+          <p className="text-gray-600 dark:text-gray-300 text-sm max-w-2xl mx-auto">
             A secure solution by {branding.companyName} for document management and workplace productivity.
           </p>
         </div>
 
         {/* Main Nav Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-          <Card className="hover:shadow-md transition-shadow border-app-blue/10">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-white p-3">
+          <Card className={`hover:shadow-md transition-shadow ${isDark ? 'border-gray-700 dashboard-card' : 'border-app-blue/10'}`}>
+            <CardHeader className={`${isDark ? 'bg-[#161a21]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-app-blue" />
+                <Building2 className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
                 Office Manager
               </CardTitle>
             </CardHeader>
             <CardContent className="py-2 px-3">
-              <p className="text-xs text-gray-600 mb-2">
+              <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
                 Manage employees, schedules and invoices in one centralized location
               </p>
             </CardContent>
@@ -49,15 +53,15 @@ const WelcomeDashboard = () => {
             </CardFooter>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow border-app-blue/10">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-white p-3">
+          <Card className={`hover:shadow-md transition-shadow ${isDark ? 'border-gray-700 dashboard-card' : 'border-app-blue/10'}`}>
+            <CardHeader className={`${isDark ? 'bg-[#161a21]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Brain className="h-4 w-4 text-app-blue" />
+                <Brain className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
                 Knowledge Base
               </CardTitle>
             </CardHeader>
             <CardContent className="py-2 px-3">
-              <p className="text-xs text-gray-600 mb-2">
+              <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
                 Access and organize your company's information resources
               </p>
             </CardContent>
@@ -68,15 +72,15 @@ const WelcomeDashboard = () => {
             </CardFooter>
           </Card>
           
-          <Card className="hover:shadow-md transition-shadow border-app-blue/10">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-white p-3">
+          <Card className={`hover:shadow-md transition-shadow ${isDark ? 'border-gray-700 dashboard-card' : 'border-app-blue/10'}`}>
+            <CardHeader className={`${isDark ? 'bg-[#161a21]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
               <CardTitle className="text-lg flex items-center gap-2">
-                <LayoutDashboard className="h-4 w-4 text-app-blue" />
+                <LayoutDashboard className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
                 Dashboard
               </CardTitle>
             </CardHeader>
             <CardContent className="py-2 px-3">
-              <p className="text-xs text-gray-600 mb-2">
+              <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
                 View your overview dashboard with all key metrics
               </p>
             </CardContent>
@@ -89,10 +93,10 @@ const WelcomeDashboard = () => {
         </div>
 
         {/* Intelligent Assistant Card */}
-        <Card className="mb-6 border-app-blue/20 shadow-sm">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-white p-3">
+        <Card className={`mb-6 ${isDark ? 'border-blue-900/30 bg-[#161a21]' : 'border-app-blue/20'} shadow-sm`}>
+          <CardHeader className={`${isDark ? 'bg-[#161a21]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
             <CardTitle className="text-xl flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-app-blue" />
+              <MessageSquare className={`h-5 w-5 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
               Intelligent Assistant
             </CardTitle>
             <CardDescription className="text-xs">
@@ -100,7 +104,7 @@ const WelcomeDashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="py-3 px-4">
-            <p className="text-sm mb-3">
+            <p className="text-sm mb-3 dark:text-gray-300">
               Our intelligent assistant can help you draft documents, organize schedules, and provide insights—all while keeping your data secure.
             </p>
             <div className="flex justify-center">
@@ -113,12 +117,12 @@ const WelcomeDashboard = () => {
 
         {/* Features Grid */}
         <div className="space-y-4 mb-6">
-          <h2 className="text-lg font-semibold text-gray-800">Explore Features</h2>
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Explore Features</h2>
           <div className="grid grid-cols-3 gap-3">
-            <Card className="hover:shadow-sm transition-shadow">
+            <Card className={`hover:shadow-sm transition-shadow ${isDark ? 'bg-[#161a21] border-gray-700' : ''}`}>
               <CardHeader className="p-3">
                 <CardTitle className="text-sm flex items-center gap-1">
-                  <BookOpenText className="h-4 w-4 text-app-blue" />
+                  <BookOpenText className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
                   Documents
                 </CardTitle>
               </CardHeader>
@@ -129,10 +133,10 @@ const WelcomeDashboard = () => {
               </CardFooter>
             </Card>
             
-            <Card className="hover:shadow-sm transition-shadow">
+            <Card className={`hover:shadow-sm transition-shadow ${isDark ? 'bg-[#161a21] border-gray-700' : ''}`}>
               <CardHeader className="p-3">
                 <CardTitle className="text-sm flex items-center gap-1">
-                  <Brain className="h-4 w-4 text-app-blue" />
+                  <Brain className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
                   Knowledge
                 </CardTitle>
               </CardHeader>
@@ -143,10 +147,10 @@ const WelcomeDashboard = () => {
               </CardFooter>
             </Card>
             
-            <Card className="hover:shadow-sm transition-shadow">
+            <Card className={`hover:shadow-sm transition-shadow ${isDark ? 'bg-[#161a21] border-gray-700' : ''}`}>
               <CardHeader className="p-3">
                 <CardTitle className="text-sm flex items-center gap-1">
-                  <Building2 className="h-4 w-4 text-app-blue" />
+                  <Building2 className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
                   Office
                 </CardTitle>
               </CardHeader>
