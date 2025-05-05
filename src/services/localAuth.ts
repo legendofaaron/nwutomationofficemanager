@@ -6,7 +6,7 @@ export interface LocalUser {
   email?: string;
   password: string; // In a real app, this should be hashed
   user_metadata: {
-    username?: string; // Add username to user_metadata
+    username?: string; // Username is in user_metadata
     full_name?: string;
     avatar_url?: string;
     bio?: string;
@@ -75,10 +75,10 @@ const updateCurrentUser = (updates: Partial<Omit<LocalUser, 'id' | 'created_at'>
     }
     
     // Apply updates
-    if (updates.username) {
+    if (updates.user_metadata?.username) {
       // Check if username is already taken by another user
       const existingUserWithUsername = users.find(u => 
-        u.username === updates.username && u.id !== session.user.id
+        u.user_metadata.username === updates.user_metadata.username && u.id !== session.user.id
       );
       
       if (existingUserWithUsername) {
@@ -87,8 +87,6 @@ const updateCurrentUser = (updates: Partial<Omit<LocalUser, 'id' | 'created_at'>
           error: new Error('Username already taken')
         };
       }
-      
-      users[userIndex].username = updates.username;
     }
     
     if (updates.email) {
@@ -241,7 +239,7 @@ export const localAuth = {
       const users = getUsers();
       
       // Find user by username
-      const user = users.find(user => user.username === username && user.password === password);
+      const user = users.find(user => user.user_metadata.username === username && user.password === password);
       
       if (!user) {
         return {
