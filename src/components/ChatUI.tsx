@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings } from 'lucide-react';
+import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings, SendHorizontal } from 'lucide-react';
 import { LlmSettings } from './LlmSettings';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -395,10 +394,10 @@ Your data remains secure on your local system. How can I assist you today?`;
                   <div 
                     className={`${
                       message.type === 'user' 
-                        ? 'bg-primary text-primary-foreground max-w-[80%] p-3 rounded-lg' 
+                        ? 'bg-primary text-primary-foreground max-w-[80%] p-3 rounded-lg shadow-sm' 
                         : message.type === 'system'
                           ? `${isDark ? 'bg-secondary' : 'bg-gray-200'} ${isDark ? 'text-secondary-foreground' : 'text-gray-800'} px-4 py-1 rounded-full text-xs font-medium`
-                          : `${isDark ? 'bg-muted' : 'bg-gray-100'} ${isDark ? 'text-foreground' : 'text-gray-800'} max-w-[80%] p-3 rounded-lg`
+                          : `${isDark ? 'bg-muted' : 'bg-gray-100'} ${isDark ? 'text-foreground' : 'text-gray-800'} max-w-[80%] p-3 rounded-lg shadow-sm`
                     } whitespace-pre-wrap`}
                   >
                     {message.content}
@@ -409,15 +408,22 @@ Your data remains secure on your local system. How can I assist you today?`;
             </div>
           </ScrollArea>
           
-          <div className={`p-3 ${isDark ? 'border-border' : 'border-gray-200'} border-t`}>
-            <div className="flex gap-2">
+          <div className={`p-3 ${isDark ? 'border-border' : 'border-gray-200'} border-t bg-card shadow-inner`}>
+            <div className="flex gap-2 items-center">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={isSetupMode ? "Type your response..." : "Type your message..."}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                className="flex-1"
               />
-              <Button onClick={handleSendMessage}>Send</Button>
+              <Button 
+                onClick={handleSendMessage} 
+                size="icon" 
+                className={`${isDark ? 'bg-primary hover:bg-primary/90' : 'bg-primary hover:bg-primary/90'} text-primary-foreground rounded-full h-10 w-10 flex-shrink-0 shadow-md`}
+              >
+                <SendHorizontal className="h-5 w-5" />
+              </Button>
             </div>
           </div>
         </>
