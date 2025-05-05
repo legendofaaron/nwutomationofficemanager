@@ -23,6 +23,7 @@ const Login = () => {
   const { toast } = useToast();
   const { branding } = useAppContext();
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -34,19 +35,31 @@ const Login = () => {
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
+    setLoginError(null);
     
     // This is a mock login - in a real app, you'd validate against a backend
     setTimeout(() => {
       setIsLoading(false);
       
-      // Simulate successful login
-      localStorage.setItem('isLoggedIn', 'true');
-      toast({
-        title: "Login successful",
-        description: "Welcome back to Office Manager",
-      });
-      
-      navigate('/dashboard');
+      // Simple mock validation - in a real app, this would be your API validation
+      if (values.email === 'admin@example.com' && values.password === 'password123') {
+        // Successful login
+        localStorage.setItem('isLoggedIn', 'true');
+        toast({
+          title: "Login successful",
+          description: "Welcome back to Office Manager",
+        });
+        
+        navigate('/dashboard');
+      } else {
+        // Failed login
+        setLoginError('Invalid email or password. Please try again.');
+        toast({
+          title: "Login failed",
+          description: "Invalid email or password",
+          variant: "destructive",
+        });
+      }
     }, 1500);
   };
 
@@ -67,6 +80,11 @@ const Login = () => {
             <CardDescription>Enter your credentials to access your account</CardDescription>
           </CardHeader>
           <CardContent>
+            {loginError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 dark:bg-red-900/20 dark:border-red-800/40 dark:text-red-400 rounded-md text-sm">
+                {loginError}
+              </div>
+            )}
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
@@ -116,6 +134,13 @@ const Login = () => {
                   {isLoading ? "Logging in..." : "Log In"}
                   {!isLoading && <ArrowRight className="ml-1 h-4 w-4" />}
                 </Button>
+                
+                {/* Demo credentials helper */}
+                <div className="pt-2 text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Demo credentials: admin@example.com / password123
+                  </p>
+                </div>
               </form>
             </Form>
           </CardContent>
