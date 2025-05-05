@@ -976,7 +976,7 @@ For questions or further information, please contact [Name] at [Contact Informat
       <div className="flex items-center justify-between p-3 border-b bg-slate-900">
         <div className="flex items-center gap-2">
           <Logo small />
-          {assistantConfig?.name && <span className="text-sm font-medium">{assistantConfig.name}</span>}
+          {assistantConfig?.name && <span className="text-sm font-medium text-gray-400">{assistantConfig.name}</span>}
         </div>
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" onClick={handleEditBranding} className="h-6 w-6" title="Edit branding and settings">
