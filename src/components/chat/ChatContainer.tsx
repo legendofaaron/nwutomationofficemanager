@@ -21,7 +21,6 @@ export const ChatContainer = ({
 }: ChatContainerProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark' || resolvedTheme === 'superdark';
   
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -33,7 +32,7 @@ export const ChatContainer = ({
       {!isSetupMode && <QuickActions onActionSelect={onQuickAction} />}
       
       <ScrollArea className="flex-1 p-4 bg-[#0D1117]">
-        <div className="space-y-4">
+        <div className="space-y-2">
           {messages.map(message => (
             <MessageBubble key={message.id} message={message} />
           ))}

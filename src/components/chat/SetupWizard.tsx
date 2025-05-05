@@ -14,7 +14,7 @@ export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupW
   return (
     <>
       <ScrollArea className="flex-1 p-4 bg-[#0D1117]">
-        <div className="space-y-4">
+        <div className="space-y-3">
           {messages.map(message => (
             <MessageBubble key={message.id} message={message} />
           ))}

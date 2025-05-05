@@ -12,8 +12,6 @@ interface ChatInputProps {
 
 export const ChatInput = ({ onSendMessage, placeholder = "Type your message..." }: ChatInputProps) => {
   const [input, setInput] = useState('');
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark' || resolvedTheme === 'superdark';
   
   const handleSend = () => {
     if (!input.trim()) return;
@@ -22,22 +20,22 @@ export const ChatInput = ({ onSendMessage, placeholder = "Type your message..." 
   };
   
   return (
-    <div className="p-3 border-t border-border/20 bg-[#0D1117]">
+    <div className="p-3 border-t border-[#1E2430]/80 bg-[#0D1117]">
       <div className="flex gap-2 items-center">
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={placeholder}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          className="flex-1 h-12 text-sm rounded-md bg-[#161B22] border-[#1E2430] text-gray-200 placeholder:text-gray-400 focus-visible:ring-primary"
+          className="flex-1 h-10 text-sm rounded-md bg-[#161B22] border-[#1E2430] text-gray-200 placeholder:text-gray-500 focus-visible:ring-blue-500"
         />
         <Button 
           onClick={handleSend} 
           size="icon" 
-          className="bg-blue-500 hover:bg-blue-600 text-white rounded-full h-10 w-10 flex-shrink-0 shadow-md transition-colors"
+          className="bg-blue-500 hover:bg-blue-600 text-white rounded-full h-9 w-9 flex-shrink-0 shadow-md transition-colors"
           aria-label="Send message"
         >
-          <SendHorizontal className="h-5 w-5" />
+          <SendHorizontal className="h-4 w-4" />
         </Button>
       </div>
     </div>
