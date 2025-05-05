@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -78,18 +77,9 @@ const TodoCalendarBubble = () => {
     setCalendarDate(selectedDate);
   }, [selectedDate, setCalendarDate]);
 
-  // Listen for clicks outside popover to close it
+  // Remove the click outside handler to keep popover open
+  // We'll still listen for the explicit closeAllPopovers event
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (isOpen && 
-          popoverRef.current && 
-          !popoverRef.current.contains(event.target as Node) && 
-          // Make sure we're not clicking the trigger button
-          !(event.target as HTMLElement).closest('[data-state="open"]')) {
-        setIsOpen(false);
-      }
-    };
-
     const handleCloseAllPopovers = (e: Event) => {
       const customEvent = e as CustomEvent;
       if (customEvent.detail?.exceptId !== popoverId) {
@@ -97,25 +87,10 @@ const TodoCalendarBubble = () => {
       }
     };
 
-    // Close when dashboard is clicked
-    const handleDashboardClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      // Only close if we're clicking directly on the dashboard content
-      if (!target.closest('[role="dialog"]') && 
-          !target.closest('[data-calendar]') &&
-          !target.closest('.calendar-component')) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('closeAllPopovers', handleCloseAllPopovers);
-    document.addEventListener('click', handleDashboardClick);
     
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('closeAllPopovers', handleCloseAllPopovers);
-      document.removeEventListener('click', handleDashboardClick);
     };
   }, [isOpen]);
 

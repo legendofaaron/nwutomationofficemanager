@@ -92,7 +92,7 @@ const MainLayout = () => {
   };
 
   const handleCloseCalendars = (e: React.MouseEvent) => {
-    // Close calendar bubbles when clicking on the main content area
+    // Only close non-calendar popovers when clicking on the main content area
     // We don't use stopPropagation to allow normal click events to still work
     const target = e.target as HTMLElement;
     
@@ -106,8 +106,10 @@ const MainLayout = () => {
       return;
     }
     
-    // Dispatch a custom event to close all popovers
-    document.dispatchEvent(new CustomEvent('closeAllPopovers'));
+    // Dispatch a custom event to close all non-calendar popovers
+    document.dispatchEvent(new CustomEvent('closeAllPopovers', {
+      detail: { exceptId: 'todo-calendar-bubble' }
+    }));
   };
 
   const sidebarButtonBg = isSuperDark 
