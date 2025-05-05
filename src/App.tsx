@@ -36,47 +36,47 @@ const App = () => {
     };
   }, []);
   
-  // Show loading state while checking authentication
-  if (isAuthenticated === null) {
-    return <LoadingScreen />;
-  }
-  
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <AppProvider>
-          <Toaster />
-          <Routes>
-            {/* Authentication Routes */}
-            <Route 
-              path="/login" 
-              element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} 
-            />
-            <Route 
-              path="/signup" 
-              element={isAuthenticated ? <Navigate to="/dashboard" /> : <Signup />} 
-            />
-            
-            {/* Protected Routes */}
-            <Route 
-              path="/dashboard" 
-              element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" />} 
-            />
-            <Route 
-              path="/setup-assistant" 
-              element={isAuthenticated ? <SetupAssistant /> : <Navigate to="/login" />} 
-            />
-            
-            {/* Home page - redirect based on authentication */}
-            <Route 
-              path="/" 
-              element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} 
-            />
-            
-            {/* 404 Route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AppProvider>
+        {/* Show loading state while checking authentication */}
+        {isAuthenticated === null ? (
+          <LoadingScreen />
+        ) : (
+          <AppProvider>
+            <Toaster />
+            <Routes>
+              {/* Authentication Routes */}
+              <Route 
+                path="/login" 
+                element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} 
+              />
+              <Route 
+                path="/signup" 
+                element={isAuthenticated ? <Navigate to="/dashboard" /> : <Signup />} 
+              />
+              
+              {/* Protected Routes */}
+              <Route 
+                path="/dashboard" 
+                element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" />} 
+              />
+              <Route 
+                path="/setup-assistant" 
+                element={isAuthenticated ? <SetupAssistant /> : <Navigate to="/login" />} 
+              />
+              
+              {/* Home page - redirect based on authentication */}
+              <Route 
+                path="/" 
+                element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} 
+              />
+              
+              {/* 404 Route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AppProvider>
+        )}
       </ThemeProvider>
     </BrowserRouter>
   );
