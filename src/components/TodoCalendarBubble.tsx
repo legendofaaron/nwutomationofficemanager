@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -5,33 +6,47 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, X, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, X, Calendar as CalendarIcon, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { type DayProps } from 'react-day-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
+import { useAppContext } from '@/context/AppContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface Todo {
   id: string;
   text: string;
   completed: boolean;
   date: Date;
+  assignedTo?: string;
+  assignedToAvatars?: string[];
+  crew?: string[];
 }
 
 const TodoCalendarBubble = () => {
+  const { calendarDate, setCalendarDate, todos, setTodos } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
   const [newTodoText, setNewTodoText] = useState('');
   const [draggedTodo, setDraggedTodo] = useState<Todo | null>(null);
-  const [todos, setTodos] = useState<Todo[]>([
-    { id: '1', text: 'Team meeting', completed: false, date: new Date() },
-    { id: '2', text: 'Review project proposal', completed: true, date: new Date() },
-    { id: '3', text: 'Call with client', completed: false, date: new Date() },
-  ]);
-
+  
   // Ref to close popover when clicking outside
   const popoverRef = useRef<HTMLDivElement>(null);
+  const popoverId = "todo-calendar-bubble";
+
+  // Update local selected date when global date changes
+  useEffect(() => {
+    if (calendarDate) {
+      setSelectedDate(calendarDate);
+    }
+  }, [calendarDate]);
+
+  // Update global date when local date changes
+  useEffect(() => {
+    setCalendarDate(selectedDate);
+  }, [selectedDate, setCalendarDate]);
 
   // Listen for clicks outside popover to close it
   useEffect(() => {
@@ -45,9 +60,32 @@ const TodoCalendarBubble = () => {
       }
     };
 
+    const handleCloseAllPopovers = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.exceptId !== popoverId) {
+        setIsOpen(false);
+      }
+    };
+
+    // Close when dashboard is clicked
+    const handleDashboardClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Only close if we're clicking directly on the dashboard content
+      if (!target.closest('[role="dialog"]') && 
+          !target.closest('[data-calendar]') &&
+          !target.closest('.calendar-component')) {
+        setIsOpen(false);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('closeAllPopovers', handleCloseAllPopovers);
+    document.addEventListener('click', handleDashboardClick);
+    
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('closeAllPopovers', handleCloseAllPopovers);
+      document.removeEventListener('click', handleDashboardClick);
     };
   }, [isOpen]);
 
@@ -58,6 +96,23 @@ const TodoCalendarBubble = () => {
   // Count tasks for each day
   const getTaskCountForDay = (date: Date): number => {
     return todos.filter(todo => todo.date.toDateString() === date.toDateString()).length;
+  };
+
+  // Get assigned employees for a day
+  const getAssignedEmployeesForDay = (date: Date): string[] => {
+    const dayTodos = todos.filter(todo => todo.date.toDateString() === date.toDateString());
+    const assignedEmployees = new Set<string>();
+    
+    dayTodos.forEach(todo => {
+      if (todo.assignedTo) {
+        assignedEmployees.add(todo.assignedTo);
+      }
+      if (todo.crew && todo.crew.length > 0) {
+        todo.crew.forEach(employee => assignedEmployees.add(employee));
+      }
+    });
+    
+    return Array.from(assignedEmployees);
   };
 
   const addTodo = () => {
@@ -72,20 +127,19 @@ const TodoCalendarBubble = () => {
     
     setTodos([...todos, newTodo]);
     setNewTodoText('');
-    toast?.success("Task added successfully");
+    toast.success("Task added successfully");
   };
 
   const toggleTodoCompletion = (id: string) => {
-    setTodos(
-      todos.map(todo =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
+    const updatedTodos = todos.map(todo =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
     );
+    setTodos(updatedTodos);
   };
 
   const deleteTodo = (id: string) => {
     setTodos(todos.filter(todo => todo.id !== id));
-    toast?.success("Task deleted successfully");
+    toast.success("Task deleted successfully");
   };
 
   // Updated drag and drop functionality
@@ -113,10 +167,12 @@ const TodoCalendarBubble = () => {
     const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
     const taskCount = getTaskCountForDay(date);
     const dateValue = date.getDate();
+    const assignedEmployees = getAssignedEmployeesForDay(date);
     
     return (
       <div 
         className="relative w-full h-full flex items-center justify-center"
+        data-calendar="day-cell"
         onClick={() => handleDateChange(date)}
         onDragOver={(e) => {
           // Allow drop by preventing the default behavior
@@ -137,7 +193,7 @@ const TodoCalendarBubble = () => {
             setTodos(updatedTodos);
             // Update the selected date to make the moved task visible
             setSelectedDate(new Date(date));
-            toast?.success(`Task moved to ${format(date, 'MMM d, yyyy')}`);
+            toast.success(`Task moved to ${format(date, 'MMM d, yyyy')}`);
             setDraggedTodo(null);
           }
         }}
@@ -149,6 +205,8 @@ const TodoCalendarBubble = () => {
           <span className="text-xs overflow-hidden text-center w-full">
             {dateValue}
           </span>
+          
+          {/* Task count badge */}
           {taskCount > 0 && (
             <Badge 
               variant="secondary" 
@@ -156,6 +214,24 @@ const TodoCalendarBubble = () => {
             >
               {taskCount}
             </Badge>
+          )}
+          
+          {/* Employee initials for assigned tasks */}
+          {assignedEmployees.length > 0 && (
+            <div className="absolute -top-1 -right-1 flex -space-x-1">
+              {assignedEmployees.slice(0, 2).map((employee, index) => (
+                <Avatar key={index} className="h-3 w-3 border border-background">
+                  <AvatarFallback className="text-[0.5rem]">
+                    {employee.substring(0, 1)}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
+              {assignedEmployees.length > 2 && (
+                <Badge variant="secondary" className="h-3 w-3 rounded-full flex items-center justify-center text-[0.5rem] p-0">
+                  +{assignedEmployees.length - 2}
+                </Badge>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -186,9 +262,10 @@ const TodoCalendarBubble = () => {
         </PopoverTrigger>
         <PopoverContent 
           ref={popoverRef}
-          className="w-80 p-0 bg-background border-2" 
+          className="w-80 p-0 bg-background border-2 calendar-component" 
           align="end"
           sideOffset={4}
+          id={popoverId}
         >
           <Card className="shadow-lg border-0">
             <div className="flex justify-between items-center p-3 bg-card border-b">
@@ -215,6 +292,7 @@ const TodoCalendarBubble = () => {
                 components={{
                   Day: customDayRender
                 }}
+                data-calendar="calendar"
               />
               
               <div className="mt-4 space-y-2">
@@ -265,6 +343,28 @@ const TodoCalendarBubble = () => {
                             {todo.text}
                           </label>
                         </div>
+                        
+                        {/* Show assigned employees */}
+                        {(todo.assignedTo || (todo.crew && todo.crew.length > 0)) && (
+                          <div className="flex -space-x-1">
+                            {todo.assignedTo && (
+                              <Avatar className="h-5 w-5 border border-background">
+                                <AvatarFallback className="text-[0.6rem]">
+                                  {todo.assignedTo.substring(0, 1)}
+                                </AvatarFallback>
+                              </Avatar>
+                            )}
+                            
+                            {todo.crew && todo.crew.map((member, idx) => (
+                              <Avatar key={idx} className="h-5 w-5 border border-background">
+                                <AvatarFallback className="text-[0.6rem]">
+                                  {member.substring(0, 1)}
+                                </AvatarFallback>
+                              </Avatar>
+                            ))}
+                          </div>
+                        )}
+                        
                         <Button
                           variant="ghost"
                           size="sm"

@@ -22,7 +22,12 @@ const PopoverContent = React.forwardRef<
         className
       )}
       onInteractOutside={(e) => {
-        // Prevent default to allow our custom close handling
+        // Close all popovers when clicking outside
+        document.dispatchEvent(new CustomEvent('closeAllPopovers', { 
+          detail: { exceptId: props.id } 
+        }));
+        
+        // Allow original handler to still work
         if (props.onInteractOutside) {
           props.onInteractOutside(e);
         }

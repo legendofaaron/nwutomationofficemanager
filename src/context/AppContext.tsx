@@ -13,6 +13,19 @@ interface File {
   spreadsheetData?: SpreadsheetData;
 }
 
+interface Todo {
+  id: string;
+  text: string;
+  completed: boolean;
+  date: Date;
+  assignedTo?: string;
+  assignedToAvatars?: string[];
+  crew?: string[];
+  location?: string;
+  startTime?: string;
+  endTime?: string;
+}
+
 interface SpreadsheetData {
   headers: string[];
   rows: Record<string, any>[];
@@ -57,7 +70,19 @@ interface AppContextType {
   setAssistantConfig: (config: AssistantConfig) => void;
   branding: BrandingConfig;
   setBranding: (config: BrandingConfig) => void;
+  // New calendar-related state
+  calendarDate: Date;
+  setCalendarDate: (date: Date) => void;
+  todos: Todo[];
+  setTodos: (todos: Todo[]) => void;
 }
+
+// Default todos
+const defaultTodos: Todo[] = [
+  { id: '1', text: 'Team meeting', completed: false, date: new Date() },
+  { id: '2', text: 'Review project proposal', completed: true, date: new Date() },
+  { id: '3', text: 'Call with client', completed: false, date: new Date() },
+];
 
 const defaultFiles: File[] = [
   {
@@ -177,6 +202,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     companyName: 'Northwestern Automation',
     logoType: 'default'
   });
+  
+  // Add calendar-related state
+  const [calendarDate, setCalendarDate] = useState<Date>(new Date());
+  const [todos, setTodos] = useState<Todo[]>(defaultTodos);
 
   return (
     <AppContext.Provider
@@ -197,7 +226,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         assistantConfig,
         setAssistantConfig,
         branding,
-        setBranding
+        setBranding,
+        calendarDate,
+        setCalendarDate,
+        todos,
+        setTodos
       }}
     >
       {children}
