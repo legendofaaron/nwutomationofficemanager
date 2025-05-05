@@ -2,376 +2,141 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Users, User, MapPin, Building2 } from 'lucide-react';
+import { Task, Crew } from './ScheduleTypes';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { User, Users, MapPin, CheckCircle, X, Clock } from 'lucide-react';
+import { getCrewDisplayCode } from './ScheduleHelpers';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { 
-  Task, TaskFormData, AssignmentType, LocationType, 
-} from './ScheduleTypes';
-import { 
-  getEmployeeOptions, getCrewOptions, getClientLocationOptions, 
-  parseClientLocationValue, getCrewMemberNames, getCrewDisplayCode, 
-  getClientLocationInfo 
-} from './ScheduleHelpers';
+import { Checkbox } from '@/components/ui/checkbox';
+import { format } from 'date-fns';
 
 interface TaskCalendarViewProps {
-  selectedDate: Date;
-  setSelectedDate: (date: Date) => void;
   tasks: Task[];
+  selectedDate: Date;
+  onSelectDate: (date: Date | undefined) => void;
   onToggleTaskCompletion: (taskId: string) => void;
-  onAddTask: (task: Task) => void;
-  employees: any[];
-  crews: any[];
-  clients: any[];
-  clientLocations: any[];
+  crews: Crew[];
 }
 
-const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
-  selectedDate,
-  setSelectedDate,
-  tasks,
+const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({ 
+  tasks, 
+  selectedDate, 
+  onSelectDate,
   onToggleTaskCompletion,
-  onAddTask,
-  employees,
-  crews,
-  clients,
-  clientLocations,
+  crews
 }) => {
-  const [newTask, setNewTask] = React.useState<TaskFormData>({
-    title: '',
-    assignedTo: '',
-    assignedCrew: '',
-    startTime: '',
-    endTime: '',
-    location: '',
-    clientId: '',
-    clientLocationId: ''
-  });
-  
-  const [assignmentType, setAssignmentType] = React.useState<AssignmentType>('individual');
-  const [locationType, setLocationType] = React.useState<LocationType>('custom');
-
-  const handleAddTask = () => {
-    if (newTask.title && newTask.startTime && newTask.endTime) {
-      const task: Task = {
-        id: Date.now().toString(),
-        title: newTask.title,
-        date: selectedDate,
-        completed: false,
-        startTime: newTask.startTime,
-        endTime: newTask.endTime
-      };
-      
-      // Handle assignment based on selected type
-      if (assignmentType === 'individual' && newTask.assignedTo) {
-        task.assignedTo = newTask.assignedTo;
-      } else if (assignmentType === 'crew' && newTask.assignedCrew) {
-        // Get crew members' names
-        const selectedCrew = crews.find(crew => crew.id === newTask.assignedCrew);
-        if (selectedCrew) {
-          task.crew = selectedCrew.members.map(memberId => {
-            const employee = employees.find(emp => emp.id === memberId);
-            return employee ? employee.name : '';
-          }).filter(name => name !== '');
-          task.crewId = newTask.assignedCrew;
-        }
-      }
-      
-      // Handle location based on selected type
-      if (locationType === 'custom' && newTask.location) {
-        task.location = newTask.location;
-      } else if (locationType === 'client' && newTask.clientId && newTask.clientLocationId) {
-        const client = clients.find(c => c.id === newTask.clientId);
-        const location = clientLocations.find(l => l.id === newTask.clientLocationId);
-        
-        if (client && location) {
-          task.location = `${client.name} - ${location.name}`;
-          task.clientId = newTask.clientId;
-          task.clientLocationId = newTask.clientLocationId;
-        }
-      }
-      
-      onAddTask(task);
-      setNewTask({ 
-        title: '', 
-        assignedTo: '', 
-        assignedCrew: '', 
-        startTime: '', 
-        endTime: '', 
-        location: '',
-        clientId: '',
-        clientLocationId: ''
-      });
-      toast.success("Task scheduled successfully");
-    } else {
-      toast.error("Please fill in all required fields");
-    }
-  };
-
-  const filteredTasks = tasks.filter(task => 
-    task.date.toDateString() === selectedDate.toDateString()
+  // Filter tasks for the selected date
+  const tasksForSelectedDate = tasks.filter(
+    task => task.date.toDateString() === selectedDate.toDateString()
   );
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Calendar</CardTitle>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add Schedule
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Schedule</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Task Title</Label>
-                  <Input
-                    id="title"
-                    value={newTask.title}
-                    onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Assignment Type</Label>
-                  <div className="flex space-x-4">
-                    <Button 
-                      variant={assignmentType === 'individual' ? 'default' : 'outline'} 
-                      onClick={() => setAssignmentType('individual')}
-                      className="flex items-center"
-                      type="button"
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Individual
-                    </Button>
-                    <Button 
-                      variant={assignmentType === 'crew' ? 'default' : 'outline'} 
-                      onClick={() => setAssignmentType('crew')}
-                      className="flex items-center"
-                      type="button"
-                    >
-                      <Users className="h-4 w-4 mr-2" />
-                      Crew
-                    </Button>
-                  </div>
-                </div>
-                
-                {assignmentType === 'individual' ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="employee">Assign To</Label>
-                    <Select
-                      value={newTask.assignedTo}
-                      onValueChange={(value) => setNewTask({ ...newTask, assignedTo: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select employee" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getEmployeeOptions(employees)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Label htmlFor="crew">Assign To Crew</Label>
-                    <Select
-                      value={newTask.assignedCrew}
-                      onValueChange={(value) => setNewTask({ ...newTask, assignedCrew: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select crew" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getCrewOptions(crews)}
-                      </SelectContent>
-                    </Select>
-                    
-                    {newTask.assignedCrew && (
-                      <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
-                        <strong>Crew members:</strong> {getCrewMemberNames(newTask.assignedCrew, crews, employees)}
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="startTime">Start Time</Label>
-                    <Input
-                      id="startTime"
-                      type="time"
-                      value={newTask.startTime}
-                      onChange={(e) => setNewTask({ ...newTask, startTime: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="endTime">End Time</Label>
-                    <Input
-                      id="endTime"
-                      type="time"
-                      value={newTask.endTime}
-                      onChange={(e) => setNewTask({ ...newTask, endTime: e.target.value })}
-                    />
-                  </div>
-                </div>
-                
-                {/* Location selection UI */}
-                <div className="space-y-2">
-                  <Label>Location Type</Label>
-                  <div className="flex space-x-4">
-                    <Button 
-                      variant={locationType === 'custom' ? 'default' : 'outline'} 
-                      onClick={() => setLocationType('custom')}
-                      className="flex items-center"
-                      type="button"
-                    >
-                      <MapPin className="h-4 w-4 mr-2" />
-                      Custom
-                    </Button>
-                    <Button 
-                      variant={locationType === 'client' ? 'default' : 'outline'} 
-                      onClick={() => setLocationType('client')}
-                      className="flex items-center"
-                      type="button"
-                    >
-                      <Building2 className="h-4 w-4 mr-2" />
-                      Client Site
-                    </Button>
-                  </div>
-                </div>
-                
-                {locationType === 'custom' ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      value={newTask.location}
-                      onChange={(e) => setNewTask({ ...newTask, location: e.target.value })}
-                      placeholder="E.g., Office, Meeting Room, etc."
-                    />
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="clientLocation">Location</Label>
-                      <Select
-                        value={newTask.clientId && newTask.clientLocationId ? `${newTask.clientId}:${newTask.clientLocationId}` : ""}
-                        onValueChange={(value) => {
-                          const parsed = parseClientLocationValue(value);
-                          if (parsed) {
-                            setNewTask({
-                              ...newTask,
-                              clientId: parsed.clientId,
-                              clientLocationId: parsed.locationId
-                            });
-                          }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select client location" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover">
-                          {getClientLocationOptions(clients, clientLocations)}
-                        </SelectContent>
-                      </Select>
-                      
-                      {newTask.clientId && newTask.clientLocationId && (
-                        <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
-                          {(() => {
-                            const locationInfo = getClientLocationInfo(
-                              newTask.clientId, 
-                              newTask.clientLocationId,
-                              clients,
-                              clientLocations
-                            );
-                            if (!locationInfo) return null;
-                            
-                            return (
-                              <>
-                                <div className="font-medium">{locationInfo.locationName}</div>
-                                <div>{locationInfo.address}</div>
-                                {locationInfo.city && locationInfo.state && (
-                                  <div>{locationInfo.city}, {locationInfo.state} {locationInfo.zipCode}</div>
-                                )}
-                              </>
-                            );
-                          })()}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                <Button onClick={handleAddTask} className="w-full">
-                  Add Schedule
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+      <Card className="shadow-md border-t-4 border-t-blue-500 hover:shadow-lg transition-all">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/30">
+              <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            Schedule Calendar
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
+            onSelect={onSelectDate}
             className={cn("rounded-md border", "pointer-events-auto")}
+            components={{
+              DayContent: ({ day }) => {
+                // Check if there are tasks on this day
+                const hasTasks = tasks.some(
+                  task => task.date.toDateString() === day.toDate().toDateString()
+                );
+                
+                return (
+                  <div className="relative h-full flex items-center justify-center">
+                    <div className="calendar-day-number z-10">
+                      {format(day.toDate(), 'd')}
+                    </div>
+                    {hasTasks && (
+                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-1 w-1 bg-blue-500 rounded-full" />
+                    )}
+                  </div>
+                );
+              },
+            }}
           />
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Tasks for {selectedDate.toLocaleDateString()}</CardTitle>
+      <Card className="shadow-md border-t-4 border-t-blue-500 hover:shadow-lg transition-all">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/30">
+              <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            {format(selectedDate, 'MMMM d, yyyy')}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {filteredTasks.map((task) => (
+          <div className="space-y-3">
+            {tasksForSelectedDate.length === 0 && (
+              <div className="p-8 text-center border border-dashed rounded-lg text-muted-foreground">
+                No tasks scheduled for this day
+              </div>
+            )}
+            
+            {tasksForSelectedDate.map((task) => (
               <div
                 key={task.id}
                 className={cn(
-                  "flex items-center justify-between p-4 rounded-lg border",
-                  task.completed ? "bg-muted/50" : "bg-card"
+                  "flex items-start justify-between p-4 rounded-lg border transition-all duration-200",
+                  task.completed ? "bg-muted/30" : "bg-card hover:shadow-md hover:border-blue-500/30"
                 )}
               >
-                <div className="space-y-1">
-                  <span className={cn("font-medium", task.completed && "line-through text-muted-foreground")}>
-                    {task.title}
-                  </span>
-                  <div className="text-sm text-muted-foreground">
-                    <p>{task.startTime} - {task.endTime}</p>
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center gap-3">
+                    <Checkbox 
+                      id={`cal-task-${task.id}`}
+                      checked={task.completed}
+                      onCheckedChange={() => onToggleTaskCompletion(task.id)}
+                      className="h-5 w-5 data-[state=checked]:bg-blue-500 data-[state=checked]:text-white"
+                    />
+                    <span className={cn(
+                      "font-medium transition-all", 
+                      task.completed && "line-through text-muted-foreground"
+                    )}>
+                      {task.title}
+                    </span>
+                  </div>
+                  
+                  <div className="pl-8 space-y-2 text-sm text-muted-foreground">
+                    <div className="flex items-center">
+                      <Clock className="h-3.5 w-3.5 mr-2" />
+                      <span>{task.startTime} - {task.endTime}</span>
+                    </div>
                     
                     {/* Show assignment info */}
                     {task.assignedTo && (
-                      <div className="flex items-center mt-1">
-                        <User className="h-3 w-3 mr-1" />
-                        <span>Assigned to: {task.assignedTo}</span>
+                      <div className="flex items-center">
+                        <User className="h-3.5 w-3.5 mr-2" />
+                        <span>{task.assignedTo}</span>
                       </div>
                     )}
                     
                     {task.crew && task.crew.length > 0 && (
-                      <div className="flex items-center mt-1">
-                        <Users className="h-3 w-3 mr-1" />
+                      <div className="flex items-center">
+                        <Users className="h-3.5 w-3.5 mr-2" />
                         <span>
-                          Crew {task.crewId ? getCrewDisplayCode(task.crewId, crews) : ''}: {task.crew.length} members
+                          Crew {task.crewId ? getCrewDisplayCode(task.crewId, crews) : ''}
                         </span>
                         
                         <div className="flex -space-x-1 ml-2">
                           {task.crew.slice(0, 3).map((member, i) => (
                             <Avatar key={i} className="h-5 w-5 border border-background">
-                              <AvatarFallback className="text-[0.6rem]">
+                              <AvatarFallback className="text-[0.6rem] bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200">
                                 {member.substring(0, 1)}
                               </AvatarFallback>
                             </Avatar>
@@ -387,19 +152,28 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                     
                     {/* Show location info */}
                     {task.location && (
-                      <div className="flex items-center mt-1">
-                        <MapPin className="h-3 w-3 mr-1" />
+                      <div className="flex items-center">
+                        <MapPin className="h-3.5 w-3.5 mr-2" />
                         <span>{task.location}</span>
                       </div>
                     )}
                   </div>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={task.completed}
-                  onChange={() => onToggleTaskCompletion(task.id)}
-                  className="h-4 w-4"
-                />
+                
+                <Badge 
+                  variant={task.completed ? "outline" : "secondary"}
+                  className={cn(
+                    "ml-2 text-xs",
+                    task.completed ? "bg-muted/50" : "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-100"
+                  )}
+                >
+                  {task.completed ? (
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                  ) : (
+                    <Clock className="h-3 w-3 mr-1" />
+                  )}
+                  {task.completed ? 'Done' : 'Pending'}
+                </Badge>
               </div>
             ))}
           </div>

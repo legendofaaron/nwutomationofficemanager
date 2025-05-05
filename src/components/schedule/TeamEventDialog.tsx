@@ -1,69 +1,71 @@
 
 import React from 'react';
-import { format } from 'date-fns';
-import { 
-  Dialog, DialogContent, DialogClose
-} from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, User, Users, MapPin, Building2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { TaskFormData, AssignmentType, LocationType } from './ScheduleTypes';
-import { 
-  getEmployeeOptions, getCrewOptions, getClientLocationOptions, 
-  parseClientLocationValue, getCrewMemberNames, getClientLocationInfo 
-} from './ScheduleHelpers';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CalendarIcon, Clock, MapPin, User, Users, X, Building2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { TaskFormData, Crew, Employee, Client, ClientLocation, LocationType, AssignmentType } from './ScheduleTypes';
+import { getEmployeeOptions, getCrewOptions, getClientLocationOptions, parseClientLocationValue, getCrewMemberNames, getClientLocationInfo } from './ScheduleHelpers';
 
 interface TeamEventDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  newTask: TaskFormData;
-  setNewTask: (task: TaskFormData) => void;
-  selectedDate: Date;
+  onCreateEvent: () => void;
+  formData: TaskFormData;
+  setFormData: React.Dispatch<React.SetStateAction<TaskFormData>>;
   assignmentType: AssignmentType;
-  setAssignmentType: (type: AssignmentType) => void;
+  setAssignmentType: React.Dispatch<React.SetStateAction<AssignmentType>>;
   locationType: LocationType;
-  setLocationType: (type: LocationType) => void;
-  handleCreateTeamEvent: () => void;
-  employees: any[];
-  crews: any[];
-  clients: any[];
-  clientLocations: any[];
+  setLocationType: React.Dispatch<React.SetStateAction<LocationType>>;
+  selectedDate: Date;
+  crews: Crew[];
+  employees: Employee[];
+  clients: Client[];
+  clientLocations: ClientLocation[];
 }
 
 const TeamEventDialog: React.FC<TeamEventDialogProps> = ({
   open,
   onOpenChange,
-  newTask,
-  setNewTask,
-  selectedDate,
+  onCreateEvent,
+  formData,
+  setFormData,
   assignmentType,
   setAssignmentType,
   locationType,
   setLocationType,
-  handleCreateTeamEvent,
-  employees,
+  selectedDate,
   crews,
+  employees,
   clients,
   clientLocations
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-[#121212] text-white border-0">
-        <div className="absolute right-4 top-4">
-          <DialogClose className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-            <X className="h-6 w-6" />
-            <span className="sr-only">Close</span>
-          </DialogClose>
-        </div>
+      <DialogContent className="max-w-md bg-white dark:bg-[#121212] dark:text-white border dark:border-gray-800 rounded-xl shadow-xl">
+        <DialogHeader className="space-y-3">
+          <div className="absolute right-4 top-4">
+            <DialogClose className="rounded-full p-1.5 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              <X className="h-5 w-5" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+          </div>
+          <div>
+            <DialogTitle className="text-2xl font-bold mb-1">Schedule Task</DialogTitle>
+            <p className="text-muted-foreground">
+              {assignmentType === 'individual' 
+                ? `Create a task for ${formData.assignedTo || 'an employee'}`
+                : `Create a team event for ${crews.find(c => c.id === formData.assignedCrew)?.name || 'a crew'}`
+              }
+            </p>
+          </div>
+        </DialogHeader>
         
-        <h2 className="text-2xl font-bold mb-1">Schedule Task</h2>
-        <p className="text-gray-400 mb-6">Create a task for Employee - {newTask.assignedTo}</p>
-        
-        <Tabs defaultValue="basicInfo" className="w-full mb-6">
+        <Tabs defaultValue="basicInfo" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="basicInfo" className="text-base">Basic Info</TabsTrigger>
             <TabsTrigger value="assignment" className="text-base">Assignment</TabsTrigger>
@@ -76,16 +78,17 @@ const TeamEventDialog: React.FC<TeamEventDialogProps> = ({
                 <Input
                   id="title"
                   placeholder="Task title"
-                  value={newTask.title}
-                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="h-11 dark:bg-[#1E1E1E] dark:border-gray-700 dark:text-white rounded-lg"
                 />
               </div>
               
               <div className="space-y-2">
                 <Label className="text-base">Date</Label>
-                <div className="h-14 bg-[#1E1E1E] rounded-xl flex items-center px-4">
-                  {format(selectedDate, 'MMMM d, yyyy')}
+                <div className="h-11 bg-muted dark:bg-[#1E1E1E] dark:border-gray-700 rounded-lg flex items-center px-4 gap-2">
+                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                  <span>{format(selectedDate, 'MMMM d, yyyy')}</span>
                 </div>
               </div>
               
@@ -96,13 +99,11 @@ const TeamEventDialog: React.FC<TeamEventDialogProps> = ({
                     <Input 
                       id="start-time" 
                       type="time" 
-                      value={newTask.startTime}
-                      onChange={(e) => setNewTask({...newTask, startTime: e.target.value})}
-                      className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl pl-4 pr-12"
+                      value={formData.startTime}
+                      onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                      className="h-11 dark:bg-[#1E1E1E] dark:border-gray-700 dark:text-white rounded-lg pl-4 pr-12"
                     />
-                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      AM
-                    </div>
+                    <Clock className="absolute right-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -111,92 +112,94 @@ const TeamEventDialog: React.FC<TeamEventDialogProps> = ({
                     <Input 
                       id="end-time" 
                       type="time" 
-                      value={newTask.endTime}
-                      onChange={(e) => setNewTask({...newTask, endTime: e.target.value})}
-                      className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl pl-4 pr-12"
+                      value={formData.endTime}
+                      onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+                      className="h-11 dark:bg-[#1E1E1E] dark:border-gray-700 dark:text-white rounded-lg pl-4 pr-12"
                     />
-                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      PM
-                    </div>
+                    <Clock className="absolute right-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   </div>
                 </div>
               </div>
               
-              {/* Location selection */}
               <div className="space-y-2">
-                <Label className="text-base">Location</Label>
-                <Select
-                  value={locationType}
-                  onValueChange={(value) => setLocationType(value as 'custom' | 'client')}
-                >
-                  <SelectTrigger className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl">
-                    <SelectValue placeholder="Select location type" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1E1E1E] border-[#2E2E2E] text-white">
-                    <SelectItem value="custom">Custom Location</SelectItem>
-                    <SelectItem value="client">Client Site</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label className="text-base">Location Type</Label>
+                <div className="flex space-x-4">
+                  <Button 
+                    variant={locationType === 'custom' ? 'default' : 'outline'} 
+                    onClick={() => setLocationType('custom')}
+                    className="flex items-center flex-1"
+                    type="button"
+                  >
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Custom
+                  </Button>
+                  <Button 
+                    variant={locationType === 'client' ? 'default' : 'outline'} 
+                    onClick={() => setLocationType('client')}
+                    className="flex items-center flex-1"
+                    type="button"
+                  >
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Client Site
+                  </Button>
+                </div>
               </div>
               
               {locationType === 'custom' ? (
                 <div className="space-y-2">
-                  <Label className="text-base" htmlFor="location">Location Details</Label>
+                  <Label className="text-base" htmlFor="location">Location</Label>
                   <Input
                     id="location"
-                    placeholder="Enter location details"
-                    value={newTask.location}
-                    onChange={(e) => setNewTask({...newTask, location: e.target.value})}
-                    className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="E.g., Office, Meeting Room, etc."
+                    className="h-11 dark:bg-[#1E1E1E] dark:border-gray-700 dark:text-white rounded-lg"
                   />
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <Label className="text-base" htmlFor="client-location">Client Location</Label>
-                  <Select
-                    value={newTask.clientId && newTask.clientLocationId ? `${newTask.clientId}:${newTask.clientLocationId}` : ""}
-                    onValueChange={(value) => {
-                      const parsed = parseClientLocationValue(value);
-                      if (parsed) {
-                        setNewTask({
-                          ...newTask,
-                          clientId: parsed.clientId,
-                          clientLocationId: parsed.locationId
-                        });
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl">
-                      <SelectValue placeholder="Choose client location" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#1E1E1E] border-[#2E2E2E] text-white">
-                      {getClientLocationOptions(clients, clientLocations)}
-                    </SelectContent>
-                  </Select>
-                  
-                  {newTask.clientId && newTask.clientLocationId && (
-                    <div className="mt-2 text-sm text-gray-400 bg-[#1A1A1A] p-3 rounded-xl">
-                      {(() => {
-                        const locationInfo = getClientLocationInfo(
-                          newTask.clientId, 
-                          newTask.clientLocationId,
-                          clients,
-                          clientLocations
-                        );
-                        if (!locationInfo) return null;
-                        
-                        return (
-                          <>
-                            <div className="font-medium text-white">{locationInfo.locationName}</div>
-                            <div>{locationInfo.address}</div>
-                            {locationInfo.city && locationInfo.state && (
-                              <div>{locationInfo.city}, {locationInfo.state} {locationInfo.zipCode}</div>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </div>
-                  )}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-base" htmlFor="clientLocation">Location</Label>
+                    <Select
+                      value={formData.clientId && formData.clientLocationId ? `${formData.clientId}:${formData.clientLocationId}` : ""}
+                      onValueChange={(value) => {
+                        const parsed = parseClientLocationValue(value);
+                        if (parsed) {
+                          setFormData({
+                            ...formData,
+                            clientId: parsed.clientId,
+                            clientLocationId: parsed.locationId
+                          });
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-11 dark:bg-[#1E1E1E] dark:border-gray-700 dark:text-white rounded-lg">
+                        <SelectValue placeholder="Select client location" />
+                      </SelectTrigger>
+                      <SelectContent className="dark:bg-[#1D1D1D] dark:border-gray-700">
+                        {getClientLocationOptions(clients, clientLocations)}
+                      </SelectContent>
+                    </Select>
+                    
+                    {formData.clientId && formData.clientLocationId && (
+                      <div className="mt-2 text-sm text-muted-foreground bg-muted/30 dark:bg-[#1A1A1A] p-3 rounded-md">
+                        {(() => {
+                          const locationInfo = getClientLocationInfo(formData.clientId, formData.clientLocationId, clients, clientLocations);
+                          if (!locationInfo) return null;
+                          
+                          return (
+                            <>
+                              <div className="font-medium text-foreground dark:text-gray-100">{locationInfo.locationName}</div>
+                              <div>{locationInfo.address}</div>
+                              {locationInfo.city && locationInfo.state && (
+                                <div>{locationInfo.city}, {locationInfo.state} {locationInfo.zipCode}</div>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -206,41 +209,39 @@ const TeamEventDialog: React.FC<TeamEventDialogProps> = ({
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-base">Assignment Type</Label>
-                <Select
-                  value={assignmentType}
-                  onValueChange={(value) => setAssignmentType(value as 'individual' | 'crew')}
-                >
-                  <SelectTrigger className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl">
-                    <SelectValue placeholder="Select assignment type" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1E1E1E] border-[#2E2E2E] text-white">
-                    <SelectItem value="individual">
-                      <div className="flex items-center">
-                        <User className="h-4 w-4 mr-2" />
-                        <span>Individual</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="crew">
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-2" />
-                        <span>Crew</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex space-x-4">
+                  <Button 
+                    variant={assignmentType === 'individual' ? 'default' : 'outline'} 
+                    onClick={() => setAssignmentType('individual')}
+                    className="flex items-center flex-1"
+                    type="button"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Individual
+                  </Button>
+                  <Button 
+                    variant={assignmentType === 'crew' ? 'default' : 'outline'} 
+                    onClick={() => setAssignmentType('crew')}
+                    className="flex items-center flex-1"
+                    type="button"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Crew
+                  </Button>
+                </div>
               </div>
               
               {assignmentType === 'individual' ? (
                 <div className="space-y-2">
                   <Label className="text-base" htmlFor="employee">Assign To</Label>
                   <Select
-                    value={newTask.assignedTo}
-                    onValueChange={(value) => setNewTask({ ...newTask, assignedTo: value })}
+                    value={formData.assignedTo}
+                    onValueChange={(value) => setFormData({ ...formData, assignedTo: value })}
                   >
-                    <SelectTrigger className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl">
+                    <SelectTrigger className="h-11 dark:bg-[#1E1E1E] dark:border-gray-700 dark:text-white rounded-lg">
                       <SelectValue placeholder="Select employee" />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#1E1E1E] border-[#2E2E2E] text-white">
+                    <SelectContent className="dark:bg-[#1D1D1D] dark:border-gray-700">
                       {getEmployeeOptions(employees)}
                     </SelectContent>
                   </Select>
@@ -249,26 +250,21 @@ const TeamEventDialog: React.FC<TeamEventDialogProps> = ({
                 <div className="space-y-2">
                   <Label className="text-base" htmlFor="crew">Assign To Crew</Label>
                   <Select
-                    value={newTask.assignedCrew}
-                    onValueChange={(value) => setNewTask({ ...newTask, assignedCrew: value })}
+                    value={formData.assignedCrew}
+                    onValueChange={(value) => setFormData({ ...formData, assignedCrew: value })}
                   >
-                    <SelectTrigger className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl">
+                    <SelectTrigger className="h-11 dark:bg-[#1E1E1E] dark:border-gray-700 dark:text-white rounded-lg">
                       <SelectValue placeholder="Select crew" />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#1E1E1E] border-[#2E2E2E] text-white">
+                    <SelectContent className="dark:bg-[#1D1D1D] dark:border-gray-700">
                       {getCrewOptions(crews)}
                     </SelectContent>
                   </Select>
                   
-                  {newTask.assignedCrew && (
-                    <div className="mt-3 text-sm text-gray-400 bg-[#1A1A1A] p-3 rounded-xl">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium text-white">Crew Members</span>
-                        <Badge variant="outline" className="text-[0.6rem]">
-                          {crews.find(c => c.id === newTask.assignedCrew)?.members.length || 0} members
-                        </Badge>
-                      </div>
-                      <div className="mt-2">{getCrewMemberNames(newTask.assignedCrew, crews, employees)}</div>
+                  {formData.assignedCrew && (
+                    <div className="mt-2 text-sm text-muted-foreground bg-muted/30 dark:bg-[#1A1A1A] p-3 rounded-md">
+                      <div className="font-medium text-foreground dark:text-gray-100">Crew members:</div>
+                      <div className="mt-1">{getCrewMemberNames(formData.assignedCrew, crews, employees)}</div>
                     </div>
                   )}
                 </div>
@@ -277,21 +273,12 @@ const TeamEventDialog: React.FC<TeamEventDialogProps> = ({
           </TabsContent>
         </Tabs>
         
-        <div className="flex gap-3 mt-4">
-          <Button 
-            variant="ghost" 
-            className="flex-1 h-12 border border-[#333] text-gray-300 hover:text-white"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button 
-            className="flex-1 h-12 bg-indigo-600 hover:bg-indigo-700 text-white"
-            onClick={handleCreateTeamEvent}
-          >
-            Create Task
-          </Button>
-        </div>
+        <Button 
+          onClick={onCreateEvent} 
+          className="w-full mt-4 h-11 text-base"
+        >
+          Create Event
+        </Button>
       </DialogContent>
     </Dialog>
   );
