@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Building2, Calendar, Receipt, Settings, Users, BookOpen } from 'lucide-react';
+import { Building2, Calendar, Receipt, Settings, Users, BookOpen, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import EmployeesView from './EmployeesView';
 import ScheduleView from './ScheduleView';
@@ -8,10 +8,11 @@ import InvoicesView from './InvoicesView';
 import { Logo } from './Logo';
 import SystemSettings from './SystemSettings';
 import BookingView from './BookingView';
+import ClientsView from './ClientsView';
 import { useTheme } from '@/context/ThemeContext';
 
 const OfficeManagerDashboard = () => {
-  const [activeTab, setActiveTab] = useState<'employees' | 'schedule' | 'invoices' | 'bookings' | 'settings'>('employees');
+  const [activeTab, setActiveTab] = useState<'employees' | 'clients' | 'schedule' | 'invoices' | 'bookings' | 'settings'>('employees');
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const isSuperDark = resolvedTheme === 'superdark';
@@ -32,6 +33,10 @@ const OfficeManagerDashboard = () => {
           <Button variant={activeTab === 'employees' ? 'default' : 'outline'} size="sm" className="gap-2" onClick={() => setActiveTab('employees')}>
             <Users className="h-4 w-4" />
             Employees
+          </Button>
+          <Button variant={activeTab === 'clients' ? 'default' : 'outline'} size="sm" className="gap-2" onClick={() => setActiveTab('clients')}>
+            <Briefcase className="h-4 w-4" />
+            Clients
           </Button>
           <Button variant={activeTab === 'schedule' ? 'default' : 'outline'} size="sm" className="gap-2" onClick={() => setActiveTab('schedule')}>
             <Calendar className="h-4 w-4" />
@@ -54,6 +59,7 @@ const OfficeManagerDashboard = () => {
 
       <div className={`p-4 ${isSuperDark ? 'bg-black' : ''}`}>
         {activeTab === 'employees' && <EmployeesView />}
+        {activeTab === 'clients' && <ClientsView />}
         {activeTab === 'schedule' && <ScheduleView />}
         {activeTab === 'invoices' && <InvoicesView />}
         {activeTab === 'bookings' && <BookingView />}

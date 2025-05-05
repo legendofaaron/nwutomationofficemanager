@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Upload, Loader2, CheckCircle, Users, User, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Upload, Loader2, CheckCircle, Users, User, Calendar as CalendarIcon, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAppContext } from '@/context/AppContext';
@@ -25,16 +25,13 @@ interface Task {
   crewId?: string;
   startTime?: string;
   endTime?: string;
+  location?: string;
+  clientId?: string;
+  clientLocationId?: string;
 }
 
-const mockEmployees = [
-  { id: '1', name: 'John Smith' },
-  { id: '2', name: 'Sarah Johnson' },
-  { id: '3', name: 'Michael Brown' },
-];
-
 const ScheduleView = () => {
-  const { employees, crews } = useAppContext();
+  const { employees, crews, clients, clientLocations } = useAppContext();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [tasks, setTasks] = useState<Task[]>([
     {
@@ -44,7 +41,8 @@ const ScheduleView = () => {
       completed: false,
       assignedTo: 'John Smith',
       startTime: '09:00',
-      endTime: '10:00'
+      endTime: '10:00',
+      location: 'Conference Room'
     },
     {
       id: '2',
@@ -53,7 +51,8 @@ const ScheduleView = () => {
       completed: true,
       assignedTo: 'Sarah Johnson',
       startTime: '14:00',
-      endTime: '15:00'
+      endTime: '15:00',
+      location: 'Office'
     },
     {
       id: '3',
@@ -62,7 +61,10 @@ const ScheduleView = () => {
       completed: false,
       crew: ['John Smith', 'Michael Brown'],
       startTime: '13:00',
-      endTime: '16:00'
+      endTime: '16:00',
+      location: 'Client Site',
+      clientId: '1',
+      clientLocationId: '1'
     },
   ]);
 
@@ -71,7 +73,10 @@ const ScheduleView = () => {
     assignedTo: '',
     assignedCrew: '',
     startTime: '',
-    endTime: ''
+    endTime: '',
+    location: '',
+    clientId: '',
+    clientLocationId: ''
   });
 
   // Add new states for upload and analyze functionality
@@ -83,6 +88,9 @@ const ScheduleView = () => {
   // New state for team event dialog
   const [teamEventDialogOpen, setTeamEventDialogOpen] = useState(false);
   const [droppedCrewId, setDroppedCrewId] = useState<string | null>(null);
+  
+  // New state to track location type for the task
+  const [locationType, setLocationType] = useState<'custom' | 'client'>('custom');
 
   const handleAddTask = () => {
     if (newTask.title && newTask.startTime && newTask.endTime) {
@@ -110,8 +118,31 @@ const ScheduleView = () => {
         }
       }
       
+      // Handle location based on selected type
+      if (locationType === 'custom' && newTask.location) {
+        task.location = newTask.location;
+      } else if (locationType === 'client' && newTask.clientId && newTask.clientLocationId) {
+        const client = clients.find(c => c.id === newTask.clientId);
+        const location = clientLocations.find(l => l.id === newTask.clientLocationId);
+        
+        if (client && location) {
+          task.location = `${client.name} - ${location.name}`;
+          task.clientId = newTask.clientId;
+          task.clientLocationId = newTask.clientLocationId;
+        }
+      }
+      
       setTasks([...tasks, task]);
-      setNewTask({ title: '', assignedTo: '', assignedCrew: '', startTime: '', endTime: '' });
+      setNewTask({ 
+        title: '', 
+        assignedTo: '', 
+        assignedCrew: '', 
+        startTime: '', 
+        endTime: '', 
+        location: '',
+        clientId: '',
+        clientLocationId: ''
+      });
       toast.success("Task scheduled successfully");
     } else {
       toast.error("Please fill in all required fields");
@@ -182,6 +213,30 @@ const ScheduleView = () => {
     return crews.map(crew => (
       <SelectItem key={crew.id} value={crew.id}>
         {crew.name} ({crew.members.length} members)
+      </SelectItem>
+    ));
+  };
+  
+  // Helper to get client options for select
+  const getClientOptions = () => {
+    return clients.map(client => (
+      <SelectItem key={client.id} value={client.id}>
+        {client.name}
+      </SelectItem>
+    ));
+  };
+  
+  // Helper to get client location options for select
+  const getClientLocationOptions = () => {
+    if (!newTask.clientId) return null;
+    
+    const filteredLocations = clientLocations.filter(
+      location => location.clientId === newTask.clientId
+    );
+    
+    return filteredLocations.map(location => (
+      <SelectItem key={location.id} value={location.id}>
+        {location.name} {location.isPrimary && "(Primary)"}
       </SelectItem>
     ));
   };
@@ -270,9 +325,32 @@ const ScheduleView = () => {
       endTime: newTask.endTime
     };
     
+    // Handle location based on selected type
+    if (locationType === 'custom' && newTask.location) {
+      teamEvent.location = newTask.location;
+    } else if (locationType === 'client' && newTask.clientId && newTask.clientLocationId) {
+      const client = clients.find(c => c.id === newTask.clientId);
+      const location = clientLocations.find(l => l.id === newTask.clientLocationId);
+      
+      if (client && location) {
+        teamEvent.location = `${client.name} - ${location.name}`;
+        teamEvent.clientId = newTask.clientId;
+        teamEvent.clientLocationId = newTask.clientLocationId;
+      }
+    }
+    
     setTasks([...tasks, teamEvent]);
     setTeamEventDialogOpen(false);
-    setNewTask({ title: '', assignedTo: '', assignedCrew: '', startTime: '', endTime: '' });
+    setNewTask({ 
+      title: '', 
+      assignedTo: '', 
+      assignedCrew: '', 
+      startTime: '', 
+      endTime: '', 
+      location: '',
+      clientId: '',
+      clientLocationId: ''
+    });
     setDroppedCrewId(null);
     
     toast.success("Team event scheduled successfully");
@@ -282,6 +360,25 @@ const ScheduleView = () => {
   const getCrewDisplayCode = (crewId: string): string => {
     const crewIndex = crews.findIndex(crew => crew.id === crewId);
     return crewIndex >= 0 ? getCrewLetterCode(crewIndex) : '';
+  };
+  
+  // Helper to get client location info
+  const getClientLocationInfo = (clientId?: string, locationId?: string) => {
+    if (!clientId || !locationId) return null;
+    
+    const client = clients.find(c => c.id === clientId);
+    const location = clientLocations.find(l => l.id === locationId);
+    
+    if (!client || !location) return null;
+    
+    return {
+      clientName: client.name,
+      locationName: location.name,
+      address: location.address,
+      city: location.city,
+      state: location.state,
+      zipCode: location.zipCode
+    };
   };
 
   return (
@@ -404,6 +501,101 @@ const ScheduleView = () => {
                           />
                         </div>
                       </div>
+                      
+                      {/* New location selection UI */}
+                      <div className="space-y-2">
+                        <Label>Location Type</Label>
+                        <div className="flex space-x-4">
+                          <Button 
+                            variant={locationType === 'custom' ? 'default' : 'outline'} 
+                            onClick={() => setLocationType('custom')}
+                            className="flex items-center"
+                            type="button"
+                          >
+                            <MapPin className="h-4 w-4 mr-2" />
+                            Custom
+                          </Button>
+                          <Button 
+                            variant={locationType === 'client' ? 'default' : 'outline'} 
+                            onClick={() => setLocationType('client')}
+                            className="flex items-center"
+                            type="button"
+                          >
+                            <Building2 className="h-4 w-4 mr-2" />
+                            Client Location
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {locationType === 'custom' ? (
+                        <div className="space-y-2">
+                          <Label htmlFor="location">Location</Label>
+                          <Input
+                            id="location"
+                            value={newTask.location}
+                            onChange={(e) => setNewTask({ ...newTask, location: e.target.value })}
+                            placeholder="E.g., Office, Meeting Room, etc."
+                          />
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="client">Client</Label>
+                            <Select
+                              value={newTask.clientId}
+                              onValueChange={(value) => setNewTask({ 
+                                ...newTask, 
+                                clientId: value,
+                                clientLocationId: '' // Reset location when client changes
+                              })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select client" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {getClientOptions()}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          {newTask.clientId && (
+                            <div className="space-y-2">
+                              <Label htmlFor="clientLocation">Client Location</Label>
+                              <Select
+                                value={newTask.clientLocationId}
+                                onValueChange={(value) => setNewTask({ ...newTask, clientLocationId: value })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select location" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {getClientLocationOptions()}
+                                </SelectContent>
+                              </Select>
+                              
+                              {newTask.clientLocationId && (
+                                <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
+                                  {(() => {
+                                    const locationInfo = getClientLocationInfo(newTask.clientId, newTask.clientLocationId);
+                                    if (!locationInfo) return null;
+                                    
+                                    return (
+                                      <>
+                                        <div className="font-medium">{locationInfo.locationName}</div>
+                                        <div>{locationInfo.address}</div>
+                                        {locationInfo.city && locationInfo.state && (
+                                          <div>{locationInfo.city}, {locationInfo.state} {locationInfo.zipCode}</div>
+                                        )}
+                                      </>
+                                    );
+                                  })()}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
                       <Button onClick={handleAddTask} className="w-full">
                         Add Schedule
                       </Button>
@@ -477,6 +669,14 @@ const ScheduleView = () => {
                                 </div>
                               </div>
                             )}
+                            
+                            {/* Show location info */}
+                            {task.location && (
+                              <div className="flex items-center mt-1">
+                                <MapPin className="h-3 w-3 mr-1" />
+                                <span>{task.location}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <input
@@ -534,6 +734,25 @@ const ScheduleView = () => {
                             <span>
                               Crew {task.crewId ? getCrewDisplayCode(task.crewId) : ''}: {task.crew.join(', ')}
                             </span>
+                          </div>
+                        )}
+                        
+                        {/* Show location info */}
+                        {task.location && (
+                          <div className="flex items-center mt-1">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            <span>{task.location}</span>
+                            
+                            {/* If it's a client location, show detailed info */}
+                            {task.clientId && task.clientLocationId && (
+                              <span className="ml-1 text-xs text-muted-foreground">
+                                {(() => {
+                                  const locationInfo = getClientLocationInfo(task.clientId, task.clientLocationId);
+                                  if (!locationInfo) return null;
+                                  return `(${locationInfo.address}, ${locationInfo.city || ''} ${locationInfo.state || ''})`;
+                                })()}
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>
@@ -688,6 +907,81 @@ const ScheduleView = () => {
                 />
               </div>
             </div>
+            
+            {/* Location selection for team event */}
+            <div className="space-y-2">
+              <Label>Location Type</Label>
+              <div className="flex space-x-4">
+                <Button 
+                  variant={locationType === 'custom' ? 'default' : 'outline'} 
+                  onClick={() => setLocationType('custom')}
+                  className="flex items-center"
+                  type="button"
+                >
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Custom
+                </Button>
+                <Button 
+                  variant={locationType === 'client' ? 'default' : 'outline'} 
+                  onClick={() => setLocationType('client')}
+                  className="flex items-center"
+                  type="button"
+                >
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Client Site
+                </Button>
+              </div>
+            </div>
+            
+            {locationType === 'custom' ? (
+              <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  value={newTask.location}
+                  onChange={(e) => setNewTask({ ...newTask, location: e.target.value })}
+                  placeholder="E.g., Office, Meeting Room, etc."
+                />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="client">Client</Label>
+                  <Select
+                    value={newTask.clientId}
+                    onValueChange={(value) => setNewTask({ 
+                      ...newTask, 
+                      clientId: value,
+                      clientLocationId: '' // Reset location when client changes
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getClientOptions()}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {newTask.clientId && (
+                  <div className="space-y-2">
+                    <Label htmlFor="clientLocation">Client Location</Label>
+                    <Select
+                      value={newTask.clientLocationId}
+                      onValueChange={(value) => setNewTask({ ...newTask, clientLocationId: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getClientLocationOptions()}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            )}
             
             <Button onClick={handleCreateTeamEvent} className="w-full">
               Schedule Team Event

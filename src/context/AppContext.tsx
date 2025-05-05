@@ -66,6 +66,29 @@ interface Employee {
   crews?: string[];
 }
 
+interface Client {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  locations?: ClientLocation[];
+  notes?: string;
+  contactPerson?: string;
+  active: boolean;
+}
+
+interface ClientLocation {
+  id: string;
+  clientId: string;
+  name: string;
+  address: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  isPrimary?: boolean;
+}
+
 interface AppContextType {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
@@ -94,6 +117,11 @@ interface AppContextType {
   setEmployees: (employees: Employee[]) => void;
   crews: Crew[];
   setCrews: (crews: Crew[]) => void;
+  // Client management
+  clients: Client[];
+  setClients: (clients: Client[]) => void;
+  clientLocations: ClientLocation[];
+  setClientLocations: (locations: ClientLocation[]) => void;
 }
 
 // Default todos with sample tasks
@@ -238,6 +266,81 @@ const defaultDatabaseTables: DatabaseTable[] = [
   }
 ];
 
+// Default clients with sample data
+const defaultClients: Client[] = [
+  { 
+    id: '1', 
+    name: 'Acme Corporation', 
+    email: 'contact@acme.com', 
+    phone: '(555) 123-4567',
+    address: '123 Business Ave, Suite 100',
+    contactPerson: 'Jane Wilson',
+    active: true
+  },
+  { 
+    id: '2', 
+    name: 'TechStart Solutions', 
+    email: 'info@techstart.com', 
+    phone: '(555) 987-6543',
+    address: '456 Innovation Blvd',
+    contactPerson: 'Robert Chen',
+    active: true
+  },
+  { 
+    id: '3', 
+    name: 'Global Enterprises', 
+    email: 'hello@globalent.com', 
+    phone: '(555) 456-7890',
+    address: '789 Corporate Dr',
+    contactPerson: 'Maria Garcia',
+    active: true
+  }
+];
+
+// Default client locations with sample data
+const defaultClientLocations: ClientLocation[] = [
+  {
+    id: '1',
+    clientId: '1',
+    name: 'Acme Headquarters',
+    address: '123 Business Ave, Suite 100',
+    city: 'San Francisco',
+    state: 'CA',
+    zipCode: '94107',
+    isPrimary: true
+  },
+  {
+    id: '2',
+    clientId: '1',
+    name: 'Acme Warehouse',
+    address: '567 Industrial Pkwy',
+    city: 'Oakland',
+    state: 'CA',
+    zipCode: '94612',
+    isPrimary: false
+  },
+  {
+    id: '3',
+    clientId: '2',
+    name: 'TechStart Main Office',
+    address: '456 Innovation Blvd',
+    city: 'Palo Alto',
+    state: 'CA',
+    zipCode: '94301',
+    isPrimary: true
+  },
+  {
+    id: '4',
+    clientId: '3',
+    name: 'Global Enterprises HQ',
+    address: '789 Corporate Dr',
+    city: 'San Jose',
+    state: 'CA',
+    zipCode: '95110',
+    isPrimary: true
+  }
+];
+
 // Create the context with undefined as default value
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -258,13 +361,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     logoType: 'default'
   });
   
-  // Calendar-related state
-  const [calendarDate, setCalendarDate] = useState<Date>(new Date());
-  const [todos, setTodos] = useState<Todo[]>(defaultTodos);
-  
   // Employee and crew management
   const [employees, setEmployees] = useState<Employee[]>(defaultEmployees);
   const [crews, setCrews] = useState<Crew[]>(defaultCrews);
+  
+  // Client management
+  const [clients, setClients] = useState<Client[]>(defaultClients);
+  const [clientLocations, setClientLocations] = useState<ClientLocation[]>(defaultClientLocations);
 
   return (
     <AppContext.Provider
@@ -293,7 +396,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         employees,
         setEmployees,
         crews,
-        setCrews
+        setCrews,
+        clients,
+        setClients,
+        clientLocations,
+        setClientLocations
       }}
     >
       {children}
