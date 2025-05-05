@@ -33,6 +33,7 @@ const Toggle = React.forwardRef<
     VariantProps<typeof toggleVariants>
 >(({ className, variant, size, ...props }, ref) => {
   const { resolvedTheme } = useTheme();
+  const isDarkMode = resolvedTheme === 'dark';
   const isSuperDarkMode = resolvedTheme === 'superdark';
 
   return (
@@ -40,6 +41,7 @@ const Toggle = React.forwardRef<
       ref={ref}
       className={cn(
         toggleVariants({ variant, size }),
+        isDarkMode && "hover:bg-[#1a1e26] data-[state=on]:bg-[#1a1e26]",
         isSuperDarkMode && "hover:bg-[#151720] data-[state=on]:bg-[#151720]",
         className
       )}
