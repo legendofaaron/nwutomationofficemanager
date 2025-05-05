@@ -972,8 +972,8 @@ For questions or further information, please contact [Name] at [Contact Informat
     setAiAssistantOpen(false);
   };
   if (!aiAssistantOpen) return null;
-  return <div className="fixed right-4 bottom-4 w-96 bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col h-[600px] z-20">
-      <div className="flex items-center justify-between p-3 border-b">
+  return <div className="fixed right-4 bottom-4 w-96 rounded-lg shadow-lg border border-gray-200 flex flex-col h-[600px] z-20 bg-slate-800">
+      <div className="flex items-center justify-between p-3 border-b bg-slate-900">
         <div className="flex items-center gap-2">
           <Logo small />
           {assistantConfig?.name && <span className="text-sm font-medium">{assistantConfig.name}</span>}
@@ -992,14 +992,14 @@ For questions or further information, please contact [Name] at [Contact Informat
       </div>
       
       {showSettings ? <LlmSettings /> : <>
-          {!isSetupMode && <div className="grid grid-cols-2 gap-2 p-3 border-b">
+          {!isSetupMode && <div className="grid grid-cols-2 gap-2 p-3 border-b bg-slate-700">
               {quickActions.map((action, index) => <Button key={index} variant="outline" size="sm" className="w-full justify-start" onClick={action.action}>
                   <action.icon className="mr-2 h-4 w-4" />
                   {action.label}
                 </Button>)}
             </div>}
           
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-700">
             {messages.map(message => <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : message.type === 'system' ? 'justify-center' : 'justify-start'}`}>
                 <div className={`${message.type === 'user' ? 'bg-blue-600 text-white max-w-[80%] p-3 rounded-lg' : message.type === 'system' ? 'bg-gray-200 text-gray-800 px-4 py-1 rounded-full text-xs font-medium' : 'bg-gray-100 text-gray-800 max-w-[80%] p-3 rounded-lg'} whitespace-pre-wrap`}>
                   {message.content}
