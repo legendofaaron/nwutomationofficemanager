@@ -43,12 +43,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // Then fetch the initial session
-    localAuth.getSession().then(({ data: { session: initialSession } }) => {
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
-      setIsLoading(false);
-    });
+    // Then fetch the initial session - fixed to handle synchronous return
+    const { data: { session: initialSession } } = localAuth.getSession();
+    setSession(initialSession);
+    setUser(initialSession?.user ?? null);
+    setIsLoading(false);
 
     return () => {
       unsubscribe();
