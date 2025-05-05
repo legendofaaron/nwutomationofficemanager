@@ -1,11 +1,11 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, ListTodo, Calendar as CalendarIcon, MapPin, Clock, User } from 'lucide-react';
+import { Plus, ListTodo, Calendar as CalendarIcon, MapPin, Clock, User, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { type DayProps } from 'react-day-picker';
@@ -15,6 +15,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/
 import { useForm } from 'react-hook-form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface Todo {
   id: string;
@@ -23,6 +24,9 @@ interface Todo {
   date: Date;
   assignedTo?: string;
   assignedToAvatar?: string;
+  crewId?: string;
+  crewName?: string;
+  crewMembers?: string[];
   location?: string;
   startTime?: string;
   endTime?: string;
@@ -41,7 +45,7 @@ interface TaskFormValues {
 interface DroppedItem {
   id: string;
   text: string;
-  type: 'employee' | 'invoice' | 'booking' | 'todo';
+  type: 'employee' | 'crew' | 'invoice' | 'booking' | 'todo';
   originalData?: any;
 }
 
@@ -56,9 +60,10 @@ const DashboardCalendar = () => {
   ]);
   const [isDragging, setIsDragging] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const calendarRef = useRef<HTMLDivElement>(null);
   const [employeeTaskDialogOpen, setEmployeeTaskDialogOpen] = useState(false);
-  const [droppedEmployee, setDroppedEmployee] = useState<any>(null);
+  const [crewTaskDialogOpen, setCrewTaskDialogOpen] = useState(false);
+  const [droppedItem, setDroppedItem] = useState<DroppedItem | null>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<TaskFormValues>({
     defaultValues: {
@@ -80,6 +85,29 @@ const DashboardCalendar = () => {
       endTime: '',
     },
   });
+
+  const crewTaskForm = useForm<TaskFormValues>({
+    defaultValues: {
+      text: '',
+      date: new Date(),
+      location: '',
+      startTime: '',
+      endTime: '',
+    },
+  });
+
+  // Listen for dragover events at the document level
+  useEffect(() => {
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault(); // Necessary to allow dropping
+    };
+    
+    document.addEventListener('dragover', handleDragOver);
+    
+    return () => {
+      document.removeEventListener('dragover', handleDragOver);
+    };
+  }, []);
 
   const todaysTodos = todos.filter(
     todo => todo.date.toDateString() === selectedDate.toDateString()
@@ -124,7 +152,7 @@ const DashboardCalendar = () => {
   };
 
   const onSubmitEmployeeTask = (values: TaskFormValues) => {
-    if (!droppedEmployee) return;
+    if (!droppedItem || droppedItem.type !== 'employee') return;
 
     const newTodo: Todo = {
       id: Date.now().toString(),
@@ -134,15 +162,39 @@ const DashboardCalendar = () => {
       location: values.location,
       startTime: values.startTime,
       endTime: values.endTime,
-      assignedTo: droppedEmployee.text,
-      assignedToAvatar: droppedEmployee.originalData?.avatarUrl
+      assignedTo: droppedItem.originalData?.name || droppedItem.text.split(' - ')[1],
+      assignedToAvatar: droppedItem.originalData?.avatarUrl
     };
     
     setTodos([...todos, newTodo]);
     setEmployeeTaskDialogOpen(false);
     employeeTaskForm.reset();
-    setDroppedEmployee(null);
-    toast.success(`Task assigned to ${droppedEmployee.text}`);
+    setDroppedItem(null);
+    toast.success(`Task assigned to ${newTodo.assignedTo}`);
+  };
+
+  const onSubmitCrewTask = (values: TaskFormValues) => {
+    if (!droppedItem || droppedItem.type !== 'crew') return;
+
+    const crewName = droppedItem.originalData?.name || droppedItem.text.split(' - ')[1];
+    const newTodo: Todo = {
+      id: Date.now().toString(),
+      text: values.text,
+      completed: false,
+      date: values.date || selectedDate,
+      location: values.location,
+      startTime: values.startTime,
+      endTime: values.endTime,
+      crewId: droppedItem.id,
+      crewName: crewName,
+      crewMembers: droppedItem.originalData?.members || []
+    };
+    
+    setTodos([...todos, newTodo]);
+    setCrewTaskDialogOpen(false);
+    crewTaskForm.reset();
+    setDroppedItem(null);
+    toast.success(`Task assigned to ${crewName} crew`);
   };
 
   const toggleTodoCompletion = (id: string) => {
@@ -214,11 +266,18 @@ const DashboardCalendar = () => {
 
   // Handle dropped items from other components
   const handleExternalItemDrop = (droppedItem: DroppedItem, date: Date) => {
-    // If it's an employee, we want to open the task assignment dialog
+    // Open appropriate dialog based on the item type
     if (droppedItem.type === 'employee') {
-      setDroppedEmployee(droppedItem);
+      setDroppedItem(droppedItem);
       employeeTaskForm.setValue('date', date);
       setEmployeeTaskDialogOpen(true);
+      return;
+    }
+    
+    if (droppedItem.type === 'crew') {
+      setDroppedItem(droppedItem);
+      crewTaskForm.setValue('date', date);
+      setCrewTaskDialogOpen(true);
       return;
     }
     
@@ -238,7 +297,9 @@ const DashboardCalendar = () => {
   const getTextByItemType = (item: DroppedItem): string => {
     switch(item.type) {
       case 'employee':
-        return `Meeting with ${item.text}`;
+        return `Meeting with ${item.originalData?.name || item.text.split(' - ')[1]}`;
+      case 'crew':
+        return `Team meeting: ${item.originalData?.name || item.text.split(' - ')[1]}`;
       case 'invoice':
         return `Process invoice: ${item.text}`;
       case 'booking':
@@ -302,7 +363,7 @@ const DashboardCalendar = () => {
             setSelectedDate(date);
             toast.success("Task moved to " + format(date, 'MMM d, yyyy'));
           } else {
-            // Handle external drops (employees, invoices, bookings)
+            // Handle external drops (employees, crews, invoices, bookings)
             try {
               const droppedData = e.dataTransfer.getData("application/json");
               if (droppedData) {
@@ -459,7 +520,7 @@ const DashboardCalendar = () => {
                     </label>
                     
                     {/* Show assigned person and other details if available */}
-                    {(todo.assignedTo || todo.location || todo.startTime) && (
+                    {(todo.assignedTo || todo.crewName || todo.location || todo.startTime) && (
                       <div className="flex flex-wrap gap-x-2 mt-0.5 text-[10px] text-muted-foreground">
                         {todo.assignedTo && (
                           <div className="flex items-center">
@@ -474,6 +535,13 @@ const DashboardCalendar = () => {
                               <User className="h-2.5 w-2.5 mr-0.5" />
                             )}
                             {todo.assignedTo}
+                          </div>
+                        )}
+                        
+                        {todo.crewName && (
+                          <div className="flex items-center">
+                            <Users className="h-2.5 w-2.5 mr-0.5" />
+                            {todo.crewName}
                           </div>
                         )}
                         
@@ -517,13 +585,15 @@ const DashboardCalendar = () => {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
-              {droppedEmployee ? (
+              {droppedItem && droppedItem.type === 'employee' ? (
                 <div className="flex items-center gap-2">
-                  <span>Assign Task to {droppedEmployee.text}</span>
-                  {droppedEmployee.originalData?.avatarUrl && (
+                  <span>Assign Task to {droppedItem.originalData?.name || droppedItem.text.split(' - ')[1]}</span>
+                  {droppedItem.originalData?.avatarUrl && (
                     <Avatar className="h-6 w-6">
-                      <AvatarImage src={droppedEmployee.originalData.avatarUrl} />
-                      <AvatarFallback>{droppedEmployee.text.substring(0, 2).toUpperCase()}</AvatarFallback>
+                      <AvatarImage src={droppedItem.originalData.avatarUrl} />
+                      <AvatarFallback>
+                        {(droppedItem.originalData?.name || droppedItem.text.split(' - ')[1]).substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
                     </Avatar>
                   )}
                 </div>
@@ -608,6 +678,118 @@ const DashboardCalendar = () => {
               <Button type="submit">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Task
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Crew Task Assignment Dialog */}
+      <Dialog open={crewTaskDialogOpen} onOpenChange={setCrewTaskDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              {droppedItem && droppedItem.type === 'crew' ? (
+                <div className="flex items-center gap-2">
+                  <span>Assign Task to {droppedItem.originalData?.name || droppedItem.text.split(' - ')[1]} Crew</span>
+                  <Badge variant="outline" className="ml-2">
+                    {droppedItem.originalData?.memberCount || 0} members
+                  </Badge>
+                </div>
+              ) : (
+                "Assign New Crew Task"
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={crewTaskForm.handleSubmit(onSubmitCrewTask)} className="space-y-4 mt-2">
+            <FormField
+              control={crewTaskForm.control}
+              name="text"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Task Description</FormLabel>
+                  <FormControl>
+                    <Input placeholder="What does the crew need to do?" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={crewTaskForm.control}
+                name="startTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Time</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={crewTaskForm.control}
+                name="endTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>End Time</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <FormField
+              control={crewTaskForm.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Where will this take place?" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            {droppedItem?.originalData?.members && droppedItem.originalData.members.length > 0 && (
+              <div className="space-y-2">
+                <FormLabel>Crew Members</FormLabel>
+                <div className="bg-muted/30 p-2 rounded-md flex flex-wrap gap-1">
+                  {droppedItem.originalData.members.map((member: string, index: number) => (
+                    <Badge key={index} variant="secondary">
+                      {member}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <FormField
+              control={crewTaskForm.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date: {format(field.value, 'MMMM d, yyyy')}</FormLabel>
+                  <FormControl>
+                    <div className="hidden">
+                      <Input {...field} type="hidden" value={field.value.toISOString()} />
+                    </div>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCrewTaskDialogOpen(false)}>Cancel</Button>
+              <Button type="submit">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Crew Task
               </Button>
             </DialogFooter>
           </form>

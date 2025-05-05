@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Input } from '@/components/ui/input';
@@ -12,7 +11,8 @@ import {
   Users, 
   Calendar,
   Cog,
-  ListCheck
+  ListCheck,
+  GrabHorizontal
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -344,6 +344,82 @@ const EmployeesView = () => {
     return crew ? crew.members.length : 0;
   };
 
+  // Enhanced drag functionality
+  const handleEmployeeDragStart = (e: React.DragEvent, employee: any) => {
+    // Set dragged employee data
+    const dragData = {
+      type: 'employee',
+      id: employee.id,
+      text: `Employee - ${employee.name}`,
+      originalData: {
+        id: employee.id,
+        name: employee.name,
+        position: employee.position,
+        email: employee.email,
+        avatarUrl: employee.avatarUrl
+      }
+    };
+    
+    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+    e.dataTransfer.effectAllowed = 'copy';
+    
+    // Create and set a custom drag image
+    const dragPreview = document.createElement('div');
+    dragPreview.classList.add('drag-preview');
+    dragPreview.innerHTML = `
+      <div class="bg-primary text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+        <span>${employee.name}</span>
+      </div>
+    `;
+    document.body.appendChild(dragPreview);
+    e.dataTransfer.setDragImage(dragPreview, 0, 0);
+    
+    // Clean up after drag starts
+    setTimeout(() => {
+      document.body.removeChild(dragPreview);
+    }, 0);
+  };
+  
+  const handleCrewDragStart = (e: React.DragEvent, crew: any) => {
+    // Get crew members
+    const members = crew.members.map((memberId: string) => {
+      const employee = employees.find(e => e.id === memberId);
+      return employee ? employee.name : '';
+    }).filter(Boolean);
+    
+    // Set dragged crew data
+    const dragData = {
+      type: 'crew',
+      id: crew.id,
+      text: `Crew - ${crew.name}`,
+      originalData: {
+        id: crew.id,
+        name: crew.name,
+        members: members,
+        memberCount: members.length
+      }
+    };
+    
+    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+    e.dataTransfer.effectAllowed = 'copy';
+    
+    // Create and set a custom drag image
+    const dragPreview = document.createElement('div');
+    dragPreview.classList.add('drag-preview');
+    dragPreview.innerHTML = `
+      <div class="bg-secondary text-secondary-foreground px-2 py-1 rounded text-xs flex items-center gap-1">
+        <span>${crew.name} (${members.length})</span>
+      </div>
+    `;
+    document.body.appendChild(dragPreview);
+    e.dataTransfer.setDragImage(dragPreview, 0, 0);
+    
+    // Clean up after drag starts
+    setTimeout(() => {
+      document.body.removeChild(dragPreview);
+    }, 0);
+  };
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
@@ -449,6 +525,7 @@ const EmployeesView = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead></TableHead>
                       <TableHead>Employee</TableHead>
                       <TableHead>Position</TableHead>
                       <TableHead>Contact</TableHead>
@@ -459,7 +536,15 @@ const EmployeesView = () => {
                   <TableBody>
                     {filteredEmployees.length > 0 ? (
                       filteredEmployees.map(employee => (
-                        <TableRow key={employee.id}>
+                        <TableRow 
+                          key={employee.id}
+                          draggable
+                          onDragStart={(e) => handleEmployeeDragStart(e, employee)}
+                          className="hover:bg-accent/50 transition-colors cursor-grab"
+                        >
+                          <TableCell className="w-10">
+                            <GrabHorizontal className="h-4 w-4 text-muted-foreground" />
+                          </TableCell>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-3">
                               <Avatar className="h-8 w-8 border">
@@ -521,7 +606,7 @@ const EmployeesView = () => {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                        <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
                           No employees found
                         </TableCell>
                       </TableRow>
@@ -544,6 +629,7 @@ const EmployeesView = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead></TableHead>
                       <TableHead>Crew Name</TableHead>
                       <TableHead>Members</TableHead>
                       <TableHead>Active Tasks</TableHead>
@@ -553,7 +639,15 @@ const EmployeesView = () => {
                   <TableBody>
                     {filteredCrews.length > 0 ? (
                       filteredCrews.map(crew => (
-                        <TableRow key={crew.id}>
+                        <TableRow 
+                          key={crew.id}
+                          draggable
+                          onDragStart={(e) => handleCrewDragStart(e, crew)}
+                          className="hover:bg-accent/50 transition-colors cursor-grab"
+                        >
+                          <TableCell className="w-10">
+                            <GrabHorizontal className="h-4 w-4 text-muted-foreground" />
+                          </TableCell>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-2">
                               <Users className="h-4 w-4 text-muted-foreground" />
@@ -620,7 +714,7 @@ const EmployeesView = () => {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+                        <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
                           No crews found
                         </TableCell>
                       </TableRow>
@@ -816,11 +910,7 @@ const EmployeesView = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {employees.map(employee => (
-                      <SelectItem 
-                        key={employee.id} 
-                        value={employee.id}
-                        disabled={newCrew.members.includes(employee.id)}
-                      >
+                      <SelectItem key={employee.id} value={employee.id}>
                         {employee.name}
                       </SelectItem>
                     ))}
