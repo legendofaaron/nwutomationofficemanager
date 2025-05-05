@@ -79,13 +79,15 @@ const TodoCalendarBubble = () => {
     setDraggedTodo(null);
   };
 
+  // Fixed: Ensure the handleDateChange function properly updates selectedDate
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
-      setSelectedDate(date);
+      // Set selected date and force a re-render of tasks
+      setSelectedDate(new Date(date));
     }
   };
 
-  // Custom day render to handle drops
+  // Custom day render to handle drops and clicks
   const customDayRender = (day: DayProps) => {
     const date = day.date;
     const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
@@ -95,6 +97,7 @@ const TodoCalendarBubble = () => {
     return (
       <div 
         className="relative w-full h-full flex items-center justify-center"
+        onClick={() => handleDateChange(date)}
         onDragOver={(e) => {
           // Allow drop by preventing the default behavior
           e.preventDefault();
@@ -113,7 +116,7 @@ const TodoCalendarBubble = () => {
             );
             setTodos(updatedTodos);
             // Update the selected date to make the moved task visible
-            setSelectedDate(date);
+            setSelectedDate(new Date(date));
             toast?.success(`Task moved to ${format(date, 'MMM d, yyyy')}`);
             setDraggedTodo(null);
           }
@@ -178,6 +181,7 @@ const TodoCalendarBubble = () => {
               </Button>
             </div>
             <CardContent className="p-3 bg-background">
+              {/* Ensure pointer-events-auto is set on the Calendar component */}
               <Calendar
                 mode="single"
                 selected={selectedDate}
