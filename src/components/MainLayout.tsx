@@ -1,6 +1,6 @@
-
 import React, { useState, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import AppSidebar from './AppSidebar';
 import DocumentViewer from './DocumentViewer';
 import DatabaseViewer from './DatabaseViewer';
@@ -30,6 +30,7 @@ const MainLayout = () => {
     setViewMode
   } = useAppContext();
 
+  const { user, signOut } = useAuth();
   const [triggerPosition, setTriggerPosition] = useState(24); // Default position (top: 24)
   const isDragging = useRef(false);
   const { resolvedTheme } = useTheme();
@@ -62,13 +63,21 @@ const MainLayout = () => {
     document.removeEventListener('mouseup', handleDragEnd);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    toast({
-      title: "Logged out successfully",
-      description: "You have been logged out of your account",
-    });
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account",
+      });
+      navigate('/login');
+    } catch (error) {
+      toast({
+        title: "Logout failed",
+        description: "There was a problem logging out",
+        variant: "destructive",
+      });
+    }
   };
 
   const sidebarButtonBg = isSuperDark 
@@ -101,12 +110,14 @@ const MainLayout = () => {
                   <DropdownMenuTrigger className="outline-none">
                     <Avatar className="h-9 w-9 transition-all hover:scale-105">
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        <User className="h-5 w-5" />
+                        {user?.email?.charAt(0).toUpperCase() || <User className="h-5 w-5" />}
                       </AvatarFallback>
                     </Avatar>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuLabel>
+                      {user?.email}
+                    </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setViewMode('settings')} className="cursor-pointer">
                       Settings

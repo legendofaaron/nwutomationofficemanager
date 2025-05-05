@@ -1,22 +1,26 @@
 
 import React, { useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Force navigation check on component mount
-    if (isLoggedIn) {
-      navigate('/dashboard');
-    } else {
-      navigate('/login');
-    }
-  }, [isLoggedIn, navigate]);
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate('/dashboard');
+      } else {
+        navigate('/login');
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
   
-  // This is a fallback in case the useEffect doesn't trigger
-  return isLoggedIn ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
+  // This is a fallback rendering while checking auth
+  return <div className="flex items-center justify-center h-screen">Checking authentication...</div>;
 };
 
 export default Index;

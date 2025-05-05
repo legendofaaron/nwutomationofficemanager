@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,10 +8,13 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/Logo';
 import { useAppContext } from '@/context/AppContext';
+import { supabase } from '@/integrations/supabase/client';
+import { AuthError } from '@supabase/supabase-js';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
@@ -28,6 +31,19 @@ const Signup = () => {
   const { toast } = useToast();
   const { branding } = useAppContext();
   const [isLoading, setIsLoading] = useState(false);
+  const [signupError, setSignupError] = useState<string | null>(null);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate('/dashboard');
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -39,22 +55,57 @@ const Signup = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
+    setSignupError(null);
     
-    // This is a mock signup - in a real app, you'd send this to a backend
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      // Simulate successful signup
-      localStorage.setItem('isLoggedIn', 'true');
-      toast({
-        title: "Account created",
-        description: "You're now logged in to Office Manager",
+    try {
+      // Sign up the user with Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: {
+            full_name: values.name,
+            username: values.email.split('@')[0], // Default username from email
+          }
+        }
       });
       
-      navigate('/dashboard');
-    }, 1500);
+      if (error) {
+        throw error;
+      }
+      
+      // Successful signup (might need email verification depending on Supabase settings)
+      toast({
+        title: "Account created",
+        description: "You're now signed up for Office Manager",
+      });
+      
+      // Check if email verification is required
+      if (data.user?.identities?.length === 0) {
+        toast({
+          title: "Verification required",
+          description: "Please check your email to verify your account before logging in",
+        });
+        navigate('/login');
+      } else {
+        // User is signed up and logged in
+        navigate('/dashboard');
+      }
+      
+    } catch (error) {
+      // Handle signup errors
+      const authError = error as AuthError;
+      setSignupError(authError.message || 'Failed to create account. Please try again.');
+      toast({
+        title: "Signup failed",
+        description: authError.message || "Failed to create account",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -74,6 +125,12 @@ const Signup = () => {
             <CardDescription>Fill in your details to create your account</CardDescription>
           </CardHeader>
           <CardContent>
+            {signupError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{signupError}</AlertDescription>
+              </Alert>
+            )}
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,10 +8,13 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/Logo';
 import { useAppContext } from '@/context/AppContext';
+import { supabase } from '@/integrations/supabase/client';
+import { AuthError } from '@supabase/supabase-js';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -25,6 +28,18 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate('/dashboard');
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -33,40 +48,42 @@ const Login = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     setLoginError(null);
     
-    // This is a mock login - in a real app, you'd validate against a backend
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
       
-      // Simple mock validation - in a real app, this would be your API validation
-      if (values.email === 'admin@example.com' && values.password === 'password123') {
-        // Successful login - set localStorage first
-        localStorage.setItem('isLoggedIn', 'true');
-        
-        // Show toast
+      if (error) {
+        throw error;
+      }
+      
+      if (data.session) {
+        // Successful login
         toast({
           title: "Login successful",
           description: "Welcome back to Office Manager",
         });
         
-        // Use setTimeout to ensure navigation happens after state updates
-        setTimeout(() => {
-          console.log("Navigating to dashboard...");
-          navigate('/dashboard');
-        }, 100);
-      } else {
-        // Failed login
-        setLoginError('Invalid email or password. Please try again.');
-        toast({
-          title: "Login failed",
-          description: "Invalid email or password",
-          variant: "destructive",
-        });
+        // Navigate to dashboard
+        navigate('/dashboard');
       }
-    }, 1500);
+    } catch (error) {
+      // Handle login errors
+      const authError = error as AuthError;
+      setLoginError(authError.message || 'Failed to sign in. Please check your credentials and try again.');
+      toast({
+        title: "Login failed",
+        description: authError.message || "Invalid email or password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -87,9 +104,10 @@ const Login = () => {
           </CardHeader>
           <CardContent>
             {loginError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 dark:bg-red-900/20 dark:border-red-800/40 dark:text-red-400 rounded-md text-sm">
-                {loginError}
-              </div>
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{loginError}</AlertDescription>
+              </Alert>
             )}
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -140,13 +158,6 @@ const Login = () => {
                   {isLoading ? "Logging in..." : "Log In"}
                   {!isLoading && <ArrowRight className="ml-1 h-4 w-4" />}
                 </Button>
-                
-                {/* Demo credentials helper */}
-                <div className="pt-2 text-center">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Demo credentials: admin@example.com / password123
-                  </p>
-                </div>
               </form>
             </Form>
           </CardContent>
