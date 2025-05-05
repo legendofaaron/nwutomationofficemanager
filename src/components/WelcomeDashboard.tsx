@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, MessageSquare, BookOpenText, PlayIcon, Building2, Brain, LayoutDashboard } from 'lucide-react';
@@ -9,21 +8,21 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from './ui/scroll-area';
 import { Logo } from './Logo';
 import { useTheme } from '@/context/ThemeContext';
-
 const WelcomeDashboard = () => {
-  const { setViewMode, branding } = useAppContext();
+  const {
+    setViewMode,
+    branding
+  } = useAppContext();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { resolvedTheme } = useTheme();
-
+  const {
+    resolvedTheme
+  } = useTheme();
   const startAssistantSetup = () => {
     navigate('/setup-assistant');
   };
-  
   const isDark = resolvedTheme === 'dark';
-
-  return (
-    <ScrollArea className="h-full">
+  return <ScrollArea className="h-full">
       <div className={`mx-auto px-3 pt-4 pb-6 max-w-5xl`}>
         <div className="text-center mb-5">
           <h1 className={`text-2xl font-bold ${isDark ? 'text-blue-400' : 'text-app-blue'} mb-2`}>Welcome to Office Manager</h1>
@@ -36,7 +35,7 @@ const WelcomeDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
           <Card className={`hover:shadow-md transition-shadow ${isDark ? 'border-[#1a1e26] dashboard-card' : 'border-app-blue/10'}`}>
             <CardHeader className={`${isDark ? 'bg-[#0d0f13]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-lg flex items-center gap-2 text-slate-950">
                 <Building2 className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
                 Office Manager
               </CardTitle>
@@ -55,7 +54,7 @@ const WelcomeDashboard = () => {
 
           <Card className={`hover:shadow-md transition-shadow ${isDark ? 'border-[#1a1e26] dashboard-card' : 'border-app-blue/10'}`}>
             <CardHeader className={`${isDark ? 'bg-[#0d0f13]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-lg flex items-center gap-2 text-slate-950">
                 <Brain className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
                 Knowledge Base
               </CardTitle>
@@ -74,7 +73,7 @@ const WelcomeDashboard = () => {
           
           <Card className={`hover:shadow-md transition-shadow ${isDark ? 'border-[#1a1e26] dashboard-card' : 'border-app-blue/10'}`}>
             <CardHeader className={`${isDark ? 'bg-[#0d0f13]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-lg flex items-center gap-2 text-zinc-950">
                 <LayoutDashboard className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
                 Dashboard
               </CardTitle>
@@ -95,7 +94,7 @@ const WelcomeDashboard = () => {
         {/* Intelligent Assistant Card */}
         <Card className={`mb-6 ${isDark ? 'border-blue-900/30 bg-[#0d0f13]' : 'border-app-blue/20'} shadow-sm`}>
           <CardHeader className={`${isDark ? 'bg-[#0d0f13]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
-            <CardTitle className="text-xl flex items-center gap-2">
+            <CardTitle className="text-xl flex items-center gap-2 text-gray-950">
               <MessageSquare className={`h-5 w-5 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
               Intelligent Assistant
             </CardTitle>
@@ -163,8 +162,6 @@ const WelcomeDashboard = () => {
           </div>
         </div>
       </div>
-    </ScrollArea>
-  );
+    </ScrollArea>;
 };
-
 export default WelcomeDashboard;
