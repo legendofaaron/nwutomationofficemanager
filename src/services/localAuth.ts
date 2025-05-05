@@ -8,6 +8,9 @@ export interface LocalUser {
     full_name?: string;
     username?: string;
     avatar_url?: string;
+    bio?: string;
+    location?: string;
+    job_title?: string;
     display_preferences?: {
       theme?: string;
       language?: string;
