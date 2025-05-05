@@ -216,32 +216,56 @@ const ScheduleView = () => {
     ));
   };
   
-  // Helper to get client options for select - Updated to show address info
-  const getClientOptions = () => {
-    return clients.map(client => (
-      <SelectItem key={client.id} value={client.id}>
-        {client.name}
-      </SelectItem>
-    ));
-  };
-  
-  // Helper to get client location options for select - Updated to show address info
+  // Updated to combine client and location info in one dropdown
   const getClientLocationOptions = () => {
-    if (!newTask.clientId) return null;
+    const options: JSX.Element[] = [];
     
-    const filteredLocations = clientLocations.filter(
-      location => location.clientId === newTask.clientId
-    );
+    clients.forEach(client => {
+      const clientLocationsFiltered = clientLocations.filter(
+        location => location.clientId === client.id
+      );
+      
+      if (clientLocationsFiltered.length > 0) {
+        // Add a label for this client
+        options.push(
+          <SelectItem 
+            key={`client-${client.id}`} 
+            value={`client-${client.id}`}
+            disabled
+          >
+            {client.name}
+          </SelectItem>
+        );
+        
+        // Add each location under this client
+        clientLocationsFiltered.forEach(location => {
+          const value = `${client.id}:${location.id}`;
+          const displayText = `${location.name}${location.isPrimary ? " (Primary)" : ""}`;
+          const description = `${location.address}${location.city ? `, ${location.city}` : ''}${location.state ? `, ${location.state}` : ''} ${location.zipCode || ''}`;
+          
+          options.push(
+            <SelectItem 
+              key={value} 
+              value={value}
+              description={description}
+              className="pl-6"
+            >
+              {displayText}
+            </SelectItem>
+          );
+        });
+      }
+    });
     
-    return filteredLocations.map(location => (
-      <SelectItem 
-        key={location.id} 
-        value={location.id}
-        description={`${location.address}${location.city ? `, ${location.city}` : ''}${location.state ? `, ${location.state}` : ''} ${location.zipCode || ''}`}
-      >
-        {location.name} {location.isPrimary && "(Primary)"}
-      </SelectItem>
-    ));
+    return options;
+  };
+
+  // Helper to parse the combined client:location value
+  const parseClientLocationValue = (value: string): { clientId: string, locationId: string } | null => {
+    if (!value || !value.includes(':')) return null;
+    
+    const [clientId, locationId] = value.split(':');
+    return { clientId, locationId };
   };
 
   // Helper to get crew member names for display
@@ -525,7 +549,7 @@ const ScheduleView = () => {
                             type="button"
                           >
                             <Building2 className="h-4 w-4 mr-2" />
-                            Client Location
+                            Client Site
                           </Button>
                         </div>
                       </div>
@@ -543,59 +567,47 @@ const ScheduleView = () => {
                       ) : (
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label htmlFor="client">Client</Label>
+                            <Label htmlFor="clientLocation">Location</Label>
                             <Select
-                              value={newTask.clientId}
-                              onValueChange={(value) => setNewTask({ 
-                                ...newTask, 
-                                clientId: value,
-                                clientLocationId: '' // Reset location when client changes
-                              })}
+                              value={newTask.clientId && newTask.clientLocationId ? `${newTask.clientId}:${newTask.clientLocationId}` : ""}
+                              onValueChange={(value) => {
+                                const parsed = parseClientLocationValue(value);
+                                if (parsed) {
+                                  setNewTask({
+                                    ...newTask,
+                                    clientId: parsed.clientId,
+                                    clientLocationId: parsed.locationId
+                                  });
+                                }
+                              }}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Select client" />
+                                <SelectValue placeholder="Select client location" />
                               </SelectTrigger>
                               <SelectContent className="bg-popover">
-                                {getClientOptions()}
+                                {getClientLocationOptions()}
                               </SelectContent>
                             </Select>
+                            
+                            {newTask.clientId && newTask.clientLocationId && (
+                              <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
+                                {(() => {
+                                  const locationInfo = getClientLocationInfo(newTask.clientId, newTask.clientLocationId);
+                                  if (!locationInfo) return null;
+                                  
+                                  return (
+                                    <>
+                                      <div className="font-medium">{locationInfo.locationName}</div>
+                                      <div>{locationInfo.address}</div>
+                                      {locationInfo.city && locationInfo.state && (
+                                        <div>{locationInfo.city}, {locationInfo.state} {locationInfo.zipCode}</div>
+                                      )}
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            )}
                           </div>
-                          
-                          {newTask.clientId && (
-                            <div className="space-y-2">
-                              <Label htmlFor="clientLocation">Client Location</Label>
-                              <Select
-                                value={newTask.clientLocationId}
-                                onValueChange={(value) => setNewTask({ ...newTask, clientLocationId: value })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select location" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-popover">
-                                  {getClientLocationOptions()}
-                                </SelectContent>
-                              </Select>
-                              
-                              {newTask.clientLocationId && (
-                                <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
-                                  {(() => {
-                                    const locationInfo = getClientLocationInfo(newTask.clientId, newTask.clientLocationId);
-                                    if (!locationInfo) return null;
-                                    
-                                    return (
-                                      <>
-                                        <div className="font-medium">{locationInfo.locationName}</div>
-                                        <div>{locationInfo.address}</div>
-                                        {locationInfo.city && locationInfo.state && (
-                                          <div>{locationInfo.city}, {locationInfo.state} {locationInfo.zipCode}</div>
-                                        )}
-                                      </>
-                                    );
-                                  })()}
-                                </div>
-                              )}
-                            </div>
-                          )}
                         </div>
                       )}
                       
@@ -949,59 +961,47 @@ const ScheduleView = () => {
             ) : (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="client">Client</Label>
+                  <Label htmlFor="clientLocation">Location</Label>
                   <Select
-                    value={newTask.clientId}
-                    onValueChange={(value) => setNewTask({ 
-                      ...newTask, 
-                      clientId: value,
-                      clientLocationId: '' // Reset location when client changes
-                    })}
+                    value={newTask.clientId && newTask.clientLocationId ? `${newTask.clientId}:${newTask.clientLocationId}` : ""}
+                    onValueChange={(value) => {
+                      const parsed = parseClientLocationValue(value);
+                      if (parsed) {
+                        setNewTask({
+                          ...newTask,
+                          clientId: parsed.clientId,
+                          clientLocationId: parsed.locationId
+                        });
+                      }
+                    }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select client" />
+                      <SelectValue placeholder="Select client location" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover">
-                      {getClientOptions()}
+                      {getClientLocationOptions()}
                     </SelectContent>
                   </Select>
+                  
+                  {newTask.clientId && newTask.clientLocationId && (
+                    <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
+                      {(() => {
+                        const locationInfo = getClientLocationInfo(newTask.clientId, newTask.clientLocationId);
+                        if (!locationInfo) return null;
+                        
+                        return (
+                          <>
+                            <div className="font-medium">{locationInfo.locationName}</div>
+                            <div>{locationInfo.address}</div>
+                            {locationInfo.city && locationInfo.state && (
+                              <div>{locationInfo.city}, {locationInfo.state} {locationInfo.zipCode}</div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </div>
-                
-                {newTask.clientId && (
-                  <div className="space-y-2">
-                    <Label htmlFor="clientLocation">Client Location</Label>
-                    <Select
-                      value={newTask.clientLocationId}
-                      onValueChange={(value) => setNewTask({ ...newTask, clientLocationId: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select location" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover">
-                        {getClientLocationOptions()}
-                      </SelectContent>
-                    </Select>
-                    
-                    {newTask.clientLocationId && (
-                      <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
-                        {(() => {
-                          const locationInfo = getClientLocationInfo(newTask.clientId, newTask.clientLocationId);
-                          if (!locationInfo) return null;
-                          
-                          return (
-                            <>
-                              <div className="font-medium">{locationInfo.locationName}</div>
-                              <div>{locationInfo.address}</div>
-                              {locationInfo.city && locationInfo.state && (
-                                <div>{locationInfo.city}, {locationInfo.state} {locationInfo.zipCode}</div>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             )}
             
