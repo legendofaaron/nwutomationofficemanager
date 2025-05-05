@@ -251,6 +251,7 @@ const DocumentViewer = () => {
                   className={`min-h-[50vh] w-full resize-none p-6 font-sans text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-lg ${isDarkMode ? 'bg-[#1a1e25] text-gray-200' : ''}`}
                   placeholder="Start typing..."
                   ref={(el) => setTextareaRef(el)}
+                  style={{ color: isDarkMode ? '#e4e4e7' : 'inherit' }}
                 />
                 <AiSuggestions 
                   content={content}
