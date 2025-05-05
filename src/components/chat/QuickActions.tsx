@@ -17,7 +17,7 @@ export const QuickActions = ({ onActionSelect }: QuickActionProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-2 p-3 border-b border-border/20">
+    <div className="grid grid-cols-1 gap-2 p-3 border-b border-border/20 bg-[#0D1117]">
       {quickActions.map((action, index) => (
         <Button
           key={index}
