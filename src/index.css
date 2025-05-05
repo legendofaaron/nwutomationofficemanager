@@ -5,253 +5,126 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
+ 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 214 85% 50%;
+ 
+    --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
-
+ 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-
+ 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
+ 
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 220 13% 46%;
+ 
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
-
-    --radius: 0.75rem;
-
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 214 85% 50%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 210 30% 97%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+ 
+    --radius: 0.5rem;
   }
-
+ 
   .dark {
-    --background: 224 71% 4%;
+    --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
-    --card: 224 71% 4%;
+ 
+    --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
-    --popover: 224 71% 4%;
+ 
+    --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 210 100% 60%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 215 27% 14%;
+ 
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+ 
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
-    --muted: 215 27% 14%;
-    --muted-foreground: 217 10% 70%;
-
-    --accent: 215 27% 14%;
+ 
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+ 
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
+ 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 215 27% 16%;
-    --input: 215 27% 16%;
-    --ring: 210 100% 60%;
-
-    --sidebar-background: 224 71% 4%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 210 100% 60%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 215 27% 12%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 215 27% 16%;
-    --sidebar-ring: 210 100% 60%;
-  }
-  
-  .superdark {
-    --background: 0 0% 0%;
-    --foreground: 210 40% 98%;
-
-    --card: 0 0% 3%;
-    --card-foreground: 0 0% 95%;
-
-    --popover: 0 0% 3%;
-    --popover-foreground: 0 0% 95%;
-
-    --primary: 210 100% 60%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 0 0% 7%;
-    --secondary-foreground: 0 0% 95%;
-
-    --muted: 0 0% 7%;
-    --muted-foreground: 217 10% 70%;
-
-    --accent: 0 0% 7%;
-    --accent-foreground: 0 0% 95%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 95%;
-
-    --border: 0 0% 10%;
-    --input: 0 0% 10%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-
-    --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 210 100% 60%;
-    --sidebar-primary-foreground: 0 0% 95%;
-    --sidebar-accent: 0 0% 8%; 
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 8%;
-    --sidebar-ring: 210 100% 60%;
   }
+}
 
+@layer base {
   * {
     @apply border-border;
   }
-
-  html {
-    @apply overflow-hidden;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  }
-
   body {
-    @apply bg-background text-foreground overflow-hidden;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    @apply bg-background text-foreground;
   }
 }
 
-@layer components {
-  .cm-editor {
-    @apply rounded-md border;
-  }
-  
-  .cursor-ns-resize {
-    cursor: ns-resize;
-  }
-  
-  .cursor-move {
-    cursor: move;
-  }
-
-  .calendar-day-cell {
-    @apply h-8 w-8 flex-shrink-0 relative flex items-center justify-center;
-  }
-  
-  .calendar-day-number {
-    @apply text-xs overflow-hidden text-center flex-shrink-0;
-  }
-  
-  /* Glass effect cards */
-  .glass-card {
-    @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-lg;
-  }
-  
-  .dark .glass-card {
-    @apply bg-black/30 backdrop-blur-md border border-white/10;
-  }
-  
-  /* Dark mode styles - updated to match screenshot */
-  .dark .app-card {
-    @apply bg-[#0d1117] border-[#1a1e26] shadow-lg;
-  }
-  
-  .dark .dashboard-card {
-    @apply bg-[#0d1117] border-[#1a1e26] shadow-lg;
-  }
-  
-  /* Super Dark mode styles - updated to match screenshot */
-  .superdark .app-card {
-    @apply bg-[#090909] border-[#151515] shadow-md;
-  }
-  
-  .superdark .dashboard-card {
-    @apply bg-[#090909] border-[#151515] shadow-md;
-  }
-  
-  /* Button improvements */
-  .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-md hover:shadow-lg;
-  }
-  
-  .btn-outline {
-    @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors;
-  }
-  
-  /* Card improvements */
-  .improved-card {
-    @apply rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow duration-300;
-  }
-  
-  /* Professional form elements */
-  .form-input {
-    @apply h-10 px-3 py-2 rounded-md border border-input bg-transparent text-sm;
-  }
-  
-  .form-label {
-    @apply text-sm font-medium text-foreground mb-1.5 block;
-  }
+/* Fix for blue calendar numbers */
+.rdp-button {
+  color: hsl(var(--foreground)) !important;
 }
 
-@layer utilities {
-  .h-screen-minus-header {
-    height: calc(100vh - 64px);
-  }
+.rdp-day_selected, 
+.rdp-day_selected:hover {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
 
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
+.rdp-day_today {
+  background-color: hsl(var(--accent)) !important;
+}
 
-  /* Hide scrollbar for IE, Edge and Firefox */
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none; /* Firefox */
-  }
-  
-  .truncate-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+/* Calendar Styling */
+.calendar-grid .rdp-cell {
+  margin-bottom: 4px;
+}
 
-  /* Animation utilities */
-  .hover-scale {
-    @apply transition-transform duration-200 hover:scale-105;
-  }
-  
-  .hover-shadow {
-    @apply transition-shadow duration-200 hover:shadow-md;
-  }
-  
-  /* Only apply transitions for light and dark themes */
-  .light *, .dark * {
-    @apply transition-all duration-300;
-  }
-  
-  /* Remove transitions for super dark theme for a snappier feel */
-  .superdark * {
-    transition: none;
-  }
-  
-  .frosted-glass {
-    @apply backdrop-blur-lg bg-white/80 dark:bg-black/50 border border-white/20 dark:border-white/10;
-  }
+.calendar-grid .rdp-button {
+  width: 100%;
+  height: 100%;
+}
+
+.calendar-grid .rdp-day {
+  font-weight: 500;
+}
+
+.calendar-grid .rdp-nav_button {
+  background-color: transparent;
+}
+
+.schedule-drop-zone {
+  border: 2px dashed transparent;
+  transition: all 0.2s ease;
+}
+
+.schedule-drop-zone.drag-over {
+  border-color: hsl(var(--primary));
+  background-color: hsl(var(--accent));
+}
+
+/* Animation for new content */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
 }

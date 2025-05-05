@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { SelectItem, SelectLabel } from "@/components/ui/select";
 import { 
   Task, Employee, Crew, Client, ClientLocation, ClientLocationInfo 
@@ -53,7 +54,6 @@ export const getClientLocationOptions = (clients: Client[], clientLocations: Cli
           <SelectItem 
             key={value} 
             value={value}
-            description={description}
             className="pl-6"
           >
             {displayText}

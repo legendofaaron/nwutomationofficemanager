@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Task, Crew } from './ScheduleTypes';
 import { cn } from '@/lib/utils';
-import { User, Users, MapPin, CheckCircle, X, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { User, Users, MapPin, CheckCircle, Clock, Calendar as CalendarIcon } from 'lucide-react';
 import { getCrewDisplayCode } from './ScheduleHelpers';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -48,7 +48,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
             mode="single"
             selected={selectedDate}
             onSelect={onSelectDate}
-            className={cn("rounded-md border", "pointer-events-auto")}
+            className={cn("rounded-md border pointer-events-auto", "calendar-grid")}
             components={{
               DayContent: (props: DayProps) => {
                 // Check if there are tasks on this day
@@ -59,7 +59,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                 
                 return (
                   <div className="relative h-full flex items-center justify-center">
-                    <div className="calendar-day-number z-10">
+                    <div className="z-10 font-medium">
                       {format(dayDate, 'd')}
                     </div>
                     {hasTasks && (
