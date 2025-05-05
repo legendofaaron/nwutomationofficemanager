@@ -6,6 +6,7 @@ import { toast } from '@/hooks/use-toast';
 import { GeneralSettingsTab } from './settings/GeneralSettingsTab';
 import { AppearanceSettingsTab } from './settings/AppearanceSettingsTab';
 import { BrandingSettingsTab } from './settings/BrandingSettingsTab';
+import { DatabaseSettingsTab } from './settings/DatabaseSettingsTab';
 
 const SystemSettings = () => {
   return (
@@ -18,9 +19,10 @@ const SystemSettings = () => {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
+          <TabsTrigger value="database">Database</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
         </TabsList>
@@ -31,6 +33,10 @@ const SystemSettings = () => {
         
         <TabsContent value="branding" className="space-y-4 py-4">
           <BrandingSettingsTab />
+        </TabsContent>
+        
+        <TabsContent value="database" className="space-y-4 py-4">
+          <DatabaseSettingsTab />
         </TabsContent>
         
         <TabsContent value="integrations" className="py-4">

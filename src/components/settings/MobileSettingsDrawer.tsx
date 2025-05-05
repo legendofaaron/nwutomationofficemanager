@@ -55,10 +55,10 @@ export const MobileSettingsDrawer = ({ open, onClose }: MobileSettingsDrawerProp
             <TabsList className="grid w-full grid-cols-3 mb-4">
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="appearance">Appearance</TabsTrigger>
-              <TabsTrigger value="integrations">Integrations</TabsTrigger>
+              <TabsTrigger value="database">Database</TabsTrigger>
             </TabsList>
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="database">Database</TabsTrigger>
+              <TabsTrigger value="integrations">Integrations</TabsTrigger>
               <TabsTrigger value="storage">Storage</TabsTrigger>
             </TabsList>
             
@@ -70,12 +70,12 @@ export const MobileSettingsDrawer = ({ open, onClose }: MobileSettingsDrawerProp
               <AppearanceSettingsTab />
             </TabsContent>
             
-            <TabsContent value="integrations" className="space-y-4">
-              <LlmSettings />
-            </TabsContent>
-            
             <TabsContent value="database" className="space-y-4">
               <DatabaseSettingsTab />
+            </TabsContent>
+            
+            <TabsContent value="integrations" className="space-y-4">
+              <LlmSettings />
             </TabsContent>
             
             <TabsContent value="storage" className="space-y-4">
