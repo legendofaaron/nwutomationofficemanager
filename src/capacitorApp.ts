@@ -3,11 +3,12 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar } from '@capacitor/status-bar';
 import { Haptics } from '@capacitor/haptics';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { Capacitor } from '@capacitor/core';
 
 export const initializeCapacitorPlugins = async () => {
   try {
     // Check if we're running in a native context (iOS/Android)
-    const isNative = window.Capacitor && !window.Capacitor.isPluginAvailable;
+    const isNative = Capacitor.isNativePlatform();
     
     if (isNative) {
       // Hide the splash screen
@@ -32,6 +33,11 @@ export const initializeCapacitorPlugins = async () => {
       
       PushNotifications.addListener('pushNotificationReceived', (notification) => {
         console.log('Push notification received:', notification);
+      });
+      
+      // Initialize haptics feedback
+      Haptics.addListener('tap', () => {
+        Haptics.impact({ style: 'medium' });
       });
     }
   } catch (error) {
