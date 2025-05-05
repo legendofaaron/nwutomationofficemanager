@@ -173,8 +173,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   });
   const [branding, setBranding] = useState<BrandingConfig>({
     companyName: 'Northwestern Automation',
-    logoType: 'image',
-    logoUrl: 'https://placehold.co/64x64/4663f5/white.png?text=NA'
+    logoType: 'default'
   });
 
   return (
