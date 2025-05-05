@@ -40,7 +40,7 @@ interface Todo {
 }
 
 interface DraggedItem {
-  type: 'employee' | 'invoice' | 'todo';
+  type: 'employee' | 'invoice' | 'todo' | 'crew';
   id: string;
   name: string;
   originalData: any;
@@ -79,8 +79,7 @@ const TodoCalendarBubble = () => {
     setCalendarDate(selectedDate);
   }, [selectedDate, setCalendarDate]);
 
-  // Remove the click outside handler to keep popover open
-  // We'll still listen for the explicit closeAllPopovers event
+  // Listen for closeAllPopovers event
   useEffect(() => {
     const handleCloseAllPopovers = (e: Event) => {
       const customEvent = e as CustomEvent;
@@ -130,7 +129,7 @@ const TodoCalendarBubble = () => {
         if (dragData) {
           const parsedData = JSON.parse(dragData);
           
-          if (parsedData.type === 'employee' || parsedData.type === 'invoice') {
+          if (parsedData.type === 'employee' || parsedData.type === 'invoice' || parsedData.type === 'crew') {
             // Open calendar if closed
             if (!isOpen) {
               setIsOpen(true);
@@ -147,6 +146,16 @@ const TodoCalendarBubble = () => {
             // Open task dialog
             setTimeout(() => {
               setIsTaskDialogOpen(true);
+              
+              // Pre-fill task dialog based on dragged item type
+              if (parsedData.type === 'crew') {
+                setNewTask({
+                  ...newTask,
+                  title: `${parsedData.text} Team Meeting`,
+                  assignedCrew: parsedData.id,
+                  assignedTo: '',
+                });
+              }
             }, 100);
           }
         }
@@ -160,7 +169,7 @@ const TodoCalendarBubble = () => {
     return () => {
       document.removeEventListener('drop', handleDrop);
     };
-  }, [isOpen]);
+  }, [isOpen, newTask]);
 
   const todaysTodos = todos.filter(
     todo => todo.date.toDateString() === selectedDate.toDateString()
@@ -252,17 +261,31 @@ const TodoCalendarBubble = () => {
       location: newTask.location
     };
     
-    // Add assignee data if we have a dragged employee
+    // Handle different types of dragged items
     if (draggedItem?.type === 'employee') {
       const employeeName = draggedItem.name.split(' - ')[1] || draggedItem.name;
       taskData.assignedTo = employeeName;
+    } else if (draggedItem?.type === 'crew') {
+      // If dragged item is a crew, assign the crew members
+      const crewId = draggedItem.id;
+      const selectedCrew = crews.find(crew => crew.id === crewId);
+      
+      if (selectedCrew) {
+        const crewMemberNames = selectedCrew.members.map(memberId => {
+          const employee = employees.find(emp => emp.id === memberId);
+          return employee ? employee.name : '';
+        }).filter(name => name !== '');
+        
+        taskData.crew = crewMemberNames;
+        taskData.text = `${draggedItem.name} Team Meeting: ${taskData.text}`;
+      }
     } else if (newTask.assignedTo) {
       // Or use manually selected assignee
       taskData.assignedTo = newTask.assignedTo;
     }
     
     // Add crew assignment if one is selected
-    if (newTask.assignedCrew) {
+    if (newTask.assignedCrew && !taskData.crew) {
       // Find the selected crew
       const selectedCrew = crews.find(crew => crew.id === newTask.assignedCrew);
       if (selectedCrew) {
@@ -329,7 +352,7 @@ const TodoCalendarBubble = () => {
             if (dragData) {
               const parsedData = JSON.parse(dragData);
               
-              if (parsedData.type === 'employee' || parsedData.type === 'invoice') {
+              if (parsedData.type === 'employee' || parsedData.type === 'invoice' || parsedData.type === 'crew') {
                 setDraggedItem({
                   type: parsedData.type,
                   id: parsedData.id,
@@ -339,6 +362,16 @@ const TodoCalendarBubble = () => {
                 
                 // Update the selected date to the drop target date
                 setSelectedDate(new Date(date));
+                
+                // Pre-fill task dialog based on dragged item type
+                if (parsedData.type === 'crew') {
+                  setNewTask({
+                    ...newTask,
+                    title: `${parsedData.text} Team Meeting`,
+                    assignedCrew: parsedData.id,
+                    assignedTo: '',
+                  });
+                }
                 
                 // Open task dialog
                 setIsTaskDialogOpen(true);
@@ -594,6 +627,8 @@ const TodoCalendarBubble = () => {
               {draggedItem ? (
                 draggedItem.type === 'employee' 
                   ? `Create a task for ${draggedItem.name}`
+                  : draggedItem.type === 'crew'
+                  ? `Create a team event for ${draggedItem.name}`
                   : `Schedule processing for ${draggedItem.name}`
               ) : (
                 'Create a new task'
@@ -665,6 +700,7 @@ const TodoCalendarBubble = () => {
                   <Select 
                     value={newTask.assignedTo} 
                     onValueChange={value => setNewTask({...newTask, assignedTo: value})}
+                    disabled={!!(draggedItem?.type === 'crew')}
                   >
                     <SelectTrigger id="assigned-to">
                       <SelectValue placeholder="Select an employee" />
@@ -697,22 +733,31 @@ const TodoCalendarBubble = () => {
                   <Users className="h-4 w-4 mr-2" />
                   <Label htmlFor="assigned-crew">Assign to Crew</Label>
                 </div>
-                <Select 
-                  value={newTask.assignedCrew} 
-                  onValueChange={value => setNewTask({...newTask, assignedCrew: value})}
-                >
-                  <SelectTrigger id="assigned-crew">
-                    <SelectValue placeholder="Select a crew" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">No crew assignment</SelectItem>
-                    {getCrewOptions()}
-                  </SelectContent>
-                </Select>
                 
-                {newTask.assignedCrew && (
+                {!draggedItem || draggedItem.type !== 'crew' ? (
+                  <Select 
+                    value={newTask.assignedCrew} 
+                    onValueChange={value => setNewTask({...newTask, assignedCrew: value})}
+                    disabled={!!(draggedItem?.type === 'employee')}
+                  >
+                    <SelectTrigger id="assigned-crew">
+                      <SelectValue placeholder="Select a crew" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No crew assignment</SelectItem>
+                      {getCrewOptions()}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="border rounded-md p-2 bg-muted/30 flex items-center">
+                    <Users className="h-4 w-4 mr-2 text-muted-foreground" />
+                    {draggedItem.name}
+                  </div>
+                )}
+                
+                {(newTask.assignedCrew || draggedItem?.type === 'crew') && (
                   <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
-                    <strong>Crew members:</strong> {getCrewMemberNames(newTask.assignedCrew)}
+                    <strong>Crew members:</strong> {getCrewMemberNames(newTask.assignedCrew || (draggedItem?.id || ''))}
                   </div>
                 )}
               </div>
@@ -724,7 +769,7 @@ const TodoCalendarBubble = () => {
               <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>
             <Button type="button" onClick={handleCreateTask}>
-              Create Task
+              {draggedItem?.type === 'crew' ? 'Create Team Event' : 'Create Task'}
             </Button>
           </DialogFooter>
         </DialogContent>

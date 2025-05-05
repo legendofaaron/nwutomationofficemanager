@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Upload, Loader2, CheckCircle, Users, User } from 'lucide-react';
+import { Plus, Upload, Loader2, CheckCircle, Users, User, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAppContext } from '@/context/AppContext';
@@ -77,6 +77,10 @@ const ScheduleView = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzedScheduleData, setAnalyzedScheduleData] = useState<Partial<Task> | null>(null);
   const [assignmentType, setAssignmentType] = useState<'individual' | 'crew'>('individual');
+  
+  // New state for team event dialog
+  const [teamEventDialogOpen, setTeamEventDialogOpen] = useState(false);
+  const [droppedCrewId, setDroppedCrewId] = useState<string | null>(null);
 
   const handleAddTask = () => {
     if (newTask.title && newTask.startTime && newTask.endTime) {
@@ -192,8 +196,90 @@ const ScheduleView = () => {
     return memberNames.join(", ");
   };
 
+  // New handler for dragover events
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  // New handler for drop events
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      const data = e.dataTransfer.getData('application/json');
+      if (data) {
+        const dragData = JSON.parse(data);
+        if (dragData.type === 'crew') {
+          setDroppedCrewId(dragData.id);
+          setTeamEventDialogOpen(true);
+          
+          // Pre-fill the form with crew data
+          setNewTask({
+            ...newTask,
+            title: `${dragData.name} Team Meeting`,
+            assignedCrew: dragData.id,
+            assignedTo: '',
+            startTime: '09:00',
+            endTime: '10:00'
+          });
+          
+          // Set assignment type to crew
+          setAssignmentType('crew');
+          
+          toast(`Creating event for ${dragData.name} crew`, {
+            description: "Fill in the details to schedule this team event"
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error handling drop:', error);
+    }
+  };
+
+  // Handle creating team event from dropped crew
+  const handleCreateTeamEvent = () => {
+    if (!newTask.title || !newTask.assignedCrew) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    
+    // Find the crew to get members
+    const selectedCrew = crews.find(crew => crew.id === newTask.assignedCrew);
+    let crewMembers: string[] = [];
+    
+    if (selectedCrew) {
+      crewMembers = selectedCrew.members.map(memberId => {
+        const employee = employees.find(emp => emp.id === memberId);
+        return employee ? employee.name : '';
+      }).filter(name => name !== '');
+    }
+    
+    const teamEvent: Task = {
+      id: Date.now().toString(),
+      title: newTask.title,
+      date: selectedDate,
+      completed: false,
+      crew: crewMembers,
+      startTime: newTask.startTime,
+      endTime: newTask.endTime
+    };
+    
+    setTasks([...tasks, teamEvent]);
+    setTeamEventDialogOpen(false);
+    setNewTask({ title: '', assignedTo: '', assignedCrew: '', startTime: '', endTime: '' });
+    setDroppedCrewId(null);
+    
+    toast.success("Team event scheduled successfully");
+  };
+
   return (
-    <div className="p-4">
+    <div 
+      className="p-4" 
+      onDragOver={handleDragOver} 
+      onDrop={handleDrop}
+    >
       <Tabs defaultValue="calendar" className="w-full">
         <TabsList>
           <TabsTrigger value="calendar">Calendar</TabsTrigger>
@@ -514,6 +600,87 @@ const ScheduleView = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Team Event Dialog */}
+      <Dialog open={teamEventDialogOpen} onOpenChange={setTeamEventDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Schedule Team Event</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Event Title</Label>
+              <Input
+                id="title"
+                value={newTask.title}
+                onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="crew">Team</Label>
+              <Select
+                value={newTask.assignedCrew}
+                onValueChange={(value) => setNewTask({ ...newTask, assignedCrew: value })}
+                disabled={!!droppedCrewId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select crew" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getCrewOptions()}
+                </SelectContent>
+              </Select>
+              
+              {newTask.assignedCrew && (
+                <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
+                  <div className="font-medium flex items-center">
+                    <Users className="h-3 w-3 mr-1" />
+                    <span>Team Members:</span>
+                  </div>
+                  <div className="mt-1">
+                    {getCrewMemberNames(newTask.assignedCrew)}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Date</Label>
+              <div className="flex items-center space-x-2 border rounded-md p-2">
+                <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                <span>{selectedDate.toLocaleDateString()}</span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startTime">Start Time</Label>
+                <Input
+                  id="startTime"
+                  type="time"
+                  value={newTask.startTime}
+                  onChange={(e) => setNewTask({ ...newTask, startTime: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endTime">End Time</Label>
+                <Input
+                  id="endTime"
+                  type="time"
+                  value={newTask.endTime}
+                  onChange={(e) => setNewTask({ ...newTask, endTime: e.target.value })}
+                />
+              </div>
+            </div>
+            
+            <Button onClick={handleCreateTeamEvent} className="w-full">
+              Schedule Team Event
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
