@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -14,6 +13,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/context/ThemeContext';
+import { Badge } from '@/components/ui/badge';
 
 interface Booking {
   id: string;
@@ -123,6 +123,39 @@ const BookingView = () => {
   const handleDeleteBooking = (id: string) => {
     setBookings(bookings.filter(booking => booking.id !== id));
     toast.success("Booking deleted successfully!");
+  };
+
+  const handleBookingDragStart = (booking: Booking, e: React.DragEvent) => {
+    // Set data transfer object with booking details
+    e.dataTransfer.setData("application/json", JSON.stringify({
+      id: booking.id,
+      text: `${booking.title} (${booking.resourceName})`,
+      type: 'booking',
+      originalData: booking
+    }));
+    
+    // Set the drag effect
+    e.dataTransfer.effectAllowed = "copy";
+    
+    // Optional: Create a custom drag image
+    const dragImage = document.createElement('div');
+    dragImage.innerHTML = `
+      <div class="flex items-center px-3 py-2 bg-primary text-primary-foreground rounded shadow-md">
+        <Calendar class="h-4 w-4 mr-2" />
+        <span>${booking.title}</span>
+      </div>
+    `;
+    dragImage.style.position = 'absolute';
+    dragImage.style.top = '-1000px';
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+    
+    // Clean up after drag operation starts
+    setTimeout(() => {
+      document.body.removeChild(dragImage);
+    }, 0);
+    
+    toast.info(`Drag ${booking.title} to calendar to reschedule`, { duration: 2000 });
   };
 
   const selectedDateBookings = bookings.filter(
@@ -286,7 +319,12 @@ const BookingView = () => {
                   </TableHeader>
                   <TableBody>
                     {selectedDateBookings.map((booking) => (
-                      <TableRow key={booking.id}>
+                      <TableRow 
+                        key={booking.id}
+                        className="hover:bg-accent/10 cursor-grab"
+                        draggable={true}
+                        onDragStart={(e) => handleBookingDragStart(booking, e)}
+                      >
                         <TableCell className="font-medium">{booking.title}</TableCell>
                         <TableCell>{booking.resourceName}</TableCell>
                         <TableCell>
@@ -297,14 +335,25 @@ const BookingView = () => {
                         </TableCell>
                         <TableCell>{booking.bookedBy}</TableCell>
                         <TableCell className="text-right">
-                          <Button 
-                            variant="destructive" 
-                            size="sm" 
-                            onClick={() => handleDeleteBooking(booking.id)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0"
+                            >
+                              <CalendarIcon className="h-3.5 w-3.5" />
+                              <span className="sr-only">Reschedule</span>
+                            </Button>
+                            <Button 
+                              variant="destructive" 
+                              size="sm" 
+                              onClick={() => handleDeleteBooking(booking.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              <span className="sr-only">Delete</span>
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

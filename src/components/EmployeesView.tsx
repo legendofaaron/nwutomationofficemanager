@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, UserPlus, Upload, CheckCircle, X } from 'lucide-react';
+import { Search, UserPlus, Upload, CheckCircle, X, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -125,6 +125,40 @@ const EmployeesView = () => {
     }));
   };
 
+  // Handle dragging of employees
+  const handleEmployeeDragStart = (employee: any, e: React.DragEvent) => {
+    // Set data transfer object with employee details
+    e.dataTransfer.setData("application/json", JSON.stringify({
+      id: employee.id,
+      text: employee.name,
+      type: 'employee',
+      originalData: employee
+    }));
+    
+    // Set the drag effect
+    e.dataTransfer.effectAllowed = "copy";
+    
+    // Optional: Create a custom drag image
+    const dragImage = document.createElement('div');
+    dragImage.innerHTML = `
+      <div class="flex items-center px-3 py-2 bg-primary text-primary-foreground rounded shadow-md">
+        <Calendar class="h-4 w-4 mr-2" />
+        <span>${employee.name}</span>
+      </div>
+    `;
+    dragImage.style.position = 'absolute';
+    dragImage.style.top = '-1000px';
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+    
+    // Clean up after drag operation starts
+    setTimeout(() => {
+      document.body.removeChild(dragImage);
+    }, 0);
+    
+    toast.info(`Drag ${employee.name} to calendar to schedule`, { duration: 2000 });
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
@@ -150,11 +184,17 @@ const EmployeesView = () => {
               <TableHead>Role</TableHead>
               <TableHead>Department</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {employees.map(employee => (
-              <TableRow key={employee.id} className="hover:bg-gray-50">
+              <TableRow 
+                key={employee.id} 
+                className="hover:bg-accent/10 cursor-grab"
+                draggable={true}
+                onDragStart={(e) => handleEmployeeDragStart(employee, e)}
+              >
                 <TableCell className="font-medium">{employee.name}</TableCell>
                 <TableCell>{employee.role}</TableCell>
                 <TableCell>{employee.department}</TableCell>
@@ -162,6 +202,16 @@ const EmployeesView = () => {
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     {employee.status}
                   </span>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    className="h-8 w-8 p-0 text-blue-600"
+                    title="Schedule meeting"
+                  >
+                    <Calendar className="h-4 w-4" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

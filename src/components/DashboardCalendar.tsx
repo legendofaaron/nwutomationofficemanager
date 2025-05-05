@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -23,6 +24,14 @@ interface Todo {
 interface TaskFormValues {
   text: string;
   date: Date;
+}
+
+// Define types for the different items that can be dropped
+interface DroppedItem {
+  id: string;
+  text: string;
+  type: 'employee' | 'invoice' | 'booking' | 'todo';
+  originalData?: any;
 }
 
 const DashboardCalendar = () => {
@@ -107,6 +116,14 @@ const DashboardCalendar = () => {
     document.body.appendChild(dragImage);
     e.dataTransfer.setDragImage(dragImage, 0, 0);
     
+    // Set the data transfer for todos
+    e.dataTransfer.setData("application/json", JSON.stringify({
+      id: todo.id,
+      text: todo.text,
+      type: 'todo',
+      originalData: todo
+    }));
+    
     // Clean up after drag operation starts
     setTimeout(() => {
       document.body.removeChild(dragImage);
@@ -142,6 +159,38 @@ const DashboardCalendar = () => {
     }
   };
 
+  // Handle dropped items from other components
+  const handleExternalItemDrop = (droppedItem: DroppedItem, date: Date) => {
+    // Create a new todo based on the dropped item
+    const newTodo: Todo = {
+      id: `${droppedItem.type}-${droppedItem.id}-${Date.now()}`,
+      text: getTextByItemType(droppedItem),
+      completed: false,
+      date: date
+    };
+
+    setTodos([...todos, newTodo]);
+    toast.success(`${capitalizeFirstLetter(droppedItem.type)} added to calendar on ${format(date, 'MMM d, yyyy')}`);
+  };
+
+  // Helper function to format the text based on item type
+  const getTextByItemType = (item: DroppedItem): string => {
+    switch(item.type) {
+      case 'employee':
+        return `Meeting with ${item.text}`;
+      case 'invoice':
+        return `Process invoice: ${item.text}`;
+      case 'booking':
+        return `Booking: ${item.text}`;
+      default:
+        return item.text;
+    }
+  };
+
+  const capitalizeFirstLetter = (string: string): string => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
   // Custom day render to show task indicators and handle drops
   const customDayRender = (day: DayProps) => {
     const date = day.date;
@@ -154,7 +203,7 @@ const DashboardCalendar = () => {
       <div 
         className={cn(
           "relative w-full h-full flex items-center justify-center",
-          isDragging && "cursor-copy drop-shadow-sm",
+          isDragging && "cursor-copy drop-shadow-sm border-2 border-dashed border-primary/50",
           "hover:bg-accent/10 transition-colors cursor-pointer"
         )}
         onClick={() => {
@@ -168,9 +217,18 @@ const DashboardCalendar = () => {
         onDragOver={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          // Add visual feedback
+          e.currentTarget.classList.add("bg-accent/30", "border-primary");
+        }}
+        onDragLeave={(e) => {
+          // Remove visual feedback
+          e.currentTarget.classList.remove("bg-accent/30", "border-primary");
         }}
         onDrop={(e) => {
           e.preventDefault();
+          e.currentTarget.classList.remove("bg-accent/30", "border-primary");
+
+          // Handle todo drops
           if (draggedTodo) {
             const updatedTodos = todos.map(todo => 
               todo.id === draggedTodo.id 
@@ -180,9 +238,21 @@ const DashboardCalendar = () => {
             setTodos(updatedTodos);
             setDraggedTodo(null);
             setIsDragging(false);
-            // Update selected date to the drop target date
             setSelectedDate(date);
             toast.success("Task moved to " + format(date, 'MMM d, yyyy'));
+          } else {
+            // Handle external drops (employees, invoices, bookings)
+            try {
+              const droppedData = e.dataTransfer.getData("application/json");
+              if (droppedData) {
+                const droppedItem: DroppedItem = JSON.parse(droppedData);
+                handleExternalItemDrop(droppedItem, date);
+                // Update selected date to where the item was dropped
+                setSelectedDate(date);
+              }
+            } catch (error) {
+              console.error("Error processing dropped item:", error);
+            }
           }
         }}
       >

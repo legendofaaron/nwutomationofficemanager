@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, FileEdit, FileSearch, Download, Send, Upload, CheckCircle, Loader2 } from 'lucide-react';
+import { Plus, Trash2, FileEdit, FileSearch, Download, Send, Upload, CheckCircle, Loader2, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -220,6 +220,43 @@ const InvoicesView = () => {
     });
   };
 
+  // Handle dragging of invoices
+  const handleInvoiceDragStart = (invoice: Invoice, e: React.DragEvent) => {
+    // Set data transfer object with invoice details
+    e.dataTransfer.setData("application/json", JSON.stringify({
+      id: invoice.id,
+      text: `${invoice.id} - ${invoice.clientName}`,
+      type: 'invoice',
+      originalData: invoice
+    }));
+    
+    // Set the drag effect
+    e.dataTransfer.effectAllowed = "copy";
+    
+    // Optional: Create a custom drag image
+    const dragImage = document.createElement('div');
+    dragImage.innerHTML = `
+      <div class="flex items-center px-3 py-2 bg-primary text-primary-foreground rounded shadow-md">
+        <Calendar class="h-4 w-4 mr-2" />
+        <span>${invoice.id}</span>
+      </div>
+    `;
+    dragImage.style.position = 'absolute';
+    dragImage.style.top = '-1000px';
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+    
+    // Clean up after drag operation starts
+    setTimeout(() => {
+      document.body.removeChild(dragImage);
+    }, 0);
+    
+    toast({
+      title: "Drag to Calendar",
+      description: `Drag invoice ${invoice.id} to schedule processing`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -315,7 +352,12 @@ const InvoicesView = () => {
               </TableRow>
             ) : (
               filteredInvoices.map((invoice) => (
-                <TableRow key={invoice.id}>
+                <TableRow 
+                  key={invoice.id} 
+                  className="hover:bg-accent/10 cursor-grab"
+                  draggable={true}
+                  onDragStart={(e) => handleInvoiceDragStart(invoice, e)}
+                >
                   <TableCell>{invoice.id}</TableCell>
                   <TableCell>{invoice.clientName}</TableCell>
                   <TableCell>{invoice.date}</TableCell>
@@ -361,6 +403,13 @@ const InvoicesView = () => {
                         onClick={() => handleDeleteInvoice(invoice.id)}
                       >
                         <Trash2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Schedule processing"
+                      >
+                        <Calendar className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
