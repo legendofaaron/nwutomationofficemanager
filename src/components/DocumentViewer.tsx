@@ -8,12 +8,22 @@ import ScheduleView from './ScheduleView';
 import AiSuggestions from './document/AiSuggestions';
 import { ScrollArea } from './ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/context/ThemeContext';
 
 const DocumentViewer = () => {
   const { currentFile, files, setFiles, setCurrentFile, setViewMode } = useAppContext();
   const [content, setContent] = useState(currentFile?.content || '');
   const { toast } = useToast();
   const [textareaRef, setTextareaRef] = useState<HTMLTextAreaElement | null>(null);
+  const { setTheme, resolvedTheme } = useTheme();
+  
+  // Set dark mode when document is opened
+  useEffect(() => {
+    if (currentFile) {
+      setTheme('dark');
+    }
+    // Clean-up function not needed as we want document to stay in dark mode
+  }, [currentFile, setTheme]);
   
   // Update content when currentFile changes
   useEffect(() => {
@@ -215,8 +225,10 @@ const DocumentViewer = () => {
     });
   };
 
+  const isDarkMode = resolvedTheme === 'dark';
+
   return (
-    <div className="relative h-full bg-[#F6F6F7]">
+    <div className={`relative h-full ${isDarkMode ? 'bg-[#111318]' : 'bg-[#F6F6F7]'}`}>
       <DocumentHeader 
         currentFile={currentFile}
         onNameChange={handleNameChange}
@@ -228,7 +240,7 @@ const DocumentViewer = () => {
       
       <ScrollArea className="h-[calc(100%-96px)]">
         <div className="max-w-3xl mx-auto px-6 py-4">
-          <div className="bg-white rounded-lg shadow-sm min-h-[50vh]">
+          <div className={`${isDarkMode ? 'bg-[#1a1e25] border border-[#2a2f38]' : 'bg-white'} rounded-lg shadow-sm min-h-[50vh]`}>
             {isSchedule ? (
               <ScheduleView />
             ) : (
@@ -236,7 +248,7 @@ const DocumentViewer = () => {
                 <Textarea
                   value={content}
                   onChange={(e) => handleContentChange(e.target.value)}
-                  className="min-h-[50vh] w-full resize-none p-6 font-sans text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-lg"
+                  className={`min-h-[50vh] w-full resize-none p-6 font-sans text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-lg ${isDarkMode ? 'bg-[#1a1e25] text-gray-200' : ''}`}
                   placeholder="Start typing..."
                   ref={(el) => setTextareaRef(el)}
                 />
