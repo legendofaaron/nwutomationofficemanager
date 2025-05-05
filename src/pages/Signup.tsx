@@ -64,14 +64,15 @@ const Signup = () => {
     setSignupError(null);
     
     try {
-      // Sign up the user with local auth
+      // Sign up the user with local auth - updated to match the correct parameter structure
       const { data, error } = await localAuth.signUp({
         email: values.email,
         password: values.password,
+        username: values.username, // Add username as a top-level parameter
         options: {
           data: {
             full_name: values.name,
-            username: values.username, // Use the provided username
+            // Note: username is now passed as a top-level parameter, not in options.data
           }
         }
       });

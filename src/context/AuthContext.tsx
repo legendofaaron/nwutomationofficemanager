@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { localAuth, LocalSession, LocalUser } from '@/services/localAuth';
@@ -53,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTimeout(() => {
           toast({
             title: "Signed in successfully",
-            description: `Welcome${currentSession?.user?.username ? ', ' + currentSession.user.username : ''}!`,
+            description: `Welcome${currentSession?.user?.user_metadata?.username ? ', ' + currentSession.user.user_metadata.username : ''}!`,
           });
         }, 0);
       } else if (event === 'SIGNED_OUT') {

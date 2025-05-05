@@ -3,10 +3,10 @@ import { v4 as uuidv4 } from 'uuid';
 
 export interface LocalUser {
   id: string;
-  username: string;
   email?: string;
   password: string; // In a real app, this should be hashed
   user_metadata: {
+    username?: string; // Add username to user_metadata
     full_name?: string;
     avatar_url?: string;
     bio?: string;
@@ -170,50 +170,55 @@ export const localAuth = {
   },
   
   // Sign up new user
-  signUp: ({ username, email, password, options }: { 
-    username: string;
-    email?: string;
+  signUp: ({ email, password, options, username }: { 
+    email: string;
     password: string; 
+    username?: string;
     options?: { data?: Record<string, any> }
   }): { data: { user: LocalUser | null }; error: Error | null } => {
     try {
       const users = getUsers();
       
-      // Check if username already exists
-      const existingUserByUsername = users.find(user => user.username === username);
-      if (existingUserByUsername) {
-        return {
-          data: { user: null },
-          error: new Error('Username is already taken')
-        };
-      }
-      
-      // Check if email already exists (if provided)
-      if (email) {
-        const existingUserByEmail = users.find(user => user.email === email);
-        if (existingUserByEmail) {
+      // Check if username is already taken (if provided)
+      if (username) {
+        const existingUserByUsername = users.find(user => 
+          user.user_metadata.username === username);
+        if (existingUserByUsername) {
           return {
             data: { user: null },
-            error: new Error('Email is already registered')
+            error: new Error('Username is already taken')
           };
         }
       }
       
-      // Create new user
+      // Check if email already exists
+      const existingUserByEmail = users.find(user => user.email === email);
+      if (existingUserByEmail) {
+        return {
+          data: { user: null },
+          error: new Error('Email is already registered')
+        };
+      }
+      
+      // Create new user with username in the right place
+      const usernameToUse = username || (options?.data?.username as string) || email.split('@')[0];
+      
       const newUser: LocalUser = {
         id: uuidv4(),
-        username,
         email,
         password,
-        user_metadata: options?.data || {},
+        user_metadata: {
+          ...options?.data,
+          username: usernameToUse // Ensure username is in user_metadata
+        },
         created_at: new Date().toISOString()
       };
       
       users.push(newUser);
       saveUsers(users);
       
-      // Auto sign in after sign up
-      const result = localAuth.signInWithUsername({ username, password });
+      // Auto sign in after sign up - using email auth instead of username
+      const result = localAuth.signInWithPassword({ email, password });
       
       return { 
         data: { user: newUser },
