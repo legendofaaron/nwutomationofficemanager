@@ -59,25 +59,25 @@ const MainLayout = () => {
     ? 'bg-black border border-[#151515]' 
     : isDark 
       ? 'bg-[#0d0f13] border border-[#1a1e26]'
-      : 'bg-white border border-blue-100 shadow-blue-100/30';
+      : 'bg-white border border-gray-200 shadow-sm';
 
   const sidebarHoverBg = isSuperDark
     ? 'hover:bg-[#0a0a0a]'
     : isDark
       ? 'hover:bg-[#171b24]'
-      : 'hover:bg-blue-50';
+      : 'hover:bg-gray-50';
 
   const mainBg = isSuperDark
     ? 'bg-black'
     : isDark
       ? 'bg-[#0a0c10]'
-      : 'bg-gradient-to-br from-blue-50/50 to-indigo-50/50 backdrop-blur-sm';
+      : 'bg-gradient-to-br from-gray-50 to-gray-100 backdrop-blur-sm';
 
   return (
     <SidebarProvider defaultOpen={sidebarOpen}>
-      <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gradient-to-br from-blue-50 to-indigo-50'} flex w-full overflow-hidden`}>
+      <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gradient-to-br from-white to-gray-100'} flex w-full overflow-hidden`}>
         <div className="relative sidebar-container">
-          <Sidebar className="shadow-lg">
+          <Sidebar className="shadow">
             <AppSidebar />
           </Sidebar>
           <div 
@@ -85,7 +85,7 @@ const MainLayout = () => {
             style={{ top: `${triggerPosition}px` }}
           >
             <SidebarTrigger 
-              className={`h-16 w-12 ${sidebarButtonBg} shadow-md rounded-r-lg flex items-center justify-center ${sidebarHoverBg} transition-all group cursor-move`}
+              className={`h-16 w-12 ${sidebarButtonBg} rounded-r-lg flex items-center justify-center ${sidebarHoverBg} transition-all group cursor-move`}
               onMouseDown={handleDragStart}
             >
               <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
@@ -96,7 +96,7 @@ const MainLayout = () => {
         </div>
         
         <main className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", sidebarOpen ? "ml-0" : "ml-0")}>
-          <div className={`w-full ${mainBg} shadow-sm h-full rounded-md overflow-auto`}>
+          <div className={`w-full ${mainBg} h-full rounded-md overflow-auto`}>
             {viewMode === 'document' && <DocumentViewer />}
             {viewMode === 'database' && <DatabaseViewer />}
             {viewMode === 'knowledge' && <KnowledgeBase />}
@@ -113,11 +113,11 @@ const MainLayout = () => {
         <div className="fixed bottom-6 right-6 z-50">
           <button 
             onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
-            className={`h-14 w-14 rounded-full shadow-lg ${isDark || isSuperDark ? 'bg-blue-500 hover:bg-blue-600' : 'bg-primary hover:bg-primary/90'} relative flex items-center justify-center transition-colors text-primary-foreground hover:scale-105 active:scale-95 transition-transform duration-200 animate-pulse-slow`}
+            className={`h-14 w-14 rounded-full shadow-md ${isDark || isSuperDark ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'} relative flex items-center justify-center transition-colors text-white hover:scale-105 active:scale-95 transition-transform duration-200`}
           >
             <Sparkles className="h-6 w-6" />
             {aiAssistantOpen && (
-              <span className="absolute top-0 right-0 h-3 w-3 bg-destructive rounded-full border-2 border-background"></span>
+              <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-background"></span>
             )}
           </button>
         </div>

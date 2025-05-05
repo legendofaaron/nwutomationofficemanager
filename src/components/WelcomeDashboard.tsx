@@ -30,35 +30,35 @@ const WelcomeDashboard = () => {
     ? 'bg-black' 
     : isDark 
       ? 'bg-[#0a0f1a]' 
-      : 'bg-gradient-to-br from-blue-50 to-indigo-50';
+      : 'bg-gradient-to-br from-gray-50 to-blue-50/30';
   
   const cardBgClass = isSuperDark
     ? 'bg-[#090909] border-[#151515]'
     : isDark
       ? 'bg-[#0d1117] border-[#1a1e26]'
-      : 'bg-white/80 backdrop-blur-sm';
+      : 'bg-white/90 backdrop-blur-sm';
   
   const buttonClass = isSuperDark
     ? 'bg-blue-600 hover:bg-blue-700 text-white'
     : isDark
       ? 'bg-blue-500 hover:bg-blue-600 text-white'
-      : 'bg-blue-500 hover:bg-blue-600 text-white';
+      : 'bg-blue-600 hover:bg-blue-700 text-white';
 
   const outlineButtonClass = isSuperDark
     ? 'border-[#202020] bg-black hover:bg-[#0a0a0a] text-white'
     : isDark
       ? 'border-blue-900/50 bg-[#111827] hover:bg-[#1e293b] text-white'
-      : 'border-blue-200 bg-white/80 hover:bg-blue-50 text-blue-700';
+      : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700';
 
   return (
     <ScrollArea className="h-full">
       <div className={`mx-auto px-4 pt-6 pb-8 max-w-5xl animate-fade-in ${bgClass} min-h-full`}>
-        <div className="flex justify-center mb-4 animate-slide-in">
+        <div className="flex justify-center mb-6 animate-slide-in">
           <Logo />
         </div>
         
-        <div className="text-center mb-8 animate-slide-in" style={{animationDelay: '100ms'}}>
-          <h1 className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2 tracking-tight">
+        <div className="text-center mb-10 animate-slide-in" style={{animationDelay: '100ms'}}>
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-3 tracking-tight">
             Welcome to Office Manager
           </h1>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
@@ -68,15 +68,15 @@ const WelcomeDashboard = () => {
         </div>
 
         {/* Intelligent Assistant Card */}
-        <Card className={`mb-8 shadow-lg transform hover:scale-[1.01] transition-all ${cardBgClass} animate-slide-in border-2 border-l-blue-500`} style={{animationDelay: '200ms', borderLeftWidth: '4px'}}>
+        <Card className={`mb-10 shadow-lg transition-all ${cardBgClass} animate-slide-in border-l-blue-600`} style={{animationDelay: '200ms', borderLeftWidth: '4px'}}>
           <CardContent className="py-8 px-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-4">
                 <div className="flex items-center">
                   <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30 mr-3">
-                    <MessageSquare className="h-6 w-6 text-blue-500 dark:text-blue-400" />
+                    <MessageSquare className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">Intelligent Assistant</h2>
+                  <h2 className="text-2xl font-medium text-gray-800 dark:text-white">Intelligent Assistant</h2>
                 </div>
                 
                 <p className="text-gray-600 dark:text-gray-300">
@@ -88,7 +88,7 @@ const WelcomeDashboard = () => {
               
               <Button 
                 onClick={startAssistantSetup} 
-                className={`px-6 py-6 h-auto text-base ${buttonClass} shadow`}
+                className={`px-6 py-6 h-auto text-base ${buttonClass} shadow-sm`}
               >
                 Set Up Your Assistant <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -97,24 +97,26 @@ const WelcomeDashboard = () => {
         </Card>
 
         {/* Feature Cards Grid */}
-        <div className="space-y-5 mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="h-5 w-5 text-blue-500" />
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Explore Features</h2>
+        <div className="space-y-5 mb-10">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">Explore Features</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <Card className={`${cardBgClass} shadow-md hover:shadow-lg transition-all animate-slide-in`} style={{animationDelay: '300ms'}}>
-              <CardContent className="p-6">
-                <div className="flex items-center mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className={`${cardBgClass} shadow-sm hover:shadow transition-all animate-slide-in`} style={{animationDelay: '300ms'}}>
+              <CardHeader className="pb-2">
+                <div className="flex items-center mb-2">
                   <div className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 mr-3">
-                    <BookOpenText className="h-5 w-5 text-indigo-500" />
+                    <BookOpenText className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                   </div>
                   <CardTitle className="text-lg text-gray-800 dark:text-white">Documents</CardTitle>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 min-h-[60px]">
-                  Create, edit, and manage your documents with intelligent assistance
-                </p>
+                <CardDescription className="text-gray-600 dark:text-gray-400">
+                  Create, edit and manage your documents with intelligent assistance
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-2">
                 <Button 
                   variant="outline" 
                   className={`w-full justify-between ${outlineButtonClass}`}
@@ -126,17 +128,19 @@ const WelcomeDashboard = () => {
               </CardContent>
             </Card>
             
-            <Card className={`${cardBgClass} shadow-md hover:shadow-lg transition-all animate-slide-in`} style={{animationDelay: '400ms'}}>
-              <CardContent className="p-6">
-                <div className="flex items-center mb-4">
+            <Card className={`${cardBgClass} shadow-sm hover:shadow transition-all animate-slide-in`} style={{animationDelay: '400ms'}}>
+              <CardHeader className="pb-2">
+                <div className="flex items-center mb-2">
                   <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30 mr-3">
-                    <BookOpenText className="h-5 w-5 text-emerald-500" />
+                    <BookOpenText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <CardTitle className="text-lg text-gray-800 dark:text-white">Knowledge Base</CardTitle>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 min-h-[60px]">
+                <CardDescription className="text-gray-600 dark:text-gray-400">
                   Organize and access your company's information efficiently
-                </p>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-2">
                 <Button 
                   variant="outline" 
                   className={`w-full justify-between ${outlineButtonClass}`}
@@ -148,17 +152,19 @@ const WelcomeDashboard = () => {
               </CardContent>
             </Card>
             
-            <Card className={`${cardBgClass} shadow-md hover:shadow-lg transition-all animate-slide-in`} style={{animationDelay: '500ms'}}>
-              <CardContent className="p-6">
-                <div className="flex items-center mb-4">
+            <Card className={`${cardBgClass} shadow-sm hover:shadow transition-all animate-slide-in`} style={{animationDelay: '500ms'}}>
+              <CardHeader className="pb-2">
+                <div className="flex items-center mb-2">
                   <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30 mr-3">
-                    <Building2 className="h-5 w-5 text-amber-500" />
+                    <Building2 className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                   </div>
                   <CardTitle className="text-lg text-gray-800 dark:text-white">Office Manager</CardTitle>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 min-h-[60px]">
+                <CardDescription className="text-gray-600 dark:text-gray-400">
                   Streamline operations, schedules, and productivity tracking
-                </p>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-2">
                 <Button 
                   variant="outline" 
                   className={`w-full justify-between ${outlineButtonClass}`}
@@ -172,7 +178,7 @@ const WelcomeDashboard = () => {
           </div>
         </div>
         
-        <p className="text-center text-gray-500 dark:text-gray-400 text-sm animate-fade-in mt-6" style={{animationDelay: '600ms'}}>
+        <p className="text-center text-gray-500 dark:text-gray-400 text-sm animate-fade-in mt-8" style={{animationDelay: '600ms'}}>
           Select a feature from the sidebar or use the Intelligent Assistant to get started
         </p>
       </div>

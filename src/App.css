@@ -43,16 +43,16 @@
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .read-the-docs {
-  color: #888;
+  color: #6b7280;
 }
 
 /* Only apply transitions for light and dark themes */
 .light *, .dark * {
-  transition: all 0.3s ease-in-out;
+  transition: all 0.2s ease-in-out;
 }
 
 /* Remove transitions for super dark theme for a snappier feel */
@@ -81,7 +81,7 @@ button::after {
 }
 
 button:focus:not(:active)::after {
-  animation: ripple 0.8s ease-out;
+  animation: ripple 0.6s ease-out;
 }
 
 @keyframes ripple {
@@ -101,24 +101,41 @@ button:focus:not(:active)::after {
 
 /* Improve scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
 }
 
 .dark ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Professional text styling */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.025em;
+}
+
+p {
+  line-height: 1.6;
+}
+
+/* Input focus styles */
+input:focus, 
+textarea:focus, 
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
 }
