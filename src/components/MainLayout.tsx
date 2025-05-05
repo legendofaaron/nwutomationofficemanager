@@ -13,7 +13,7 @@ import TodoCalendarBubble from './TodoCalendarBubble';
 import { cn } from '@/lib/utils';
 import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from './Logo';
-import { Bot } from 'lucide-react';
+import { Bot, Sparkles } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 
 const MainLayout = () => {
@@ -59,25 +59,25 @@ const MainLayout = () => {
     ? 'bg-black border border-[#151515]' 
     : isDark 
       ? 'bg-[#0d0f13] border border-[#1a1e26]'
-      : 'bg-white';
+      : 'bg-white border border-blue-100 shadow-blue-100/30';
 
   const sidebarHoverBg = isSuperDark
     ? 'hover:bg-[#0a0a0a]'
     : isDark
       ? 'hover:bg-[#171b24]'
-      : 'hover:bg-gray-50';
+      : 'hover:bg-blue-50';
 
   const mainBg = isSuperDark
     ? 'bg-black'
     : isDark
       ? 'bg-[#0a0c10]'
-      : 'bg-white';
+      : 'bg-gradient-to-br from-blue-50/50 to-indigo-50/50 backdrop-blur-sm';
 
   return (
     <SidebarProvider defaultOpen={sidebarOpen}>
-      <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-app-gray-lightest'} flex w-full overflow-hidden`}>
+      <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gradient-to-br from-blue-50 to-indigo-50'} flex w-full overflow-hidden`}>
         <div className="relative sidebar-container">
-          <Sidebar>
+          <Sidebar className="shadow-lg">
             <AppSidebar />
           </Sidebar>
           <div 
@@ -85,7 +85,7 @@ const MainLayout = () => {
             style={{ top: `${triggerPosition}px` }}
           >
             <SidebarTrigger 
-              className={`h-16 w-12 ${sidebarButtonBg} shadow-md rounded-r-lg flex items-center justify-center ${sidebarHoverBg} transition-colors group cursor-move`}
+              className={`h-16 w-12 ${sidebarButtonBg} shadow-md rounded-r-lg flex items-center justify-center ${sidebarHoverBg} transition-all group cursor-move`}
               onMouseDown={handleDragStart}
             >
               <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
@@ -113,9 +113,9 @@ const MainLayout = () => {
         <div className="fixed bottom-6 right-6 z-50">
           <button 
             onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
-            className={`h-12 w-12 rounded-full shadow-lg ${isDark || isSuperDark ? 'bg-blue-500 hover:bg-blue-600' : 'bg-primary hover:bg-primary/90'} relative flex items-center justify-center transition-colors text-primary-foreground`}
+            className={`h-14 w-14 rounded-full shadow-lg ${isDark || isSuperDark ? 'bg-blue-500 hover:bg-blue-600' : 'bg-primary hover:bg-primary/90'} relative flex items-center justify-center transition-colors text-primary-foreground hover:scale-105 active:scale-95 transition-transform duration-200 animate-pulse-slow`}
           >
-            <Bot className="h-5 w-5" />
+            <Sparkles className="h-6 w-6" />
             {aiAssistantOpen && (
               <span className="absolute top-0 right-0 h-3 w-3 bg-destructive rounded-full border-2 border-background"></span>
             )}
