@@ -18,7 +18,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { UserAvatar } from './UserAvatar';
 import { ProLayout } from './ProLayout';
 
 const MainLayout = () => {
@@ -80,6 +80,17 @@ const MainLayout = () => {
     }
   };
 
+  const navigateToProfile = () => {
+    setViewMode('settings');
+    // Adding a small delay to ensure the settings component is mounted before trying to focus on the profile tab
+    setTimeout(() => {
+      const profileTab = document.querySelector('[value="profile"]');
+      if (profileTab) {
+        (profileTab as HTMLElement).click();
+      }
+    }, 100);
+  };
+
   const sidebarButtonBg = isSuperDark 
     ? 'bg-black border border-[#151515]' 
     : isDark 
@@ -108,17 +119,20 @@ const MainLayout = () => {
                 <Logo onClick={() => setViewMode('welcome')} />
                 <DropdownMenu>
                   <DropdownMenuTrigger className="outline-none">
-                    <Avatar className="h-9 w-9 transition-all hover:scale-105">
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {user?.email?.charAt(0).toUpperCase() || <User className="h-5 w-5" />}
-                      </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar className="h-9 w-9 transition-all hover:scale-105 cursor-pointer" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>
-                      {user?.email}
+                    <DropdownMenuLabel className="flex items-center gap-2">
+                      <UserAvatar className="h-7 w-7" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{user?.user_metadata?.full_name || 'User'}</span>
+                        <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
+                      </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={navigateToProfile} className="cursor-pointer">
+                      Profile
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setViewMode('settings')} className="cursor-pointer">
                       Settings
                     </DropdownMenuItem>

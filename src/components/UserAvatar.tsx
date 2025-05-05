@@ -7,9 +7,10 @@ import { cn } from '@/lib/utils';
 interface UserAvatarProps {
   className?: string;
   showFallback?: boolean;
+  onClick?: () => void;
 }
 
-export function UserAvatar({ className, showFallback = true }: UserAvatarProps) {
+export function UserAvatar({ className, showFallback = true, onClick }: UserAvatarProps) {
   const { user } = useAuth();
   
   const getInitials = () => {
@@ -23,7 +24,10 @@ export function UserAvatar({ className, showFallback = true }: UserAvatarProps) 
   };
   
   return (
-    <Avatar className={cn("bg-primary", className)}>
+    <Avatar 
+      className={cn("bg-primary", className, onClick && "cursor-pointer")}
+      onClick={onClick}
+    >
       <AvatarImage 
         src={user?.user_metadata?.avatar_url} 
         alt={user?.user_metadata?.full_name || 'User'}
