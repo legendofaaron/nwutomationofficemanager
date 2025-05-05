@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 
 export interface LocalUser {
@@ -8,6 +7,12 @@ export interface LocalUser {
   user_metadata: {
     full_name?: string;
     username?: string;
+    avatar_url?: string;
+    display_preferences?: {
+      theme?: string;
+      language?: string;
+      dashboard_layout?: 'default' | 'compact' | 'expanded';
+    };
   };
   created_at: string;
 }
@@ -38,6 +43,69 @@ const saveSession = (session: LocalSession | null): void => {
     localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(session));
   } else {
     localStorage.removeItem(LOCAL_SESSION_KEY);
+  }
+};
+
+// Helper to update current user
+const updateCurrentUser = (updates: Partial<Omit<LocalUser, 'id' | 'created_at'>>): { data: { user: LocalUser | null }; error: Error | null } => {
+  try {
+    // Get current session
+    const sessionJson = localStorage.getItem(LOCAL_SESSION_KEY);
+    if (!sessionJson) {
+      return {
+        data: { user: null },
+        error: new Error('No active session found')
+      };
+    }
+    
+    const session: LocalSession = JSON.parse(sessionJson);
+    const users = getUsers();
+    
+    // Find and update user
+    const userIndex = users.findIndex(u => u.id === session.user.id);
+    if (userIndex === -1) {
+      return {
+        data: { user: null },
+        error: new Error('User not found')
+      };
+    }
+    
+    // Apply updates
+    if (updates.email) {
+      users[userIndex].email = updates.email;
+    }
+    
+    if (updates.password) {
+      users[userIndex].password = updates.password;
+    }
+    
+    if (updates.user_metadata) {
+      users[userIndex].user_metadata = {
+        ...users[userIndex].user_metadata,
+        ...updates.user_metadata
+      };
+    }
+    
+    // Update in storage
+    saveUsers(users);
+    
+    // Update session
+    const updatedUser = users[userIndex];
+    const updatedSession: LocalSession = {
+      ...session,
+      user: { ...updatedUser, password: '[REDACTED]' }
+    };
+    saveSession(updatedSession);
+    
+    return {
+      data: { user: updatedUser },
+      error: null
+    };
+  } catch (error) {
+    return {
+      data: { user: null },
+      error: error instanceof Error ? error : new Error('Failed to update user')
+    };
   }
 };
 
@@ -150,6 +218,49 @@ export const localAuth = {
       return { error: null };
     } catch (error) {
       return { error: error instanceof Error ? error : new Error('Failed to sign out') };
+    }
+  },
+  
+  // Update user
+  updateUser: (updates: Partial<Omit<LocalUser, 'id' | 'created_at'>>): { data: { user: LocalUser | null }; error: Error | null } => {
+    return updateCurrentUser(updates);
+  },
+  
+  // Upload profile picture (simulated)
+  uploadAvatar: async (file: File): Promise<{ data: { url: string } | null, error: Error | null }> => {
+    try {
+      // Create a unique ID for the image
+      const imageId = uuidv4();
+      
+      // Convert file to data URL
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+          const dataUrl = e.target?.result as string;
+          
+          // In a real app, we'd upload to a server here
+          // For this demo, we'll use the data URL directly
+          resolve({
+            data: { url: dataUrl },
+            error: null
+          });
+        };
+        
+        reader.onerror = () => {
+          resolve({
+            data: null,
+            error: new Error('Failed to process image')
+          });
+        };
+        
+        reader.readAsDataURL(file);
+      });
+    } catch (error) {
+      return {
+        data: null,
+        error: error instanceof Error ? error : new Error('Failed to upload image')
+      };
     }
   },
   

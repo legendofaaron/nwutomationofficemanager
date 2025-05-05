@@ -2,11 +2,11 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LlmSettings } from './LlmSettings';
-import { toast } from '@/hooks/use-toast';
 import { GeneralSettingsTab } from './settings/GeneralSettingsTab';
 import { AppearanceSettingsTab } from './settings/AppearanceSettingsTab';
 import { BrandingSettingsTab } from './settings/BrandingSettingsTab';
 import { DatabaseSettingsTab } from './settings/DatabaseSettingsTab';
+import { ProfileSettings } from './settings/ProfileSettings';
 
 const SystemSettings = () => {
   return (
@@ -18,14 +18,19 @@ const SystemSettings = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="database">Database</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="profile" className="space-y-4 py-4">
+          <ProfileSettings />
+        </TabsContent>
         
         <TabsContent value="general" className="space-y-4 py-4">
           <GeneralSettingsTab />

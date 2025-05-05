@@ -8,6 +8,7 @@ interface AuthContextType {
   user: LocalUser | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
+  refreshUser: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +18,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<LocalSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  // Function to refresh user data
+  const refreshUser = () => {
+    const { data: { session: currentSession } } = localAuth.getSession();
+    if (currentSession) {
+      setSession(currentSession);
+      setUser(currentSession.user);
+    }
+  };
 
   useEffect(() => {
     // Set up the auth state listener first for better security
@@ -69,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Provide the authentication context to the app
   return (
-    <AuthContext.Provider value={{ session, user, isLoading, signOut }}>
+    <AuthContext.Provider value={{ session, user, isLoading, signOut, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
