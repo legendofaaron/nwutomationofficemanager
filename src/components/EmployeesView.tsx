@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Input } from '@/components/ui/input';
@@ -12,7 +13,7 @@ import {
   Calendar,
   Cog,
   ListCheck,
-  GrabHorizontal
+  GripHorizontal
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -543,7 +544,7 @@ const EmployeesView = () => {
                           className="hover:bg-accent/50 transition-colors cursor-grab"
                         >
                           <TableCell className="w-10">
-                            <GrabHorizontal className="h-4 w-4 text-muted-foreground" />
+                            <GripHorizontal className="h-4 w-4 text-muted-foreground" />
                           </TableCell>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-3">
@@ -646,7 +647,7 @@ const EmployeesView = () => {
                           className="hover:bg-accent/50 transition-colors cursor-grab"
                         >
                           <TableCell className="w-10">
-                            <GrabHorizontal className="h-4 w-4 text-muted-foreground" />
+                            <GripHorizontal className="h-4 w-4 text-muted-foreground" />
                           </TableCell>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-2">
