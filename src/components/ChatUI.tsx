@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -320,31 +321,31 @@ Your data remains secure on your local system. How can I assist you today?`;
     return (
       <Button
         onClick={handleToggleChat}
-        className="fixed bottom-4 right-4 h-12 w-12 rounded-full p-0 shadow-lg hover:shadow-xl transition-shadow bg-primary text-primary-foreground"
+        className="fixed bottom-4 right-4 h-10 w-10 rounded-full p-0 shadow-lg hover:shadow-xl transition-shadow bg-primary text-primary-foreground"
       >
-        <Bot className="h-6 w-6" />
+        <Bot className="h-5 w-5" />
       </Button>
     );
   }
 
   return (
-    <div className={`fixed right-4 bottom-4 w-96 ${isDark ? 'bg-card' : 'bg-white'} rounded-lg shadow-lg ${isDark ? 'border-border' : 'border-gray-200'} border flex flex-col h-[600px] z-20 animate-in slide-in-from-bottom-5`}>
-      <div className={`flex items-center justify-between p-3 ${isDark ? 'border-border' : 'border-gray-200'} border-b`}>
-        <div className="flex items-center gap-2">
-          <Bot className="h-5 w-5 text-primary" />
-          <h3 className="font-medium">Office Manager</h3>
+    <div className={`fixed right-4 bottom-16 w-80 ${isDark ? 'bg-card/90' : 'bg-white/95'} backdrop-blur-sm rounded-lg shadow-lg ${isDark ? 'border-border/50' : 'border-gray-200/70'} border flex flex-col h-[500px] z-20 animate-in slide-in-from-bottom-5`}>
+      <div className={`flex items-center justify-between p-2 ${isDark ? 'border-border/50' : 'border-gray-200/70'} border-b`}>
+        <div className="flex items-center gap-1.5">
+          <Bot className="h-4 w-4 text-primary" />
+          <h3 className="font-medium text-sm">Office Manager</h3>
           {assistantConfig?.companyName && (
             <span className="text-xs text-muted-foreground">for {assistantConfig.companyName}</span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={() => setShowSettings(!showSettings)}
             className="h-6 w-6"
           >
-            <Settings className="h-4 w-4" />
+            <Settings className="h-3.5 w-3.5" />
           </Button>
           <Button 
             variant="ghost" 
@@ -352,7 +353,7 @@ Your data remains secure on your local system. How can I assist you today?`;
             onClick={() => setIsOpen(false)}
             className="h-6 w-6"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -362,24 +363,24 @@ Your data remains secure on your local system. How can I assist you today?`;
       ) : (
         <>
           {!isSetupMode && (
-            <div className={`grid grid-cols-2 gap-2 p-3 ${isDark ? 'border-border' : 'border-gray-200'} border-b`}>
+            <div className={`grid grid-cols-2 gap-1.5 p-2 ${isDark ? 'border-border/50' : 'border-gray-200/70'} border-b`}>
               {quickActions.map((action, index) => (
                 <Button
                   key={index}
                   variant="outline"
                   size="sm"
-                  className="w-full justify-start"
+                  className="w-full justify-start text-xs py-1 h-8"
                   onClick={action.action}
                 >
-                  <action.icon className="mr-2 h-4 w-4" />
+                  <action.icon className="mr-1.5 h-3.5 w-3.5" />
                   {action.label}
                 </Button>
               ))}
             </div>
           )}
           
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
+          <ScrollArea className="flex-1 p-3">
+            <div className="space-y-3">
               {messages.map(message => (
                 <div 
                   key={message.id} 
@@ -394,10 +395,10 @@ Your data remains secure on your local system. How can I assist you today?`;
                   <div 
                     className={`${
                       message.type === 'user' 
-                        ? 'bg-primary text-primary-foreground max-w-[80%] p-3 rounded-lg shadow-sm' 
+                        ? 'bg-primary text-primary-foreground max-w-[80%] p-2 rounded-lg shadow-sm text-sm' 
                         : message.type === 'system'
-                          ? `${isDark ? 'bg-secondary' : 'bg-gray-200'} ${isDark ? 'text-secondary-foreground' : 'text-gray-800'} px-4 py-1 rounded-full text-xs font-medium`
-                          : `${isDark ? 'bg-muted' : 'bg-gray-100'} ${isDark ? 'text-foreground' : 'text-gray-800'} max-w-[80%] p-3 rounded-lg shadow-sm`
+                          ? `${isDark ? 'bg-secondary' : 'bg-gray-200'} ${isDark ? 'text-secondary-foreground' : 'text-gray-800'} px-3 py-0.5 rounded-full text-xs font-medium`
+                          : `${isDark ? 'bg-muted/80' : 'bg-gray-100/90'} ${isDark ? 'text-foreground' : 'text-gray-800'} max-w-[80%] p-2 rounded-lg shadow-sm text-sm`
                     } whitespace-pre-wrap`}
                   >
                     {message.content}
@@ -408,21 +409,21 @@ Your data remains secure on your local system. How can I assist you today?`;
             </div>
           </ScrollArea>
           
-          <div className={`p-3 ${isDark ? 'border-border' : 'border-gray-200'} border-t bg-card shadow-inner`}>
-            <div className="flex gap-2 items-center">
+          <div className={`p-2 ${isDark ? 'border-border/50' : 'border-gray-200/70'} border-t bg-card/60 shadow-inner`}>
+            <div className="flex gap-1.5 items-center">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={isSetupMode ? "Type your response..." : "Type your message..."}
+                placeholder={isSetupMode ? "Type response..." : "Type message..."}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                className="flex-1"
+                className="flex-1 h-8 text-sm"
               />
               <Button 
                 onClick={handleSendMessage} 
                 size="icon" 
-                className={`${isDark ? 'bg-primary hover:bg-primary/90' : 'bg-primary hover:bg-primary/90'} text-primary-foreground rounded-full h-10 w-10 flex-shrink-0 shadow-md`}
+                className={`${isDark ? 'bg-primary hover:bg-primary/90' : 'bg-primary hover:bg-primary/90'} text-primary-foreground rounded-full h-8 w-8 flex-shrink-0 shadow-md`}
               >
-                <SendHorizontal className="h-5 w-5" />
+                <SendHorizontal className="h-4 w-4" />
               </Button>
             </div>
           </div>
