@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SelectItem, SelectLabel } from "@/components/ui/select";
+import { SelectItem, SelectLabel, SelectGroup } from "@/components/ui/select";
 import { 
   Task, Employee, Crew, Client, ClientLocation, ClientLocationInfo 
 } from "./ScheduleTypes";
@@ -34,32 +34,33 @@ export const getClientLocationOptions = (clients: Client[], clientLocations: Cli
     );
     
     if (clientLocationsFiltered.length > 0) {
-      // Add a label for this client
+      // Add a SelectGroup with a label for this client
       options.push(
-        <SelectLabel 
-          key={`client-${client.id}`}
-          className="font-medium"
-        >
-          {client.name}
-        </SelectLabel>
-      );
-      
-      // Add each location under this client
-      clientLocationsFiltered.forEach(location => {
-        const value = `${client.id}:${location.id}`;
-        const displayText = `${location.name}${location.isPrimary ? " (Primary)" : ""}`;
-        const description = `${location.address}${location.city ? `, ${location.city}` : ''}${location.state ? `, ${location.state}` : ''} ${location.zipCode || ''}`;
-        
-        options.push(
-          <SelectItem 
-            key={value} 
-            value={value}
-            className="pl-6"
+        <SelectGroup key={`client-group-${client.id}`}>
+          <SelectLabel 
+            key={`client-${client.id}`}
+            className="font-medium"
           >
-            {displayText}
-          </SelectItem>
-        );
-      });
+            {client.name}
+          </SelectLabel>
+          
+          {/* Add each location under this client */}
+          {clientLocationsFiltered.map(location => {
+            const value = `${client.id}:${location.id}`;
+            const displayText = `${location.name}${location.isPrimary ? " (Primary)" : ""}`;
+            
+            return (
+              <SelectItem 
+                key={value} 
+                value={value}
+                className="pl-6"
+              >
+                {displayText}
+              </SelectItem>
+            );
+          })}
+        </SelectGroup>
+      );
     }
   });
   

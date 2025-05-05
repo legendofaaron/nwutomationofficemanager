@@ -1,16 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Plus, CalendarIcon, List, FileUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAppContext } from '@/context/AppContext';
 import { Task, TaskFormData, AssignmentType, LocationType } from './schedule/ScheduleTypes';
-import TaskCalendarView from './schedule/TaskCalendarView';
-import TaskListView from './schedule/TaskListView';
-import UploadAnalyzeSection from './schedule/UploadAnalyzeSection';
-import TeamEventDialog from './schedule/TeamEventDialog';
+
+// Import components
+import TaskCalendarView from './TaskCalendarView';
+import TaskListView from './TaskListView';
+import TeamEventDialog from './TeamEventDialog';
+import UploadAnalyzeSection from './UploadAnalyzeSection';
+import { parseClientLocationValue } from './ScheduleHelpers';
 
 const ScheduleView = () => {
-  const { employees, crews, clients, clientLocations, calendarDate } = useAppContext();
+  const { 
+    employees, 
+    crews, 
+    clients, 
+    clientLocations, 
+    calendarDate, 
+    setCalendarDate,
+    todos,
+    setTodos 
+  } = useAppContext();
+  
   const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
+  
+  // Synchronize tasks with todos from AppContext
   const [tasks, setTasks] = useState<Task[]>([
     {
       id: '1',
@@ -46,14 +65,42 @@ const ScheduleView = () => {
     },
   ]);
 
+  // Effect to synchronize selected date with App context
+  useEffect(() => {
+    if (calendarDate && calendarDate.getTime() !== selectedDate.getTime()) {
+      setSelectedDate(calendarDate);
+    }
+  }, [calendarDate]);
+
+  // Effect to update global state when local selected date changes
+  useEffect(() => {
+    setCalendarDate(selectedDate);
+  }, [selectedDate, setCalendarDate]);
+
+  // Effect to keep todos and tasks synchronized
+  useEffect(() => {
+    // Convert tasks to todos format for global state
+    const updatedTodos = tasks.map(task => ({
+      id: task.id,
+      text: task.title,
+      completed: task.completed,
+      date: task.date,
+      assignedTo: task.assignedTo,
+      crew: task.crew,
+      location: task.location,
+      startTime: task.startTime,
+      endTime: task.endTime
+    }));
+    
+    setTodos(updatedTodos);
+  }, [tasks, setTodos]);
+
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [teamEventDialogOpen, setTeamEventDialogOpen] = useState(false);
   const [droppedCrewId, setDroppedCrewId] = useState<string | null>(null);
-  
-  // State to track assignment and location types
   const [assignmentType, setAssignmentType] = useState<AssignmentType>('individual');
   const [locationType, setLocationType] = useState<LocationType>('custom');
-
-  // FormData state instead of newTask
+  
   const [formData, setFormData] = useState<TaskFormData>({
     title: '',
     assignedTo: '',
@@ -65,108 +112,56 @@ const ScheduleView = () => {
     clientLocationId: ''
   });
 
-  // Handler for adding a new task
-  const handleAddTask = (task: Task) => {
-    setTasks([...tasks, task]);
-  };
-
-  // Handler for toggling task completion status
-  const handleToggleTaskCompletion = (taskId: string) => {
-    setTasks(tasks.map(t =>
-      t.id === taskId ? { ...t, completed: !t.completed } : t
-    ));
-  };
-
-  // New handler for dragover events
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  // New handler for drop events
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    try {
-      const data = e.dataTransfer.getData('application/json');
-      if (data) {
-        const dragData = JSON.parse(data);
-        if (dragData.type === 'crew') {
-          setDroppedCrewId(dragData.id);
-          setTeamEventDialogOpen(true);
-          
-          // Pre-fill the form with crew data
-          setFormData({
-            ...formData,
-            title: `${dragData.name} Team Meeting`,
-            assignedCrew: dragData.id,
-            assignedTo: '',
-            startTime: '09:00',
-            endTime: '10:00',
-            location: '',
-            clientId: '',
-            clientLocationId: ''
-          });
-          
-          // Set assignment type to crew
-          setAssignmentType('crew');
-          
-          toast(`Creating event for ${dragData.name} crew`, {
-            description: "Fill in the details to schedule this team event"
-          });
+  const handleAddTask = () => {
+    if (formData.title && formData.startTime && formData.endTime) {
+      const task: Task = {
+        id: Date.now().toString(),
+        title: formData.title,
+        date: selectedDate,
+        completed: false,
+        startTime: formData.startTime,
+        endTime: formData.endTime
+      };
+      
+      // Handle assignment based on selected type
+      if (assignmentType === 'individual' && formData.assignedTo) {
+        task.assignedTo = formData.assignedTo;
+      } else if (assignmentType === 'crew' && formData.assignedCrew) {
+        // Get crew members' names
+        const selectedCrew = crews.find(crew => crew.id === formData.assignedCrew);
+        if (selectedCrew) {
+          task.crew = selectedCrew.members.map(memberId => {
+            const employee = employees.find(emp => emp.id === memberId);
+            return employee ? employee.name : '';
+          }).filter(name => name !== '');
+          task.crewId = formData.assignedCrew;
         }
       }
-    } catch (error) {
-      console.error('Error handling drop:', error);
+      
+      // Handle location based on selected type
+      if (locationType === 'custom' && formData.location) {
+        task.location = formData.location;
+      } else if (locationType === 'client' && formData.clientId && formData.clientLocationId) {
+        const client = clients.find(c => c.id === formData.clientId);
+        const location = clientLocations.find(l => l.id === formData.clientLocationId);
+        
+        if (client && location) {
+          task.location = `${client.name} - ${location.name}`;
+          task.clientId = formData.clientId;
+          task.clientLocationId = formData.clientLocationId;
+        }
+      }
+      
+      setTasks([...tasks, task]);
+      resetFormData();
+      setIsTaskDialogOpen(false);
+      toast.success("Task scheduled successfully");
+    } else {
+      toast.error("Please fill in all required fields");
     }
   };
 
-  // Handle creating team event from dropped crew
-  const handleCreateTeamEvent = () => {
-    if (!formData.title || !formData.assignedCrew) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-    
-    // Find the crew to get members
-    const selectedCrew = crews.find(crew => crew.id === formData.assignedCrew);
-    let crewMembers: string[] = [];
-    
-    if (selectedCrew) {
-      crewMembers = selectedCrew.members.map(memberId => {
-        const employee = employees.find(emp => emp.id === memberId);
-        return employee ? employee.name : '';
-      }).filter(name => name !== '');
-    }
-    
-    const teamEvent: Task = {
-      id: Date.now().toString(),
-      title: formData.title,
-      date: selectedDate,
-      completed: false,
-      crew: crewMembers,
-      crewId: formData.assignedCrew,
-      startTime: formData.startTime,
-      endTime: formData.endTime
-    };
-    
-    // Handle location based on selected type
-    if (locationType === 'custom' && formData.location) {
-      teamEvent.location = formData.location;
-    } else if (locationType === 'client' && formData.clientId && formData.clientLocationId) {
-      const client = clients.find(c => c.id === formData.clientId);
-      const location = clientLocations.find(l => l.id === formData.clientLocationId);
-      
-      if (client && location) {
-        teamEvent.location = `${client.name} - ${location.name}`;
-        teamEvent.clientId = formData.clientId;
-        teamEvent.clientLocationId = formData.clientLocationId;
-      }
-    }
-    
-    setTasks([...tasks, teamEvent]);
-    setTeamEventDialogOpen(false);
+  const resetFormData = () => {
     setFormData({ 
       title: '', 
       assignedTo: '', 
@@ -177,35 +172,200 @@ const ScheduleView = () => {
       clientId: '',
       clientLocationId: ''
     });
+  };
+
+  // Handle creating team event from dropped crew
+  const handleCreateTeamEvent = () => {
+    handleAddTask();
+    setTeamEventDialogOpen(false);
     setDroppedCrewId(null);
+  };
+
+  const handleToggleTaskCompletion = (taskId: string) => {
+    setTasks(tasks.map(t =>
+      t.id === taskId ? { ...t, completed: !t.completed } : t
+    ));
     
-    toast.success("Team event scheduled successfully");
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      toast.success(
+        task.completed ? "Task marked as incomplete" : "Task marked as complete",
+        { description: task.title }
+      );
+    }
+  };
+
+  // Handle opening task dialog with pre-filled date
+  const handleOpenAddTaskDialog = () => {
+    // Reset form data
+    resetFormData();
+    
+    // Pre-fill with default times
+    setFormData({
+      ...formData,
+      startTime: '09:00',
+      endTime: '10:00'
+    });
+    
+    // Open the dialog
+    setIsTaskDialogOpen(true);
+  };
+
+  // Handle applying analyzed schedule data
+  const handleApplyScheduleData = (newTaskFromFile: Task) => {
+    setTasks([...tasks, newTaskFromFile]);
+    toast.success("New task added from analyzed file");
+  };
+
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Add classes for drop zone visual feedback
+    if (e.currentTarget.classList.contains('schedule-drop-zone')) {
+      e.currentTarget.classList.add('drag-over');
+    }
+  };
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Remove visual feedback classes
+    if (e.currentTarget.classList.contains('schedule-drop-zone')) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Remove visual feedback
+    if (e.currentTarget.classList.contains('schedule-drop-zone')) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+    
+    try {
+      const data = e.dataTransfer.getData('application/json');
+      if (data) {
+        const dragData = JSON.parse(data);
+        
+        // Handle crew drop
+        if (dragData.type === 'crew') {
+          setDroppedCrewId(dragData.id);
+          
+          // Pre-fill the form with crew data
+          setFormData({
+            ...formData,
+            title: `${dragData.name} Team Meeting`,
+            assignedCrew: dragData.id,
+            assignedTo: '',
+            startTime: '09:00',
+            endTime: '10:00'
+          });
+          
+          // Set assignment type to crew
+          setAssignmentType('crew');
+          setTeamEventDialogOpen(true);
+          
+          toast.success(`Creating event for ${dragData.name} crew`, {
+            description: "Fill in the details to schedule this team event"
+          });
+        }
+        
+        // Handle task drop for reordering or moving to a different day
+        else if (dragData.type === 'task') {
+          const taskId = dragData.id;
+          const task = tasks.find(t => t.id === taskId);
+          
+          if (task && task.date.toDateString() !== selectedDate.toDateString()) {
+            // Update the task date
+            setTasks(tasks.map(t => 
+              t.id === taskId 
+                ? { ...t, date: selectedDate } 
+                : t
+            ));
+            
+            toast.success(`Task moved to ${selectedDate.toLocaleDateString()}`, {
+              description: task.title
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error handling drop:', error);
+      toast.error("Error processing the dragged item");
+    }
   };
 
   return (
     <div 
-      className="p-4" 
-      onDragOver={handleDragOver} 
+      className="p-4 schedule-drop-zone transition-colors duration-300 rounded-lg" 
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Schedule Management</h1>
+        
+        <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="gap-2 h-9 font-medium">
+              <Plus className="h-4 w-4" />
+              Add Task
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add New Task</DialogTitle>
+            </DialogHeader>
+            <TeamEventDialog 
+              open={isTaskDialogOpen}
+              onOpenChange={setIsTaskDialogOpen}
+              onCreateEvent={handleAddTask}
+              formData={formData}
+              setFormData={setFormData}
+              assignmentType={assignmentType}
+              setAssignmentType={setAssignmentType}
+              locationType={locationType}
+              setLocationType={setLocationType}
+              selectedDate={selectedDate}
+              crews={crews}
+              employees={employees}
+              clients={clients}
+              clientLocations={clientLocations}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
+      
       <Tabs defaultValue="calendar" className="w-full">
-        <TabsList>
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
-          <TabsTrigger value="list">List</TabsTrigger>
+        <TabsList className="mb-4">
+          <TabsTrigger value="calendar" className="gap-2">
+            <CalendarIcon className="h-4 w-4" />
+            Calendar View
+          </TabsTrigger>
+          <TabsTrigger value="list" className="gap-2">
+            <List className="h-4 w-4" />
+            List View
+          </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="calendar" className="mt-4">
-          <TaskCalendarView 
+        <TabsContent value="calendar" className="mt-0">
+          <TaskCalendarView
+            tasks={tasks}
             selectedDate={selectedDate}
             onSelectDate={(date) => date && setSelectedDate(date)}
-            tasks={tasks}
             onToggleTaskCompletion={handleToggleTaskCompletion}
             crews={crews}
+            onAddNewTask={handleOpenAddTaskDialog}
           />
         </TabsContent>
         
-        <TabsContent value="list" className="mt-4">
-          <TaskListView 
+        <TabsContent value="list" className="mt-0">
+          <TaskListView
             tasks={tasks}
             onToggleTaskCompletion={handleToggleTaskCompletion}
             crews={crews}
@@ -215,26 +375,35 @@ const ScheduleView = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Upload and Analyze Section at the bottom */}
-      <UploadAnalyzeSection 
-        selectedDate={selectedDate}
-        onApplyScheduleData={handleAddTask}
-      />
+      {/* Upload and Analyze Section */}
+      <div className="mt-8 border border-border rounded-lg p-6 bg-card">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/30">
+            <FileUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <h2 className="text-xl font-semibold">Upload & Analyze Schedule</h2>
+        </div>
+        
+        <UploadAnalyzeSection 
+          onApplyScheduleData={handleApplyScheduleData}
+          selectedDate={selectedDate}
+        />
+      </div>
 
-      {/* Team Event Dialog */}
+      {/* Team Event Dialog for dropped crews */}
       <TeamEventDialog 
         open={teamEventDialogOpen}
         onOpenChange={setTeamEventDialogOpen}
+        onCreateEvent={handleCreateTeamEvent}
         formData={formData}
         setFormData={setFormData}
-        selectedDate={selectedDate}
         assignmentType={assignmentType}
         setAssignmentType={setAssignmentType}
         locationType={locationType}
         setLocationType={setLocationType}
-        onCreateEvent={handleCreateTeamEvent}
-        employees={employees}
+        selectedDate={selectedDate}
         crews={crews}
+        employees={employees}
         clients={clients}
         clientLocations={clientLocations}
       />
