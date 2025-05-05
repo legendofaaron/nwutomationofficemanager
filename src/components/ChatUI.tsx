@@ -1,26 +1,21 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { X, Bot, Calendar, FileText, Receipt, ScanSearch, Info, Settings, SendHorizontal } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import { LlmSettings } from './LlmSettings';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTheme } from '@/context/ThemeContext';
-
-interface Message {
-  id: string;
-  type: 'user' | 'ai' | 'system';
-  content: string;
-}
+import { ChatHeader } from './chat/ChatHeader';
+import { ChatContainer } from './chat/ChatContainer';
+import { SetupWizard } from './chat/SetupWizard';
+import { Message } from './chat/MessageBubble';
 
 type SetupStep = 'welcome' | 'name' | 'company' | 'purpose' | 'complete' | null;
 
 const ChatUI = () => {
   const { aiAssistantOpen, setAiAssistantOpen, assistantConfig, setAssistantConfig } = useAppContext();
-  const [input, setInput] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isSetupMode, setIsSetupMode] = useState(false);
@@ -32,7 +27,7 @@ const ChatUI = () => {
     purpose: assistantConfig?.purpose || ''
   });
   const navigate = useNavigate();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark' || resolvedTheme === 'superdark';
   
@@ -72,15 +67,6 @@ You can:
 Your data remains secure on your local system. Need assistance? Just ask me anything!`
     }
   ]);
-
-  // Scroll to bottom whenever messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   // Check if setup is needed when assistant opens
   useEffect(() => {
@@ -226,14 +212,6 @@ How can I assist you today?`
     }]);
   };
 
-  const quickActions = [
-    { icon: FileText, label: 'Create Document', action: () => handleQuickAction('create document') },
-    { icon: Calendar, label: 'Create Schedule', action: () => handleQuickAction('create schedule') },
-    { icon: Receipt, label: 'Create Invoice', action: () => handleQuickAction('create invoice') },
-    { icon: ScanSearch, label: 'Analyze Receipt', action: () => handleQuickAction('analyze receipt') },
-    { icon: Info, label: 'How to use', action: () => handleQuickAction('explain how to use') }
-  ];
-
   const handleQuickAction = (action: string) => {
     if (isSetupMode) return;
     
@@ -277,13 +255,10 @@ Your data remains secure on your local system. How can I assist you today?`;
     }, 500);
   };
 
-  const handleSendMessage = async () => {
-    if (!input.trim()) return;
-    
+  const handleSendMessage = async (input: string) => {
     // If in setup mode, process as setup response
     if (isSetupMode) {
       handleSetupResponse(input);
-      setInput('');
       return;
     }
     
@@ -309,8 +284,6 @@ Your data remains secure on your local system. How can I assist you today?`;
         variant: 'destructive'
       });
     }
-    
-    setInput('');
   };
 
   const handleToggleChat = () => {
@@ -331,105 +304,28 @@ Your data remains secure on your local system. How can I assist you today?`;
 
   return (
     <div className={`fixed right-4 bottom-20 w-72 ${isDark ? 'bg-card/90' : 'bg-white/95'} backdrop-blur-sm rounded-xl shadow-lg ${isDark ? 'border-border/30' : 'border-gray-200/50'} border flex flex-col h-[450px] z-20 animate-in slide-in-from-bottom-5`}>
-      <div className={`flex items-center justify-between p-2 ${isDark ? 'border-border/30' : 'border-gray-200/50'} border-b rounded-t-xl`}>
-        <div className="flex items-center gap-1.5">
-          <Bot className="h-4 w-4 text-primary" />
-          <h3 className="font-medium text-sm">Office Manager</h3>
-          {assistantConfig?.companyName && (
-            <span className="text-xs text-muted-foreground">for {assistantConfig.companyName}</span>
-          )}
-        </div>
-        <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setShowSettings(!showSettings)}
-            className="h-6 w-6 rounded-full"
-          >
-            <Settings className="h-3.5 w-3.5" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setIsOpen(false)}
-            className="h-6 w-6 rounded-full"
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </div>
+      <ChatHeader 
+        assistantName={assistantConfig?.name || 'Office Manager'} 
+        companyName={assistantConfig?.companyName}
+        onSettingsClick={() => setShowSettings(!showSettings)}
+        onCloseClick={() => setIsOpen(false)}
+      />
       
       {showSettings ? (
         <LlmSettings />
+      ) : isSetupMode ? (
+        <SetupWizard 
+          messages={messages}
+          onSendResponse={handleSetupResponse}
+          messagesEndRef={messagesEndRef}
+        />
       ) : (
-        <>
-          {!isSetupMode && (
-            <div className={`grid grid-cols-2 gap-1 p-1.5 ${isDark ? 'border-border/30' : 'border-gray-200/50'} border-b`}>
-              {quickActions.map((action, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-start text-xs py-1 h-7"
-                  onClick={action.action}
-                >
-                  <action.icon className="mr-1 h-3 w-3" />
-                  {action.label}
-                </Button>
-              ))}
-            </div>
-          )}
-          
-          <ScrollArea className="flex-1 p-3">
-            <div className="space-y-2.5">
-              {messages.map(message => (
-                <div 
-                  key={message.id} 
-                  className={`flex ${
-                    message.type === 'user' 
-                      ? 'justify-end' 
-                      : message.type === 'system' 
-                        ? 'justify-center' 
-                        : 'justify-start'
-                  }`}
-                >
-                  <div 
-                    className={`${
-                      message.type === 'user' 
-                        ? 'bg-primary text-primary-foreground max-w-[80%] p-2 rounded-lg shadow-sm text-xs' 
-                        : message.type === 'system'
-                          ? `${isDark ? 'bg-secondary' : 'bg-gray-200'} ${isDark ? 'text-secondary-foreground' : 'text-gray-800'} px-2.5 py-0.5 rounded-full text-xs font-medium`
-                          : `${isDark ? 'bg-muted/60' : 'bg-gray-100/90'} ${isDark ? 'text-foreground' : 'text-gray-800'} max-w-[80%] p-2 rounded-lg shadow-sm text-xs`
-                    } whitespace-pre-wrap`}
-                  >
-                    {message.content}
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
-          
-          <div className={`p-2 ${isDark ? 'border-border/30' : 'border-gray-200/50'} border-t rounded-b-xl bg-card/40 shadow-inner`}>
-            <div className="flex gap-1.5 items-center">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={isSetupMode ? "Type response..." : "Type message..."}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                className="flex-1 h-7 text-xs rounded-full"
-              />
-              <Button 
-                onClick={handleSendMessage} 
-                size="icon" 
-                className={`${isDark ? 'bg-primary hover:bg-primary/90' : 'bg-primary hover:bg-primary/90'} text-primary-foreground rounded-full h-7 w-7 flex-shrink-0 shadow-md`}
-                aria-label="Send message"
-              >
-                <SendHorizontal className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        </>
+        <ChatContainer 
+          messages={messages}
+          onSendMessage={handleSendMessage}
+          onQuickAction={handleQuickAction}
+          isSetupMode={isSetupMode}
+        />
       )}
     </div>
   );
