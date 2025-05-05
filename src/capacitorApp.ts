@@ -1,7 +1,7 @@
 
 import { SplashScreen } from '@capacitor/splash-screen';
-import { StatusBar } from '@capacitor/status-bar';
-import { Haptics } from '@capacitor/haptics';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 
@@ -15,7 +15,7 @@ export const initializeCapacitorPlugins = async () => {
       await SplashScreen.hide();
       
       // Set status bar style
-      await StatusBar.setStyle({ style: 'dark' });
+      await StatusBar.setStyle({ style: Style.Dark });
       await StatusBar.setBackgroundColor({ color: '#000000' });
       
       // Initialize push notifications
@@ -36,9 +36,10 @@ export const initializeCapacitorPlugins = async () => {
       });
       
       // Initialize haptics feedback
-      Haptics.addListener('tap', () => {
-        Haptics.impact({ style: 'medium' });
-      });
+      Haptics.impact({ style: ImpactStyle.Medium });
+      
+      // Note: Haptics doesn't have an addListener method in current API
+      // We'll trigger haptic feedback in response to specific app actions instead
     }
   } catch (error) {
     console.error('Error initializing Capacitor plugins:', error);
