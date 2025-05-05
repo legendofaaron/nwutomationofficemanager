@@ -8,22 +8,19 @@ import { queryLlm } from '@/utils/llm';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from './Logo';
-
 interface Message {
   id: string;
   type: 'user' | 'ai' | 'system';
   content: string;
 }
-
 type SetupStep = 'welcome' | 'name' | 'company' | 'purpose' | 'complete' | null;
-
 const AiAssistant = () => {
-  const { 
-    aiAssistantOpen, 
-    setAiAssistantOpen, 
-    assistantConfig, 
-    setAssistantConfig, 
-    branding, 
+  const {
+    aiAssistantOpen,
+    setAiAssistantOpen,
+    assistantConfig,
+    setAssistantConfig,
+    branding,
     setBranding,
     setViewMode,
     setCurrentFile,
@@ -45,12 +42,10 @@ const AiAssistant = () => {
   });
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  const [messages, setMessages] = useState<Message[]>([
-    { 
-      id: '1', 
-      type: 'ai', 
-      content: `👋 Welcome to Office Manager
+  const [messages, setMessages] = useState<Message[]>([{
+    id: '1',
+    type: 'ai',
+    content: `👋 Welcome to Office Manager
 
 I'm your intelligent assistant designed to help you streamline office tasks efficiently. Here's what I can do for you:
 
@@ -80,16 +75,16 @@ You can:
 3. Ask questions about any feature
 
 Your data remains secure on your local system. Need assistance? Just ask me anything!`
-    }
-  ]);
+  }]);
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth'
+    });
   };
 
   // Check if setup is needed when assistant opens
@@ -101,36 +96,35 @@ Your data remains secure on your local system. Need assistance? Just ask me anyt
       }
     }
   }, [aiAssistantOpen, assistantConfig]);
-
   const startSetupProcess = () => {
     setIsSetupMode(true);
     setCurrentSetupStep('welcome');
-    
+
     // Add welcome setup message
-    setMessages([
-      {
-        id: Date.now().toString(), 
-        type: 'system', 
-        content: "🔧 Setup Mode"
-      },
-      {
-        id: (Date.now() + 1).toString(), 
-        type: 'ai', 
-        content: `I notice this is your first time using the assistant. Let's take a moment to personalize it for you. I'll guide you through a quick setup process.
+    setMessages([{
+      id: Date.now().toString(),
+      type: 'system',
+      content: "🔧 Setup Mode"
+    }, {
+      id: (Date.now() + 1).toString(),
+      type: 'ai',
+      content: `I notice this is your first time using the assistant. Let's take a moment to personalize it for you. I'll guide you through a quick setup process.
 
 Would you like to:
 1. Start the guided setup now
 2. Go to the setup page for more detailed configuration
 3. Skip setup for now`
-      }
-    ]);
+    }]);
   };
-
   const handleSetupResponse = (response: string) => {
     // Add user response to messages
     const userMessageId = Date.now().toString();
-    setMessages(prev => [...prev, { id: userMessageId, type: 'user', content: response }]);
-    
+    setMessages(prev => [...prev, {
+      id: userMessageId,
+      type: 'user',
+      content: response
+    }]);
+
     // Process response based on current setup step
     switch (currentSetupStep) {
       case 'welcome':
@@ -144,21 +138,25 @@ Would you like to:
           // Skip setup
           setIsSetupMode(false);
           setCurrentSetupStep(null);
-          setMessages(prev => [...prev, { 
-            id: (Date.now() + 1).toString(), 
-            type: 'ai', 
-            content: "No problem! You can always configure me later through the setup page. How can I help you today?" 
+          setMessages(prev => [...prev, {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: "No problem! You can always configure me later through the setup page. How can I help you today?"
           }]);
         }
         break;
-        
       case 'name':
-        setSetupData(prev => ({ ...prev, name: response }));
+        setSetupData(prev => ({
+          ...prev,
+          name: response
+        }));
         processNextSetupStep('company');
         break;
-        
       case 'company':
-        setSetupData(prev => ({ ...prev, companyName: response }));
+        setSetupData(prev => ({
+          ...prev,
+          companyName: response
+        }));
         // Fix: update the branding with proper type checking
         setBranding({
           ...branding,
@@ -166,12 +164,13 @@ Would you like to:
         });
         processNextSetupStep('purpose');
         break;
-        
       case 'purpose':
-        setSetupData(prev => ({ ...prev, purpose: response }));
+        setSetupData(prev => ({
+          ...prev,
+          purpose: response
+        }));
         processNextSetupStep('complete');
         break;
-        
       case 'complete':
         if (response.toLowerCase().includes('yes')) {
           // Navigate to full setup
@@ -184,10 +183,8 @@ Would you like to:
         break;
     }
   };
-
   const processNextSetupStep = (nextStep: SetupStep) => {
     setCurrentSetupStep(nextStep);
-    
     let message = '';
     switch (nextStep) {
       case 'name':
@@ -209,14 +206,12 @@ Would you like to:
 Would you like to go to the full setup page for more detailed configuration, including logo selection?`;
         break;
     }
-    
-    setMessages(prev => [...prev, { 
-      id: (Date.now() + 1).toString(), 
-      type: 'ai', 
-      content: message 
+    setMessages(prev => [...prev, {
+      id: (Date.now() + 1).toString(),
+      type: 'ai',
+      content: message
     }]);
   };
-
   const completeSetup = () => {
     // Save to context
     if (setAssistantConfig) {
@@ -226,7 +221,7 @@ Would you like to go to the full setup page for more detailed configuration, inc
         purpose: setupData.purpose
       });
     }
-    
+
     // Update branding if company name was changed
     if (setupData.companyName && setupData.companyName !== branding.companyName) {
       setBranding({
@@ -234,51 +229,62 @@ Would you like to go to the full setup page for more detailed configuration, inc
         companyName: setupData.companyName
       });
     }
-    
+
     // Exit setup mode
     setIsSetupMode(false);
     setCurrentSetupStep(null);
-    
+
     // Add completion message
-    setMessages(prev => [...prev, { 
-      id: (Date.now() + 1).toString(), 
-      type: 'ai', 
+    setMessages(prev => [...prev, {
+      id: (Date.now() + 1).toString(),
+      type: 'ai',
       content: `Perfect! Your assistant is now set up as "${setupData.name}" for ${setupData.companyName}. I'll focus on helping you with ${setupData.purpose}.
 
 You can always update your branding settings including company logo by clicking the Settings button in the assistant header.
 
-How can I assist you today?` 
+How can I assist you today?`
     }]);
   };
-
-  const quickActions = [
-    { icon: FileText, label: 'Create Document', action: () => handleQuickAction('create document') },
-    { icon: Calendar, label: 'Create Schedule', action: () => handleQuickAction('create schedule') },
-    { icon: Receipt, label: 'Create Invoice', action: () => handleQuickAction('create invoice') },
-    { icon: ScanSearch, label: 'Analyze Receipt', action: () => handleQuickAction('analyze receipt') },
-    { icon: Info, label: 'How to use', action: () => handleQuickAction('explain how to use') }
-  ];
-
+  const quickActions = [{
+    icon: FileText,
+    label: 'Create Document',
+    action: () => handleQuickAction('create document')
+  }, {
+    icon: Calendar,
+    label: 'Create Schedule',
+    action: () => handleQuickAction('create schedule')
+  }, {
+    icon: Receipt,
+    label: 'Create Invoice',
+    action: () => handleQuickAction('create invoice')
+  }, {
+    icon: ScanSearch,
+    label: 'Analyze Receipt',
+    action: () => handleQuickAction('analyze receipt')
+  }, {
+    icon: Info,
+    label: 'How to use',
+    action: () => handleQuickAction('explain how to use')
+  }];
   const handleQuickAction = (action: string) => {
     if (isSetupMode) return;
-    
     const userMessageId = Date.now().toString();
-    setMessages(prev => [...prev, { id: userMessageId, type: 'user', content: action }]);
-    
+    setMessages(prev => [...prev, {
+      id: userMessageId,
+      type: 'user',
+      content: action
+    }]);
     let response = '';
-    
     switch (action) {
       case 'create document':
         response = "I'd be happy to help you create a new document. What type of document would you like to create?";
-        
+
         // Add options for document types
         setTimeout(() => {
-          setMessages(prev => [
-            ...prev, 
-            { 
-              id: (Date.now() + 2).toString(), 
-              type: 'ai', 
-              content: `Here are some common document types:
+          setMessages(prev => [...prev, {
+            id: (Date.now() + 2).toString(),
+            type: 'ai',
+            content: `Here are some common document types:
 1. Project Proposal
 2. Meeting Minutes
 3. Business Report
@@ -286,9 +292,8 @@ How can I assist you today?`
 5. Custom Document
 
 Which would you like to create? Or describe your custom document needs.`
-            }
-          ]);
-          
+          }]);
+
           // Set up listener for next user input
           setActiveAction({
             type: 'document',
@@ -296,14 +301,13 @@ Which would you like to create? Or describe your custom document needs.`
           });
         }, 800);
         break;
-        
       case 'create schedule':
         response = "Let's organize a schedule for you. What type of schedule would you like to create?";
-        
+
         // Switch to schedule view after response
         setTimeout(() => {
           setViewMode('document');
-          
+
           // Create a new schedule document
           const newSchedule = {
             id: Date.now().toString(),
@@ -311,7 +315,7 @@ Which would you like to create? Or describe your custom document needs.`
             type: 'document' as const,
             content: '# Schedule\n\n## Daily Tasks\n\n- [ ] Task 1\n\n- [ ] Task 2\n\n- [ ] Task 3\n\n## Weekly Goals\n\n- Goal 1\n- Goal 2'
           };
-          
+
           // Find Documents folder or create it
           let documentsFolder = files.find(f => f.type === 'folder' && f.name === 'Documents');
           if (!documentsFolder) {
@@ -323,7 +327,7 @@ Which would you like to create? Or describe your custom document needs.`
             };
             setFiles([...files, documentsFolder]);
           }
-          
+
           // Add schedule to documents folder
           const updatedFiles = files.map(file => {
             if (file.id === documentsFolder?.id) {
@@ -334,24 +338,18 @@ Which would you like to create? Or describe your custom document needs.`
             }
             return file;
           });
-          
           setFiles(updatedFiles);
           setCurrentFile(newSchedule);
-          
-          setMessages(prev => [
-            ...prev, 
-            { 
-              id: (Date.now() + 2).toString(), 
-              type: 'ai', 
-              content: `I've created a new schedule document for you. You can now edit it in the document viewer.
+          setMessages(prev => [...prev, {
+            id: (Date.now() + 2).toString(),
+            type: 'ai',
+            content: `I've created a new schedule document for you. You can now edit it in the document viewer.
 
 Would you like me to help customize this schedule further? For example:
 1. Add specific time blocks
 2. Set recurring meetings
 3. Add deadline reminders`
-            }
-          ]);
-          
+          }]);
           setActiveAction({
             type: 'schedule',
             step: 'customize',
@@ -359,20 +357,16 @@ Would you like me to help customize this schedule further? For example:
           });
         }, 800);
         break;
-        
       case 'create invoice':
         response = "I can help you generate a professional invoice. Let's get started with the basic details.";
-        
+
         // Navigate to invoice view
         setTimeout(() => {
           setViewMode('office');
-          
-          setMessages(prev => [
-            ...prev, 
-            { 
-              id: (Date.now() + 2).toString(), 
-              type: 'ai', 
-              content: `I've opened the Office Manager where you can create and manage invoices.
+          setMessages(prev => [...prev, {
+            id: (Date.now() + 2).toString(),
+            type: 'ai',
+            content: `I've opened the Office Manager where you can create and manage invoices.
 
 Please provide the following details to create your invoice:
 1. Client Name
@@ -381,29 +375,23 @@ Please provide the following details to create your invoice:
 4. Service Description
 
 Or you can simply fill out the invoice form directly in the Office Manager panel.`
-            }
-          ]);
-          
+          }]);
           setActiveAction({
             type: 'invoice',
             step: 'create'
           });
         }, 800);
         break;
-        
       case 'analyze receipt':
         response = "I can assist with receipt analysis. Please upload or share the receipt details so I can process the information.";
-        
+
         // Switch to receipt analyzer
         setTimeout(() => {
           setViewMode('office');
-          
-          setMessages(prev => [
-            ...prev, 
-            { 
-              id: (Date.now() + 2).toString(), 
-              type: 'ai', 
-              content: `I've opened the Office Manager where you can upload and analyze receipts.
+          setMessages(prev => [...prev, {
+            id: (Date.now() + 2).toString(),
+            type: 'ai',
+            content: `I've opened the Office Manager where you can upload and analyze receipts.
 
 You can:
 1. Upload a receipt image or PDF
@@ -411,16 +399,13 @@ You can:
 3. Use the receipt scanning tool
 
 The system will extract key information such as vendor, date, amount, and items purchased.`
-            }
-          ]);
-          
+          }]);
           setActiveAction({
             type: 'receipt',
             step: 'analyze'
           });
         }, 800);
         break;
-        
       case 'explain how to use':
         response = `Here's how to make the most of ${assistantConfig?.name || 'Office Manager'}:
 
@@ -435,12 +420,12 @@ Your data remains secure on your local system. How can I assist you today?`;
       default:
         response = "I'll help you with that request.";
     }
-    
     setTimeout(() => {
-      setMessages(prev => [
-        ...prev, 
-        { id: (Date.now() + 1).toString(), type: 'ai', content: response }
-      ]);
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: response
+      }]);
     }, 500);
   };
 
@@ -462,21 +447,22 @@ Your data remains secure on your local system. How can I assist you today?`;
       // Check if the message contains something like "title should be" or "change title to"
       const titleRegex = /(?:title|name|call it|rename to|change to|make it)(?:\s+(?:the|a|an|this))?(?:\s+document)?\s+(?:to|as|be)?\s+["']?([^"'.!?]+)["']?/i;
       const match = userInput.match(titleRegex);
-      
       if (match && match[1]) {
         // Extract the requested title
         const newTitle = match[1].trim();
-        
         if (newTitle) {
           // Update document content only if it starts with a markdown header
           if (currentFile.content && currentFile.content.startsWith('# ')) {
             // Replace the first header line with the new title
             const updatedContent = currentFile.content.replace(/^# .*$/m, `# ${newTitle}`);
-            
+
             // Update the document content
-            const updatedFile = { ...currentFile, content: updatedContent };
+            const updatedFile = {
+              ...currentFile,
+              content: updatedContent
+            };
             setCurrentFile(updatedFile);
-            
+
             // Update in files tree
             const updateFiles = (filesArray: any[]): any[] => {
               return filesArray.map(file => {
@@ -484,24 +470,22 @@ Your data remains secure on your local system. How can I assist you today?`;
                   return updatedFile;
                 }
                 if (file.children) {
-                  return { ...file, children: updateFiles(file.children) };
+                  return {
+                    ...file,
+                    children: updateFiles(file.children)
+                  };
                 }
                 return file;
               });
             };
-            
             setFiles(updateFiles(files));
-            
+
             // Add confirmation message
-            setMessages(prev => [
-              ...prev, 
-              { 
-                id: (Date.now() + 2).toString(), 
-                type: 'ai', 
-                content: `I've updated your document title to "${newTitle}".`
-              }
-            ]);
-            
+            setMessages(prev => [...prev, {
+              id: (Date.now() + 2).toString(),
+              type: 'ai',
+              content: `I've updated your document title to "${newTitle}".`
+            }]);
             return true;
           }
         }
@@ -515,16 +499,14 @@ Your data remains secure on your local system. How can I assist you today?`;
     // First check if it's a document title update request
     const titleUpdated = updateDocumentTitle(userInput);
     if (titleUpdated) return true;
-    
     if (!activeAction.type) return false;
-    
     switch (activeAction.type) {
       case 'document':
         if (activeAction.step === 'select-type') {
           // Create document based on selected type
           const documentType = getDocumentTypeFromInput(userInput);
           const content = generateDocumentTemplate(documentType);
-          
+
           // Create new document
           const newDocument = {
             id: Date.now().toString(),
@@ -532,7 +514,7 @@ Your data remains secure on your local system. How can I assist you today?`;
             type: 'document' as const,
             content
           };
-          
+
           // Find Documents folder or create it
           let documentsFolder = files.find(f => f.type === 'folder' && f.name === 'Documents');
           if (!documentsFolder) {
@@ -544,7 +526,7 @@ Your data remains secure on your local system. How can I assist you today?`;
             };
             setFiles([...files, documentsFolder]);
           }
-          
+
           // Add document to documents folder
           const updatedFiles = files.map(file => {
             if (file.id === documentsFolder?.id) {
@@ -555,43 +537,37 @@ Your data remains secure on your local system. How can I assist you today?`;
             }
             return file;
           });
-          
           setFiles(updatedFiles);
           setCurrentFile(newDocument);
           setViewMode('document');
-          
+
           // Respond to user
-          setMessages(prev => [
-            ...prev, 
-            { 
-              id: (Date.now() + 1).toString(), 
-              type: 'ai', 
-              content: `I've created a new ${documentType} for you and opened it in the document viewer. You can now edit it.
+          setMessages(prev => [...prev, {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: `I've created a new ${documentType} for you and opened it in the document viewer. You can now edit it.
 
 Would you like me to help you fill in any specific sections of this document?`
-            }
-          ]);
-          
+          }]);
+
           // Update action state
           setActiveAction({
             type: 'document',
             step: 'editing',
             documentId: newDocument.id
           });
-          
           return true;
         }
         break;
-        
       case 'schedule':
         if (activeAction.step === 'customize' && activeAction.documentId) {
           // Update schedule based on customization request
           const updatedContent = customizeSchedule(userInput, files, activeAction.documentId);
-          
+
           // Update file content
           const updatedFiles = updateFileContent(files, activeAction.documentId, updatedContent);
           setFiles(updatedFiles);
-          
+
           // Find the current file and update it if it's the active one
           const updatedFile = findFileById(files, activeAction.documentId);
           if (updatedFile) {
@@ -600,53 +576,42 @@ Would you like me to help you fill in any specific sections of this document?`
               content: updatedContent
             });
           }
-          
+
           // Respond to user
-          setMessages(prev => [
-            ...prev, 
-            { 
-              id: (Date.now() + 1).toString(), 
-              type: 'ai', 
-              content: `I've updated your schedule with the requested customizations. You can continue editing it in the document viewer.
+          setMessages(prev => [...prev, {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: `I've updated your schedule with the requested customizations. You can continue editing it in the document viewer.
 
 Is there anything else you'd like to add to your schedule?`
-            }
-          ]);
-          
+          }]);
           return true;
         }
         break;
-        
       case 'invoice':
       case 'receipt':
         // These are handled in the Office Manager views
-        setMessages(prev => [
-          ...prev, 
-          { 
-            id: (Date.now() + 1).toString(), 
-            type: 'ai', 
-            content: `I've opened the appropriate tool in the Office Manager panel. You can now interact with it directly.
+        setMessages(prev => [...prev, {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: `I've opened the appropriate tool in the Office Manager panel. You can now interact with it directly.
 
 Let me know if you need help with any specific part of the ${activeAction.type === 'invoice' ? 'invoice creation' : 'receipt analysis'} process.`
-          }
-        ]);
-        
+        }]);
+
         // Clear active action after redirecting
         setActiveAction({
           type: null,
           step: ''
         });
-        
         return true;
     }
-    
     return false;
   };
 
   // Helper function to determine document type from user input
   const getDocumentTypeFromInput = (input: string): string => {
     input = input.toLowerCase();
-    
     if (input.includes('1') || input.includes('proposal') || input.includes('project proposal')) {
       return 'Project Proposal';
     } else if (input.includes('2') || input.includes('minutes') || input.includes('meeting minutes')) {
@@ -662,7 +627,7 @@ Let me know if you need help with any specific part of the ${activeAction.type =
 
   // Generate document template based on type
   const generateDocumentTemplate = (type: string): string => {
-    switch(type) {
+    switch (type) {
       case 'Project Proposal':
         return `# Project Proposal: [Project Name]
 
@@ -728,7 +693,10 @@ Let me know if you need help with any specific part of the ${activeAction.type =
 ## Meeting Details
 
 - **Date:** ${new Date().toLocaleDateString()}
-- **Time:** ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+- **Time:** ${new Date().toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit'
+        })}
 - **Location:** 
 - **Meeting Type:** 
 
@@ -884,9 +852,8 @@ For questions or further information, please contact [Name] at [Contact Informat
   const customizeSchedule = (input: string, files: any[], documentId: string): string => {
     const file = findFileById(files, documentId);
     let content = file?.content || '';
-    
     const lowerInput = input.toLowerCase();
-    
+
     // Add time blocks if requested
     if (lowerInput.includes('time') || lowerInput.includes('block') || lowerInput.includes('1')) {
       content += `
@@ -904,7 +871,7 @@ For questions or further information, please contact [Name] at [Contact Informat
 - 16:00 - 17:00: [Task]
 `;
     }
-    
+
     // Add recurring meetings if requested
     if (lowerInput.includes('meeting') || lowerInput.includes('recurring') || lowerInput.includes('2')) {
       content += `
@@ -916,7 +883,7 @@ For questions or further information, please contact [Name] at [Contact Informat
 - Friday 16:00 - Week Review
 `;
     }
-    
+
     // Add deadline reminders if requested
     if (lowerInput.includes('deadline') || lowerInput.includes('reminder') || lowerInput.includes('3')) {
       content += `
@@ -928,7 +895,6 @@ For questions or further information, please contact [Name] at [Contact Informat
 - [ ] Review quarterly results by ${new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString()}
 `;
     }
-    
     return content;
   };
 
@@ -950,43 +916,46 @@ For questions or further information, please contact [Name] at [Contact Informat
   const updateFileContent = (files: any[], id: string, content: string): any[] => {
     return files.map(file => {
       if (file.id === id) {
-        return { ...file, content };
+        return {
+          ...file,
+          content
+        };
       }
       if (file.children) {
-        return { ...file, children: updateFileContent(file.children, id, content) };
+        return {
+          ...file,
+          children: updateFileContent(file.children, id, content)
+        };
       }
       return file;
     });
   };
-
   const handleSendMessage = async () => {
     if (!input.trim()) return;
-    
+
     // If in setup mode, process as setup response
     if (isSetupMode) {
       handleSetupResponse(input);
       setInput('');
       return;
     }
-    
     const userMessageId = Date.now().toString();
-    setMessages([...messages, { id: userMessageId, type: 'user', content: input }]);
-    
+    setMessages([...messages, {
+      id: userMessageId,
+      type: 'user',
+      content: input
+    }]);
     try {
       // First check if this is part of an active action flow or a document title request
       const wasProcessed = processActionInput(input);
-      
       if (!wasProcessed) {
         // Simple AI response simulation for immediate feedback
         setTimeout(() => {
-          setMessages(current => [
-            ...current,
-            {
-              id: (Date.now() + 1).toString(),
-              type: 'ai',
-              content: `I'll help you with "${input}". How would you like to proceed?`
-            }
-          ]);
+          setMessages(current => [...current, {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: `I'll help you with "${input}". How would you like to proceed?`
+          }]);
         }, 800);
       }
     } catch (error) {
@@ -996,120 +965,56 @@ For questions or further information, please contact [Name] at [Contact Informat
         variant: 'destructive'
       });
     }
-    
     setInput('');
   };
-
   const handleEditBranding = () => {
     navigate('/setup-assistant');
     setAiAssistantOpen(false);
   };
-
   if (!aiAssistantOpen) return null;
-
-  return (
-    <div className="fixed right-4 bottom-4 w-96 bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col h-[600px] z-20">
+  return <div className="fixed right-4 bottom-4 w-96 bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col h-[600px] z-20">
       <div className="flex items-center justify-between p-3 border-b">
         <div className="flex items-center gap-2">
           <Logo small />
-          {assistantConfig?.name && (
-            <span className="text-sm font-medium">{assistantConfig.name}</span>
-          )}
+          {assistantConfig?.name && <span className="text-sm font-medium">{assistantConfig.name}</span>}
         </div>
         <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleEditBranding}
-            className="h-6 w-6"
-            title="Edit branding and settings"
-          >
+          <Button variant="ghost" size="icon" onClick={handleEditBranding} className="h-6 w-6" title="Edit branding and settings">
             <Edit className="h-3.5 w-3.5" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setShowSettings(!showSettings)}
-            className="h-6 w-6"
-            title="AI settings"
-          >
+          <Button variant="ghost" size="icon" onClick={() => setShowSettings(!showSettings)} className="h-6 w-6" title="AI settings">
             <Settings className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setAiAssistantOpen(false)}
-            className="h-6 w-6"
-          >
+          <Button variant="ghost" size="icon" onClick={() => setAiAssistantOpen(false)} className="h-6 w-6">
             <X className="h-4 w-4" />
           </Button>
         </div>
       </div>
       
-      {showSettings ? (
-        <LlmSettings />
-      ) : (
-        <>
-          {!isSetupMode && (
-            <div className="grid grid-cols-2 gap-2 p-3 border-b">
-              {quickActions.map((action, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-start"
-                  onClick={action.action}
-                >
+      {showSettings ? <LlmSettings /> : <>
+          {!isSetupMode && <div className="grid grid-cols-2 gap-2 p-3 border-b">
+              {quickActions.map((action, index) => <Button key={index} variant="outline" size="sm" className="w-full justify-start" onClick={action.action}>
                   <action.icon className="mr-2 h-4 w-4" />
                   {action.label}
-                </Button>
-              ))}
-            </div>
-          )}
+                </Button>)}
+            </div>}
           
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map(message => (
-              <div 
-                key={message.id} 
-                className={`flex ${
-                  message.type === 'user' 
-                    ? 'justify-end' 
-                    : message.type === 'system' 
-                      ? 'justify-center' 
-                      : 'justify-start'
-                }`}
-              >
-                <div 
-                  className={`${
-                    message.type === 'user' 
-                      ? 'bg-blue-600 text-white max-w-[80%] p-3 rounded-lg' 
-                      : message.type === 'system'
-                        ? 'bg-gray-200 text-gray-800 px-4 py-1 rounded-full text-xs font-medium'
-                        : 'bg-gray-100 text-gray-800 max-w-[80%] p-3 rounded-lg'
-                  } whitespace-pre-wrap`}
-                >
+            {messages.map(message => <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : message.type === 'system' ? 'justify-center' : 'justify-start'}`}>
+                <div className={`${message.type === 'user' ? 'bg-blue-600 text-white max-w-[80%] p-3 rounded-lg' : message.type === 'system' ? 'bg-gray-200 text-gray-800 px-4 py-1 rounded-full text-xs font-medium' : 'bg-gray-100 text-gray-800 max-w-[80%] p-3 rounded-lg'} whitespace-pre-wrap`}>
                   {message.content}
                 </div>
-              </div>
-            ))}
+              </div>)}
             <div ref={messagesEndRef} />
           </div>
           
-          <div className="p-3 border-t">
+          <div className="p-3 border-t mx-0">
             <div className="flex gap-2">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={isSetupMode ? "Type your response..." : "Type your message..."}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-              />
-              <Button onClick={handleSendMessage}>Send</Button>
+              <Input value={input} onChange={e => setInput(e.target.value)} placeholder={isSetupMode ? "Type your response..." : "Type your message..."} onKeyDown={e => e.key === 'Enter' && handleSendMessage()} />
+              <Button onClick={handleSendMessage} className="my-0 mx-[52px] px-[10px] py-0">Send</Button>
             </div>
           </div>
-        </>
-      )}
-    </div>
-  );
+        </>}
+    </div>;
 };
-
 export default AiAssistant;
