@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { type DayProps } from 'react-day-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { toast } from 'sonner';
 
 interface Todo {
   id: string;
@@ -51,6 +52,7 @@ const TodoCalendarBubble = () => {
     
     setTodos([...todos, newTodo]);
     setNewTodoText('');
+    toast?.success("Task added successfully");
   };
 
   const toggleTodoCompletion = (id: string) => {
@@ -63,11 +65,14 @@ const TodoCalendarBubble = () => {
 
   const deleteTodo = (id: string) => {
     setTodos(todos.filter(todo => todo.id !== id));
+    toast?.success("Task deleted successfully");
   };
 
-  // Drag and drop functionality
-  const handleDragStart = (todo: Todo) => {
+  // Updated drag and drop functionality
+  const handleDragStart = (todo: Todo, e: React.DragEvent) => {
     setDraggedTodo(todo);
+    e.dataTransfer.setData('text/plain', todo.id);
+    e.dataTransfer.effectAllowed = 'move';
   };
 
   const handleDragEnd = () => {
@@ -77,21 +82,10 @@ const TodoCalendarBubble = () => {
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      
-      // If there's a todo being dragged, update its date
-      if (draggedTodo) {
-        const updatedTodos = todos.map(todo => 
-          todo.id === draggedTodo.id 
-            ? { ...todo, date } 
-            : todo
-        );
-        setTodos(updatedTodos);
-        setDraggedTodo(null);
-      }
     }
   };
 
-  // Custom day render to show task indicators
+  // Custom day render to handle drops
   const customDayRender = (day: DayProps) => {
     const date = day.date;
     const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
@@ -99,7 +93,32 @@ const TodoCalendarBubble = () => {
     const dateValue = date.getDate();
     
     return (
-      <div className="relative w-full h-full flex items-center justify-center">
+      <div 
+        className="relative w-full h-full flex items-center justify-center"
+        onDragOver={(e) => {
+          // Allow drop by preventing the default behavior
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Handle the drop - update the todo's date
+          if (draggedTodo) {
+            const updatedTodos = todos.map(todo => 
+              todo.id === draggedTodo.id 
+                ? { ...todo, date } 
+                : todo
+            );
+            setTodos(updatedTodos);
+            // Update the selected date to make the moved task visible
+            setSelectedDate(date);
+            toast?.success(`Task moved to ${format(date, 'MMM d, yyyy')}`);
+            setDraggedTodo(null);
+          }
+        }}
+      >
         <div className={cn(
           "flex flex-col items-center justify-center",
           isSelected && "font-bold"
@@ -163,7 +182,7 @@ const TodoCalendarBubble = () => {
                 mode="single"
                 selected={selectedDate}
                 onSelect={handleDateChange}
-                className="rounded-md border bg-card shadow-sm"
+                className="rounded-md border bg-card shadow-sm pointer-events-auto"
                 components={{
                   Day: customDayRender
                 }}
@@ -196,8 +215,8 @@ const TodoCalendarBubble = () => {
                       <div 
                         key={todo.id} 
                         className="flex items-center justify-between space-x-2 text-sm bg-background rounded-sm p-1"
-                        draggable
-                        onDragStart={() => handleDragStart(todo)}
+                        draggable={true}
+                        onDragStart={(e) => handleDragStart(todo, e)}
                         onDragEnd={handleDragEnd}
                         style={{ cursor: 'grab' }}
                       >
