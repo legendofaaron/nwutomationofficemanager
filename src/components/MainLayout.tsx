@@ -129,7 +129,12 @@ const MainLayout = () => {
                 onMouseDown={handleDragStart}
               >
                 <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
-                  <Logo small onClick={() => setViewMode('welcome')} />
+                  {/* Remove Logo from the sidebar trigger to avoid duplicate logos */}
+                  <div className="relative">
+                    <div className={`rounded-full border-2 border-app-blue ${small ? 'p-0.5' : 'p-1'}`}>
+                      <Hexagon className="h-6 w-6 text-app-blue" />
+                    </div>
+                  </div>
                 </div>
               </SidebarTrigger>
             </div>
