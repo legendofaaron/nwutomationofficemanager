@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -10,6 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { type DayProps } from 'react-day-picker';
+import { toast } from 'sonner';
 
 interface Todo {
   id: string;
@@ -23,6 +25,7 @@ const TodoCalendar = () => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(true);
   const [newTodoText, setNewTodoText] = useState('');
   const [draggedTodo, setDraggedTodo] = useState<Todo | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [todos, setTodos] = useState<Todo[]>([
     { id: '1', text: 'Team meeting', completed: false, date: new Date() },
     { id: '2', text: 'Review project proposal', completed: true, date: new Date() },
@@ -50,6 +53,7 @@ const TodoCalendar = () => {
     
     setTodos([...todos, newTodo]);
     setNewTodoText('');
+    toast?.success("Task added successfully");
   };
 
   const toggleTodoCompletion = (id: string) => {
@@ -62,15 +66,32 @@ const TodoCalendar = () => {
 
   const deleteTodo = (id: string) => {
     setTodos(todos.filter(todo => todo.id !== id));
+    toast?.success("Task removed");
   };
 
-  // Drag and drop functionality
-  const handleDragStart = (todo: Todo) => {
+  // Enhanced drag and drop functionality
+  const handleDragStart = (todo: Todo, e: React.DragEvent) => {
     setDraggedTodo(todo);
+    setIsDragging(true);
+    
+    // Set drag effect and image
+    e.dataTransfer.effectAllowed = "move";
+    
+    // Create a custom drag preview element (optional)
+    const dragPreview = document.createElement('div');
+    dragPreview.innerHTML = `<div class="bg-primary text-white px-2 py-1 rounded text-xs">${todo.text}</div>`;
+    dragPreview.className = "fixed top-0 left-0 z-50 pointer-events-none";
+    document.body.appendChild(dragPreview);
+    
+    // Hide the preview immediately (it's used just for initialization)
+    setTimeout(() => {
+      document.body.removeChild(dragPreview);
+    }, 0);
   };
 
   const handleDragEnd = () => {
     setDraggedTodo(null);
+    setIsDragging(false);
   };
 
   const handleDateChange = (date: Date | undefined) => {
@@ -86,11 +107,12 @@ const TodoCalendar = () => {
         );
         setTodos(updatedTodos);
         setDraggedTodo(null);
+        toast?.success(`Task moved to ${format(date, 'MMM d, yyyy')}`);
       }
     }
   };
 
-  // Custom day render to show task indicators
+  // Custom day render to show task indicators and handle drops
   const customDayRender = (day: DayProps) => {
     const date = day.date;
     // Check if the current day is selected by comparing dates
@@ -99,7 +121,33 @@ const TodoCalendar = () => {
     const dateValue = date.getDate();
     
     return (
-      <div className="relative w-full h-full flex items-center justify-center">
+      <div 
+        className={cn(
+          "relative w-full h-full flex items-center justify-center",
+          isDragging && "cursor-copy drop-shadow-sm",
+          "hover:bg-accent/10 transition-colors cursor-pointer"
+        )}
+        onClick={() => setSelectedDate(date)}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (draggedTodo) {
+            const updatedTodos = todos.map(todo => 
+              todo.id === draggedTodo.id 
+                ? { ...todo, date } 
+                : todo
+            );
+            setTodos(updatedTodos);
+            setDraggedTodo(null);
+            setIsDragging(false);
+            setSelectedDate(date);
+            toast?.success(`Task moved to ${format(date, 'MMM d, yyyy')}`);
+          }
+        }}
+      >
         <div className={cn(
           "flex flex-col items-center justify-center",
           isSelected && "font-bold"
@@ -180,7 +228,7 @@ const TodoCalendar = () => {
                         key={todo.id} 
                         className="flex items-center justify-between space-x-2 text-sm bg-background rounded-sm p-1"
                         draggable
-                        onDragStart={() => handleDragStart(todo)}
+                        onDragStart={(e) => handleDragStart(todo, e)}
                         onDragEnd={handleDragEnd}
                         style={{ cursor: 'grab' }}
                       >
