@@ -8,12 +8,13 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, User, ArrowRight, AlertCircle, Shield } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, AlertCircle, Shield, Presentation } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/Logo';
 import { useAppContext } from '@/context/AppContext';
 import { localAuth } from '@/services/localAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
   username: z.string().min(3, { message: 'Username must be at least 3 characters' }),
@@ -111,6 +112,15 @@ const Login = () => {
     }
   };
 
+  // Function to handle demo login
+  const handleDemoLogin = () => {
+    toast({
+      title: "Demo Mode Active",
+      description: "You are browsing in demo mode. Data will not be saved.",
+    });
+    navigate('/dashboard');
+  };
+
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-[#080a0c] dark:to-[#111418]">
       <div className="w-full max-w-md">
@@ -198,6 +208,22 @@ const Login = () => {
                 </Button>
               </form>
             </Form>
+            
+            <div className="mt-6">
+              <Separator className="my-4">
+                <span className="px-2 text-xs text-gray-500">OR</span>
+              </Separator>
+              
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full" 
+                onClick={handleDemoLogin}
+              >
+                <Presentation className="mr-2 h-4 w-4" />
+                Try Demo Preview
+              </Button>
+            </div>
           </CardContent>
           <CardFooter className="flex justify-center border-t p-4">
             <p className="text-sm text-gray-600 dark:text-gray-400">

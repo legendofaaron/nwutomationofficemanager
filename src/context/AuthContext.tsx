@@ -7,8 +7,10 @@ interface AuthContextType {
   session: LocalSession | null;
   user: LocalUser | null;
   isLoading: boolean;
+  isDemoMode: boolean;
   signOut: () => Promise<void>;
   refreshUser: () => void;
+  setDemoMode: (isDemoMode: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<LocalUser | null>(null);
   const [session, setSession] = useState<LocalSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const { toast } = useToast();
 
   // Function to refresh user data
@@ -66,6 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Reset demo mode
+      setIsDemoMode(false);
       await localAuth.signOut();
     } catch (error) {
       console.error("Error signing out:", error);
@@ -77,9 +82,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Set demo mode function
+  const setDemoMode = (value: boolean) => {
+    setIsDemoMode(value);
+  };
+
   // Provide the authentication context to the app
   return (
-    <AuthContext.Provider value={{ session, user, isLoading, signOut, refreshUser }}>
+    <AuthContext.Provider value={{ 
+      session, 
+      user, 
+      isLoading, 
+      isDemoMode,
+      signOut, 
+      refreshUser,
+      setDemoMode 
+    }}>
       {children}
     </AuthContext.Provider>
   );

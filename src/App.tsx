@@ -14,23 +14,28 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Protected route component with enhanced security
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session, isLoading } = useAuth();
+  const { session, isLoading, isDemoMode, setDemoMode } = useAuth();
   const location = useLocation();
   
   if (isLoading) {
     return <LoadingScreen />;
   }
   
-  return session ? (
-    <>{children}</>
-  ) : (
-    <Navigate to="/login" state={{ from: location.pathname }} replace />
-  );
+  // Allow access if user is authenticated or in demo mode
+  if (session || isDemoMode) {
+    // If coming from login and no session, we're in demo mode
+    if (!session && location.pathname === '/dashboard' && !isDemoMode) {
+      setDemoMode(true);
+    }
+    return <>{children}</>;
+  }
+  
+  return <Navigate to="/login" state={{ from: location.pathname }} replace />;
 };
 
 // Public route that redirects authenticated users
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session, isLoading } = useAuth();
+  const { session, isLoading, isDemoMode } = useAuth();
   const location = useLocation();
   const from = location.state?.from || '/dashboard';
   
@@ -38,7 +43,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     return <LoadingScreen />;
   }
   
-  return session ? <Navigate to={from} replace /> : <>{children}</>;
+  return (session || isDemoMode) ? <Navigate to={from} replace /> : <>{children}</>;
 };
 
 const AppRoutes = () => {
