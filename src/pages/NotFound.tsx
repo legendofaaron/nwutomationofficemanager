@@ -1,8 +1,13 @@
+
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { useTheme } from "@/context/ThemeContext";
 
 const NotFound = () => {
   const location = useLocation();
+  const { resolvedTheme } = useTheme();
+  const isSuperDark = resolvedTheme === 'superdark';
+  const isDark = resolvedTheme === 'dark';
 
   useEffect(() => {
     console.error(
@@ -12,10 +17,12 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className={`min-h-screen flex items-center justify-center ${
+      isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gray-100'
+    }`}>
       <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">Oops! Page not found</p>
+        <h1 className={`text-4xl font-bold mb-4 ${isSuperDark || isDark ? 'text-gray-200' : ''}`}>404</h1>
+        <p className={`text-xl mb-4 ${isSuperDark || isDark ? 'text-gray-400' : 'text-gray-600'}`}>Oops! Page not found</p>
         <a href="/" className="text-blue-500 hover:text-blue-700 underline">
           Return to Home
         </a>

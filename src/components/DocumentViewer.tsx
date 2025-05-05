@@ -34,7 +34,7 @@ const DocumentViewer = () => {
 
   if (!currentFile) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className={`flex items-center justify-center h-full ${resolvedTheme === 'superdark' ? 'bg-black' : ''}`}>
         <p className="text-gray-400">Select a document to view or edit</p>
       </div>
     );
@@ -226,9 +226,14 @@ const DocumentViewer = () => {
   };
 
   const isDarkMode = resolvedTheme === 'dark';
+  const isSuperDark = resolvedTheme === 'superdark';
+  
+  const bgColor = isSuperDark ? 'bg-black' : isDarkMode ? 'bg-[#111318]' : 'bg-[#F6F6F7]';
+  const cardBg = isSuperDark ? 'bg-[#090909] border-[#151515]' : isDarkMode ? 'bg-[#1a1e25] border-[#2a2f38]' : 'bg-white';
+  const textareaBg = isSuperDark ? 'bg-[#090909] text-gray-200' : isDarkMode ? 'bg-[#1a1e25] text-gray-200' : '';
 
   return (
-    <div className={`relative h-full ${isDarkMode ? 'bg-[#111318]' : 'bg-[#F6F6F7]'}`}>
+    <div className={`relative h-full ${bgColor}`}>
       <DocumentHeader 
         currentFile={currentFile}
         onNameChange={handleNameChange}
@@ -240,7 +245,7 @@ const DocumentViewer = () => {
       
       <ScrollArea className="h-[calc(100%-96px)]">
         <div className="max-w-3xl mx-auto px-6 py-4">
-          <div className={`${isDarkMode ? 'bg-[#1a1e25] border border-[#2a2f38]' : 'bg-white'} rounded-lg shadow-sm min-h-[50vh]`}>
+          <div className={`${cardBg} rounded-lg shadow-sm min-h-[50vh]`}>
             {isSchedule ? (
               <ScheduleView />
             ) : (
@@ -248,10 +253,10 @@ const DocumentViewer = () => {
                 <Textarea
                   value={content}
                   onChange={(e) => handleContentChange(e.target.value)}
-                  className={`min-h-[50vh] w-full resize-none p-6 font-sans text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-lg ${isDarkMode ? 'bg-[#1a1e25] text-gray-200' : ''}`}
+                  className={`min-h-[50vh] w-full resize-none p-6 font-sans text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-lg ${textareaBg}`}
                   placeholder="Start typing..."
                   ref={(el) => setTextareaRef(el)}
-                  style={{ color: isDarkMode ? '#e4e4e7' : 'inherit' }}
+                  style={{ color: isDarkMode || isSuperDark ? '#e4e4e7' : 'inherit' }}
                 />
                 <AiSuggestions 
                   content={content}

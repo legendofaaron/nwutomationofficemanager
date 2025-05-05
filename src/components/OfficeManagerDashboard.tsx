@@ -14,16 +14,20 @@ const OfficeManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState<'employees' | 'schedule' | 'invoices' | 'bookings' | 'settings'>('employees');
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
+  const isSuperDark = resolvedTheme === 'superdark';
+  
+  const borderColor = isSuperDark ? 'border-[#151515]' : isDark ? 'border-[#1a1e26]' : '';
+  const bgColor = isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-zinc-900';
 
   return <div className="h-full">
-      <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-[#1a1e26]' : ''}`}>
+      <div className={`flex items-center justify-between p-4 border-b ${borderColor}`}>
         <div className="flex items-center gap-2">
           <Logo small />
           <h2 className="text-lg font-medium">Office Manager</h2>
         </div>
       </div>
 
-      <div className={`p-4 border-b ${isDark ? 'bg-[#0a0c10] border-[#1a1e26]' : 'bg-zinc-900'}`}>
+      <div className={`p-4 border-b ${bgColor} ${borderColor}`}>
         <div className="flex items-center gap-4 flex-wrap">
           <Button variant={activeTab === 'employees' ? 'default' : 'outline'} size="sm" className="gap-2" onClick={() => setActiveTab('employees')}>
             <Users className="h-4 w-4" />
@@ -48,7 +52,7 @@ const OfficeManagerDashboard = () => {
         </div>
       </div>
 
-      <div className="p-4">
+      <div className={`p-4 ${isSuperDark ? 'bg-black' : ''}`}>
         {activeTab === 'employees' && <EmployeesView />}
         {activeTab === 'schedule' && <ScheduleView />}
         {activeTab === 'invoices' && <InvoicesView />}

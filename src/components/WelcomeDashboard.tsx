@@ -25,9 +25,13 @@ const WelcomeDashboard = () => {
     navigate('/setup-assistant');
   };
 
+  const isSuperDark = resolvedTheme === 'superdark';
+  const bgClass = isSuperDark ? 'bg-black' : 'bg-[#0a0f1a]';
+  const borderClass = isSuperDark ? 'border-[#151515]' : 'border-blue-900/30';
+
   return (
     <ScrollArea className="h-full">
-      <div className="mx-auto px-4 pt-6 pb-8 max-w-5xl">
+      <div className={`mx-auto px-4 pt-6 pb-8 max-w-5xl ${isSuperDark ? 'bg-black' : ''}`}>
         <div className="flex justify-center mb-4">
           <Logo />
         </div>
@@ -41,7 +45,7 @@ const WelcomeDashboard = () => {
         </div>
 
         {/* Intelligent Assistant Card */}
-        <Card className="mb-8 bg-[#0a0f1a] border-blue-900/30">
+        <Card className={`mb-8 ${bgClass} ${borderClass}`}>
           <CardContent className="py-6 px-6">
             <div className="flex items-start mb-3">
               <MessageSquare className="h-6 w-6 text-blue-400 mr-2" />
@@ -61,7 +65,7 @@ const WelcomeDashboard = () => {
             <div className="flex justify-center">
               <Button 
                 onClick={startAssistantSetup} 
-                className="bg-[#111827] hover:bg-[#1e293b] text-white border border-blue-900/50"
+                className={`${isSuperDark ? 'bg-black hover:bg-[#0a0a0a]' : 'bg-[#111827] hover:bg-[#1e293b]'} text-white border ${isSuperDark ? 'border-[#202020]' : 'border-blue-900/50'}`}
               >
                 Set Up Your Assistant <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -74,7 +78,7 @@ const WelcomeDashboard = () => {
           <h2 className="text-lg font-semibold text-gray-200">Explore Features</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-[#0a0f1a] border-blue-900/30">
+            <Card className={`${bgClass} ${borderClass}`}>
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
                   <BookOpenText className="h-5 w-5 text-blue-400 mr-2" />
@@ -85,7 +89,7 @@ const WelcomeDashboard = () => {
                 </p>
                 <Button 
                   variant="outline" 
-                  className="w-full justify-between border-blue-900/50 bg-[#111827] hover:bg-[#1e293b] text-white"
+                  className={`w-full justify-between ${isSuperDark ? 'border-[#202020] bg-black hover:bg-[#0a0a0a]' : 'border-blue-900/50 bg-[#111827] hover:bg-[#1e293b]'} text-white`}
                   onClick={() => setViewMode('document')}
                 >
                   View Files 
@@ -94,7 +98,7 @@ const WelcomeDashboard = () => {
               </CardContent>
             </Card>
             
-            <Card className="bg-[#0a0f1a] border-blue-900/30">
+            <Card className={`${bgClass} ${borderClass}`}>
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
                   <BookOpenText className="h-5 w-5 text-blue-400 mr-2" />
@@ -105,7 +109,7 @@ const WelcomeDashboard = () => {
                 </p>
                 <Button 
                   variant="outline" 
-                  className="w-full justify-between border-blue-900/50 bg-[#111827] hover:bg-[#1e293b] text-white"
+                  className={`w-full justify-between ${isSuperDark ? 'border-[#202020] bg-black hover:bg-[#0a0a0a]' : 'border-blue-900/50 bg-[#111827] hover:bg-[#1e293b]'} text-white`}
                   onClick={() => setViewMode('knowledge')}
                 >
                   Open Knowledge Base 
@@ -114,7 +118,7 @@ const WelcomeDashboard = () => {
               </CardContent>
             </Card>
             
-            <Card className="bg-[#0a0f1a] border-blue-900/30">
+            <Card className={`${bgClass} ${borderClass}`}>
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
                   <Building2 className="h-5 w-5 text-blue-400 mr-2" />
@@ -125,7 +129,7 @@ const WelcomeDashboard = () => {
                 </p>
                 <Button 
                   variant="outline" 
-                  className="w-full justify-between border-blue-900/50 bg-[#111827] hover:bg-[#1e293b] text-white"
+                  className={`w-full justify-between ${isSuperDark ? 'border-[#202020] bg-black hover:bg-[#0a0a0a]' : 'border-blue-900/50 bg-[#111827] hover:bg-[#1e293b]'} text-white`}
                   onClick={() => setViewMode('office')}
                 >
                   Open Office Manager 

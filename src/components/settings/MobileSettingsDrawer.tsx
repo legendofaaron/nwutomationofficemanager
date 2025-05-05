@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LlmSettings } from '@/components/LlmSettings';
 import { DatabaseSettingsTab } from './DatabaseSettingsTab';
 import { StorageSettingsTab } from './StorageSettingsTab';
+import { useTheme } from '@/context/ThemeContext';
 
 interface MobileSettingsDrawerProps {
   open: boolean;
@@ -27,11 +28,13 @@ interface MobileSettingsDrawerProps {
 export const MobileSettingsDrawer = ({ open, onClose }: MobileSettingsDrawerProps) => {
   const { branding } = useAppContext();
   const [activeTab, setActiveTab] = useState("general");
+  const { resolvedTheme } = useTheme();
+  const isSuperDark = resolvedTheme === 'superdark';
   
   return (
     <Drawer open={open} onClose={onClose}>
-      <DrawerContent className="h-[85vh]">
-        <DrawerHeader className="border-b">
+      <DrawerContent className={`h-[85vh] ${isSuperDark ? 'bg-black border-t border-[#151515]' : ''}`}>
+        <DrawerHeader className={`border-b ${isSuperDark ? 'border-[#151515]' : ''}`}>
           <div className="flex items-center justify-between">
             <div>
               <DrawerTitle>{branding.companyName} Settings</DrawerTitle>
@@ -81,7 +84,7 @@ export const MobileSettingsDrawer = ({ open, onClose }: MobileSettingsDrawerProp
           </Tabs>
         </div>
         
-        <DrawerFooter className="border-t">
+        <DrawerFooter className={`border-t ${isSuperDark ? 'border-[#151515]' : ''}`}>
           <DrawerClose asChild>
             <Button variant="outline" onClick={onClose}>Close</Button>
           </DrawerClose>
