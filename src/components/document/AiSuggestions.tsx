@@ -1,20 +1,23 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Bot } from 'lucide-react';
+import { Bot, Sparkles } from 'lucide-react';
 import { queryLlm } from '@/utils/llm';
 import { useToast } from '@/hooks/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 interface AiSuggestionsProps {
   content: string;
   onSuggestionApply: (suggestion: string) => void;
 }
+
 const AiSuggestions: React.FC<AiSuggestionsProps> = ({
   content,
   onSuggestionApply
 }) => {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const [loading, setLoading] = React.useState(false);
+
   const generateSuggestions = async () => {
     setLoading(true);
     try {
@@ -29,6 +32,11 @@ const AiSuggestions: React.FC<AiSuggestionsProps> = ({
       // Pass webhook URL as undefined to let queryLlm use the one from localStorage
       const response = await queryLlm(prompt, endpoint, model);
       onSuggestionApply(response.message);
+      
+      toast({
+        title: "AI Suggestions Applied",
+        description: "The document has been enhanced with AI suggestions.",
+      });
     } catch (error) {
       toast({
         title: 'Error',
@@ -39,8 +47,33 @@ const AiSuggestions: React.FC<AiSuggestionsProps> = ({
       setLoading(false);
     }
   };
-  return <div className="fixed right-4 top-32 z-10">
-      
-    </div>;
+
+  return (
+    <div className="fixed right-4 top-32 z-10">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              className="rounded-full shadow-md bg-white hover:bg-gray-100 border border-gray-200"
+              onClick={generateSuggestions}
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-primary"></div>
+              ) : (
+                <Sparkles className="h-4 w-4 text-indigo-600" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p>Enhance with AI suggestions</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
 };
+
 export default AiSuggestions;

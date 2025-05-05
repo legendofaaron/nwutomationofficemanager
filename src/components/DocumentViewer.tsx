@@ -16,13 +16,14 @@ const DocumentViewer = () => {
   const { toast } = useToast();
   const [textareaRef, setTextareaRef] = useState<HTMLTextAreaElement | null>(null);
   const { setTheme, resolvedTheme } = useTheme();
+  const [selectionStart, setSelectionStart] = useState(0);
+  const [selectionEnd, setSelectionEnd] = useState(0);
   
   // Set dark mode when document is opened
   useEffect(() => {
     if (currentFile) {
       setTheme('dark');
     }
-    // Clean-up function not needed as we want document to stay in dark mode
   }, [currentFile, setTheme]);
   
   // Update content when currentFile changes
@@ -31,6 +32,17 @@ const DocumentViewer = () => {
       setContent(currentFile.content);
     }
   }, [currentFile]);
+
+  // Auto-save functionality
+  useEffect(() => {
+    const autoSaveTimer = setTimeout(() => {
+      if (currentFile && content !== currentFile.content) {
+        handleContentChange(content);
+      }
+    }, 2000);
+    
+    return () => clearTimeout(autoSaveTimer);
+  }, [content]);
 
   if (!currentFile) {
     return (
@@ -143,6 +155,12 @@ const DocumentViewer = () => {
     handleContentChange(suggestion);
   };
 
+  const trackSelection = (e: React.MouseEvent<HTMLTextAreaElement> | React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const textarea = e.currentTarget;
+    setSelectionStart(textarea.selectionStart);
+    setSelectionEnd(textarea.selectionEnd);
+  };
+
   const handleFormatText = (format: string) => {
     if (!textareaRef) return;
     
@@ -165,6 +183,10 @@ const DocumentViewer = () => {
       case 'underline':
         formattedText = `<u>${selectedText}</u>`;
         cursorOffset = 3;
+        break;
+      case 'strikethrough':
+        formattedText = `~~${selectedText}~~`;
+        cursorOffset = 2;
         break;
       case 'h1':
         formattedText = `# ${selectedText}`;
@@ -194,24 +216,54 @@ const DocumentViewer = () => {
         formattedText = `![${selectedText || 'Image'}](image_url)`;
         cursorOffset = 2;
         break;
+      case 'alignLeft':
+        formattedText = `<div style="text-align: left">${selectedText}</div>`;
+        cursorOffset = 30;
+        break;
+      case 'alignCenter':
+        formattedText = `<div style="text-align: center">${selectedText}</div>`;
+        cursorOffset = 32;
+        break;
+      case 'alignRight':
+        formattedText = `<div style="text-align: right">${selectedText}</div>`;
+        cursorOffset = 31;
+        break;
+      case 'alignJustify':
+        formattedText = `<div style="text-align: justify">${selectedText}</div>`;
+        cursorOffset = 33;
+        break;
+      case 'indent':
+        formattedText = selectedText.split('\n').map(line => `  ${line}`).join('\n');
+        cursorOffset = 2;
+        break;
+      case 'outdent':
+        formattedText = selectedText.split('\n').map(line => line.replace(/^  /, '')).join('\n');
+        cursorOffset = 0;
+        break;
       default:
         break;
     }
 
-    if (formattedText !== selectedText) {
-      const newContent = content.substring(0, start) + formattedText + content.substring(end);
-      handleContentChange(newContent);
-      
-      // Set the cursor position after the operation is complete
-      setTimeout(() => {
-        textarea.focus();
-        const newCursorPos = start + formattedText.length;
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-      }, 0);
+    if (formattedText !== selectedText || format === 'undo' || format === 'redo') {
+      if (format === 'undo') {
+        document.execCommand('undo');
+      } else if (format === 'redo') {
+        document.execCommand('redo');
+      } else {
+        const newContent = content.substring(0, start) + formattedText + content.substring(end);
+        handleContentChange(newContent);
+        
+        // Set the cursor position after the operation is complete
+        setTimeout(() => {
+          textarea.focus();
+          const newCursorPos = start + formattedText.length;
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
+      }
       
       toast({
         title: "Formatting applied",
-        description: `${format} formatting applied to selected text`,
+        description: `${format} formatting applied`,
         duration: 1500,
       });
     }
@@ -230,7 +282,7 @@ const DocumentViewer = () => {
   
   const bgColor = isSuperDark ? 'bg-black' : isDarkMode ? 'bg-[#111318]' : 'bg-[#F6F6F7]';
   const cardBg = isSuperDark ? 'bg-[#090909] border-[#151515]' : isDarkMode ? 'bg-[#1a1e25] border-[#2a2f38]' : 'bg-white';
-  const textareaBg = isSuperDark ? 'bg-[#090909] text-gray-200' : isDarkMode ? 'bg-[#1a1e25] text-gray-200' : '';
+  const textareaBg = isSuperDark ? 'bg-[#090909] text-gray-200' : isDarkMode ? 'bg-[#1a1e25] text-gray-200' : 'bg-white';
 
   return (
     <div className={`relative h-full ${bgColor}`}>
@@ -244,8 +296,8 @@ const DocumentViewer = () => {
       {!isSchedule && <DocumentToolbar onFormatText={handleFormatText} />}
       
       <ScrollArea className="h-[calc(100%-96px)]">
-        <div className="max-w-3xl mx-auto px-6 py-4">
-          <div className={`${cardBg} rounded-lg shadow-sm min-h-[50vh]`}>
+        <div className="max-w-4xl mx-auto px-6 py-4">
+          <div className={`${cardBg} rounded-lg shadow-sm min-h-[70vh] border border-gray-200/20`}>
             {isSchedule ? (
               <ScheduleView />
             ) : (
@@ -253,10 +305,16 @@ const DocumentViewer = () => {
                 <Textarea
                   value={content}
                   onChange={(e) => handleContentChange(e.target.value)}
-                  className={`min-h-[50vh] w-full resize-none p-6 font-sans text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-lg ${textareaBg}`}
+                  onMouseUp={trackSelection}
+                  onKeyUp={trackSelection}
+                  className={`min-h-[70vh] w-full resize-none p-8 font-serif text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-lg ${textareaBg}`}
                   placeholder="Start typing..."
                   ref={(el) => setTextareaRef(el)}
-                  style={{ color: isDarkMode || isSuperDark ? '#e4e4e7' : 'inherit' }}
+                  style={{ 
+                    color: isDarkMode || isSuperDark ? '#e4e4e7' : '#333333',
+                    lineHeight: '1.6',
+                    letterSpacing: '0.01em'
+                  }}
                 />
                 <AiSuggestions 
                   content={content}
