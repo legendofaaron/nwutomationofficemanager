@@ -1009,7 +1009,7 @@ For questions or further information, please contact [Name] at [Contact Informat
           </div>
           
           <div className="p-3 border-t mx-0">
-            <div className="flex gap-2 mx-0 my-0 px-0 py-0">
+            <div className="flex gap-2 px-[7px] py-[2px] mx-[9px] my-px">
               <Input value={input} onChange={e => setInput(e.target.value)} placeholder={isSetupMode ? "Type your response..." : "Type your message..."} onKeyDown={e => e.key === 'Enter' && handleSendMessage()} className="px-[7px] py-[7px] my-0 mx-0" />
               <Button onClick={handleSendMessage} className="my-0 mx-[52px] px-[10px] py-0">Send</Button>
             </div>
