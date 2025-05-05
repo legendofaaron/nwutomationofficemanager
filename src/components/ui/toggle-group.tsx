@@ -27,7 +27,7 @@ const ToggleGroup = React.forwardRef<
       ref={ref}
       className={cn(
         "flex items-center justify-center gap-1",
-        isSuperDarkMode && "bg-[#09090c]",
+        isSuperDarkMode && "bg-[#090909]",
         className
       )}
       {...props}
@@ -58,7 +58,7 @@ const ToggleGroupItem = React.forwardRef<
           variant: context.variant || variant,
           size: context.size || size,
         }),
-        isSuperDarkMode && "hover:bg-[#151720] data-[state=on]:bg-[#151720]",
+        isSuperDarkMode && "hover:bg-[#151515] data-[state=on]:bg-[#151515]",
         className
       )}
       {...props}

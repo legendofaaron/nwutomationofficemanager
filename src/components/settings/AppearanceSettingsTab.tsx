@@ -70,11 +70,11 @@ export const AppearanceSettingsTab = () => {
               />
               <Label
                 htmlFor="theme-superdark"
-                className={`flex flex-col items-center justify-between rounded-md border-2 border-muted p-4 hover:bg-accent hover:text-accent-foreground ${
-                  theme === 'superdark' ? 'border-primary' : ''
+                className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-black text-white p-4 hover:bg-black hover:text-white ${
+                  theme === 'superdark' ? 'border-blue-500' : ''
                 }`}
               >
-                <MoonStar className="h-5 w-5 mb-2" />
+                <MoonStar className="h-5 w-5 mb-2 text-blue-500" />
                 <span className="text-sm font-medium">Super Dark</span>
               </Label>
             </div>

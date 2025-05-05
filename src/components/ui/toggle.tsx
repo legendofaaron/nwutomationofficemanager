@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import * as TogglePrimitive from "@radix-ui/react-toggle"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -42,7 +41,7 @@ const Toggle = React.forwardRef<
       className={cn(
         toggleVariants({ variant, size }),
         isDarkMode && "hover:bg-[#1a1e26] data-[state=on]:bg-[#1a1e26]",
-        isSuperDarkMode && "hover:bg-[#151720] data-[state=on]:bg-[#151720]",
+        isSuperDarkMode && "hover:bg-[#151515] data-[state=on]:bg-[#151515]",
         className
       )}
       {...props}

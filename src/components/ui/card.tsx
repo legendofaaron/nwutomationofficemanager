@@ -17,7 +17,7 @@ const Card = React.forwardRef<
       className={cn(
         "rounded-lg border bg-card text-card-foreground shadow-sm",
         isDarkMode && "bg-[#0d1117] border-[#1a1e26]",
-        isSuperDarkMode && "bg-[#09090c] border-[#151720]",
+        isSuperDarkMode && "bg-[#090909] border-[#151515]",
         className
       )}
       {...props}
