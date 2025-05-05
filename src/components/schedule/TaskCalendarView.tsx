@@ -133,10 +133,26 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                   
                   try {
                     const data = e.dataTransfer.getData('application/json');
-                    if (data) {
+                    if (data && onMoveTask) {
                       const dragData = JSON.parse(data);
-                      if (dragData.type === 'task' && dragData.id && onMoveTask) {
-                        onMoveTask(dragData.id, dayDate);
+                      if (dragData.type === 'task' && dragData.id) {
+                        // Get the task being moved
+                        const taskToMove = tasks.find(t => t.id === dragData.id);
+                        
+                        // Only proceed with move if day is different or if same day, only update UI
+                        if (taskToMove) {
+                          const isSameDay = taskToMove.date.toDateString() === dayDate.toDateString();
+                          
+                          if (!isSameDay) {
+                            // Different day, proceed with actual move
+                            onMoveTask(dragData.id, dayDate);
+                          } else {
+                            // Same day, just cleanup UI but don't trigger move
+                            console.log("Task dropped on same day, no move needed");
+                          }
+                        } else {
+                          onMoveTask(dragData.id, dayDate);
+                        }
                       }
                     }
                   } catch (error) {

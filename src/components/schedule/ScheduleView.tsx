@@ -13,7 +13,6 @@ import TaskCalendarView from './TaskCalendarView';
 import TaskListView from './TaskListView';
 import TeamEventDialog from './TeamEventDialog';
 import UploadAnalyzeSection from './UploadAnalyzeSection';
-import { parseClientLocationValue } from './ScheduleHelpers';
 
 const ScheduleView = () => {
   const { 
