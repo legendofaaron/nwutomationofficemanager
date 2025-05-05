@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Calendar, getCrewLetterCode } from '@/components/ui/calendar';
@@ -552,7 +551,7 @@ const ScheduleView = () => {
                               <SelectTrigger>
                                 <SelectValue placeholder="Select client" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="bg-popover">
                                 {getClientOptions()}
                               </SelectContent>
                             </Select>
@@ -568,7 +567,7 @@ const ScheduleView = () => {
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select location" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-popover">
                                   {getClientLocationOptions()}
                                 </SelectContent>
                               </Select>
@@ -958,7 +957,7 @@ const ScheduleView = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="Select client" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-popover">
                       {getClientOptions()}
                     </SelectContent>
                   </Select>
@@ -974,10 +973,29 @@ const ScheduleView = () => {
                       <SelectTrigger>
                         <SelectValue placeholder="Select location" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-popover">
                         {getClientLocationOptions()}
                       </SelectContent>
                     </Select>
+                    
+                    {newTask.clientLocationId && (
+                      <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
+                        {(() => {
+                          const locationInfo = getClientLocationInfo(newTask.clientId, newTask.clientLocationId);
+                          if (!locationInfo) return null;
+                          
+                          return (
+                            <>
+                              <div className="font-medium">{locationInfo.locationName}</div>
+                              <div>{locationInfo.address}</div>
+                              {locationInfo.city && locationInfo.state && (
+                                <div>{locationInfo.city}, {locationInfo.state} {locationInfo.zipCode}</div>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
