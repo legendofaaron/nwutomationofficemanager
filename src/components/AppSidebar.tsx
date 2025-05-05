@@ -293,12 +293,7 @@ const AppSidebar = () => {
       </SidebarMenuItem>);
   };
   return <>
-      <SidebarHeader className="p-6 border-b">
-        <div className="flex items-center justify-between">
-          <Logo onClick={() => setViewMode('welcome')} />
-          
-        </div>
-      </SidebarHeader>
+      
 
       <SidebarContent>
         <SidebarGroup>
