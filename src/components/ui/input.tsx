@@ -13,7 +13,8 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         type={type}
         className={cn(
           "flex h-10 w-full rounded-md border border-input bg-app-gray-light px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          isDarkMode ? "text-gray-200" : "text-foreground",
+          isDarkMode ? "text-gray-100" : "text-foreground",
+          isDarkMode ? "bg-[#161a21] border-[#2a2f38]" : "bg-app-gray-light",
           className
         )}
         ref={ref}
