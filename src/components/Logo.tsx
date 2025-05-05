@@ -43,7 +43,9 @@ export const Logo = ({ small, onClick }: { small?: boolean; onClick?: () => void
           </div>
         </div>
       )}
-      {!small && <span className="font-semibold text-app-blue">{branding.companyName}</span>}
+      {(!small || branding.logoType === 'text') && (
+        <span className="font-semibold text-app-blue">{branding.companyName}</span>
+      )}
     </div>
   );
 };

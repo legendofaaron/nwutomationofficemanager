@@ -95,7 +95,7 @@ const MainLayout = () => {
           <div className="relative sidebar-container">
             <Sidebar className="shadow-md border-r border-gray-100 dark:border-gray-800">
               <div className="flex justify-between items-center p-4">
-                <Logo small onClick={() => setViewMode('welcome')} />
+                <Logo onClick={() => setViewMode('welcome')} />
                 <DropdownMenu>
                   <DropdownMenuTrigger className="outline-none">
                     <Avatar className="h-9 w-9 transition-all hover:scale-105">
@@ -128,12 +128,8 @@ const MainLayout = () => {
                 onMouseDown={handleDragStart}
               >
                 <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
-                  {/* Remove Logo from the sidebar trigger to avoid duplicate logos */}
-                  <div className="relative">
-                    <div className="rounded-full border-2 border-app-blue p-1">
-                      <Hexagon className="h-6 w-6 text-app-blue" />
-                    </div>
-                  </div>
+                  {/* Use Logo component for consistent branding */}
+                  <Logo small />
                 </div>
               </SidebarTrigger>
             </div>
