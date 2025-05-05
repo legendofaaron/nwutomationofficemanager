@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import AppSidebar from './AppSidebar';
@@ -12,7 +13,7 @@ import TodoCalendarBubble from './TodoCalendarBubble';
 import { cn } from '@/lib/utils';
 import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from './Logo';
-import { Bot, Hexagon, LogOut, Sparkles, User } from 'lucide-react';
+import { LogOut, Sparkles, User } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -128,7 +129,6 @@ const MainLayout = () => {
                 onMouseDown={handleDragStart}
               >
                 <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
-                  {/* Use Logo component for consistent branding */}
                   <Logo small />
                 </div>
               </SidebarTrigger>
