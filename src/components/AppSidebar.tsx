@@ -12,7 +12,6 @@ import { useToast } from '@/hooks/use-toast';
 import { MobileSettingsDrawer } from './settings/MobileSettingsDrawer';
 import { Dialog, DialogContent } from './ui/dialog';
 import DashboardCalendar from './DashboardCalendar';
-
 const AppSidebar = () => {
   const {
     viewMode,
@@ -29,10 +28,14 @@ const AppSidebar = () => {
     setAiAssistantOpen,
     aiAssistantOpen
   } = useAppContext();
-  
-  const { toast } = useToast();
-  
-  const [renameItem, setRenameItem] = useState<{ id: string; name: string; type: string } | null>(null);
+  const {
+    toast
+  } = useToast();
+  const [renameItem, setRenameItem] = useState<{
+    id: string;
+    name: string;
+    type: string;
+  } | null>(null);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [draggedItem, setDraggedItem] = useState<any>(null);
   const [dragOverItem, setDragOverItem] = useState<any>(null);
@@ -64,7 +67,6 @@ const AppSidebar = () => {
     onClick: () => setIsCalendarOpen(true),
     isActive: false
   }]);
-
   const handleFileClick = (file: any) => {
     if (file.type === 'folder') return;
     setCurrentFile(file);
@@ -74,13 +76,11 @@ const AppSidebar = () => {
       setViewMode('document');
     }
   };
-
   const handleRenameClick = (e: React.MouseEvent, item: any) => {
     e.stopPropagation();
     setRenameItem(item);
     setIsRenameDialogOpen(true);
   };
-
   const handleEditFile = (e: React.MouseEvent, file: any) => {
     e.stopPropagation();
     setCurrentFile(file);
@@ -94,7 +94,6 @@ const AppSidebar = () => {
       description: `Editing ${file.name}`
     });
   };
-
   const handleDeleteFile = (e: React.MouseEvent, fileToDelete: any) => {
     e.stopPropagation();
     const deleteFileRecursively = (files: any[], targetId: string): any[] => {
@@ -108,37 +107,31 @@ const AppSidebar = () => {
         return true;
       });
     };
-    
     const updatedFiles = deleteFileRecursively(files, fileToDelete.id);
     setFiles(updatedFiles);
     if (fileToDelete.id === activeFile?.id) {
       setCurrentFile(null);
       setViewMode('files');
     }
-    
     toast({
       title: "Item deleted",
       description: `${fileToDelete.name} has been deleted`
     });
   };
-  
   const handleTableClick = (table: any) => {
     setCurrentTable(table);
     setViewMode('database');
   };
-
   const handleCloseRenameDialog = () => {
     setIsRenameDialogOpen(false);
     setRenameItem(null);
   };
-  
   const handleDragStart = (e: React.DragEvent, item: any) => {
     e.stopPropagation();
     setDraggedItem(item);
     e.dataTransfer.effectAllowed = 'move';
     e.currentTarget.classList.add('opacity-50');
   };
-  
   const handleDragOver = (e: React.DragEvent, item: any) => {
     e.preventDefault();
     e.stopPropagation();
@@ -148,13 +141,11 @@ const AppSidebar = () => {
       e.currentTarget.classList.add('bg-sidebar-accent', 'bg-opacity-30');
     }
   };
-  
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     e.currentTarget.classList.remove('bg-sidebar-accent', 'bg-opacity-30');
   };
-  
   const handleDragEnd = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -162,18 +153,14 @@ const AppSidebar = () => {
     setDraggedItem(null);
     setDragOverItem(null);
   };
-  
   const handleDrop = (e: React.DragEvent, targetFolder: any) => {
     e.preventDefault();
     e.stopPropagation();
     e.currentTarget.classList.remove('bg-sidebar-accent', 'bg-opacity-30');
-    
     if (!draggedItem || targetFolder.id === draggedItem.id || !targetFolder.type || targetFolder.type !== 'folder') {
       return;
     }
-    
     const deepCopyFiles = JSON.parse(JSON.stringify(files));
-    
     const findItemPath = (filesList: any[], itemId: string, path: (number | string)[] = []): (number | string)[] | null => {
       for (let i = 0; i < filesList.length; i++) {
         if (filesList[i].id === itemId) {
@@ -186,7 +173,6 @@ const AppSidebar = () => {
       }
       return null;
     };
-    
     const findFolderPath = (filesList: any[], folderId: string, path: (number | string)[] = []): (number | string)[] | null => {
       for (let i = 0; i < filesList.length; i++) {
         if (filesList[i].id === folderId) {
@@ -199,19 +185,15 @@ const AppSidebar = () => {
       }
       return null;
     };
-    
     const itemPath = findItemPath(deepCopyFiles, draggedItem.id);
     const folderPath = findFolderPath(deepCopyFiles, targetFolder.id);
-    
     if (!itemPath || !folderPath) {
       return;
     }
-    
     let currentLevel: any = deepCopyFiles;
     let itemToMove = null;
     let parentArray = null;
     let indexInParent = -1;
-    
     for (let i = 0; i < itemPath.length; i++) {
       const pathPart = itemPath[i];
       if (i === itemPath.length - 1) {
@@ -226,7 +208,6 @@ const AppSidebar = () => {
         }
       }
     }
-    
     let targetLevel: any = deepCopyFiles;
     for (let i = 0; i < folderPath.length; i++) {
       const pathPart = folderPath[i];
@@ -236,51 +217,41 @@ const AppSidebar = () => {
         targetLevel = targetLevel[pathPart as number];
       }
     }
-    
     if (!itemToMove || !targetLevel || !parentArray || indexInParent === -1) {
       return;
     }
-    
     parentArray.splice(indexInParent, 1);
-    
     if (!targetLevel.children) {
       targetLevel.children = [];
     }
     targetLevel.children.push(itemToMove);
-    
     setFiles(deepCopyFiles);
-    
     toast({
       title: "Item moved",
       description: `${itemToMove.name} moved to ${targetLevel.name}`
     });
-    
     setDraggedItem(null);
     setDragOverItem(null);
   };
-  
   const handleMenuItemDragStart = (e: React.DragEvent, index: number) => {
     e.stopPropagation();
     setDraggedMenuItemIndex(index);
     e.dataTransfer.effectAllowed = 'move';
     e.currentTarget.classList.add('opacity-50');
   };
-
   const handleMenuItemDragEnter = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     e.stopPropagation();
     if (draggedMenuItemIndex === null || draggedMenuItemIndex === index) return;
-    
+
     // Reorder the items in the menu (visually)
     const newItems = [...mainMenuItems];
     const draggedItem = newItems[draggedMenuItemIndex];
     newItems.splice(draggedMenuItemIndex, 1);
     newItems.splice(index, 0, draggedItem);
-
     setMainMenuItems(newItems);
     setDraggedMenuItemIndex(index);
   };
-
   const handleMenuItemDragEnd = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -291,19 +262,10 @@ const AppSidebar = () => {
       description: "Menu items have been reordered"
     });
   };
-  
   const renderFileTree = (files: any[], level = 0) => {
     return files.map(file => <SidebarMenuItem key={file.id}>
         {file.type === 'folder' ? <Collapsible>
-            <CollapsibleTrigger 
-              className={`flex items-center w-full text-left p-2 hover:bg-sidebar-accent rounded-md group/menu-item relative ${dragOverItem?.id === file.id ? 'bg-sidebar-accent bg-opacity-30' : ''}`}
-              draggable
-              onDragStart={(e) => handleDragStart(e, file)}
-              onDragOver={(e) => handleDragOver(e, file)}
-              onDragLeave={handleDragLeave}
-              onDragEnd={handleDragEnd}
-              onDrop={(e) => handleDrop(e, file)}
-            >
+            <CollapsibleTrigger className={`flex items-center w-full text-left p-2 hover:bg-sidebar-accent rounded-md group/menu-item relative ${dragOverItem?.id === file.id ? 'bg-sidebar-accent bg-opacity-30' : ''}`} draggable onDragStart={e => handleDragStart(e, file)} onDragOver={e => handleDragOver(e, file)} onDragLeave={handleDragLeave} onDragEnd={handleDragEnd} onDrop={e => handleDrop(e, file)}>
               {file.children && file.children.length > 0 ? <>
                   <ChevronRight className="w-4 h-4 mr-2 transition-transform duration-200 transform group-data-[state=open]:rotate-90" />
                   <FolderOpen className="w-4 h-4 mr-2" />
@@ -319,12 +281,7 @@ const AppSidebar = () => {
             {file.children && <CollapsibleContent className="ml-4">
                 {renderFileTree(file.children, level + 1)}
               </CollapsibleContent>}
-          </Collapsible> : <div 
-              className="group/menu-item relative"
-              draggable
-              onDragStart={(e) => handleDragStart(e, file)}
-              onDragEnd={handleDragEnd}
-            >
+          </Collapsible> : <div className="group/menu-item relative" draggable onDragStart={e => handleDragStart(e, file)} onDragEnd={handleDragEnd}>
             <SidebarMenuButton onClick={() => handleFileClick(file)} className="w-full text-left flex items-center">
               {file.type === 'spreadsheet' ? <Table className="w-4 h-4 mr-2 flex-shrink-0" /> : <File className="w-4 h-4 mr-2 flex-shrink-0" />}
               <span className="flex-1 truncate">{file.name}</span>
@@ -335,14 +292,11 @@ const AppSidebar = () => {
           </div>}
       </SidebarMenuItem>);
   };
-  
   return <>
       <SidebarHeader className="p-6 border-b">
         <div className="flex items-center justify-between">
           <Logo onClick={() => setViewMode('welcome')} />
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)} className="h-6 w-6 hover:bg-app-gray-light">
-            <X className="h-4 w-4" />
-          </Button>
+          
         </div>
       </SidebarHeader>
 
@@ -365,23 +319,14 @@ const AppSidebar = () => {
           <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainMenuItems.map((item, index) => (
-                <SidebarMenuItem key={item.id}>
-                  <div
-                    draggable
-                    onDragStart={(e) => handleMenuItemDragStart(e, index)}
-                    onDragEnter={(e) => handleMenuItemDragEnter(e, index)}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDragEnd={handleMenuItemDragEnd}
-                    className="cursor-grab active:cursor-grabbing"
-                  >
+              {mainMenuItems.map((item, index) => <SidebarMenuItem key={item.id}>
+                  <div draggable onDragStart={e => handleMenuItemDragStart(e, index)} onDragEnter={e => handleMenuItemDragEnter(e, index)} onDragOver={e => e.preventDefault()} onDragEnd={handleMenuItemDragEnd} className="cursor-grab active:cursor-grabbing">
                     <SidebarMenuButton onClick={item.onClick} data-active={item.isActive}>
                       <item.icon className="w-4 h-4 mr-2" />
                       <span>{item.title}</span>
                     </SidebarMenuButton>
                   </div>
-                </SidebarMenuItem>
-              ))}
+                </SidebarMenuItem>)}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -414,10 +359,7 @@ const AppSidebar = () => {
       <SidebarFooter className="p-4 border-t mt-auto">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton 
-              onClick={() => setIsSettingsDrawerOpen(true)} 
-              data-active={viewMode === 'settings'}
-            >
+            <SidebarMenuButton onClick={() => setIsSettingsDrawerOpen(true)} data-active={viewMode === 'settings'}>
               <Settings className="w-4 h-4 mr-2" />
               <span>Settings</span>
             </SidebarMenuButton>
@@ -426,19 +368,10 @@ const AppSidebar = () => {
       </SidebarFooter>
 
       {/* Rename Dialog */}
-      {renameItem && (
-        <RenameItemDialog 
-          item={renameItem} 
-          isOpen={isRenameDialogOpen} 
-          onClose={handleCloseRenameDialog} 
-        />
-      )}
+      {renameItem && <RenameItemDialog item={renameItem} isOpen={isRenameDialogOpen} onClose={handleCloseRenameDialog} />}
       
       {/* Settings Drawer */}
-      <MobileSettingsDrawer 
-        open={isSettingsDrawerOpen} 
-        onClose={() => setIsSettingsDrawerOpen(false)} 
-      />
+      <MobileSettingsDrawer open={isSettingsDrawerOpen} onClose={() => setIsSettingsDrawerOpen(false)} />
 
       {/* Calendar Dialog */}
       <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
@@ -450,7 +383,6 @@ const AppSidebar = () => {
       </Dialog>
     </>;
 };
-
 export const SidebarToggle = () => {
   const {
     setSidebarOpen
@@ -459,5 +391,4 @@ export const SidebarToggle = () => {
       <Menu className="h-4 w-4" />
     </Button>;
 };
-
 export default AppSidebar;
