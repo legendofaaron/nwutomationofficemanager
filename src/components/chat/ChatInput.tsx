@@ -22,14 +22,20 @@ export const ChatInput = ({ onSendMessage, placeholder = "Type your message...",
   };
   
   return (
-    <div className="p-3 border-t border-[#1E2430]/80 bg-[#0D1117]">
+    <div className={`p-3 border-t ${resolvedTheme === 'superdark' ? 'border-[#1E2430]/80 bg-[#0D1117]' : resolvedTheme === 'dark' ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'}`}>
       <div className="flex gap-2 items-center">
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={placeholder}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          className="flex-1 h-10 text-sm rounded-md bg-[#161B22] border-[#1E2430] text-gray-200 placeholder:text-gray-500 focus-visible:ring-blue-500"
+          className={`flex-1 h-10 text-sm rounded-md ${
+            resolvedTheme === 'superdark' 
+              ? 'bg-[#161B22] border-[#1E2430] text-gray-200 placeholder:text-gray-500' 
+              : resolvedTheme === 'dark'
+              ? 'bg-gray-800 border-gray-700 text-gray-200 placeholder:text-gray-500'
+              : 'bg-gray-50 border-gray-200'
+          } focus-visible:ring-blue-500`}
           disabled={disabled}
         />
         <Button 

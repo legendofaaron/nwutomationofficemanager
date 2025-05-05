@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -6,10 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Clock, BookOpen } from 'lucide-react';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Plus, Clock, BookOpen, Calendar as CalendarIcon, Trash2, Edit, User, Building, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/context/ThemeContext';
 
 interface Booking {
   id: string;
@@ -77,6 +81,11 @@ const BookingView = () => {
   });
 
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
+  const [filterType, setFilterType] = useState<'all' | 'room' | 'equipment'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  const isSuperDark = resolvedTheme === 'superdark';
 
   const handleAddBooking = () => {
     if (newBooking.resourceId && newBooking.title && newBooking.startTime && newBooking.endTime && newBooking.bookedBy) {
@@ -120,18 +129,30 @@ const BookingView = () => {
     booking => booking.date.toDateString() === selectedDate.toDateString()
   );
 
+  const filteredResources = filterType === 'all' 
+    ? resources 
+    : resources.filter(resource => resource.type === filterType);
+  
+  // Pagination logic
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(filteredResources.length / itemsPerPage);
+  const paginatedResources = filteredResources.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h2 className="text-2xl font-semibold">Resource Bookings</h2>
         <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2 shadow-sm">
               <Plus className="h-4 w-4" />
               New Booking
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Create New Booking</DialogTitle>
             </DialogHeader>
@@ -167,7 +188,7 @@ const BookingView = () => {
               
               <div className="space-y-2">
                 <Label>Date</Label>
-                <div className="border rounded-md p-2 bg-gray-50">
+                <div className="border rounded-md p-2 bg-gray-50 dark:bg-gray-900">
                   {format(selectedDate, 'MMMM d, yyyy')}
                 </div>
               </div>
@@ -220,10 +241,13 @@ const BookingView = () => {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+      <div className="grid gap-6 lg:grid-cols-5">
+        <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Calendar</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5 text-blue-500" />
+              Calendar
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Calendar
@@ -235,41 +259,57 @@ const BookingView = () => {
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Bookings for {format(selectedDate, 'MMMM d, yyyy')}</CardTitle>
+        <Card className="lg:col-span-3">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-blue-500" />
+              Bookings for {format(selectedDate, 'MMMM d, yyyy')}
+            </CardTitle>
+            {selectedDateBookings.length > 0 && (
+              <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+                {selectedDateBookings.length} {selectedDateBookings.length === 1 ? 'booking' : 'bookings'}
+              </Badge>
+            )}
           </CardHeader>
           <CardContent>
             {selectedDateBookings.length > 0 ? (
               <div className="space-y-4">
-                {selectedDateBookings.map((booking) => (
-                  <div 
-                    key={booking.id} 
-                    className="bg-white rounded-lg border p-4 flex justify-between items-start shadow-sm"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <BookOpen className="h-4 w-4 text-primary" />
-                        <h3 className="font-medium">{booking.title}</h3>
-                      </div>
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <p>Resource: {booking.resourceName}</p>
-                        <p className="flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5" />
-                          {booking.startTime} - {booking.endTime}
-                        </p>
-                        <p>Booked by: {booking.bookedBy}</p>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      onClick={() => handleDeleteBooking(booking.id)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                ))}
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Resource</TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Booked By</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedDateBookings.map((booking) => (
+                      <TableRow key={booking.id}>
+                        <TableCell className="font-medium">{booking.title}</TableCell>
+                        <TableCell>{booking.resourceName}</TableCell>
+                        <TableCell>
+                          <span className="flex items-center gap-1 text-sm">
+                            <Clock className="h-3.5 w-3.5 text-gray-500" />
+                            {booking.startTime} - {booking.endTime}
+                          </span>
+                        </TableCell>
+                        <TableCell>{booking.bookedBy}</TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            onClick={() => handleDeleteBooking(booking.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
@@ -290,18 +330,58 @@ const BookingView = () => {
       </div>
       
       <Card>
-        <CardHeader>
-          <CardTitle>All Resources</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Building className="h-5 w-5 text-blue-500" />
+            Available Resources
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="filterType" className="text-sm sr-only">Filter</Label>
+            <Select value={filterType} onValueChange={value => {
+              setFilterType(value as 'all' | 'room' | 'equipment');
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger className="w-[180px] text-sm h-8">
+                <Filter className="h-3.5 w-3.5 mr-2" />
+                <SelectValue placeholder="Filter resources" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Resources</SelectItem>
+                <SelectItem value="room">Rooms Only</SelectItem>
+                <SelectItem value="equipment">Equipment Only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {resources.map((resource) => (
-              <div key={resource.id} className="bg-white rounded-lg border p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-medium">{resource.name}</h3>
+            {paginatedResources.map((resource) => (
+              <div 
+                key={resource.id} 
+                className={cn(
+                  "rounded-lg border p-4 transition-all hover:shadow-md",
+                  isDark ? "bg-gray-900 border-gray-800" : "bg-white",
+                  isSuperDark ? "bg-[#0D1117] border-[#1a1e26]" : ""
+                )}
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="font-medium">{resource.name}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {resource.type === 'room' ? (
+                        <span className="flex items-center gap-1 mt-1">
+                          <User className="h-3.5 w-3.5" />
+                          Capacity: {resource.capacity}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Equipment</span>
+                      )}
+                    </p>
+                  </div>
                   <Button 
                     variant="outline" 
                     size="sm"
+                    className="h-8"
                     onClick={() => {
                       setNewBooking({...newBooking, resourceId: resource.id});
                       setIsBookingDialogOpen(true);
@@ -310,17 +390,82 @@ const BookingView = () => {
                     Book
                   </Button>
                 </div>
-                <p className="text-sm text-gray-600">
-                  Type: {resource.type.charAt(0).toUpperCase() + resource.type.slice(1)}
-                  {resource.capacity && `, Capacity: ${resource.capacity}`}
-                </p>
+                
+                <div className="text-xs text-muted-foreground mt-2">
+                  {resource.type === 'room' ? (
+                    <span>Room {resource.id}</span>
+                  ) : (
+                    <span>Asset #{resource.id}</span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
+          
+          {totalPages > 1 && (
+            <div className="mt-6">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      href="#" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage(prev => Math.max(prev - 1, 1));
+                      }}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({length: totalPages}, (_, i) => i + 1).map(page => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(page);
+                        }}
+                        isActive={currentPage === page}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      href="#" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage(prev => Math.min(prev + 1, totalPages));
+                      }}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
   );
 };
+
+// Missing Badge component implementation
+const Badge = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { variant?: 'default' | 'secondary' | 'destructive' | 'outline' }
+>(({ className, variant = 'default', ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+      className
+    )}
+    {...props}
+  />
+));
+Badge.displayName = "Badge";
 
 export default BookingView;
