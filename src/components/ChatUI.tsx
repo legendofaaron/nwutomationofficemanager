@@ -8,6 +8,7 @@ import { LlmSettings } from './LlmSettings';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useTheme } from '@/context/ThemeContext';
 
 interface Message {
   id: string;
@@ -32,6 +33,8 @@ const ChatUI = () => {
   });
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark' || resolvedTheme === 'superdark';
   
   const [messages, setMessages] = useState<Message[]>([
     { 
@@ -318,7 +321,7 @@ Your data remains secure on your local system. How can I assist you today?`;
     return (
       <Button
         onClick={handleToggleChat}
-        className="fixed bottom-4 right-4 h-12 w-12 rounded-full p-0 shadow-lg hover:shadow-xl transition-shadow"
+        className="fixed bottom-4 right-4 h-12 w-12 rounded-full p-0 shadow-lg hover:shadow-xl transition-shadow bg-primary text-primary-foreground"
       >
         <Bot className="h-6 w-6" />
       </Button>
@@ -326,13 +329,13 @@ Your data remains secure on your local system. How can I assist you today?`;
   }
 
   return (
-    <div className="fixed right-4 bottom-4 w-96 bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col h-[600px] z-20 animate-in slide-in-from-bottom-5">
-      <div className="flex items-center justify-between p-3 border-b">
+    <div className={`fixed right-4 bottom-4 w-96 ${isDark ? 'bg-card' : 'bg-white'} rounded-lg shadow-lg ${isDark ? 'border-border' : 'border-gray-200'} border flex flex-col h-[600px] z-20 animate-in slide-in-from-bottom-5`}>
+      <div className={`flex items-center justify-between p-3 ${isDark ? 'border-border' : 'border-gray-200'} border-b`}>
         <div className="flex items-center gap-2">
-          <Bot className="h-5 w-5 text-blue-600" />
+          <Bot className="h-5 w-5 text-primary" />
           <h3 className="font-medium">Office Manager</h3>
           {assistantConfig?.companyName && (
-            <span className="text-xs text-gray-500">for {assistantConfig.companyName}</span>
+            <span className="text-xs text-muted-foreground">for {assistantConfig.companyName}</span>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -360,7 +363,7 @@ Your data remains secure on your local system. How can I assist you today?`;
       ) : (
         <>
           {!isSetupMode && (
-            <div className="grid grid-cols-2 gap-2 p-3 border-b">
+            <div className={`grid grid-cols-2 gap-2 p-3 ${isDark ? 'border-border' : 'border-gray-200'} border-b`}>
               {quickActions.map((action, index) => (
                 <Button
                   key={index}
@@ -376,35 +379,37 @@ Your data remains secure on your local system. How can I assist you today?`;
             </div>
           )}
           
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map(message => (
-              <div 
-                key={message.id} 
-                className={`flex ${
-                  message.type === 'user' 
-                    ? 'justify-end' 
-                    : message.type === 'system' 
-                      ? 'justify-center' 
-                      : 'justify-start'
-                }`}
-              >
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-4">
+              {messages.map(message => (
                 <div 
-                  className={`${
+                  key={message.id} 
+                  className={`flex ${
                     message.type === 'user' 
-                      ? 'bg-blue-600 text-white max-w-[80%] p-3 rounded-lg' 
-                      : message.type === 'system'
-                        ? 'bg-gray-200 text-gray-800 px-4 py-1 rounded-full text-xs font-medium'
-                        : 'bg-gray-100 text-gray-800 max-w-[80%] p-3 rounded-lg'
-                  } whitespace-pre-wrap`}
+                      ? 'justify-end' 
+                      : message.type === 'system' 
+                        ? 'justify-center' 
+                        : 'justify-start'
+                  }`}
                 >
-                  {message.content}
+                  <div 
+                    className={`${
+                      message.type === 'user' 
+                        ? 'bg-primary text-primary-foreground max-w-[80%] p-3 rounded-lg' 
+                        : message.type === 'system'
+                          ? `${isDark ? 'bg-secondary' : 'bg-gray-200'} ${isDark ? 'text-secondary-foreground' : 'text-gray-800'} px-4 py-1 rounded-full text-xs font-medium`
+                          : `${isDark ? 'bg-muted' : 'bg-gray-100'} ${isDark ? 'text-foreground' : 'text-gray-800'} max-w-[80%] p-3 rounded-lg`
+                    } whitespace-pre-wrap`}
+                  >
+                    {message.content}
+                  </div>
                 </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
           
-          <div className="p-3 border-t">
+          <div className={`p-3 ${isDark ? 'border-border' : 'border-gray-200'} border-t`}>
             <div className="flex gap-2">
               <Input
                 value={input}
