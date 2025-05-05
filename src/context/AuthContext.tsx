@@ -15,11 +15,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Local storage key for demo mode
+const DEMO_MODE_STORAGE_KEY = 'office_manager_demo_mode';
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<LocalUser | null>(null);
   const [session, setSession] = useState<LocalSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(() => {
+    // Initialize demo mode from localStorage if it exists
+    const savedDemoMode = localStorage.getItem(DEMO_MODE_STORAGE_KEY);
+    return savedDemoMode === 'true';
+  });
   const { toast } = useToast();
 
   // Function to refresh user data
@@ -34,8 +41,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Set up the auth state listener first for better security
     const { unsubscribe } = localAuth.onAuthStateChange((event, currentSession) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+      // Only update session if not in demo mode
+      if (!isDemoMode) {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+      }
       setIsLoading(false);
       
       // Show toast notifications for auth events
@@ -58,19 +68,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Then fetch the initial session
     const { data: { session: initialSession } } = localAuth.getSession();
-    setSession(initialSession);
-    setUser(initialSession?.user ?? null);
+    
+    // Only set the session if not in demo mode
+    if (!isDemoMode) {
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
+    }
+    
     setIsLoading(false);
 
     return () => {
       unsubscribe();
     };
-  }, [toast]);
+  }, [toast, isDemoMode]);
 
   const signOut = async () => {
     try {
       // Reset demo mode
-      setIsDemoMode(false);
+      setDemoMode(false);
       await localAuth.signOut();
       
       // Force refresh to ensure clean state
@@ -87,11 +102,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Set demo mode function
+  // Set demo mode function with localStorage persistence
   const setDemoMode = (value: boolean) => {
+    // Store demo mode in localStorage for persistence
+    localStorage.setItem(DEMO_MODE_STORAGE_KEY, value.toString());
     setIsDemoMode(value);
     
-    // If turning on demo mode, make sure we have a clean session
+    // If turning on demo mode, make sure we clear any real session
     if (value && session) {
       // We don't need to sign out, just clear the local state
       // This avoids the sign out notification

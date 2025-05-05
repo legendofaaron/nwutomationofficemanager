@@ -68,8 +68,8 @@ export function UserAvatar({
         </TooltipTrigger>
         <TooltipContent>
           <p>{user.user_metadata?.full_name || user.email}</p>
-          {user.user_metadata?.username && (
-            <p className="text-xs text-muted-foreground">@{user.user_metadata.username}</p>
+          {user.email && (
+            <p className="text-xs text-muted-foreground">{user.email}</p>
           )}
         </TooltipContent>
       </Tooltip>

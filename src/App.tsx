@@ -14,8 +14,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Protected route component with enhanced security
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session, isLoading, isDemoMode, setDemoMode } = useAuth();
-  const location = useLocation();
+  const { session, isLoading, isDemoMode } = useAuth();
   
   if (isLoading) {
     return <LoadingScreen />;
@@ -23,10 +22,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   // Allow access if user is authenticated or in demo mode
   if (session || isDemoMode) {
-    // If coming from login and no session, we're in demo mode
-    if (!session && location.pathname === '/dashboard' && !isDemoMode) {
-      setDemoMode(true);
-    }
     return <>{children}</>;
   }
   

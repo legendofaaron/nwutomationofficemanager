@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -124,10 +123,8 @@ const Login = () => {
     // Enable demo mode in the auth context
     setDemoMode(true);
     
-    // Refresh the page to get a clean state for demo mode
-    setTimeout(() => {
-      window.location.href = '/dashboard';
-    }, 300);
+    // Navigate to dashboard with demo mode enabled
+    navigate('/dashboard');
   };
 
   return (
