@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import AppSidebar from './AppSidebar';
@@ -13,7 +12,7 @@ import TodoCalendarBubble from './TodoCalendarBubble';
 import { cn } from '@/lib/utils';
 import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from './Logo';
-import { Bot, LogOut, Sparkles, User } from 'lucide-react';
+import { Bot, Hexagon, LogOut, Sparkles, User } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -131,7 +130,7 @@ const MainLayout = () => {
                 <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
                   {/* Remove Logo from the sidebar trigger to avoid duplicate logos */}
                   <div className="relative">
-                    <div className={`rounded-full border-2 border-app-blue ${small ? 'p-0.5' : 'p-1'}`}>
+                    <div className="rounded-full border-2 border-app-blue p-1">
                       <Hexagon className="h-6 w-6 text-app-blue" />
                     </div>
                   </div>
