@@ -24,12 +24,11 @@ const DocumentNameAiSuggestion = ({ onSuggestion }: DocumentNameAiSuggestionProp
         setTimeout(() => reject(new Error("Request timed out")), 5000)
       );
       
-      // Remove webhook from regular suggestions to prevent unnecessary triggers
+      // Pass without explicit webhook URL to let queryLlm use the one from localStorage
       const responsePromise = queryLlm(
         prompt, 
         'http://localhost:5678/workflow/EQL62DuHvzL2PmBk',
         'default'
-        // Webhook removed from here
       );
       const response = await Promise.race([responsePromise, timeoutPromise]) as any;
       

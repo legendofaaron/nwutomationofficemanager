@@ -7,14 +7,19 @@ interface LlmResponse {
 
 export async function queryLlm(prompt: string, endpoint: string, model: string = 'default', webhookUrl?: string): Promise<LlmResponse> {
   try {
+    // Get webhook URL from localStorage if not provided explicitly
+    const storedConfig = localStorage.getItem('llmConfig');
+    const config = storedConfig ? JSON.parse(storedConfig) : {};
+    const effectiveWebhookUrl = webhookUrl || config.webhookUrl;
+    
     const payload: Record<string, any> = {
       message: prompt,
       model: model
     };
     
-    // Only add webhook URL if explicitly provided
-    if (webhookUrl) {
-      payload.webhookUrl = webhookUrl;
+    // Always include webhook URL if available from any source
+    if (effectiveWebhookUrl) {
+      payload.webhookUrl = effectiveWebhookUrl;
       payload.callbackEnabled = true;
     }
 

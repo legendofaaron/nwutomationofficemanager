@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,6 +27,23 @@ export const LlmSettings = () => {
     model: 'default',
     webhookUrl: 'http://localhost:5678/webhook-test/bf4dd093-bb02-472c-9454-7ab9af97bd1d'
   });
+
+  // Load config from localStorage on component mount
+  useEffect(() => {
+    const savedConfig = localStorage.getItem('llmConfig');
+    if (savedConfig) {
+      try {
+        setConfig(JSON.parse(savedConfig));
+      } catch (error) {
+        console.error('Failed to parse saved LLM config:', error);
+      }
+    }
+  }, []);
+
+  // Save config to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('llmConfig', JSON.stringify(config));
+  }, [config]);
 
   const testConnection = async () => {
     try {
@@ -130,7 +147,7 @@ export const LlmSettings = () => {
             placeholder="http://localhost:5678/webhook-test/[ID]"
           />
           <p className="text-xs text-gray-500 mt-1">
-            Enter the webhook URL for bidirectional communication
+            Enter the webhook URL for bidirectional communication (all features will use this webhook)
           </p>
         </div>
 
