@@ -8,7 +8,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, ArrowRight, AlertCircle, Shield, User } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, AlertCircle, Shield } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/Logo';
 import { useAppContext } from '@/context/AppContext';
@@ -16,7 +16,7 @@ import { localAuth } from '@/services/localAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
-  email: z.string().min(1, { message: 'Please enter your username or email' }),
+  email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
 });
 
@@ -102,7 +102,7 @@ const Login = () => {
       } else {
         toast({
           title: "Login failed",
-          description: authError.message || "Invalid username/email or password",
+          description: authError.message || "Invalid email or password",
           variant: "destructive",
         });
       }
@@ -115,10 +115,8 @@ const Login = () => {
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-[#080a0c] dark:to-[#111418]">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center justify-center mb-8">
-          <div className="mb-4 flex justify-center">
-            <Logo />
-          </div>
-          <h1 className="text-2xl font-bold text-center">Welcome to Office Manager</h1>
+          <Logo />
+          <h1 className="text-2xl font-bold text-center mt-6">Welcome to Office Manager</h1>
           <p className="mt-2 text-sm text-center text-gray-600 dark:text-gray-400">
             Log in to continue to {branding.companyName}
           </p>
@@ -148,14 +146,14 @@ const Login = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Username or Email</FormLabel>
+                      <FormLabel>Email Address</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                          <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                           <Input 
-                            placeholder="Enter your username or email" 
+                            placeholder="Enter your email address" 
                             className="pl-10" 
-                            autoComplete="username"
+                            autoComplete="email"
                             disabled={isLocked || isLoading}
                             {...field} 
                           />

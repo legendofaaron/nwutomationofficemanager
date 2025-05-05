@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // Then fetch the initial session - fixed to handle synchronous return
+    // Then fetch the initial session
     const { data: { session: initialSession } } = localAuth.getSession();
     setSession(initialSession);
     setUser(initialSession?.user ?? null);

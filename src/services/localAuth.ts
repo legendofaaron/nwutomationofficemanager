@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 
 export interface LocalUser {
@@ -112,6 +113,17 @@ const updateCurrentUser = (updates: Partial<Omit<LocalUser, 'id' | 'created_at'>
   }
 };
 
+// Function to dispatch auth state change events manually
+const dispatchAuthEvent = (event: string, session: LocalSession | null) => {
+  // Create a custom event that mimics the storage event
+  const customEvent = new CustomEvent('auth-state-change', { 
+    detail: { event, session } 
+  });
+  
+  // Dispatch the event
+  document.dispatchEvent(customEvent);
+};
+
 export const localAuth = {
   // Get current session
   getSession: (): { data: { session: LocalSession | null } } => {
@@ -157,8 +169,8 @@ export const localAuth = {
       users.push(newUser);
       saveUsers(users);
       
-      // Auto sign in after sign up - fixed by using the localAuth reference directly
-      localAuth.signInWithPassword({ email, password });
+      // Auto sign in after sign up
+      const result = localAuth.signInWithPassword({ email, password });
       
       return { 
         data: { user: newUser },
@@ -180,16 +192,15 @@ export const localAuth = {
     try {
       const users = getUsers();
       
-      // Find user by email or username
+      // Find user by exact email match only
       const user = users.find(user => 
-        (user.email === email || user.user_metadata.username === email) && 
-        user.password === password
+        user.email === email && user.password === password
       );
       
       if (!user) {
         return {
           data: { session: null },
-          error: new Error('Invalid username/email or password')
+          error: new Error('Invalid email or password')
         };
       }
       
@@ -201,6 +212,9 @@ export const localAuth = {
       };
       
       saveSession(session);
+      
+      // Manually trigger auth state change
+      dispatchAuthEvent('SIGNED_IN', session);
       
       return {
         data: { session },
@@ -215,9 +229,14 @@ export const localAuth = {
   },
   
   // Sign out
-  signOut: (): { error: Error | null } => {
+  signOut: async (): Promise<{ error: Error | null }> => {
     try {
+      const currentSession = localAuth.getSession().data.session;
       saveSession(null);
+      
+      // Manually trigger auth state change
+      dispatchAuthEvent('SIGNED_OUT', null);
+      
       return { error: null };
     } catch (error) {
       return { error: error instanceof Error ? error : new Error('Failed to sign out') };
@@ -269,16 +288,13 @@ export const localAuth = {
   
   // Subscribe to auth state changes (mimicking Supabase's onAuthStateChange)
   onAuthStateChange: (callback: (event: string, session: LocalSession | null) => void) => {
-    // Simple implementation using storage event
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === LOCAL_SESSION_KEY) {
-        const session = event.newValue ? JSON.parse(event.newValue) : null;
-        const eventName = session ? 'SIGNED_IN' : 'SIGNED_OUT';
-        callback(eventName, session);
-      }
+    // Use custom event for auth state changes
+    const handleAuthStateChange = (e: any) => {
+      const { event, session } = e.detail;
+      callback(event, session);
     };
     
-    window.addEventListener('storage', handleStorageChange);
+    document.addEventListener('auth-state-change', handleAuthStateChange);
     
     // Initial call with current session
     const { data } = localAuth.getSession();
@@ -288,7 +304,7 @@ export const localAuth = {
     // Return object with unsubscribe method
     return {
       unsubscribe: () => {
-        window.removeEventListener('storage', handleStorageChange);
+        document.removeEventListener('auth-state-change', handleAuthStateChange);
       }
     };
   }
