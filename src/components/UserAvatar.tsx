@@ -3,14 +3,23 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface UserAvatarProps {
   className?: string;
   showFallback?: boolean;
   onClick?: () => void;
+  showTooltip?: boolean;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-export function UserAvatar({ className, showFallback = true, onClick }: UserAvatarProps) {
+export function UserAvatar({ 
+  className, 
+  showFallback = true, 
+  onClick, 
+  showTooltip = false,
+  size = 'md'
+}: UserAvatarProps) {
   const { user } = useAuth();
   
   const getInitials = () => {
@@ -23,9 +32,20 @@ export function UserAvatar({ className, showFallback = true, onClick }: UserAvat
       .substring(0, 2);
   };
   
-  return (
+  const sizeClasses = {
+    sm: "h-8 w-8",
+    md: "h-10 w-10",
+    lg: "h-16 w-16"
+  };
+  
+  const avatar = (
     <Avatar 
-      className={cn("bg-primary", className, onClick && "cursor-pointer")}
+      className={cn(
+        "bg-primary", 
+        sizeClasses[size],
+        onClick && "cursor-pointer hover:opacity-90 transition-opacity",
+        className
+      )}
       onClick={onClick}
     >
       <AvatarImage 
@@ -39,4 +59,22 @@ export function UserAvatar({ className, showFallback = true, onClick }: UserAvat
       )}
     </Avatar>
   );
+  
+  if (showTooltip && user) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {avatar}
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{user.user_metadata?.full_name || user.email}</p>
+          {user.user_metadata?.username && (
+            <p className="text-xs text-muted-foreground">@{user.user_metadata.username}</p>
+          )}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+  
+  return avatar;
 }
