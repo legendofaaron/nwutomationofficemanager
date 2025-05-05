@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, UserPlus, Upload, CheckCircle, X, Calendar } from 'lucide-react';
+import { Search, UserPlus, Upload, CheckCircle, X, Calendar, Camera, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -17,27 +18,39 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 
-const mockEmployees = [
+interface Employee {
+  id: number;
+  name: string;
+  role: string;
+  department: string;
+  status: string;
+  avatarUrl?: string;
+}
+
+const mockEmployees: Employee[] = [
   {
     id: 1,
     name: 'John Smith',
     role: 'Software Engineer',
     department: 'Engineering',
-    status: 'Active'
+    status: 'Active',
+    avatarUrl: ''
   },
   {
     id: 2,
     name: 'Sarah Johnson',
     role: 'Product Manager',
     department: 'Product',
-    status: 'Active'
+    status: 'Active',
+    avatarUrl: ''
   },
   {
     id: 3,
     name: 'Michael Brown',
     role: 'UX Designer',
     department: 'Design',
-    status: 'Active'
+    status: 'Active',
+    avatarUrl: ''
   }
 ];
 
@@ -50,14 +63,30 @@ const EmployeesView = () => {
     name: '',
     role: '',
     department: '',
-    status: 'Active'
+    status: 'Active',
+    avatarUrl: ''
   });
-  const [employees, setEmployees] = useState([...mockEmployees]);
+  const [employees, setEmployees] = useState<Employee[]>([...mockEmployees]);
+  const [employeeImage, setEmployeeImage] = useState<File | null>(null);
+  const [employeeImagePreview, setEmployeeImagePreview] = useState<string>('');
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
       setAnalyzedData(null);
+    }
+  };
+
+  const handleEmployeeImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setEmployeeImage(file);
+      
+      // Create preview URL
+      const imageUrl = URL.createObjectURL(file);
+      setEmployeeImagePreview(imageUrl);
     }
   };
 
@@ -86,7 +115,8 @@ const EmployeesView = () => {
     
     const newEmployeeFromAnalysis = {
       id: employees.length + 1,
-      ...analyzedData
+      ...analyzedData,
+      avatarUrl: ''
     };
     
     setEmployees([...employees, newEmployeeFromAnalysis]);
@@ -101,19 +131,32 @@ const EmployeesView = () => {
       return;
     }
 
+    let avatarUrl = '';
+    
+    // If we have an image preview, use that
+    if (employeeImagePreview) {
+      avatarUrl = employeeImagePreview;
+    }
+
     const addedEmployee = {
       id: employees.length + 1,
-      ...newEmployee
+      ...newEmployee,
+      avatarUrl
     };
 
     setEmployees([...employees, addedEmployee]);
     toast.success("New employee has been added");
+    
+    // Reset form
     setNewEmployee({
       name: '',
       role: '',
       department: '',
-      status: 'Active'
+      status: 'Active',
+      avatarUrl: ''
     });
+    setEmployeeImage(null);
+    setEmployeeImagePreview('');
     setIsAddEmployeeOpen(false);
   };
 
@@ -159,6 +202,12 @@ const EmployeesView = () => {
     toast.info(`Drag ${employee.name} to calendar to schedule`, { duration: 2000 });
   };
 
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
@@ -180,7 +229,7 @@ const EmployeesView = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <TableHead>Employee</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Department</TableHead>
               <TableHead>Status</TableHead>
@@ -195,7 +244,15 @@ const EmployeesView = () => {
                 draggable={true}
                 onDragStart={(e) => handleEmployeeDragStart(employee, e)}
               >
-                <TableCell className="font-medium">{employee.name}</TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8 border">
+                      <AvatarImage src={employee.avatarUrl} alt={employee.name} />
+                      <AvatarFallback>{employee.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span>{employee.name}</span>
+                  </div>
+                </TableCell>
                 <TableCell>{employee.role}</TableCell>
                 <TableCell>{employee.department}</TableCell>
                 <TableCell>
@@ -229,6 +286,36 @@ const EmployeesView = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            {/* Employee Photo Upload */}
+            <div className="flex flex-col items-center mb-2">
+              <div 
+                className="relative w-24 h-24 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 hover:bg-gray-100 cursor-pointer mb-2"
+                onClick={triggerFileInput}
+              >
+                {employeeImagePreview ? (
+                  <div className="w-full h-full rounded-full overflow-hidden">
+                    <img 
+                      src={employeeImagePreview} 
+                      alt="Employee preview" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <Camera className="h-8 w-8 text-gray-400" />
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleEmployeeImageChange}
+                />
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {employeeImagePreview ? "Change photo" : "Add employee photo"}
+              </span>
+            </div>
+
             <div className="grid gap-2">
               <Label htmlFor="name">Name</Label>
               <Input 

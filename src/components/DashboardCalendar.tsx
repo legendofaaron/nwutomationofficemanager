@@ -5,25 +5,36 @@ import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, ListTodo, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, ListTodo, Calendar as CalendarIcon, MapPin, Clock, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { type DayProps } from 'react-day-picker';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Todo {
   id: string;
   text: string;
   completed: boolean;
   date: Date;
+  assignedTo?: string;
+  assignedToAvatar?: string;
+  location?: string;
+  startTime?: string;
+  endTime?: string;
 }
 
 interface TaskFormValues {
   text: string;
   date: Date;
+  location?: string;
+  startTime?: string;
+  endTime?: string;
+  assignedTo?: string;
 }
 
 // Define types for the different items that can be dropped
@@ -46,11 +57,27 @@ const DashboardCalendar = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
+  const [employeeTaskDialogOpen, setEmployeeTaskDialogOpen] = useState(false);
+  const [droppedEmployee, setDroppedEmployee] = useState<any>(null);
 
   const form = useForm<TaskFormValues>({
     defaultValues: {
       text: '',
       date: new Date(),
+      location: '',
+      startTime: '',
+      endTime: '',
+      assignedTo: ''
+    },
+  });
+
+  const employeeTaskForm = useForm<TaskFormValues>({
+    defaultValues: {
+      text: '',
+      date: new Date(),
+      location: '',
+      startTime: '',
+      endTime: '',
     },
   });
 
@@ -83,13 +110,39 @@ const DashboardCalendar = () => {
       id: Date.now().toString(),
       text: values.text,
       completed: false,
-      date: values.date || selectedDate
+      date: values.date || selectedDate,
+      location: values.location,
+      startTime: values.startTime,
+      endTime: values.endTime,
+      assignedTo: values.assignedTo
     };
     
     setTodos([...todos, newTodo]);
     setIsDialogOpen(false);
     form.reset();
     toast.success("Task created successfully");
+  };
+
+  const onSubmitEmployeeTask = (values: TaskFormValues) => {
+    if (!droppedEmployee) return;
+
+    const newTodo: Todo = {
+      id: Date.now().toString(),
+      text: values.text,
+      completed: false,
+      date: values.date || selectedDate,
+      location: values.location,
+      startTime: values.startTime,
+      endTime: values.endTime,
+      assignedTo: droppedEmployee.text,
+      assignedToAvatar: droppedEmployee.originalData?.avatarUrl
+    };
+    
+    setTodos([...todos, newTodo]);
+    setEmployeeTaskDialogOpen(false);
+    employeeTaskForm.reset();
+    setDroppedEmployee(null);
+    toast.success(`Task assigned to ${droppedEmployee.text}`);
   };
 
   const toggleTodoCompletion = (id: string) => {
@@ -161,7 +214,15 @@ const DashboardCalendar = () => {
 
   // Handle dropped items from other components
   const handleExternalItemDrop = (droppedItem: DroppedItem, date: Date) => {
-    // Create a new todo based on the dropped item
+    // If it's an employee, we want to open the task assignment dialog
+    if (droppedItem.type === 'employee') {
+      setDroppedEmployee(droppedItem);
+      employeeTaskForm.setValue('date', date);
+      setEmployeeTaskDialogOpen(true);
+      return;
+    }
+    
+    // For other types, create a new todo directly
     const newTodo: Todo = {
       id: `${droppedItem.type}-${droppedItem.id}-${Date.now()}`,
       text: getTextByItemType(droppedItem),
@@ -336,7 +397,7 @@ const DashboardCalendar = () => {
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        className="rounded-md border"
+                        className="rounded-md border pointer-events-auto"
                       />
                     </FormItem>
                   )}
@@ -386,15 +447,52 @@ const DashboardCalendar = () => {
                     onCheckedChange={() => toggleTodoCompletion(todo.id)}
                     className="h-3.5 w-3.5"
                   />
-                  <label
-                    htmlFor={`todo-${todo.id}`}
-                    className={cn(
-                      "text-xs cursor-pointer",
-                      todo.completed && "line-through text-muted-foreground"
+                  <div className="flex flex-col">
+                    <label
+                      htmlFor={`todo-${todo.id}`}
+                      className={cn(
+                        "text-xs cursor-pointer",
+                        todo.completed && "line-through text-muted-foreground"
+                      )}
+                    >
+                      {todo.text}
+                    </label>
+                    
+                    {/* Show assigned person and other details if available */}
+                    {(todo.assignedTo || todo.location || todo.startTime) && (
+                      <div className="flex flex-wrap gap-x-2 mt-0.5 text-[10px] text-muted-foreground">
+                        {todo.assignedTo && (
+                          <div className="flex items-center">
+                            {todo.assignedToAvatar ? (
+                              <Avatar className="h-3 w-3 mr-0.5">
+                                <AvatarImage src={todo.assignedToAvatar} />
+                                <AvatarFallback className="text-[8px]">
+                                  {todo.assignedTo.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            ) : (
+                              <User className="h-2.5 w-2.5 mr-0.5" />
+                            )}
+                            {todo.assignedTo}
+                          </div>
+                        )}
+                        
+                        {todo.startTime && (
+                          <div className="flex items-center">
+                            <Clock className="h-2.5 w-2.5 mr-0.5" />
+                            {todo.startTime}{todo.endTime ? ` - ${todo.endTime}` : ''}
+                          </div>
+                        )}
+                        
+                        {todo.location && (
+                          <div className="flex items-center">
+                            <MapPin className="h-2.5 w-2.5 mr-0.5" />
+                            {todo.location}
+                          </div>
+                        )}
+                      </div>
                     )}
-                  >
-                    {todo.text}
-                  </label>
+                  </div>
                 </div>
                 <Button
                   variant="ghost"
@@ -413,6 +511,108 @@ const DashboardCalendar = () => {
           )}
         </div>
       </div>
+
+      {/* Employee Task Assignment Dialog */}
+      <Dialog open={employeeTaskDialogOpen} onOpenChange={setEmployeeTaskDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              {droppedEmployee ? (
+                <div className="flex items-center gap-2">
+                  <span>Assign Task to {droppedEmployee.text}</span>
+                  {droppedEmployee.originalData?.avatarUrl && (
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={droppedEmployee.originalData.avatarUrl} />
+                      <AvatarFallback>{droppedEmployee.text.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+              ) : (
+                "Assign New Task"
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={employeeTaskForm.handleSubmit(onSubmitEmployeeTask)} className="space-y-4 mt-2">
+            <FormField
+              control={employeeTaskForm.control}
+              name="text"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Task Description</FormLabel>
+                  <FormControl>
+                    <Input placeholder="What needs to be done?" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={employeeTaskForm.control}
+                name="startTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Time</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={employeeTaskForm.control}
+                name="endTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>End Time</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <FormField
+              control={employeeTaskForm.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Where will this take place?" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={employeeTaskForm.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date: {format(field.value, 'MMMM d, yyyy')}</FormLabel>
+                  <FormControl>
+                    <div className="hidden">
+                      <Input {...field} type="hidden" value={field.value.toISOString()} />
+                    </div>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEmployeeTaskDialogOpen(false)}>Cancel</Button>
+              <Button type="submit">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Task
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
