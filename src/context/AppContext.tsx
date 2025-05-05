@@ -51,6 +51,21 @@ interface BrandingConfig {
   primaryColor?: string;
 }
 
+interface Crew {
+  id: string;
+  name: string;
+  members: string[];
+}
+
+interface Employee {
+  id: string;
+  name: string;
+  position?: string;
+  email?: string;
+  phone?: string;
+  crews?: string[];
+}
+
 interface AppContextType {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
@@ -74,6 +89,11 @@ interface AppContextType {
   setCalendarDate: (date: Date) => void;
   todos: Todo[];
   setTodos: (todos: Todo[]) => void;
+  // Employee and crew management
+  employees: Employee[];
+  setEmployees: (employees: Employee[]) => void;
+  crews: Crew[];
+  setCrews: (crews: Crew[]) => void;
 }
 
 // Default todos with sample tasks
@@ -104,6 +124,20 @@ const defaultTodos: Todo[] = [
   },
 ];
 
+// Default employees
+const defaultEmployees: Employee[] = [
+  { id: '1', name: 'John Smith', position: 'Manager', email: 'john@example.com' },
+  { id: '2', name: 'Sarah Johnson', position: 'Developer', email: 'sarah@example.com' },
+  { id: '3', name: 'Michael Brown', position: 'Designer', email: 'michael@example.com' },
+];
+
+// Default crews
+const defaultCrews: Crew[] = [
+  { id: '1', name: 'Development Team', members: ['2', '3'] },
+  { id: '2', name: 'Management', members: ['1'] },
+];
+
+// Default files with sample data
 const defaultFiles: File[] = [
   {
     id: '1',
@@ -171,6 +205,7 @@ const defaultFiles: File[] = [
   }
 ];
 
+// Default database tables with sample data
 const defaultDatabaseTables: DatabaseTable[] = [
   {
     id: '1',
@@ -223,9 +258,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     logoType: 'default'
   });
   
-  // Add calendar-related state
+  // Calendar-related state
   const [calendarDate, setCalendarDate] = useState<Date>(new Date());
   const [todos, setTodos] = useState<Todo[]>(defaultTodos);
+  
+  // Employee and crew management
+  const [employees, setEmployees] = useState<Employee[]>(defaultEmployees);
+  const [crews, setCrews] = useState<Crew[]>(defaultCrews);
 
   return (
     <AppContext.Provider
@@ -250,7 +289,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         calendarDate,
         setCalendarDate,
         todos,
-        setTodos
+        setTodos,
+        employees,
+        setEmployees,
+        crews,
+        setCrews
       }}
     >
       {children}

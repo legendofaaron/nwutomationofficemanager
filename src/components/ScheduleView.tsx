@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -8,9 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Upload, Loader2, CheckCircle } from 'lucide-react';
+import { Plus, Upload, Loader2, CheckCircle, Users, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useAppContext } from '@/context/AppContext';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface Task {
   id: string;
@@ -18,6 +20,7 @@ interface Task {
   date: Date;
   completed: boolean;
   assignedTo?: string;
+  crew?: string[];
   startTime?: string;
   endTime?: string;
 }
@@ -29,6 +32,7 @@ const mockEmployees = [
 ];
 
 const ScheduleView = () => {
+  const { employees, crews } = useAppContext();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [tasks, setTasks] = useState<Task[]>([
     {
@@ -49,11 +53,21 @@ const ScheduleView = () => {
       startTime: '14:00',
       endTime: '15:00'
     },
+    {
+      id: '3',
+      title: 'Site Inspection',
+      date: new Date(),
+      completed: false,
+      crew: ['John Smith', 'Michael Brown'],
+      startTime: '13:00',
+      endTime: '16:00'
+    },
   ]);
 
   const [newTask, setNewTask] = useState({
     title: '',
     assignedTo: '',
+    assignedCrew: '',
     startTime: '',
     endTime: ''
   });
@@ -62,21 +76,38 @@ const ScheduleView = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzedScheduleData, setAnalyzedScheduleData] = useState<Partial<Task> | null>(null);
+  const [assignmentType, setAssignmentType] = useState<'individual' | 'crew'>('individual');
 
   const handleAddTask = () => {
-    if (newTask.title && newTask.assignedTo && newTask.startTime && newTask.endTime) {
+    if (newTask.title && newTask.startTime && newTask.endTime) {
       const task: Task = {
         id: Date.now().toString(),
         title: newTask.title,
         date: selectedDate,
         completed: false,
-        assignedTo: newTask.assignedTo,
         startTime: newTask.startTime,
         endTime: newTask.endTime
       };
       
+      // Handle assignment based on selected type
+      if (assignmentType === 'individual' && newTask.assignedTo) {
+        task.assignedTo = newTask.assignedTo;
+      } else if (assignmentType === 'crew' && newTask.assignedCrew) {
+        // Get crew members' names
+        const selectedCrew = crews.find(crew => crew.id === newTask.assignedCrew);
+        if (selectedCrew) {
+          task.crew = selectedCrew.members.map(memberId => {
+            const employee = employees.find(emp => emp.id === memberId);
+            return employee ? employee.name : '';
+          }).filter(name => name !== '');
+        }
+      }
+      
       setTasks([...tasks, task]);
-      setNewTask({ title: '', assignedTo: '', startTime: '', endTime: '' });
+      setNewTask({ title: '', assignedTo: '', assignedCrew: '', startTime: '', endTime: '' });
+      toast.success("Task scheduled successfully");
+    } else {
+      toast.error("Please fill in all required fields");
     }
   };
 
@@ -130,6 +161,37 @@ const ScheduleView = () => {
     toast("New task added from analyzed file");
   };
 
+  // Helper to get employee options for select
+  const getEmployeeOptions = () => {
+    return employees.map(employee => (
+      <SelectItem key={employee.id} value={employee.name}>
+        {employee.name}
+      </SelectItem>
+    ));
+  };
+
+  // Helper to get crew options for select
+  const getCrewOptions = () => {
+    return crews.map(crew => (
+      <SelectItem key={crew.id} value={crew.id}>
+        {crew.name} ({crew.members.length} members)
+      </SelectItem>
+    ));
+  };
+
+  // Helper to get crew member names for display
+  const getCrewMemberNames = (crewId: string) => {
+    const crew = crews.find(c => c.id === crewId);
+    if (!crew) return "No members";
+    
+    const memberNames = crew.members.map(memberId => {
+      const employee = employees.find(emp => emp.id === memberId);
+      return employee ? employee.name : "";
+    }).filter(Boolean);
+    
+    return memberNames.join(", ");
+  };
+
   return (
     <div className="p-4">
       <Tabs defaultValue="calendar" className="w-full">
@@ -163,24 +225,69 @@ const ScheduleView = () => {
                           onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
                         />
                       </div>
+                      
                       <div className="space-y-2">
-                        <Label htmlFor="employee">Assign To</Label>
-                        <Select
-                          value={newTask.assignedTo}
-                          onValueChange={(value) => setNewTask({ ...newTask, assignedTo: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select employee" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {mockEmployees.map((employee) => (
-                              <SelectItem key={employee.id} value={employee.name}>
-                                {employee.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Label>Assignment Type</Label>
+                        <div className="flex space-x-4">
+                          <Button 
+                            variant={assignmentType === 'individual' ? 'default' : 'outline'} 
+                            onClick={() => setAssignmentType('individual')}
+                            className="flex items-center"
+                            type="button"
+                          >
+                            <User className="h-4 w-4 mr-2" />
+                            Individual
+                          </Button>
+                          <Button 
+                            variant={assignmentType === 'crew' ? 'default' : 'outline'} 
+                            onClick={() => setAssignmentType('crew')}
+                            className="flex items-center"
+                            type="button"
+                          >
+                            <Users className="h-4 w-4 mr-2" />
+                            Crew
+                          </Button>
+                        </div>
                       </div>
+                      
+                      {assignmentType === 'individual' ? (
+                        <div className="space-y-2">
+                          <Label htmlFor="employee">Assign To</Label>
+                          <Select
+                            value={newTask.assignedTo}
+                            onValueChange={(value) => setNewTask({ ...newTask, assignedTo: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select employee" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {getEmployeeOptions()}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Label htmlFor="crew">Assign To Crew</Label>
+                          <Select
+                            value={newTask.assignedCrew}
+                            onValueChange={(value) => setNewTask({ ...newTask, assignedCrew: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select crew" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {getCrewOptions()}
+                            </SelectContent>
+                          </Select>
+                          
+                          {newTask.assignedCrew && (
+                            <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
+                              <strong>Crew members:</strong> {getCrewMemberNames(newTask.assignedCrew)}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="startTime">Start Time</Label>
@@ -232,17 +339,46 @@ const ScheduleView = () => {
                       <div
                         key={task.id}
                         className={cn(
-                          "flex items-center justify-between p-4 rounded-lg",
+                          "flex items-center justify-between p-4 rounded-lg border",
                           task.completed ? "bg-muted/50" : "bg-card"
                         )}
                       >
                         <div className="space-y-1">
-                          <span className={cn(task.completed && "line-through text-muted-foreground")}>
+                          <span className={cn("font-medium", task.completed && "line-through text-muted-foreground")}>
                             {task.title}
                           </span>
                           <div className="text-sm text-muted-foreground">
-                            <p>Assigned to: {task.assignedTo}</p>
                             <p>{task.startTime} - {task.endTime}</p>
+                            
+                            {/* Show assignment info */}
+                            {task.assignedTo && (
+                              <div className="flex items-center mt-1">
+                                <User className="h-3 w-3 mr-1" />
+                                <span>Assigned to: {task.assignedTo}</span>
+                              </div>
+                            )}
+                            
+                            {task.crew && task.crew.length > 0 && (
+                              <div className="flex items-center mt-1">
+                                <Users className="h-3 w-3 mr-1" />
+                                <span>Crew: {task.crew.length} members</span>
+                                
+                                <div className="flex -space-x-1 ml-2">
+                                  {task.crew.slice(0, 3).map((member, i) => (
+                                    <Avatar key={i} className="h-5 w-5 border border-background">
+                                      <AvatarFallback className="text-[0.6rem]">
+                                        {member.substring(0, 1)}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  ))}
+                                  {task.crew.length > 3 && (
+                                    <Badge variant="secondary" className="h-5 w-5 rounded-full flex items-center justify-center text-[0.6rem] p-0">
+                                      +{task.crew.length - 3}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <input
@@ -274,18 +410,32 @@ const ScheduleView = () => {
                   <div
                     key={task.id}
                     className={cn(
-                      "flex items-center justify-between p-4 rounded-lg",
+                      "flex items-center justify-between p-4 rounded-lg border",
                       task.completed ? "bg-muted/50" : "bg-card"
                     )}
                   >
                     <div className="space-y-1">
-                      <span className={cn("block", task.completed && "line-through text-muted-foreground")}>
+                      <span className={cn("font-medium", task.completed && "line-through text-muted-foreground")}>
                         {task.title}
                       </span>
                       <div className="text-sm text-muted-foreground">
                         <p>Date: {task.date.toLocaleDateString()}</p>
-                        <p>Assigned to: {task.assignedTo}</p>
                         <p>{task.startTime} - {task.endTime}</p>
+                        
+                        {/* Show assignment info */}
+                        {task.assignedTo && (
+                          <div className="flex items-center mt-1">
+                            <User className="h-3 w-3 mr-1" />
+                            <span>Assigned to: {task.assignedTo}</span>
+                          </div>
+                        )}
+                        
+                        {task.crew && task.crew.length > 0 && (
+                          <div className="flex items-center mt-1">
+                            <Users className="h-3 w-3 mr-1" />
+                            <span>Crew: {task.crew.join(', ')}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <input

@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, X, Calendar as CalendarIcon, User } from 'lucide-react';
+import { Plus, X, Calendar as CalendarIcon, User, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { type DayProps } from 'react-day-picker';
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Todo {
   id: string;
@@ -46,7 +47,7 @@ interface DraggedItem {
 }
 
 const TodoCalendarBubble = () => {
-  const { calendarDate, setCalendarDate, todos, setTodos } = useAppContext();
+  const { calendarDate, setCalendarDate, todos, setTodos, employees, crews } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
   const [newTodoText, setNewTodoText] = useState('');
@@ -58,7 +59,8 @@ const TodoCalendarBubble = () => {
     startTime: '09:00',
     endTime: '10:00',
     location: 'Office',
-    assignedTo: ''
+    assignedTo: '',
+    assignedCrew: ''
   });
   
   // Ref to close popover when clicking outside
@@ -259,6 +261,21 @@ const TodoCalendarBubble = () => {
       taskData.assignedTo = newTask.assignedTo;
     }
     
+    // Add crew assignment if one is selected
+    if (newTask.assignedCrew) {
+      // Find the selected crew
+      const selectedCrew = crews.find(crew => crew.id === newTask.assignedCrew);
+      if (selectedCrew) {
+        // Get the names of all crew members
+        const crewMemberNames = selectedCrew.members.map(memberId => {
+          const employee = employees.find(emp => emp.id === memberId);
+          return employee ? employee.name : '';
+        }).filter(name => name !== '');
+        
+        taskData.crew = crewMemberNames;
+      }
+    }
+    
     // Create special task text for invoices
     if (draggedItem?.type === 'invoice') {
       const invoiceId = draggedItem.originalData.id;
@@ -277,7 +294,8 @@ const TodoCalendarBubble = () => {
       startTime: '09:00',
       endTime: '10:00',
       location: 'Office',
-      assignedTo: ''
+      assignedTo: '',
+      assignedCrew: ''
     });
     
     toast.success("Task scheduled successfully");
@@ -388,6 +406,37 @@ const TodoCalendarBubble = () => {
 
   // Total task count for the bubble badge - count only incomplete tasks
   const totalTaskCount = todos.filter(todo => !todo.completed).length;
+
+  // Get employee options for select
+  const getEmployeeOptions = () => {
+    return employees.map(employee => (
+      <SelectItem key={employee.id} value={employee.name}>
+        {employee.name}
+      </SelectItem>
+    ));
+  };
+
+  // Get crew options for select
+  const getCrewOptions = () => {
+    return crews.map(crew => (
+      <SelectItem key={crew.id} value={crew.id}>
+        {crew.name} ({crew.members.length} members)
+      </SelectItem>
+    ));
+  };
+
+  // Helper to get crew member names for display
+  const getCrewMemberNames = (crewId: string) => {
+    const crew = crews.find(c => c.id === crewId);
+    if (!crew) return "No members";
+    
+    const memberNames = crew.members.map(memberId => {
+      const employee = employees.find(emp => emp.id === memberId);
+      return employee ? employee.name : "";
+    }).filter(Boolean);
+    
+    return memberNames.join(", ");
+  };
 
   return (
     <div className="fixed top-4 right-4 z-50">
@@ -551,64 +600,125 @@ const TodoCalendarBubble = () => {
               )}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="task-title">Task Title</Label>
-              <Input 
-                id="task-title"
-                placeholder="Task title"
-                value={newTask.title}
-                onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Date</Label>
-              <div className="border rounded-md p-2 bg-muted/30">
-                {format(selectedDate, 'MMMM d, yyyy')}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+          
+          <Tabs defaultValue="basic" className="w-full">
+            <TabsList className="grid grid-cols-2">
+              <TabsTrigger value="basic">Basic Info</TabsTrigger>
+              <TabsTrigger value="assignment">Assignment</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="basic" className="space-y-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="start-time">Start Time</Label>
+                <Label htmlFor="task-title">Task Title</Label>
                 <Input 
-                  id="start-time" 
-                  type="time" 
-                  value={newTask.startTime}
-                  onChange={(e) => setNewTask({...newTask, startTime: e.target.value})}
+                  id="task-title"
+                  placeholder="Task title"
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({...newTask, title: e.target.value})}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="end-time">End Time</Label>
+                <Label>Date</Label>
+                <div className="border rounded-md p-2 bg-muted/30">
+                  {format(selectedDate, 'MMMM d, yyyy')}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="start-time">Start Time</Label>
+                  <Input 
+                    id="start-time" 
+                    type="time" 
+                    value={newTask.startTime}
+                    onChange={(e) => setNewTask({...newTask, startTime: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="end-time">End Time</Label>
+                  <Input 
+                    id="end-time" 
+                    type="time" 
+                    value={newTask.endTime}
+                    onChange={(e) => setNewTask({...newTask, endTime: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="location">Location</Label>
                 <Input 
-                  id="end-time" 
-                  type="time" 
-                  value={newTask.endTime}
-                  onChange={(e) => setNewTask({...newTask, endTime: e.target.value})}
+                  id="location" 
+                  placeholder="Location" 
+                  value={newTask.location}
+                  onChange={(e) => setNewTask({...newTask, location: e.target.value})}
                 />
               </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="location">Location</Label>
-              <Input 
-                id="location" 
-                placeholder="Location" 
-                value={newTask.location}
-                onChange={(e) => setNewTask({...newTask, location: e.target.value})}
-              />
-            </div>
-            {/* Only show employee selection if we don't have a dragged employee */}
-            {!draggedItem || draggedItem.type !== 'employee' ? (
-              <div className="grid gap-2">
-                <Label htmlFor="assigned-to">Assigned To</Label>
-                <Input
-                  id="assigned-to"
-                  placeholder="Employee name"
-                  value={newTask.assignedTo}
-                  onChange={(e) => setNewTask({...newTask, assignedTo: e.target.value})}
-                />
+            </TabsContent>
+            
+            <TabsContent value="assignment" className="space-y-4 py-4">
+              {/* Individual Assignment */}
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <User className="h-4 w-4 mr-2" />
+                  <Label htmlFor="assigned-to">Assign to Individual</Label>
+                </div>
+                {!draggedItem || draggedItem.type !== 'employee' ? (
+                  <Select 
+                    value={newTask.assignedTo} 
+                    onValueChange={value => setNewTask({...newTask, assignedTo: value})}
+                  >
+                    <SelectTrigger id="assigned-to">
+                      <SelectValue placeholder="Select an employee" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No individual assignment</SelectItem>
+                      {getEmployeeOptions()}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="border rounded-md p-2 bg-muted/30">
+                    {draggedItem.name}
+                  </div>
+                )}
               </div>
-            ) : null}
-          </div>
+              
+              {/* OR divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Or</span>
+                </div>
+              </div>
+              
+              {/* Crew Assignment */}
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <Users className="h-4 w-4 mr-2" />
+                  <Label htmlFor="assigned-crew">Assign to Crew</Label>
+                </div>
+                <Select 
+                  value={newTask.assignedCrew} 
+                  onValueChange={value => setNewTask({...newTask, assignedCrew: value})}
+                >
+                  <SelectTrigger id="assigned-crew">
+                    <SelectValue placeholder="Select a crew" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No crew assignment</SelectItem>
+                    {getCrewOptions()}
+                  </SelectContent>
+                </Select>
+                
+                {newTask.assignedCrew && (
+                  <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
+                    <strong>Crew members:</strong> {getCrewMemberNames(newTask.assignedCrew)}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+          
           <DialogFooter className="sm:justify-between">
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
