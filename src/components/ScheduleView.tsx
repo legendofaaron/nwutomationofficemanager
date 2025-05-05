@@ -913,4 +913,184 @@ const ScheduleView = () => {
                         type="time" 
                         value={newTask.endTime}
                         onChange={(e) => setNewTask({...newTask, endTime: e.target.value})}
-                        className="
+                        className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl pl-4 pr-12"
+                      />
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        PM
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Location selection */}
+                <div className="space-y-2">
+                  <Label className="text-base">Location</Label>
+                  <Select
+                    value={locationType}
+                    onValueChange={(value) => setLocationType(value as 'custom' | 'client')}
+                  >
+                    <SelectTrigger className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl">
+                      <SelectValue placeholder="Select location type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1E1E1E] border-[#2E2E2E] text-white">
+                      <SelectItem value="custom">Custom Location</SelectItem>
+                      <SelectItem value="client">Client Site</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {locationType === 'custom' ? (
+                  <div className="space-y-2">
+                    <Label className="text-base" htmlFor="location">Location Details</Label>
+                    <Input
+                      id="location"
+                      placeholder="Enter location details"
+                      value={newTask.location}
+                      onChange={(e) => setNewTask({...newTask, location: e.target.value})}
+                      className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label className="text-base" htmlFor="client-location">Client Location</Label>
+                    <Select
+                      value={newTask.clientId && newTask.clientLocationId ? `${newTask.clientId}:${newTask.clientLocationId}` : ""}
+                      onValueChange={(value) => {
+                        const parsed = parseClientLocationValue(value);
+                        if (parsed) {
+                          setNewTask({
+                            ...newTask,
+                            clientId: parsed.clientId,
+                            clientLocationId: parsed.locationId
+                          });
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl">
+                        <SelectValue placeholder="Choose client location" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1E1E1E] border-[#2E2E2E] text-white">
+                        {getClientLocationOptions()}
+                      </SelectContent>
+                    </Select>
+                    
+                    {newTask.clientId && newTask.clientLocationId && (
+                      <div className="mt-2 text-sm text-gray-400 bg-[#1A1A1A] p-3 rounded-xl">
+                        {(() => {
+                          const locationInfo = getClientLocationInfo(newTask.clientId, newTask.clientLocationId);
+                          if (!locationInfo) return null;
+                          
+                          return (
+                            <>
+                              <div className="font-medium text-white">{locationInfo.locationName}</div>
+                              <div>{locationInfo.address}</div>
+                              {locationInfo.city && locationInfo.state && (
+                                <div>{locationInfo.city}, {locationInfo.state} {locationInfo.zipCode}</div>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="assignment" className="space-y-6 mt-0">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-base">Assignment Type</Label>
+                  <Select
+                    value={assignmentType}
+                    onValueChange={(value) => setAssignmentType(value as 'individual' | 'crew')}
+                  >
+                    <SelectTrigger className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl">
+                      <SelectValue placeholder="Select assignment type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1E1E1E] border-[#2E2E2E] text-white">
+                      <SelectItem value="individual">
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 mr-2" />
+                          <span>Individual</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="crew">
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-2" />
+                          <span>Crew</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {assignmentType === 'individual' ? (
+                  <div className="space-y-2">
+                    <Label className="text-base" htmlFor="employee">Assign To</Label>
+                    <Select
+                      value={newTask.assignedTo}
+                      onValueChange={(value) => setNewTask({ ...newTask, assignedTo: value })}
+                    >
+                      <SelectTrigger className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl">
+                        <SelectValue placeholder="Select employee" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1E1E1E] border-[#2E2E2E] text-white">
+                        {getEmployeeOptions()}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label className="text-base" htmlFor="crew">Assign To Crew</Label>
+                    <Select
+                      value={newTask.assignedCrew}
+                      onValueChange={(value) => setNewTask({ ...newTask, assignedCrew: value })}
+                    >
+                      <SelectTrigger className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl">
+                        <SelectValue placeholder="Select crew" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1E1E1E] border-[#2E2E2E] text-white">
+                        {getCrewOptions()}
+                      </SelectContent>
+                    </Select>
+                    
+                    {newTask.assignedCrew && (
+                      <div className="mt-3 text-sm text-gray-400 bg-[#1A1A1A] p-3 rounded-xl">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-white">Crew Members</span>
+                          <Badge variant="outline" className="text-[0.6rem]">
+                            {crews.find(c => c.id === newTask.assignedCrew)?.members.length || 0} members
+                          </Badge>
+                        </div>
+                        <div className="mt-2">{getCrewMemberNames(newTask.assignedCrew)}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+          
+          <div className="flex gap-3 mt-4">
+            <Button 
+              variant="ghost" 
+              className="flex-1 h-12 border border-[#333] text-gray-300 hover:text-white"
+              onClick={() => setTeamEventDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              className="flex-1 h-12 bg-indigo-600 hover:bg-indigo-700 text-white"
+              onClick={handleCreateTeamEvent}
+            >
+              Create Task
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default ScheduleView;
