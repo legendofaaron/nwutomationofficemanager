@@ -1,9 +1,8 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Plus, CalendarIcon, List } from 'lucide-react';
+import { Plus, CalendarIcon, List, FileUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAppContext } from '@/context/AppContext';
@@ -17,8 +16,20 @@ import UploadAnalyzeSection from './UploadAnalyzeSection';
 import { parseClientLocationValue } from './ScheduleHelpers';
 
 const ScheduleView = () => {
-  const { employees, crews, clients, clientLocations, calendarDate } = useAppContext();
+  const { 
+    employees, 
+    crews, 
+    clients, 
+    clientLocations, 
+    calendarDate, 
+    setCalendarDate,
+    todos,
+    setTodos 
+  } = useAppContext();
+  
   const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
+  
+  // Synchronize tasks with todos from AppContext
   const [tasks, setTasks] = useState<Task[]>([
     {
       id: '1',
@@ -53,6 +64,36 @@ const ScheduleView = () => {
       clientLocationId: '1'
     },
   ]);
+
+  // Effect to synchronize selected date with App context
+  useEffect(() => {
+    if (calendarDate && calendarDate.getTime() !== selectedDate.getTime()) {
+      setSelectedDate(calendarDate);
+    }
+  }, [calendarDate]);
+
+  // Effect to update global state when local selected date changes
+  useEffect(() => {
+    setCalendarDate(selectedDate);
+  }, [selectedDate, setCalendarDate]);
+
+  // Effect to keep todos and tasks synchronized
+  useEffect(() => {
+    // Convert tasks to todos format for global state
+    const updatedTodos = tasks.map(task => ({
+      id: task.id,
+      text: task.title,
+      completed: task.completed,
+      date: task.date,
+      assignedTo: task.assignedTo,
+      crew: task.crew,
+      location: task.location,
+      startTime: task.startTime,
+      endTime: task.endTime
+    }));
+    
+    setTodos(updatedTodos);
+  }, [tasks, setTodos]);
 
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [teamEventDialogOpen, setTeamEventDialogOpen] = useState(false);
@@ -154,48 +195,64 @@ const ScheduleView = () => {
     }
   };
 
+  // Handle opening task dialog with pre-filled date
+  const handleOpenAddTaskDialog = () => {
+    // Reset form data
+    resetFormData();
+    
+    // Pre-fill with default times
+    setFormData({
+      ...formData,
+      startTime: '09:00',
+      endTime: '10:00'
+    });
+    
+    // Open the dialog
+    setIsTaskDialogOpen(true);
+  };
+
   // Handle applying analyzed schedule data
   const handleApplyScheduleData = (newTaskFromFile: Task) => {
     setTasks([...tasks, newTaskFromFile]);
     toast.success("New task added from analyzed file");
   };
 
-  // New handler for dragover events
+  // Drag and drop handlers
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Visual feedback for drag over
+    // Add classes for drop zone visual feedback
     if (e.currentTarget.classList.contains('schedule-drop-zone')) {
-      e.currentTarget.classList.add('bg-blue-50', 'dark:bg-blue-900/10', 'border-blue-200', 'dark:border-blue-800');
+      e.currentTarget.classList.add('drag-over');
     }
   };
   
-  // Handler for drag leave
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Remove visual feedback
+    // Remove visual feedback classes
     if (e.currentTarget.classList.contains('schedule-drop-zone')) {
-      e.currentTarget.classList.remove('bg-blue-50', 'dark:bg-blue-900/10', 'border-blue-200', 'dark:border-blue-800');
+      e.currentTarget.classList.remove('drag-over');
     }
   };
 
-  // New handler for drop events
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
     // Remove visual feedback
     if (e.currentTarget.classList.contains('schedule-drop-zone')) {
-      e.currentTarget.classList.remove('bg-blue-50', 'dark:bg-blue-900/10', 'border-blue-200', 'dark:border-blue-800');
+      e.currentTarget.classList.remove('drag-over');
     }
     
     try {
       const data = e.dataTransfer.getData('application/json');
       if (data) {
         const dragData = JSON.parse(data);
+        
+        // Handle crew drop
         if (dragData.type === 'crew') {
           setDroppedCrewId(dragData.id);
           
@@ -217,6 +274,25 @@ const ScheduleView = () => {
             description: "Fill in the details to schedule this team event"
           });
         }
+        
+        // Handle task drop for reordering or moving to a different day
+        else if (dragData.type === 'task') {
+          const taskId = dragData.id;
+          const task = tasks.find(t => t.id === taskId);
+          
+          if (task && task.date.toDateString() !== selectedDate.toDateString()) {
+            // Update the task date
+            setTasks(tasks.map(t => 
+              t.id === taskId 
+                ? { ...t, date: selectedDate } 
+                : t
+            ));
+            
+            toast.success(`Task moved to ${selectedDate.toLocaleDateString()}`, {
+              description: task.title
+            });
+          }
+        }
       }
     } catch (error) {
       console.error('Error handling drop:', error);
@@ -226,7 +302,7 @@ const ScheduleView = () => {
 
   return (
     <div 
-      className="p-4 schedule-drop-zone transition-colors duration-300" 
+      className="p-4 schedule-drop-zone transition-colors duration-300 rounded-lg" 
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -241,7 +317,7 @@ const ScheduleView = () => {
               Add Task
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Add New Task</DialogTitle>
             </DialogHeader>
@@ -284,6 +360,7 @@ const ScheduleView = () => {
             onSelectDate={(date) => date && setSelectedDate(date)}
             onToggleTaskCompletion={handleToggleTaskCompletion}
             crews={crews}
+            onAddNewTask={handleOpenAddTaskDialog}
           />
         </TabsContent>
         
@@ -299,10 +376,19 @@ const ScheduleView = () => {
       </Tabs>
 
       {/* Upload and Analyze Section */}
-      <UploadAnalyzeSection 
-        onApplyScheduleData={handleApplyScheduleData}
-        selectedDate={selectedDate}
-      />
+      <div className="mt-8 border border-border rounded-lg p-6 bg-card">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/30">
+            <FileUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <h2 className="text-xl font-semibold">Upload & Analyze Schedule</h2>
+        </div>
+        
+        <UploadAnalyzeSection 
+          onApplyScheduleData={handleApplyScheduleData}
+          selectedDate={selectedDate}
+        />
+      </div>
 
       {/* Team Event Dialog for dropped crews */}
       <TeamEventDialog 
