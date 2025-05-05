@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SelectItem, SelectLabel, SelectGroup } from "@/components/ui/select";
 import { 
@@ -37,10 +36,7 @@ export const getClientLocationOptions = (clients: Client[], clientLocations: Cli
       // Add a SelectGroup with a label for this client
       options.push(
         <SelectGroup key={`client-group-${client.id}`}>
-          <SelectLabel 
-            key={`client-${client.id}`}
-            className="font-medium"
-          >
+          <SelectLabel key={`client-${client.id}`} className="font-medium">
             {client.name}
           </SelectLabel>
           

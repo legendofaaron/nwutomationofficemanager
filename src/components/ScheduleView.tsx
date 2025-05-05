@@ -9,11 +9,11 @@ import { useAppContext } from '@/context/AppContext';
 import { Task, TaskFormData, AssignmentType, LocationType } from './schedule/ScheduleTypes';
 
 // Import components
-import TaskCalendarView from './TaskCalendarView';
-import TaskListView from './TaskListView';
-import TeamEventDialog from './TeamEventDialog';
-import UploadAnalyzeSection from './UploadAnalyzeSection';
-import { parseClientLocationValue } from './ScheduleHelpers';
+import TaskCalendarView from './schedule/TaskCalendarView';
+import TaskListView from './schedule/TaskListView';
+import TeamEventDialog from './schedule/TeamEventDialog';
+import UploadAnalyzeSection from './schedule/UploadAnalyzeSection';
+import { parseClientLocationValue } from './schedule/ScheduleHelpers';
 
 const ScheduleView = () => {
   const { 
