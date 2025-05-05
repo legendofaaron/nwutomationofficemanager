@@ -15,6 +15,7 @@ import { useForm } from 'react-hook-form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useAppContext } from '@/context/AppContext';
 
 interface Todo {
   id: string;
@@ -49,6 +50,9 @@ interface DroppedItem {
 }
 
 const DashboardCalendar = () => {
+  // Add the useAppContext hook to access crews
+  const { crews } = useAppContext();
+  
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [newTodoText, setNewTodoText] = useState('');
   const [draggedTodo, setDraggedTodo] = useState<Todo | null>(null);
