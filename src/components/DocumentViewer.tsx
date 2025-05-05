@@ -7,10 +7,13 @@ import DocumentToolbar from './document/DocumentToolbar';
 import ScheduleView from './ScheduleView';
 import AiSuggestions from './document/AiSuggestions';
 import { ScrollArea } from './ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 const DocumentViewer = () => {
   const { currentFile, files, setFiles, setCurrentFile, setViewMode } = useAppContext();
   const [content, setContent] = useState(currentFile?.content || '');
+  const { toast } = useToast();
+  const [textareaRef, setTextareaRef] = useState<HTMLTextAreaElement | null>(null);
   
   // Update content when currentFile changes
   useEffect(() => {
@@ -130,14 +133,98 @@ const DocumentViewer = () => {
     handleContentChange(suggestion);
   };
 
+  const handleFormatText = (format: string) => {
+    if (!textareaRef) return;
+    
+    const textarea = textareaRef;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = content.substring(start, end);
+    let formattedText = selectedText;
+    let cursorOffset = 0;
+    
+    switch (format) {
+      case 'bold':
+        formattedText = `**${selectedText}**`;
+        cursorOffset = 2;
+        break;
+      case 'italic':
+        formattedText = `*${selectedText}*`;
+        cursorOffset = 1;
+        break;
+      case 'underline':
+        formattedText = `<u>${selectedText}</u>`;
+        cursorOffset = 3;
+        break;
+      case 'h1':
+        formattedText = `# ${selectedText}`;
+        cursorOffset = 2;
+        break;
+      case 'h2':
+        formattedText = `## ${selectedText}`;
+        cursorOffset = 3;
+        break;
+      case 'h3':
+        formattedText = `### ${selectedText}`;
+        cursorOffset = 4;
+        break;
+      case 'bulletList':
+        formattedText = selectedText.split('\n').map(line => `- ${line}`).join('\n');
+        cursorOffset = 2;
+        break;
+      case 'numberedList':
+        formattedText = selectedText.split('\n').map((line, i) => `${i+1}. ${line}`).join('\n');
+        cursorOffset = 3;
+        break;
+      case 'link':
+        formattedText = `[${selectedText}](url)`;
+        cursorOffset = 1;
+        break;
+      case 'image':
+        formattedText = `![${selectedText || 'Image'}](image_url)`;
+        cursorOffset = 2;
+        break;
+      default:
+        break;
+    }
+
+    if (formattedText !== selectedText) {
+      const newContent = content.substring(0, start) + formattedText + content.substring(end);
+      handleContentChange(newContent);
+      
+      // Set the cursor position after the operation is complete
+      setTimeout(() => {
+        textarea.focus();
+        const newCursorPos = start + formattedText.length;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+      
+      toast({
+        title: "Formatting applied",
+        description: `${format} formatting applied to selected text`,
+        duration: 1500,
+      });
+    }
+  };
+
+  const handleSave = () => {
+    toast({
+      title: "Document saved",
+      description: "Your document has been saved successfully",
+      duration: 2000,
+    });
+  };
+
   return (
     <div className="relative h-full bg-[#F6F6F7]">
       <DocumentHeader 
         currentFile={currentFile}
         onNameChange={handleNameChange}
         onConvertToSpreadsheet={handleConvertToSpreadsheet}
+        onSave={handleSave}
       />
-      <DocumentToolbar />
+      
+      {!isSchedule && <DocumentToolbar onFormatText={handleFormatText} />}
       
       <ScrollArea className="h-[calc(100%-96px)]">
         <div className="max-w-3xl mx-auto px-6 py-4">
@@ -151,6 +238,7 @@ const DocumentViewer = () => {
                   onChange={(e) => handleContentChange(e.target.value)}
                   className="min-h-[50vh] w-full resize-none p-6 font-sans text-base leading-relaxed border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-lg"
                   placeholder="Start typing..."
+                  ref={(el) => setTextareaRef(el)}
                 />
                 <AiSuggestions 
                   content={content}

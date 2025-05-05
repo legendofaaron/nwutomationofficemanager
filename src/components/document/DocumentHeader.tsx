@@ -9,9 +9,10 @@ interface DocumentHeaderProps {
   currentFile: any;
   onNameChange: (name: string) => void;
   onConvertToSpreadsheet: () => void;
+  onSave?: () => void;
 }
 
-const DocumentHeader = ({ currentFile, onNameChange, onConvertToSpreadsheet }: DocumentHeaderProps) => {
+const DocumentHeader = ({ currentFile, onNameChange, onConvertToSpreadsheet, onSave }: DocumentHeaderProps) => {
   const { aiAssistantOpen, setAiAssistantOpen } = useAppContext();
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(currentFile?.name || '');
@@ -67,7 +68,12 @@ const DocumentHeader = ({ currentFile, onNameChange, onConvertToSpreadsheet }: D
           <Table className="h-4 w-4 mr-2" />
           Convert to Spreadsheet
         </Button>
-        <Button variant="ghost" size="icon" className="hover:bg-white/90">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="hover:bg-white/90"
+          onClick={onSave}
+        >
           <Save className="h-4 w-4" />
         </Button>
         <Button 
