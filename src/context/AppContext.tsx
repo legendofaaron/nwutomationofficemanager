@@ -158,9 +158,11 @@ const defaultDatabaseTables: DatabaseTable[] = [
   }
 ];
 
+// Create the context with undefined as default value
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const AppProvider = ({ children }: { children: ReactNode }) => {
+// Create the AppProvider component as a proper React function component
+export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('welcome');
   const [files, setFiles] = useState<File[]>(defaultFiles);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
@@ -203,6 +205,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// Create a hook to use the context
 export const useAppContext = () => {
   const context = useContext(AppContext);
   if (context === undefined) {

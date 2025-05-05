@@ -38,8 +38,8 @@ const App = () => {
   
   return (
     <BrowserRouter>
-      <AppProvider>
-        <ThemeProvider>
+      <ThemeProvider>
+        <AppProvider>
           <Toaster />
           <Routes>
             {/* Authentication Routes */}
@@ -71,8 +71,8 @@ const App = () => {
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </ThemeProvider>
-      </AppProvider>
+        </AppProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 };
