@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type ViewMode = 'welcome' | 'files' | 'database' | 'document' | 'knowledge' | 'office' | 'spreadsheet' | 'settings';
@@ -70,18 +69,39 @@ interface AppContextType {
   setAssistantConfig: (config: AssistantConfig) => void;
   branding: BrandingConfig;
   setBranding: (config: BrandingConfig) => void;
-  // New calendar-related state
+  // Calendar-related state
   calendarDate: Date;
   setCalendarDate: (date: Date) => void;
   todos: Todo[];
   setTodos: (todos: Todo[]) => void;
 }
 
-// Default todos
+// Default todos with sample tasks
 const defaultTodos: Todo[] = [
-  { id: '1', text: 'Team meeting', completed: false, date: new Date() },
-  { id: '2', text: 'Review project proposal', completed: true, date: new Date() },
-  { id: '3', text: 'Call with client', completed: false, date: new Date() },
+  { 
+    id: '1', 
+    text: 'Team meeting', 
+    completed: false, 
+    date: new Date(),
+    location: 'Conference Room',
+    startTime: '10:00',
+    endTime: '11:00'
+  },
+  { 
+    id: '2', 
+    text: 'Review project proposal', 
+    completed: true, 
+    date: new Date(),
+    assignedTo: 'John Smith'
+  },
+  { 
+    id: '3', 
+    text: 'Call with client', 
+    completed: false, 
+    date: new Date(),
+    startTime: '14:30',
+    endTime: '15:00'
+  },
 ];
 
 const defaultFiles: File[] = [

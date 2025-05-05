@@ -32,6 +32,20 @@ const PopoverContent = React.forwardRef<
           props.onInteractOutside(e);
         }
       }}
+      onDragOver={(e) => {
+        // Allow dropzones to work
+        e.stopPropagation();
+        if (props.onDragOver) {
+          props.onDragOver(e);
+        }
+      }}
+      onDrop={(e) => {
+        // Handle drops inside popovers
+        e.stopPropagation();
+        if (props.onDrop) {
+          props.onDrop(e);
+        }
+      }}
       {...props}
     />
   </PopoverPrimitive.Portal>

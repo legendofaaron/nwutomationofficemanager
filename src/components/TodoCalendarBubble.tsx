@@ -14,6 +14,17 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { toast } from 'sonner';
 import { useAppContext } from '@/context/AppContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from '@/components/ui/label';
 
 interface Todo {
   id: string;
@@ -23,6 +34,16 @@ interface Todo {
   assignedTo?: string;
   assignedToAvatars?: string[];
   crew?: string[];
+  location?: string;
+  startTime?: string;
+  endTime?: string;
+}
+
+interface DraggedItem {
+  type: 'employee' | 'invoice' | 'todo';
+  id: string;
+  name: string;
+  originalData: any;
 }
 
 const TodoCalendarBubble = () => {
@@ -31,6 +52,15 @@ const TodoCalendarBubble = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
   const [newTodoText, setNewTodoText] = useState('');
   const [draggedTodo, setDraggedTodo] = useState<Todo | null>(null);
+  const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    startTime: '09:00',
+    endTime: '10:00',
+    location: 'Office',
+    assignedTo: ''
+  });
   
   // Ref to close popover when clicking outside
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -86,6 +116,72 @@ const TodoCalendarBubble = () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('closeAllPopovers', handleCloseAllPopovers);
       document.removeEventListener('click', handleDashboardClick);
+    };
+  }, [isOpen]);
+
+  // Listen for dragover events at the document level
+  useEffect(() => {
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault(); // Necessary to allow dropping
+      
+      // Check if the popover is not open and the dragover is over the calendar bubble
+      if (!isOpen && e.target) {
+        const targetElement = e.target as HTMLElement;
+        const calendarBubble = document.querySelector('[data-calendar-bubble="true"]');
+        
+        // If dragging over the calendar button when closed, open it
+        if (calendarBubble && (calendarBubble === targetElement || calendarBubble.contains(targetElement))) {
+          setIsOpen(true);
+        }
+      }
+    };
+    
+    document.addEventListener('dragover', handleDragOver);
+    
+    return () => {
+      document.removeEventListener('dragover', handleDragOver);
+    };
+  }, [isOpen]);
+
+  // Listen for drop events at the document level for handling external drops
+  useEffect(() => {
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      
+      try {
+        const dragData = e.dataTransfer?.getData('application/json');
+        if (dragData) {
+          const parsedData = JSON.parse(dragData);
+          
+          if (parsedData.type === 'employee' || parsedData.type === 'invoice') {
+            // Open calendar if closed
+            if (!isOpen) {
+              setIsOpen(true);
+            }
+            
+            // Set dragged item data for task creation
+            setDraggedItem({
+              type: parsedData.type,
+              id: parsedData.id,
+              name: parsedData.text,
+              originalData: parsedData.originalData
+            });
+            
+            // Open task dialog
+            setTimeout(() => {
+              setIsTaskDialogOpen(true);
+            }, 100);
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing drag data:", error);
+      }
+    };
+    
+    document.addEventListener('drop', handleDrop);
+    
+    return () => {
+      document.removeEventListener('drop', handleDrop);
     };
   }, [isOpen]);
 
@@ -161,6 +257,57 @@ const TodoCalendarBubble = () => {
     }
   };
 
+  // Create a new task based on dragged item or manual creation
+  const handleCreateTask = () => {
+    if (!newTask.title) {
+      toast.error("Please provide a task title");
+      return;
+    }
+    
+    // Create basic task data
+    const taskData: Todo = {
+      id: Date.now().toString(),
+      text: newTask.title,
+      completed: false,
+      date: selectedDate,
+      startTime: newTask.startTime,
+      endTime: newTask.endTime,
+      location: newTask.location
+    };
+    
+    // Add assignee data if we have a dragged employee
+    if (draggedItem?.type === 'employee') {
+      const employeeName = draggedItem.name.split(' - ')[1] || draggedItem.name;
+      taskData.assignedTo = employeeName;
+    } else if (newTask.assignedTo) {
+      // Or use manually selected assignee
+      taskData.assignedTo = newTask.assignedTo;
+    }
+    
+    // Create special task text for invoices
+    if (draggedItem?.type === 'invoice') {
+      const invoiceId = draggedItem.originalData.id;
+      const clientName = draggedItem.originalData.clientName;
+      taskData.text = `Process invoice ${invoiceId} for ${clientName}`;
+    }
+    
+    // Add to todos
+    setTodos([...todos, taskData]);
+    
+    // Reset states
+    setIsTaskDialogOpen(false);
+    setDraggedItem(null);
+    setNewTask({
+      title: '',
+      startTime: '09:00',
+      endTime: '10:00',
+      location: 'Office',
+      assignedTo: ''
+    });
+    
+    toast.success("Task scheduled successfully");
+  };
+
   // Custom day render to handle drops and clicks
   const customDayRender = (day: DayProps) => {
     const date = day.date;
@@ -183,18 +330,44 @@ const TodoCalendarBubble = () => {
           e.preventDefault();
           e.stopPropagation();
           
-          // Handle the drop - update the todo's date
-          if (draggedTodo) {
-            const updatedTodos = todos.map(todo => 
-              todo.id === draggedTodo.id 
-                ? { ...todo, date } 
-                : todo
-            );
-            setTodos(updatedTodos);
-            // Update the selected date to make the moved task visible
-            setSelectedDate(new Date(date));
-            toast.success(`Task moved to ${format(date, 'MMM d, yyyy')}`);
-            setDraggedTodo(null);
+          try {
+            // Check if we have a dragged JSON item first
+            const dragData = e.dataTransfer.getData('application/json');
+            if (dragData) {
+              const parsedData = JSON.parse(dragData);
+              
+              if (parsedData.type === 'employee' || parsedData.type === 'invoice') {
+                setDraggedItem({
+                  type: parsedData.type,
+                  id: parsedData.id,
+                  name: parsedData.text,
+                  originalData: parsedData.originalData
+                });
+                
+                // Update the selected date to the drop target date
+                setSelectedDate(new Date(date));
+                
+                // Open task dialog
+                setIsTaskDialogOpen(true);
+                return;
+              }
+            }
+            
+            // Fall back to handling todo drags
+            if (draggedTodo) {
+              const updatedTodos = todos.map(todo => 
+                todo.id === draggedTodo.id 
+                  ? { ...todo, date } 
+                  : todo
+              );
+              setTodos(updatedTodos);
+              // Update the selected date to make the moved task visible
+              setSelectedDate(new Date(date));
+              toast.success(`Task moved to ${format(date, 'MMM d, yyyy')}`);
+              setDraggedTodo(null);
+            }
+          } catch (error) {
+            console.error("Error handling drop:", error);
           }
         }}
       >
@@ -248,6 +421,7 @@ const TodoCalendarBubble = () => {
           <Button 
             size="icon" 
             className="h-12 w-12 rounded-full shadow-lg bg-primary relative"
+            data-calendar-bubble="true"
           >
             <CalendarIcon className="h-5 w-5" />
             {totalTaskCount > 0 && (
@@ -386,6 +560,90 @@ const TodoCalendarBubble = () => {
           </Card>
         </PopoverContent>
       </Popover>
+
+      {/* Task Creation Dialog */}
+      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Schedule Task</DialogTitle>
+            <DialogDescription>
+              {draggedItem ? (
+                draggedItem.type === 'employee' 
+                  ? `Create a task for ${draggedItem.name}`
+                  : `Schedule processing for ${draggedItem.name}`
+              ) : (
+                'Create a new task'
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="task-title">Task Title</Label>
+              <Input 
+                id="task-title"
+                placeholder="Task title"
+                value={newTask.title}
+                onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Date</Label>
+              <div className="border rounded-md p-2 bg-muted/30">
+                {format(selectedDate, 'MMMM d, yyyy')}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="start-time">Start Time</Label>
+                <Input 
+                  id="start-time" 
+                  type="time" 
+                  value={newTask.startTime}
+                  onChange={(e) => setNewTask({...newTask, startTime: e.target.value})}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="end-time">End Time</Label>
+                <Input 
+                  id="end-time" 
+                  type="time" 
+                  value={newTask.endTime}
+                  onChange={(e) => setNewTask({...newTask, endTime: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="location">Location</Label>
+              <Input 
+                id="location" 
+                placeholder="Location" 
+                value={newTask.location}
+                onChange={(e) => setNewTask({...newTask, location: e.target.value})}
+              />
+            </div>
+            {/* Only show employee selection if we don't have a dragged employee */}
+            {!draggedItem || draggedItem.type !== 'employee' ? (
+              <div className="grid gap-2">
+                <Label htmlFor="assigned-to">Assigned To</Label>
+                <Input
+                  id="assigned-to"
+                  placeholder="Employee name"
+                  value={newTask.assignedTo}
+                  onChange={(e) => setNewTask({...newTask, assignedTo: e.target.value})}
+                />
+              </div>
+            ) : null}
+          </div>
+          <DialogFooter className="sm:justify-between">
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button type="button" onClick={handleCreateTask}>
+              Create Task
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
