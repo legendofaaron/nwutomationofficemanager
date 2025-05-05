@@ -4,7 +4,18 @@ import { Hexagon } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 
 export const Logo = ({ small, onClick }: { small?: boolean; onClick?: () => void }) => {
-  const { branding } = useAppContext();
+  // Try to use AppContext, but don't fail if it's not available
+  // This allows the Logo to work in the LoadingScreen where AppContext isn't available
+  let branding = { companyName: 'Northwestern Automation', logoType: 'default', logoUrl: '' };
+  
+  try {
+    const appContext = useAppContext();
+    if (appContext) {
+      branding = appContext.branding;
+    }
+  } catch (error) {
+    // AppContext not available, use default branding
+  }
   
   return (
     <div 
