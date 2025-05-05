@@ -7,7 +7,7 @@ interface LlmResponse {
 
 export async function queryLlm(prompt: string, endpoint: string, model: string = 'default', webhookUrl?: string): Promise<LlmResponse> {
   try {
-    // Get webhook URL from localStorage if not provided explicitly
+    // Get stored configuration from localStorage
     const storedConfig = localStorage.getItem('llmConfig');
     const config = storedConfig ? JSON.parse(storedConfig) : {};
     const effectiveWebhookUrl = webhookUrl || config.webhookUrl;
@@ -16,6 +16,16 @@ export async function queryLlm(prompt: string, endpoint: string, model: string =
       message: prompt,
       model: model
     };
+    
+    // Include custom model configuration if it exists and is enabled
+    if (config.customModel?.isCustom) {
+      payload.customModel = {
+        name: config.customModel.name,
+        apiKey: config.customModel.apiKey,
+        baseUrl: config.customModel.baseUrl,
+        contextLength: config.customModel.contextLength
+      };
+    }
     
     // Always include webhook URL if available from any source
     if (effectiveWebhookUrl) {
@@ -32,7 +42,7 @@ export async function queryLlm(prompt: string, endpoint: string, model: string =
     });
 
     if (!response.ok) {
-      throw new Error('Failed to query n8n workflow');
+      throw new Error('Failed to query language model');
     }
 
     const data = await response.json();
@@ -40,7 +50,7 @@ export async function queryLlm(prompt: string, endpoint: string, model: string =
       message: data.response || data.message || "No response received",
     };
   } catch (error) {
-    console.error('Error querying n8n workflow:', error);
+    console.error('Error querying language model:', error);
     throw error;
   }
 }

@@ -18,12 +18,15 @@ const AiSuggestions: React.FC<AiSuggestionsProps> = ({ content, onSuggestionAppl
     setLoading(true);
     try {
       const prompt = `Please suggest improvements for this text: ${content}`;
+      
+      // Load LLM configuration from localStorage
+      const storedConfig = localStorage.getItem('llmConfig');
+      const config = storedConfig ? JSON.parse(storedConfig) : {};
+      const endpoint = config.endpoint || 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk';
+      const model = config.customModel?.isCustom ? 'custom' : (config.model || 'default');
+      
       // Pass webhook URL as undefined to let queryLlm use the one from localStorage
-      const response = await queryLlm(
-        prompt, 
-        'http://localhost:5678/workflow/EQL62DuHvzL2PmBk', 
-        'default'
-      );
+      const response = await queryLlm(prompt, endpoint, model);
       onSuggestionApply(response.message);
     } catch (error) {
       toast({

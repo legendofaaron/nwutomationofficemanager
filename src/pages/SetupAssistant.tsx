@@ -47,7 +47,11 @@ const SetupAssistant = () => {
     companyDescription: '',
     assistantPurpose: 'General office tasks and document management',
     logoType: branding.logoType || 'default' as 'default' | 'text' | 'image',
-    logoUrl: branding.logoUrl || ''
+    logoUrl: branding.logoUrl || '',
+    useCustomModel: false,
+    customModelName: '',
+    customModelApiKey: '',
+    customModelBaseUrl: '',
   });
   
   useEffect(() => {
@@ -326,23 +330,75 @@ const SetupAssistant = () => {
             <TabsContent value="llm">
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="llm-model">Language Model</Label>
-                  <Select 
-                    value={config.llmModel}
-                    onValueChange={(value) => setConfig({...config, llmModel: value})}
-                  >
-                    <SelectTrigger id="llm-model">
-                      <SelectValue placeholder="Select language model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="gpt-4o-mini">GPT-4o Mini (Faster, more affordable)</SelectItem>
-                      <SelectItem value="gpt-4o">GPT-4o (More capable)</SelectItem>
-                      <SelectItem value="gpt-4.5-preview">GPT-4.5 Preview (Most capable)</SelectItem>
-                      <SelectItem value="llama-3.1-8b">Llama 3.1 (8B)</SelectItem>
-                      <SelectItem value="llama-3.1-70b">Llama 3.1 (70B)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="use-custom-model">Use Custom Model</Label>
+                    <Switch 
+                      id="use-custom-model"
+                      checked={config.useCustomModel}
+                      onCheckedChange={(checked) => setConfig({...config, useCustomModel: checked})}
+                    />
+                  </div>
                 </div>
+                
+                {!config.useCustomModel ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="llm-model">Language Model</Label>
+                    <Select 
+                      value={config.llmModel}
+                      onValueChange={(value) => setConfig({...config, llmModel: value})}
+                    >
+                      <SelectTrigger id="llm-model">
+                        <SelectValue placeholder="Select language model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="gpt-4o-mini">GPT-4o Mini (Faster, more affordable)</SelectItem>
+                        <SelectItem value="gpt-4o">GPT-4o (More capable)</SelectItem>
+                        <SelectItem value="gpt-4.5-preview">GPT-4.5 Preview (Most capable)</SelectItem>
+                        <SelectItem value="llama-3.1-8b">Llama 3.1 (8B)</SelectItem>
+                        <SelectItem value="llama-3.1-70b">Llama 3.1 (70B)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="custom-model-name">Custom Model Name</Label>
+                      <Input 
+                        id="custom-model-name"
+                        value={config.customModelName}
+                        onChange={(e) => setConfig({...config, customModelName: e.target.value})}
+                        placeholder="My Custom Model"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="custom-model-api-key">API Key</Label>
+                      <Input 
+                        id="custom-model-api-key"
+                        type="password"
+                        value={config.customModelApiKey}
+                        onChange={(e) => setConfig({...config, customModelApiKey: e.target.value})}
+                        placeholder="sk-..."
+                      />
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Your API key will be stored locally in your browser
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="custom-model-base-url">Base URL (Optional)</Label>
+                      <Input 
+                        id="custom-model-base-url"
+                        value={config.customModelBaseUrl}
+                        onChange={(e) => setConfig({...config, customModelBaseUrl: e.target.value})}
+                        placeholder="https://api.example.com/v1"
+                      />
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Leave empty to use the default endpoint
+                      </p>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="space-y-2">
                   <Label htmlFor="endpoint">API Endpoint</Label>
