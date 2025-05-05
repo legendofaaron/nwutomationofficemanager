@@ -86,8 +86,8 @@ export const localAuth = {
       users.push(newUser);
       saveUsers(users);
       
-      // Auto sign in after sign up - fixed the undefined access issue
-      const signInResult = this.signInWithPassword({ email, password });
+      // Auto sign in after sign up - fixed by calling signInWithPassword correctly
+      this.signInWithPassword({ email, password });
       
       return { 
         data: { user: newUser },
