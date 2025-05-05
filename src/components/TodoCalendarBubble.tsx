@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent } from '@/components/ui/card';
@@ -29,6 +29,27 @@ const TodoCalendarBubble = () => {
     { id: '2', text: 'Review project proposal', completed: true, date: new Date() },
     { id: '3', text: 'Call with client', completed: false, date: new Date() },
   ]);
+
+  // Ref to close popover when clicking outside
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  // Listen for clicks outside popover to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpen && 
+          popoverRef.current && 
+          !popoverRef.current.contains(event.target as Node) && 
+          // Make sure we're not clicking the trigger button
+          !(event.target as HTMLElement).closest('[data-state="open"]')) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const todaysTodos = todos.filter(
     todo => todo.date.toDateString() === selectedDate.toDateString()
@@ -163,7 +184,12 @@ const TodoCalendarBubble = () => {
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 p-0 bg-background border-2" align="end">
+        <PopoverContent 
+          ref={popoverRef}
+          className="w-80 p-0 bg-background border-2" 
+          align="end"
+          sideOffset={4}
+        >
           <Card className="shadow-lg border-0">
             <div className="flex justify-between items-center p-3 bg-card border-b">
               <h3 className="text-base flex items-center font-medium">

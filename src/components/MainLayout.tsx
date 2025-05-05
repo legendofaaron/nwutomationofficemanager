@@ -160,7 +160,22 @@ const MainLayout = () => {
             </div>
           </div>
           
-          <main className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", sidebarOpen ? "ml-0" : "ml-0")}>
+          <main 
+            className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", sidebarOpen ? "ml-0" : "ml-0")}
+            onClick={(e) => {
+              // Close calendar bubbles when clicking on the main content area
+              // We don't use stopPropagation to allow normal click events to still work
+              const target = e.target as HTMLElement;
+              // Only close if we're clicking directly on the main content
+              // and not on interactive elements or the calendar itself
+              if (target.closest('[role="dialog"]') || 
+                  target.closest('button') || 
+                  target.closest('input') ||
+                  target.closest('[data-calendar]')) {
+                return;
+              }
+            }}
+          >
             <div className={`w-full ${mainBg} h-full rounded-md overflow-auto`}>
               {viewMode === 'document' && <DocumentViewer />}
               {viewMode === 'database' && <DatabaseViewer />}
