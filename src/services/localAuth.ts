@@ -86,8 +86,8 @@ export const localAuth = {
       users.push(newUser);
       saveUsers(users);
       
-      // Auto sign in after sign up - fixed by calling signInWithPassword correctly
-      this.signInWithPassword({ email, password });
+      // Auto sign in after sign up - fixed by using the localAuth reference directly
+      localAuth.signInWithPassword({ email, password });
       
       return { 
         data: { user: newUser },
