@@ -226,15 +226,14 @@ const ScheduleView = () => {
       );
       
       if (clientLocationsFiltered.length > 0) {
-        // Add a label for this client
+        // Add a label for this client (changed from SelectItem to SelectLabel to avoid value issues)
         options.push(
-          <SelectItem 
-            key={`client-${client.id}`} 
-            value={`client-${client.id}`}
-            disabled
+          <SelectLabel 
+            key={`client-${client.id}`}
+            className="font-medium"
           >
             {client.name}
-          </SelectItem>
+          </SelectLabel>
         );
         
         // Add each location under this client
