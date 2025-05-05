@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type ViewMode = 'welcome' | 'files' | 'database' | 'document' | 'knowledge' | 'office' | 'spreadsheet' | 'settings';
@@ -360,6 +361,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     companyName: 'Northwestern Automation',
     logoType: 'default'
   });
+  
+  // Add missing state variables
+  const [calendarDate, setCalendarDate] = useState<Date>(new Date());
+  const [todos, setTodos] = useState<Todo[]>(defaultTodos);
   
   // Employee and crew management
   const [employees, setEmployees] = useState<Employee[]>(defaultEmployees);

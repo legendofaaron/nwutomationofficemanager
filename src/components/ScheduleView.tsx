@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Upload, Loader2, CheckCircle, Users, User, Calendar as CalendarIcon, MapPin } from 'lucide-react';
+import { Plus, Upload, Loader2, CheckCircle, Users, User, Calendar as CalendarIcon, MapPin, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAppContext } from '@/context/AppContext';
