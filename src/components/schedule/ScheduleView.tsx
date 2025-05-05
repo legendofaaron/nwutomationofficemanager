@@ -300,6 +300,24 @@ const ScheduleView = () => {
     }
   };
 
+  // Handle moving a task to a different date
+  const handleMoveTask = (taskId: string, newDate: Date) => {
+    const task = tasks.find(t => t.id === taskId);
+    
+    if (task && task.date.toDateString() !== newDate.toDateString()) {
+      // Create task copy with updated date
+      setTasks(tasks.map(t => 
+        t.id === taskId 
+          ? { ...t, date: newDate } 
+          : t
+      ));
+      
+      toast.success(`Task "${task.title}" moved to ${newDate.toLocaleDateString()}`, {
+        description: `${task.startTime} - ${task.endTime}`
+      });
+    }
+  };
+
   return (
     <div 
       className="p-4 schedule-drop-zone transition-colors duration-300 rounded-lg" 
@@ -361,6 +379,7 @@ const ScheduleView = () => {
             onToggleTaskCompletion={handleToggleTaskCompletion}
             crews={crews}
             onAddNewTask={handleOpenAddTaskDialog}
+            onMoveTask={handleMoveTask}
           />
         </TabsContent>
         

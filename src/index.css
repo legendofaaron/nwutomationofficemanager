@@ -129,6 +129,7 @@
 /* Calendar day drop styling */
 .calendar-day-cell {
   position: relative;
+  cursor: pointer;
 }
 
 .calendar-day-cell.drag-over .rdp-button {
@@ -138,6 +139,10 @@
 
 .calendar-day-cell.valid-drop-target {
   cursor: pointer;
+}
+
+.calendar-day-cell.valid-drop-target:hover {
+  background-color: rgba(59, 130, 246, 0.05);
 }
 
 /* Empty day state styling */
@@ -182,3 +187,4 @@
   transform: scale(1.02);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
+
