@@ -216,7 +216,7 @@ const ScheduleView = () => {
     ));
   };
   
-  // Helper to get client options for select
+  // Helper to get client options for select - Updated to show address info
   const getClientOptions = () => {
     return clients.map(client => (
       <SelectItem key={client.id} value={client.id}>
@@ -225,7 +225,7 @@ const ScheduleView = () => {
     ));
   };
   
-  // Helper to get client location options for select
+  // Helper to get client location options for select - Updated to show address info
   const getClientLocationOptions = () => {
     if (!newTask.clientId) return null;
     
@@ -234,7 +234,11 @@ const ScheduleView = () => {
     );
     
     return filteredLocations.map(location => (
-      <SelectItem key={location.id} value={location.id}>
+      <SelectItem 
+        key={location.id} 
+        value={location.id}
+        description={`${location.address}${location.city ? `, ${location.city}` : ''}${location.state ? `, ${location.state}` : ''} ${location.zipCode || ''}`}
+      >
         {location.name} {location.isPrimary && "(Primary)"}
       </SelectItem>
     ));
