@@ -4,8 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Plus, Upload } from 'lucide-react';
-import { KnowledgeItem, Category } from './knowledge/types';
-import { KnowledgeSidebar, categories } from './knowledge/KnowledgeSidebar';
+import { KnowledgeSidebar } from './knowledge/KnowledgeSidebar';
 import { KnowledgeLibrary } from './knowledge/KnowledgeLibrary';
 import { KnowledgeTraining } from './knowledge/KnowledgeTraining';
 import { AddKnowledgeDialog } from './knowledge/dialogs/AddKnowledgeDialog';
@@ -14,8 +13,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/components/ui/use-toast';
 
 const KnowledgeBase = () => {
-  const [knowledgeItems, setKnowledgeItems] = useState<KnowledgeItem[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [knowledgeItems, setKnowledgeItems] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -34,8 +33,8 @@ const KnowledgeBase = () => {
   });
 
   // Handle adding a new knowledge item
-  const handleAddItem = (newItem: Partial<KnowledgeItem>) => {
-    const fullItem: KnowledgeItem = {
+  const handleAddItem = (newItem) => {
+    const fullItem = {
       id: uuidv4(),
       title: newItem.title || 'Untitled',
       content: newItem.content || '',
@@ -54,7 +53,10 @@ const KnowledgeBase = () => {
   };
 
   // Handle uploading a file
-  const handleUploadFile = (files: File[]) => {
+  const handleUploadFile = (file) => {
+    // Convert single file to array to maintain compatibility with existing code
+    const files = [file];
+    
     const newItems = files.map(file => ({
       id: uuidv4(),
       title: file.name,
@@ -74,7 +76,7 @@ const KnowledgeBase = () => {
   };
 
   // Handle deleting a knowledge item
-  const handleDeleteItem = (id: string) => {
+  const handleDeleteItem = (id) => {
     setKnowledgeItems(knowledgeItems.filter(item => item.id !== id));
     
     toast({
@@ -198,7 +200,7 @@ const KnowledgeBase = () => {
       <UploadFileDialog 
         isOpen={isUploadDialogOpen} 
         onClose={() => setIsUploadDialogOpen(false)}
-        onUpload={handleUploadFile}
+        onUploadFile={handleUploadFile}
       />
     </div>
   );
