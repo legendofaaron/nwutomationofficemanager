@@ -972,7 +972,7 @@ For questions or further information, please contact [Name] at [Contact Informat
     setAiAssistantOpen(false);
   };
   if (!aiAssistantOpen) return null;
-  return <div className="fixed right-4 bottom-4 w-96 shadow-lg border border-gray-200 flex flex-col h-[600px] z-20 bg-slate-800 rounded-lg px-0 my-[79px] mx-0">
+  return <div className="fixed right-4 bottom-4 w-96 shadow-lg border border-black-200 flex flex-col h-[600px] z-20 bg-slate-800 rounded-lg px-0 my-[79px] mx-0">
       <div className="flex items-center justify-between p-3 border-b bg-slate-900">
         <div className="flex items-center gap-2">
           <Logo small />
