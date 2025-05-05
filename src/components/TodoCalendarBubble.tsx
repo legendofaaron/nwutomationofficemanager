@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -142,8 +141,8 @@ const TodoCalendarBubble = () => {
     );
   };
 
-  // Total task count for the bubble badge
-  const totalTaskCount = todos.length;
+  // Total task count for the bubble badge - count only incomplete tasks
+  const totalTaskCount = todos.filter(todo => !todo.completed).length;
 
   return (
     <div className="fixed top-4 right-4 z-50">
