@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, User, ArrowRight, AlertCircle, Shield } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, AlertCircle, Shield, AtSign } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/Logo';
 import { useAppContext } from '@/context/AppContext';
@@ -16,6 +17,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+  username: z.string()
+    .min(3, { message: 'Username must be at least 3 characters' })
+    .max(20, { message: 'Username must be less than 20 characters' })
+    .regex(/^[a-z0-9_]+$/, { message: 'Username can only contain lowercase letters, numbers, and underscores' }),
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
   confirmPassword: z.string().min(6, { message: 'Confirm password must be at least 6 characters' }),
@@ -47,6 +52,7 @@ const Signup = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
+      username: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -65,7 +71,7 @@ const Signup = () => {
         options: {
           data: {
             full_name: values.name,
-            username: values.email.split('@')[0], // Default username from email
+            username: values.username, // Use the provided username
           }
         }
       });
@@ -136,6 +142,27 @@ const Signup = () => {
                           <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                           <Input 
                             placeholder="Enter your name" 
+                            className="pl-10" 
+                            {...field} 
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <AtSign className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                          <Input 
+                            placeholder="Choose a username" 
                             className="pl-10" 
                             {...field} 
                           />
