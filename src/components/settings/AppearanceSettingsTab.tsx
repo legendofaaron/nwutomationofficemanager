@@ -60,6 +60,7 @@ export const AppearanceSettingsTab = () => {
               >
                 <Moon className="h-5 w-5 mb-2" />
                 <span className="text-sm font-medium">Dark</span>
+                <span className="text-xs text-muted-foreground">Super Dark</span>
               </Label>
             </div>
             <div>

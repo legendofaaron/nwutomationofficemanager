@@ -34,8 +34,8 @@ const WelcomeDashboard = () => {
 
         {/* Main Nav Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-          <Card className={`hover:shadow-md transition-shadow ${isDark ? 'border-gray-700 dashboard-card' : 'border-app-blue/10'}`}>
-            <CardHeader className={`${isDark ? 'bg-[#161a21]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
+          <Card className={`hover:shadow-md transition-shadow ${isDark ? 'border-[#1a1e26] dashboard-card' : 'border-app-blue/10'}`}>
+            <CardHeader className={`${isDark ? 'bg-[#0d0f13]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Building2 className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
                 Office Manager
@@ -53,8 +53,8 @@ const WelcomeDashboard = () => {
             </CardFooter>
           </Card>
 
-          <Card className={`hover:shadow-md transition-shadow ${isDark ? 'border-gray-700 dashboard-card' : 'border-app-blue/10'}`}>
-            <CardHeader className={`${isDark ? 'bg-[#161a21]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
+          <Card className={`hover:shadow-md transition-shadow ${isDark ? 'border-[#1a1e26] dashboard-card' : 'border-app-blue/10'}`}>
+            <CardHeader className={`${isDark ? 'bg-[#0d0f13]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Brain className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
                 Knowledge Base
@@ -72,8 +72,8 @@ const WelcomeDashboard = () => {
             </CardFooter>
           </Card>
           
-          <Card className={`hover:shadow-md transition-shadow ${isDark ? 'border-gray-700 dashboard-card' : 'border-app-blue/10'}`}>
-            <CardHeader className={`${isDark ? 'bg-[#161a21]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
+          <Card className={`hover:shadow-md transition-shadow ${isDark ? 'border-[#1a1e26] dashboard-card' : 'border-app-blue/10'}`}>
+            <CardHeader className={`${isDark ? 'bg-[#0d0f13]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
               <CardTitle className="text-lg flex items-center gap-2">
                 <LayoutDashboard className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
                 Dashboard
@@ -93,8 +93,8 @@ const WelcomeDashboard = () => {
         </div>
 
         {/* Intelligent Assistant Card */}
-        <Card className={`mb-6 ${isDark ? 'border-blue-900/30 bg-[#161a21]' : 'border-app-blue/20'} shadow-sm`}>
-          <CardHeader className={`${isDark ? 'bg-[#161a21]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
+        <Card className={`mb-6 ${isDark ? 'border-blue-900/30 bg-[#0d0f13]' : 'border-app-blue/20'} shadow-sm`}>
+          <CardHeader className={`${isDark ? 'bg-[#0d0f13]' : 'bg-gradient-to-r from-blue-50 to-white'} p-3`}>
             <CardTitle className="text-xl flex items-center gap-2">
               <MessageSquare className={`h-5 w-5 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
               Intelligent Assistant
@@ -119,7 +119,7 @@ const WelcomeDashboard = () => {
         <div className="space-y-4 mb-6">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Explore Features</h2>
           <div className="grid grid-cols-3 gap-3">
-            <Card className={`hover:shadow-sm transition-shadow ${isDark ? 'bg-[#161a21] border-gray-700' : ''}`}>
+            <Card className={`hover:shadow-sm transition-shadow ${isDark ? 'bg-[#0d0f13] border-[#1a1e26]' : ''}`}>
               <CardHeader className="p-3">
                 <CardTitle className="text-sm flex items-center gap-1">
                   <BookOpenText className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
@@ -133,7 +133,7 @@ const WelcomeDashboard = () => {
               </CardFooter>
             </Card>
             
-            <Card className={`hover:shadow-sm transition-shadow ${isDark ? 'bg-[#161a21] border-gray-700' : ''}`}>
+            <Card className={`hover:shadow-sm transition-shadow ${isDark ? 'bg-[#0d0f13] border-[#1a1e26]' : ''}`}>
               <CardHeader className="p-3">
                 <CardTitle className="text-sm flex items-center gap-1">
                   <Brain className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />
@@ -147,7 +147,7 @@ const WelcomeDashboard = () => {
               </CardFooter>
             </Card>
             
-            <Card className={`hover:shadow-sm transition-shadow ${isDark ? 'bg-[#161a21] border-gray-700' : ''}`}>
+            <Card className={`hover:shadow-sm transition-shadow ${isDark ? 'bg-[#0d0f13] border-[#1a1e26]' : ''}`}>
               <CardHeader className="p-3">
                 <CardTitle className="text-sm flex items-center gap-1">
                   <Building2 className={`h-4 w-4 ${isDark ? 'text-blue-400' : 'text-app-blue'}`} />

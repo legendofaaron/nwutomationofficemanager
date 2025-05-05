@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Building2, Calendar, Receipt, Settings, Users, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,17 +8,22 @@ import InvoicesView from './InvoicesView';
 import { Logo } from './Logo';
 import SystemSettings from './SystemSettings';
 import BookingView from './BookingView';
+import { useTheme } from '@/context/ThemeContext';
+
 const OfficeManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState<'employees' | 'schedule' | 'invoices' | 'bookings' | 'settings'>('employees');
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
   return <div className="h-full">
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-[#1a1e26]' : ''}`}>
         <div className="flex items-center gap-2">
           <Logo small />
           <h2 className="text-lg font-medium">Office Manager</h2>
         </div>
       </div>
 
-      <div className="p-4 border-b bg-zinc-900">
+      <div className={`p-4 border-b ${isDark ? 'bg-[#0a0c10] border-[#1a1e26]' : 'bg-zinc-900'}`}>
         <div className="flex items-center gap-4 flex-wrap">
           <Button variant={activeTab === 'employees' ? 'default' : 'outline'} size="sm" className="gap-2" onClick={() => setActiveTab('employees')}>
             <Users className="h-4 w-4" />

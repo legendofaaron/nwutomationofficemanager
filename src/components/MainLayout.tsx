@@ -56,7 +56,7 @@ const MainLayout = () => {
 
   return (
     <SidebarProvider defaultOpen={sidebarOpen}>
-      <div className="h-screen bg-app-gray-lightest dark:bg-[#111318] flex w-full overflow-hidden">
+      <div className="h-screen bg-app-gray-lightest dark:bg-[#0a0c10] flex w-full overflow-hidden">
         <div className="relative sidebar-container">
           <Sidebar>
             <AppSidebar />
@@ -66,7 +66,7 @@ const MainLayout = () => {
             style={{ top: `${triggerPosition}px` }}
           >
             <SidebarTrigger 
-              className={`h-16 w-12 ${isDark ? 'bg-[#1a1e25] border border-[#2a2f38]' : 'bg-white'} shadow-md rounded-r-lg flex items-center justify-center hover:bg-gray-50 dark:hover:bg-[#222733] transition-colors group cursor-move`}
+              className={`h-16 w-12 ${isDark ? 'bg-[#0d0f13] border border-[#1a1e26]' : 'bg-white'} shadow-md rounded-r-lg flex items-center justify-center hover:bg-gray-50 dark:hover:bg-[#171b24] transition-colors group cursor-move`}
               onMouseDown={handleDragStart}
             >
               <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
@@ -77,7 +77,7 @@ const MainLayout = () => {
         </div>
         
         <main className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", sidebarOpen ? "ml-0" : "ml-0")}>
-          <div className={`w-full ${isDark ? 'bg-[#111318]' : 'bg-white'} shadow-sm h-full rounded-md overflow-auto`}>
+          <div className={`w-full ${isDark ? 'bg-[#0a0c10]' : 'bg-white'} shadow-sm h-full rounded-md overflow-auto`}>
             {viewMode === 'document' && <DocumentViewer />}
             {viewMode === 'database' && <DatabaseViewer />}
             {viewMode === 'knowledge' && <KnowledgeBase />}
