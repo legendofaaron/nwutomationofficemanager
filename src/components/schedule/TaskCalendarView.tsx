@@ -4,12 +4,13 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Task, Crew } from './ScheduleTypes';
 import { cn } from '@/lib/utils';
-import { User, Users, MapPin, CheckCircle, X, Clock } from 'lucide-react';
+import { User, Users, MapPin, CheckCircle, X, Clock, Calendar as CalendarIcon } from 'lucide-react';
 import { getCrewDisplayCode } from './ScheduleHelpers';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
+import { DayProps } from 'react-day-picker';
 
 interface TaskCalendarViewProps {
   tasks: Task[];
@@ -49,16 +50,17 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
             onSelect={onSelectDate}
             className={cn("rounded-md border", "pointer-events-auto")}
             components={{
-              DayContent: ({ day }) => {
+              DayContent: (props: DayProps) => {
                 // Check if there are tasks on this day
+                const dayDate = props.date;
                 const hasTasks = tasks.some(
-                  task => task.date.toDateString() === day.toDate().toDateString()
+                  task => task.date.toDateString() === dayDate.toDateString()
                 );
                 
                 return (
                   <div className="relative h-full flex items-center justify-center">
                     <div className="calendar-day-number z-10">
-                      {format(day.toDate(), 'd')}
+                      {format(dayDate, 'd')}
                     </div>
                     {hasTasks && (
                       <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-1 w-1 bg-blue-500 rounded-full" />

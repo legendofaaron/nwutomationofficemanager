@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
@@ -47,7 +46,15 @@ const ScheduleView = () => {
     },
   ]);
 
-  const [newTask, setNewTask] = useState<TaskFormData>({
+  const [teamEventDialogOpen, setTeamEventDialogOpen] = useState(false);
+  const [droppedCrewId, setDroppedCrewId] = useState<string | null>(null);
+  
+  // State to track assignment and location types
+  const [assignmentType, setAssignmentType] = useState<AssignmentType>('individual');
+  const [locationType, setLocationType] = useState<LocationType>('custom');
+
+  // FormData state instead of newTask
+  const [formData, setFormData] = useState<TaskFormData>({
     title: '',
     assignedTo: '',
     assignedCrew: '',
@@ -57,14 +64,6 @@ const ScheduleView = () => {
     clientId: '',
     clientLocationId: ''
   });
-
-  // Add new states for team event dialog
-  const [teamEventDialogOpen, setTeamEventDialogOpen] = useState(false);
-  const [droppedCrewId, setDroppedCrewId] = useState<string | null>(null);
-  
-  // State to track assignment and location types
-  const [assignmentType, setAssignmentType] = useState<AssignmentType>('individual');
-  const [locationType, setLocationType] = useState<LocationType>('custom');
 
   // Handler for adding a new task
   const handleAddTask = (task: Task) => {
@@ -98,8 +97,8 @@ const ScheduleView = () => {
           setTeamEventDialogOpen(true);
           
           // Pre-fill the form with crew data
-          setNewTask({
-            ...newTask,
+          setFormData({
+            ...formData,
             title: `${dragData.name} Team Meeting`,
             assignedCrew: dragData.id,
             assignedTo: '',
@@ -125,13 +124,13 @@ const ScheduleView = () => {
 
   // Handle creating team event from dropped crew
   const handleCreateTeamEvent = () => {
-    if (!newTask.title || !newTask.assignedCrew) {
+    if (!formData.title || !formData.assignedCrew) {
       toast.error("Please fill in all required fields");
       return;
     }
     
     // Find the crew to get members
-    const selectedCrew = crews.find(crew => crew.id === newTask.assignedCrew);
+    const selectedCrew = crews.find(crew => crew.id === formData.assignedCrew);
     let crewMembers: string[] = [];
     
     if (selectedCrew) {
@@ -143,32 +142,32 @@ const ScheduleView = () => {
     
     const teamEvent: Task = {
       id: Date.now().toString(),
-      title: newTask.title,
+      title: formData.title,
       date: selectedDate,
       completed: false,
       crew: crewMembers,
-      crewId: newTask.assignedCrew,
-      startTime: newTask.startTime,
-      endTime: newTask.endTime
+      crewId: formData.assignedCrew,
+      startTime: formData.startTime,
+      endTime: formData.endTime
     };
     
     // Handle location based on selected type
-    if (locationType === 'custom' && newTask.location) {
-      teamEvent.location = newTask.location;
-    } else if (locationType === 'client' && newTask.clientId && newTask.clientLocationId) {
-      const client = clients.find(c => c.id === newTask.clientId);
-      const location = clientLocations.find(l => l.id === newTask.clientLocationId);
+    if (locationType === 'custom' && formData.location) {
+      teamEvent.location = formData.location;
+    } else if (locationType === 'client' && formData.clientId && formData.clientLocationId) {
+      const client = clients.find(c => c.id === formData.clientId);
+      const location = clientLocations.find(l => l.id === formData.clientLocationId);
       
       if (client && location) {
         teamEvent.location = `${client.name} - ${location.name}`;
-        teamEvent.clientId = newTask.clientId;
-        teamEvent.clientLocationId = newTask.clientLocationId;
+        teamEvent.clientId = formData.clientId;
+        teamEvent.clientLocationId = formData.clientLocationId;
       }
     }
     
     setTasks([...tasks, teamEvent]);
     setTeamEventDialogOpen(false);
-    setNewTask({ 
+    setFormData({ 
       title: '', 
       assignedTo: '', 
       assignedCrew: '', 
@@ -198,14 +197,10 @@ const ScheduleView = () => {
         <TabsContent value="calendar" className="mt-4">
           <TaskCalendarView 
             selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
+            onSelectDate={(date) => date && setSelectedDate(date)}
             tasks={tasks}
             onToggleTaskCompletion={handleToggleTaskCompletion}
-            onAddTask={handleAddTask}
-            employees={employees}
             crews={crews}
-            clients={clients}
-            clientLocations={clientLocations}
           />
         </TabsContent>
         
@@ -223,21 +218,21 @@ const ScheduleView = () => {
       {/* Upload and Analyze Section at the bottom */}
       <UploadAnalyzeSection 
         selectedDate={selectedDate}
-        onAddTask={handleAddTask}
+        onApplyScheduleData={handleAddTask}
       />
 
       {/* Team Event Dialog */}
       <TeamEventDialog 
         open={teamEventDialogOpen}
         onOpenChange={setTeamEventDialogOpen}
-        newTask={newTask}
-        setNewTask={setNewTask}
+        formData={formData}
+        setFormData={setFormData}
         selectedDate={selectedDate}
         assignmentType={assignmentType}
         setAssignmentType={setAssignmentType}
         locationType={locationType}
         setLocationType={setLocationType}
-        handleCreateTeamEvent={handleCreateTeamEvent}
+        onCreateEvent={handleCreateTeamEvent}
         employees={employees}
         crews={crews}
         clients={clients}
