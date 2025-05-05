@@ -6,7 +6,7 @@ import { useAppContext } from '@/context/AppContext';
 export const Logo = ({ small, onClick }: { small?: boolean; onClick?: () => void }) => {
   // Try to use AppContext, but don't fail if it's not available
   // This allows the Logo to work in the LoadingScreen where AppContext isn't available
-  let branding = { companyName: 'Northwestern Automation', logoType: 'default', logoUrl: '' };
+  let branding = { companyName: 'Northwestern Automation', logoType: 'default' as const, logoUrl: '' };
   
   try {
     const appContext = useAppContext();
