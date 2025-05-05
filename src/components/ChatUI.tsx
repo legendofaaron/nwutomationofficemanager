@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -294,7 +293,7 @@ Your data remains secure on your local system. How can I assist you today?`;
     return (
       <Button
         onClick={handleToggleChat}
-        className="fixed bottom-4 right-4 h-12 w-12 rounded-full p-0 shadow-lg hover:shadow-xl transition-all bg-primary text-primary-foreground"
+        className="fixed bottom-4 right-4 h-12 w-12 rounded-full p-0 shadow-xl hover:shadow-2xl transition-all bg-blue-500 hover:bg-blue-600 text-white border-none"
         aria-label="Open chat assistant"
       >
         <Bot className="h-5 w-5" />
@@ -303,7 +302,7 @@ Your data remains secure on your local system. How can I assist you today?`;
   }
 
   return (
-    <div className={`fixed right-4 bottom-20 w-72 ${isDark ? 'bg-card/90' : 'bg-white/95'} backdrop-blur-sm rounded-xl shadow-lg ${isDark ? 'border-border/30' : 'border-gray-200/50'} border flex flex-col h-[450px] z-20 animate-in slide-in-from-bottom-5`}>
+    <div className="fixed right-4 bottom-20 w-[350px] bg-[#0D1117] backdrop-blur-sm rounded-xl shadow-xl border border-[#1E2430] flex flex-col h-[550px] z-20 animate-in slide-in-from-bottom-5">
       <ChatHeader 
         assistantName={assistantConfig?.name || 'Office Manager'} 
         companyName={assistantConfig?.companyName}

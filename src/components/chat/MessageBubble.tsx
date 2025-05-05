@@ -29,10 +29,10 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       <div 
         className={`${
           message.type === 'user' 
-            ? 'bg-primary text-primary-foreground max-w-[80%] p-2 rounded-lg shadow-sm text-xs' 
+            ? 'bg-blue-500 text-white max-w-[80%] p-3 rounded-lg shadow-sm text-sm' 
             : message.type === 'system'
-              ? `${isDark ? 'bg-secondary' : 'bg-gray-200'} ${isDark ? 'text-secondary-foreground' : 'text-gray-800'} px-2.5 py-0.5 rounded-full text-xs font-medium`
-              : `${isDark ? 'bg-muted/60' : 'bg-gray-100/90'} ${isDark ? 'text-foreground' : 'text-gray-800'} max-w-[80%] p-2 rounded-lg shadow-sm text-xs`
+              ? 'bg-[#1E2430] text-gray-300 px-3 py-1 rounded-full text-xs font-medium'
+              : 'bg-[#161B22] text-gray-200 max-w-[80%] p-3 rounded-lg shadow-sm text-sm'
         } whitespace-pre-wrap`}
       >
         {message.content}

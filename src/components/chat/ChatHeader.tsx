@@ -21,30 +21,34 @@ export const ChatHeader = ({
   const isDark = resolvedTheme === 'dark' || resolvedTheme === 'superdark';
   
   return (
-    <div className={`flex items-center justify-between p-2 ${isDark ? 'border-border/30' : 'border-gray-200/50'} border-b rounded-t-xl`}>
-      <div className="flex items-center gap-1.5">
-        <Bot className="h-4 w-4 text-primary" />
-        <h3 className="font-medium text-sm">{assistantName}</h3>
-        {companyName && (
-          <span className="text-xs text-muted-foreground">for {companyName}</span>
-        )}
+    <div className="flex items-center justify-between p-4 border-b border-border/20 bg-[#0D1117] rounded-t-xl">
+      <div className="flex items-center gap-2">
+        <div className="h-9 w-9 rounded-full bg-blue-500 flex items-center justify-center">
+          <Bot className="h-5 w-5 text-white" />
+        </div>
+        <div>
+          <h3 className="font-medium text-base text-white">{assistantName}</h3>
+          {companyName && (
+            <span className="text-xs text-gray-400">for {companyName}</span>
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-1">
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={onSettingsClick}
-          className="h-6 w-6 rounded-full"
+          className="h-8 w-8 rounded-full text-gray-400 hover:text-white hover:bg-[#1E2430]"
         >
-          <Settings className="h-3.5 w-3.5" />
+          <Settings className="h-4 w-4" />
         </Button>
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={onCloseClick}
-          className="h-6 w-6 rounded-full"
+          className="h-8 w-8 rounded-full text-gray-400 hover:text-white hover:bg-[#1E2430]"
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="h-4 w-4" />
         </Button>
       </div>
     </div>

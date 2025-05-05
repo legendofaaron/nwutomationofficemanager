@@ -13,8 +13,8 @@ interface SetupWizardProps {
 export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupWizardProps) => {
   return (
     <>
-      <ScrollArea className="flex-1 p-3">
-        <div className="space-y-2.5">
+      <ScrollArea className="flex-1 p-4 bg-[#0D1117]">
+        <div className="space-y-4">
           {messages.map(message => (
             <MessageBubble key={message.id} message={message} />
           ))}

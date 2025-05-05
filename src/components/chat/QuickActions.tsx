@@ -17,16 +17,15 @@ export const QuickActions = ({ onActionSelect }: QuickActionProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-1 p-1.5 border-b border-border/30">
+    <div className="grid grid-cols-1 gap-2 p-3 border-b border-border/20">
       {quickActions.map((action, index) => (
         <Button
           key={index}
           variant="outline"
-          size="sm"
-          className="w-full justify-start text-xs py-1 h-7"
+          className="w-full justify-start text-sm py-5 h-auto bg-[#0D1117] border-[#1E2430] text-gray-100 hover:bg-[#161B22] transition-colors"
           onClick={action.action}
         >
-          <action.icon className="mr-1 h-3 w-3" />
+          <action.icon className="mr-2 h-5 w-5" />
           {action.label}
         </Button>
       ))}
