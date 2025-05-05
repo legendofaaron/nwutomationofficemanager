@@ -10,6 +10,7 @@ import NotFound from './pages/NotFound';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
+import { LoadingScreen } from './components/LoadingScreen';
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -21,19 +22,23 @@ const App = () => {
       setIsAuthenticated(isLoggedIn);
     };
     
-    checkAuth();
+    // Slight delay to simulate checking authentication
+    const timer = setTimeout(() => {
+      checkAuth();
+    }, 500); // Small delay for the loading screen to show
     
     // Listen for storage events (in case user logs in/out in another tab)
     window.addEventListener('storage', checkAuth);
     
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('storage', checkAuth);
     };
   }, []);
   
   // Show loading state while checking authentication
   if (isAuthenticated === null) {
-    return <div className="h-screen w-full flex items-center justify-center">Loading...</div>;
+    return <LoadingScreen />;
   }
   
   return (

@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 0 0% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -127,12 +127,14 @@
     @apply border-border;
   }
 
-  body {
-    @apply bg-background text-foreground overflow-hidden;
-  }
-
   html {
     @apply overflow-hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground overflow-hidden;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 }
 
@@ -197,6 +199,15 @@
   .improved-card {
     @apply rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow duration-300;
   }
+  
+  /* Professional form elements */
+  .form-input {
+    @apply h-10 px-3 py-2 rounded-md border border-input bg-transparent text-sm;
+  }
+  
+  .form-label {
+    @apply text-sm font-medium text-foreground mb-1.5 block;
+  }
 }
 
 @layer utilities {
@@ -238,5 +249,9 @@
   /* Remove transitions for super dark theme for a snappier feel */
   .superdark * {
     transition: none;
+  }
+  
+  .frosted-glass {
+    @apply backdrop-blur-lg bg-white/80 dark:bg-black/50 border border-white/20 dark:border-white/10;
   }
 }
