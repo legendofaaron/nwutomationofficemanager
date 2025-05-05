@@ -126,6 +126,20 @@
   background-color: hsl(var(--accent));
 }
 
+/* Calendar day drop styling */
+.calendar-day-cell {
+  position: relative;
+}
+
+.calendar-day-cell.drag-over .rdp-button {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  border: 2px dashed hsl(var(--primary));
+}
+
+.calendar-day-cell.valid-drop-target {
+  cursor: pointer;
+}
+
 /* Empty day state styling */
 .empty-day-container {
   min-height: 200px;

@@ -217,6 +217,24 @@ const ScheduleView = () => {
     toast.success("New task added from analyzed file");
   };
 
+  // Handle moving a task to a different date
+  const handleMoveTask = (taskId: string, newDate: Date) => {
+    const task = tasks.find(t => t.id === taskId);
+    
+    if (task && task.date.toDateString() !== newDate.toDateString()) {
+      // Create task copy with updated date
+      setTasks(tasks.map(t => 
+        t.id === taskId 
+          ? { ...t, date: newDate } 
+          : t
+      ));
+      
+      toast.success(`Task moved to ${newDate.toLocaleDateString()}`, {
+        description: task.title
+      });
+    }
+  };
+
   // Drag and drop handlers
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -361,6 +379,7 @@ const ScheduleView = () => {
             onToggleTaskCompletion={handleToggleTaskCompletion}
             crews={crews}
             onAddNewTask={handleOpenAddTaskDialog}
+            onMoveTask={handleMoveTask}
           />
         </TabsContent>
         

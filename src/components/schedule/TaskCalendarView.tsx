@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Task, Crew } from './ScheduleTypes';
@@ -20,7 +20,7 @@ interface TaskCalendarViewProps {
   onToggleTaskCompletion: (taskId: string) => void;
   crews: Crew[];
   onAddNewTask: () => void;
-  onDragStart?: (task: Task) => void;
+  onMoveTask?: (taskId: string, newDate: Date) => void;
 }
 
 const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({ 
@@ -30,8 +30,11 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   onToggleTaskCompletion,
   crews,
   onAddNewTask,
-  onDragStart
+  onMoveTask
 }) => {
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
+
   // Filter tasks for the selected date
   const tasksForSelectedDate = tasks.filter(
     task => task.date.toDateString() === selectedDate.toDateString()
@@ -39,25 +42,27 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
 
   // Handle task drag start
   const handleDragStart = (e: React.DragEvent, task: Task) => {
+    // Set data for drag operation
     e.dataTransfer.setData('application/json', JSON.stringify({
       type: 'task',
       id: task.id,
       title: task.title
     }));
     
+    // Store dragged task id in state
+    setDraggedTaskId(task.id);
+    
     // Add dragging class for visual feedback
     const element = e.currentTarget as HTMLElement;
     element.classList.add('dragging');
-    
-    if (onDragStart) {
-      onDragStart(task);
-    }
   };
 
   // Handle drag end
   const handleDragEnd = (e: React.DragEvent) => {
     const element = e.currentTarget as HTMLElement;
     element.classList.remove('dragging');
+    setDraggedTaskId(null);
+    setDragOverDate(null);
   };
 
   return (
@@ -79,19 +84,86 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
             className={cn("rounded-md border pointer-events-auto", "calendar-grid")}
             components={{
               DayContent: (props: DayProps) => {
-                // Check if there are tasks on this day
                 const dayDate = props.date;
                 const hasTasks = tasks.some(
                   task => task.date.toDateString() === dayDate.toDateString()
                 );
                 
+                // Is this date being dragged over
+                const isDragOver = dragOverDate && 
+                                  dragOverDate.toDateString() === dayDate.toDateString();
+                
+                // Event handlers for day cells
+                const handleDayDragOver = (e: React.DragEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (draggedTaskId) {
+                    setDragOverDate(dayDate);
+                    // Add visual feedback class
+                    const cell = e.currentTarget.closest('.rdp-cell');
+                    if (cell) {
+                      cell.classList.add('drag-over');
+                    }
+                  }
+                };
+                
+                const handleDayDragLeave = (e: React.DragEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // Remove visual feedback
+                  const cell = e.currentTarget.closest('.rdp-cell');
+                  if (cell) {
+                    cell.classList.remove('drag-over');
+                  }
+                  
+                  if (dragOverDate && dragOverDate.toDateString() === dayDate.toDateString()) {
+                    setDragOverDate(null);
+                  }
+                };
+                
+                const handleDayDrop = (e: React.DragEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  // Remove visual feedback
+                  const cell = e.currentTarget.closest('.rdp-cell');
+                  if (cell) {
+                    cell.classList.remove('drag-over');
+                  }
+                  
+                  try {
+                    const data = e.dataTransfer.getData('application/json');
+                    if (data) {
+                      const dragData = JSON.parse(data);
+                      if (dragData.type === 'task' && dragData.id && onMoveTask) {
+                        onMoveTask(dragData.id, dayDate);
+                      }
+                    }
+                  } catch (error) {
+                    console.error('Error handling day drop:', error);
+                  }
+                  
+                  setDragOverDate(null);
+                };
+                
                 return (
-                  <div className="relative h-full flex items-center justify-center">
+                  <div 
+                    className={cn(
+                      "calendar-day-cell relative h-full flex items-center justify-center",
+                      draggedTaskId && "valid-drop-target"
+                    )}
+                    onDragOver={handleDayDragOver}
+                    onDragLeave={handleDayDragLeave}
+                    onDrop={handleDayDrop}
+                  >
                     <div className="z-10 font-medium">
                       {format(dayDate, 'd')}
                     </div>
                     {hasTasks && (
-                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-1 w-1 bg-blue-500 rounded-full" />
+                      <div className={cn(
+                        "absolute bottom-0 left-1/2 transform -translate-x-1/2 h-1 w-1 rounded-full",
+                        isDragOver ? "bg-blue-600" : "bg-blue-500"
+                      )} />
                     )}
                   </div>
                 );
