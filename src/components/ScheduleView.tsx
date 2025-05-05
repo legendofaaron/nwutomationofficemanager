@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Calendar, getCrewLetterCode } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel } from '@/components/ui/select';
-import { Plus, Upload, Loader2, CheckCircle, Users, User, Calendar as CalendarIcon, MapPin, Building2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectSeparator } from '@/components/ui/select';
+import { Plus, Upload, Loader2, CheckCircle, Users, User, Calendar as CalendarIcon, MapPin, Building2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAppContext } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { format } from 'date-fns';
 
 interface Task {
   id: string;
@@ -30,8 +31,8 @@ interface Task {
 }
 
 const ScheduleView = () => {
-  const { employees, crews, clients, clientLocations } = useAppContext();
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const { employees, crews, clients, clientLocations, calendarDate } = useAppContext();
+  const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
   const [tasks, setTasks] = useState<Task[]>([
     {
       id: '1',
@@ -87,6 +88,7 @@ const ScheduleView = () => {
   // New state for team event dialog
   const [teamEventDialogOpen, setTeamEventDialogOpen] = useState(false);
   const [droppedCrewId, setDroppedCrewId] = useState<string | null>(null);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   
   // New state to track location type for the task
   const [locationType, setLocationType] = useState<'custom' | 'client'>('custom');
@@ -121,7 +123,7 @@ const ScheduleView = () => {
       if (locationType === 'custom' && newTask.location) {
         task.location = newTask.location;
       } else if (locationType === 'client' && newTask.clientId && newTask.clientLocationId) {
-        const client = clients.find(c => c.id === newTask.clientId);
+        const client = clients.find(c => c.id === clientId);
         const location = clientLocations.find(l => l.id === newTask.clientLocationId);
         
         if (client && location) {
@@ -355,7 +357,7 @@ const ScheduleView = () => {
     if (locationType === 'custom' && newTask.location) {
       teamEvent.location = newTask.location;
     } else if (locationType === 'client' && newTask.clientId && newTask.clientLocationId) {
-      const client = clients.find(c => c.id === newTask.clientId);
+      const client = clients.find(c => c.id === clientId);
       const location = clientLocations.find(l => l.id === newTask.clientLocationId);
       
       if (client && location) {
@@ -850,168 +852,65 @@ const ScheduleView = () => {
 
       {/* Team Event Dialog */}
       <Dialog open={teamEventDialogOpen} onOpenChange={setTeamEventDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Schedule Team Event</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-md bg-[#121212] text-white border-0">
+          <div className="absolute right-4 top-4">
+            <DialogClose className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              <X className="h-6 w-6" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+          </div>
           
-          <div className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Event Title</Label>
-              <Input
-                id="title"
-                value={newTask.title}
-                onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-              />
-            </div>
+          <h2 className="text-2xl font-bold mb-1">Schedule Task</h2>
+          <p className="text-gray-400 mb-6">Create a task for Employee - {newTask.assignedTo}</p>
+          
+          <Tabs defaultValue="basicInfo" className="w-full mb-6">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="basicInfo" className="text-base">Basic Info</TabsTrigger>
+              <TabsTrigger value="assignment" className="text-base">Assignment</TabsTrigger>
+            </TabsList>
             
-            <div className="space-y-2">
-              <Label htmlFor="crew">Team</Label>
-              <Select
-                value={newTask.assignedCrew}
-                onValueChange={(value) => setNewTask({ ...newTask, assignedCrew: value })}
-                disabled={!!droppedCrewId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select crew" />
-                </SelectTrigger>
-                <SelectContent>
-                  {getCrewOptions()}
-                </SelectContent>
-              </Select>
-              
-              {newTask.assignedCrew && (
-                <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
-                  <div className="font-medium flex items-center">
-                    <Users className="h-3 w-3 mr-1" />
-                    <span>Team Members:</span>
-                  </div>
-                  <div className="mt-1">
-                    {getCrewMemberNames(newTask.assignedCrew)}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Date</Label>
-              <div className="flex items-center space-x-2 border rounded-md p-2">
-                <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                <span>{selectedDate.toLocaleDateString()}</span>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startTime">Start Time</Label>
-                <Input
-                  id="startTime"
-                  type="time"
-                  value={newTask.startTime}
-                  onChange={(e) => setNewTask({ ...newTask, startTime: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="endTime">End Time</Label>
-                <Input
-                  id="endTime"
-                  type="time"
-                  value={newTask.endTime}
-                  onChange={(e) => setNewTask({ ...newTask, endTime: e.target.value })}
-                />
-              </div>
-            </div>
-            
-            {/* Location selection for team event */}
-            <div className="space-y-2">
-              <Label>Location Type</Label>
-              <div className="flex space-x-4">
-                <Button 
-                  variant={locationType === 'custom' ? 'default' : 'outline'} 
-                  onClick={() => setLocationType('custom')}
-                  className="flex items-center"
-                  type="button"
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Custom
-                </Button>
-                <Button 
-                  variant={locationType === 'client' ? 'default' : 'outline'} 
-                  onClick={() => setLocationType('client')}
-                  className="flex items-center"
-                  type="button"
-                >
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Client Site
-                </Button>
-              </div>
-            </div>
-            
-            {locationType === 'custom' ? (
-              <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  value={newTask.location}
-                  onChange={(e) => setNewTask({ ...newTask, location: e.target.value })}
-                  placeholder="E.g., Office, Meeting Room, etc."
-                />
-              </div>
-            ) : (
+            <TabsContent value="basicInfo" className="space-y-6 mt-0">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="clientLocation">Location</Label>
-                  <Select
-                    value={newTask.clientId && newTask.clientLocationId ? `${newTask.clientId}:${newTask.clientLocationId}` : ""}
-                    onValueChange={(value) => {
-                      const parsed = parseClientLocationValue(value);
-                      if (parsed) {
-                        setNewTask({
-                          ...newTask,
-                          clientId: parsed.clientId,
-                          clientLocationId: parsed.locationId
-                        });
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select client location" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      {getClientLocationOptions()}
-                    </SelectContent>
-                  </Select>
-                  
-                  {newTask.clientId && newTask.clientLocationId && (
-                    <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
-                      {(() => {
-                        const locationInfo = getClientLocationInfo(newTask.clientId, newTask.clientLocationId);
-                        if (!locationInfo) return null;
-                        
-                        return (
-                          <>
-                            <div className="font-medium">{locationInfo.locationName}</div>
-                            <div>{locationInfo.address}</div>
-                            {locationInfo.city && locationInfo.state && (
-                              <div>{locationInfo.city}, {locationInfo.state} {locationInfo.zipCode}</div>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </div>
-                  )}
+                  <Label className="text-base" htmlFor="title">Task Title</Label>
+                  <Input
+                    id="title"
+                    placeholder="Task title"
+                    value={newTask.title}
+                    onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                    className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl"
+                  />
                 </div>
-              </div>
-            )}
-            
-            <Button onClick={handleCreateTeamEvent} className="w-full">
-              Schedule Team Event
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-export default ScheduleView;
+                
+                <div className="space-y-2">
+                  <Label className="text-base">Date</Label>
+                  <div className="h-14 bg-[#1E1E1E] rounded-xl flex items-center px-4">
+                    {format(selectedDate, 'MMMM d, yyyy')}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-base" htmlFor="start-time">Start Time</Label>
+                    <div className="relative">
+                      <Input 
+                        id="start-time" 
+                        type="time" 
+                        value={newTask.startTime}
+                        onChange={(e) => setNewTask({...newTask, startTime: e.target.value})}
+                        className="h-14 bg-[#1E1E1E] border-0 text-white rounded-xl pl-4 pr-12"
+                      />
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        AM
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-base" htmlFor="end-time">End Time</Label>
+                    <div className="relative">
+                      <Input 
+                        id="end-time" 
+                        type="time" 
+                        value={newTask.endTime}
+                        onChange={(e) => setNewTask({...newTask, endTime: e.target.value})}
+                        className="
