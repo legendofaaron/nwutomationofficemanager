@@ -72,6 +72,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Reset demo mode
       setIsDemoMode(false);
       await localAuth.signOut();
+      
+      // Force refresh to ensure clean state
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     } catch (error) {
       console.error("Error signing out:", error);
       toast({
@@ -85,6 +90,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Set demo mode function
   const setDemoMode = (value: boolean) => {
     setIsDemoMode(value);
+    
+    // If turning on demo mode, make sure we have a clean session
+    if (value && session) {
+      // We don't need to sign out, just clear the local state
+      // This avoids the sign out notification
+      setSession(null);
+      setUser(null);
+    }
   };
 
   // Provide the authentication context to the app

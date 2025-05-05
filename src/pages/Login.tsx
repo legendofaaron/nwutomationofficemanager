@@ -15,6 +15,7 @@ import { useAppContext } from '@/context/AppContext';
 import { localAuth } from '@/services/localAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/context/AuthContext';
 
 const formSchema = z.object({
   username: z.string().min(3, { message: 'Username must be at least 3 characters' }),
@@ -25,6 +26,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { branding } = useAppContext();
+  const { setDemoMode } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginAttempts, setLoginAttempts] = useState(0);
@@ -118,7 +120,14 @@ const Login = () => {
       title: "Demo Mode Active",
       description: "You are browsing in demo mode. Data will not be saved.",
     });
-    navigate('/dashboard');
+    
+    // Enable demo mode in the auth context
+    setDemoMode(true);
+    
+    // Refresh the page to get a clean state for demo mode
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 300);
   };
 
   return (
