@@ -8,7 +8,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, ArrowRight, AlertCircle, Shield } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle, Shield, User } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/Logo';
 import { useAppContext } from '@/context/AppContext';
@@ -16,7 +16,7 @@ import { localAuth } from '@/services/localAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address' }),
+  email: z.string().min(1, { message: 'Please enter your username or email' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
 });
 
@@ -102,7 +102,7 @@ const Login = () => {
       } else {
         toast({
           title: "Login failed",
-          description: authError.message || "Invalid email or password",
+          description: authError.message || "Invalid username/email or password",
           variant: "destructive",
         });
       }
@@ -148,14 +148,14 @@ const Login = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Username or Email</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                          <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                           <Input 
-                            placeholder="Enter your email" 
+                            placeholder="Enter your username or email" 
                             className="pl-10" 
-                            autoComplete="email"
+                            autoComplete="username"
                             disabled={isLocked || isLoading}
                             {...field} 
                           />
@@ -195,7 +195,7 @@ const Login = () => {
                   className="w-full" 
                   disabled={isLoading || isLocked}
                 >
-                  {isLoading ? "Authenticating..." : isLocked ? "Account Locked" : "Log In Securely"}
+                  {isLoading ? "Authenticating..." : isLocked ? "Account Locked" : "Log In"}
                   {!isLoading && !isLocked && <ArrowRight className="ml-1 h-4 w-4" />}
                 </Button>
               </form>

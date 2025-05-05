@@ -108,12 +108,17 @@ export const localAuth = {
   }): { data: { session: LocalSession | null }; error: Error | null } => {
     try {
       const users = getUsers();
-      const user = users.find(user => user.email === email && user.password === password);
+      
+      // Find user by email or username
+      const user = users.find(user => 
+        (user.email === email || user.user_metadata.username === email) && 
+        user.password === password
+      );
       
       if (!user) {
         return {
           data: { session: null },
-          error: new Error('Invalid email or password')
+          error: new Error('Invalid username/email or password')
         };
       }
       
