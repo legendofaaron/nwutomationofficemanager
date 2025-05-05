@@ -1,9 +1,12 @@
 
 import React from 'react';
-import App from '@/App';
+import { Navigate } from 'react-router-dom';
 
 const Index = () => {
-  return <App />;
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  
+  // Redirect to dashboard if logged in, otherwise to login page
+  return isLoggedIn ? <Navigate to="/dashboard" /> : <Navigate to="/login" />;
 };
 
 export default Index;

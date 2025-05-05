@@ -13,8 +13,11 @@ import TodoCalendarBubble from './TodoCalendarBubble';
 import { cn } from '@/lib/utils';
 import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from './Logo';
-import { Bot, Sparkles } from 'lucide-react';
+import { Bot, LogOut, Sparkles } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/components/ui/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const MainLayout = () => {
   const {
@@ -30,6 +33,8 @@ const MainLayout = () => {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const isSuperDark = resolvedTheme === 'superdark';
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleDragStart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -55,6 +60,15 @@ const MainLayout = () => {
     document.removeEventListener('mouseup', handleDragEnd);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    toast({
+      title: "Logged out",
+      description: "You have successfully logged out",
+    });
+    navigate('/login');
+  };
+
   const sidebarButtonBg = isSuperDark 
     ? 'bg-black border border-[#151515]' 
     : isDark 
@@ -78,6 +92,21 @@ const MainLayout = () => {
       <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gradient-to-br from-white to-gray-100'} flex w-full overflow-hidden`}>
         <div className="relative sidebar-container">
           <Sidebar className="shadow">
+            <div className="flex justify-between items-center p-4">
+              <Logo small onClick={() => setViewMode('welcome')} />
+              <DropdownMenu>
+                <DropdownMenuTrigger className="h-8 w-8 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center">
+                  <span className="sr-only">User menu</span>
+                  <span className="text-xs font-semibold text-white">U</span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <AppSidebar />
           </Sidebar>
           <div 
