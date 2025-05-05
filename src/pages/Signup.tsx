@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,12 +7,11 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, User, ArrowRight, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, AlertCircle, Shield } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/Logo';
 import { useAppContext } from '@/context/AppContext';
-import { supabase } from '@/integrations/supabase/client';
-import { AuthError } from '@supabase/supabase-js';
+import { localAuth } from '@/services/localAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
@@ -36,7 +34,7 @@ const Signup = () => {
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
+      const { data } = await localAuth.getSession();
       if (data.session) {
         navigate('/dashboard');
       }
@@ -60,8 +58,8 @@ const Signup = () => {
     setSignupError(null);
     
     try {
-      // Sign up the user with Supabase Auth
-      const { data, error } = await supabase.auth.signUp({
+      // Sign up the user with local auth
+      const { data, error } = await localAuth.signUp({
         email: values.email,
         password: values.password,
         options: {
@@ -76,27 +74,18 @@ const Signup = () => {
         throw error;
       }
       
-      // Successful signup (might need email verification depending on Supabase settings)
+      // Successful signup
       toast({
         title: "Account created",
         description: "You're now signed up for Office Manager",
       });
       
-      // Check if email verification is required
-      if (data.user?.identities?.length === 0) {
-        toast({
-          title: "Verification required",
-          description: "Please check your email to verify your account before logging in",
-        });
-        navigate('/login');
-      } else {
-        // User is signed up and logged in
-        navigate('/dashboard');
-      }
+      // User is signed up and logged in
+      navigate('/dashboard');
       
     } catch (error) {
       // Handle signup errors
-      const authError = error as AuthError;
+      const authError = error as Error;
       setSignupError(authError.message || 'Failed to create account. Please try again.');
       toast({
         title: "Signup failed",
@@ -121,8 +110,11 @@ const Signup = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>Sign Up</CardTitle>
-            <CardDescription>Fill in your details to create your account</CardDescription>
+            <CardTitle className="flex items-center justify-center space-x-2">
+              <Shield className="h-5 w-5 text-primary" />
+              <span>Sign Up</span>
+            </CardTitle>
+            <CardDescription className="text-center">Fill in your details to create your account</CardDescription>
           </CardHeader>
           <CardContent>
             {signupError && (
@@ -235,6 +227,12 @@ const Signup = () => {
             </p>
           </CardFooter>
         </Card>
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            <Shield className="inline h-3 w-3 mr-1" /> 
+            Offline mode enabled - Your data is stored locally
+          </p>
+        </div>
       </div>
     </div>
   );

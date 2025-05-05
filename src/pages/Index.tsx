@@ -1,14 +1,14 @@
 
 import React, { useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { localAuth } from '@/services/localAuth';
 
 const Index = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
+      const { data } = await localAuth.getSession();
       if (data.session) {
         navigate('/dashboard');
       } else {

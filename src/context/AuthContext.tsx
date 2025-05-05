@@ -1,12 +1,11 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { localAuth, LocalSession, LocalUser } from '@/services/localAuth';
 
 interface AuthContextType {
-  session: Session | null;
-  user: User | null;
+  session: LocalSession | null;
+  user: LocalUser | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
 }
@@ -14,14 +13,14 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<LocalUser | null>(null);
+  const [session, setSession] = useState<LocalSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     // Set up the auth state listener first for better security
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+    const { unsubscribe } = localAuth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setIsLoading(false);
@@ -45,20 +44,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Then fetch the initial session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+    localAuth.getSession().then(({ data: { session: initialSession } }) => {
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
       setIsLoading(false);
     });
 
     return () => {
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, [toast]);
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await localAuth.signOut();
     } catch (error) {
       console.error("Error signing out:", error);
       toast({

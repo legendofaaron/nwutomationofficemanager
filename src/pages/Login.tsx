@@ -12,8 +12,7 @@ import { Mail, Lock, ArrowRight, AlertCircle, Shield } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/Logo';
 import { useAppContext } from '@/context/AppContext';
-import { supabase } from '@/integrations/supabase/client';
-import { AuthError } from '@supabase/supabase-js';
+import { localAuth } from '@/services/localAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
@@ -33,7 +32,7 @@ const Login = () => {
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
+      const { data } = await localAuth.getSession();
       if (data.session) {
         navigate('/dashboard');
       }
@@ -64,7 +63,7 @@ const Login = () => {
     setLoginError(null);
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await localAuth.signInWithPassword({
         email: values.email,
         password: values.password,
       });
@@ -80,7 +79,7 @@ const Login = () => {
       }
     } catch (error) {
       // Handle login errors
-      const authError = error as AuthError;
+      const authError = error as Error;
       setLoginError(authError.message || 'Failed to sign in. Please check your credentials and try again.');
       
       // Increment failed login attempts
@@ -116,7 +115,7 @@ const Login = () => {
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-[#080a0c] dark:to-[#111418]">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center justify-center mb-8">
-          <div className="mb-4">
+          <div className="mb-4 flex justify-center">
             <Logo />
           </div>
           <h1 className="text-2xl font-bold text-center">Welcome to Office Manager</h1>
@@ -211,6 +210,12 @@ const Login = () => {
             </p>
           </CardFooter>
         </Card>
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            <Shield className="inline h-3 w-3 mr-1" /> 
+            Offline mode enabled - Your data is stored locally
+          </p>
+        </div>
       </div>
     </div>
   );
