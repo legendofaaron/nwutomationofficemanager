@@ -336,28 +336,6 @@ const AppSidebar = () => {
       </SidebarMenuItem>);
   };
   
-  const mainMenuItems = [{
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    onClick: () => setViewMode('welcome'),
-    isActive: viewMode === 'welcome' || !viewMode
-  }, {
-    title: "Office Manager",
-    icon: Building2,
-    onClick: () => setViewMode('office'),
-    isActive: viewMode === 'office'
-  }, {
-    title: "Knowledge Base",
-    icon: Brain,
-    onClick: () => setViewMode('knowledge'),
-    isActive: viewMode === 'knowledge'
-  }, {
-    title: "Calendar",
-    icon: Calendar,
-    onClick: () => setIsCalendarOpen(true),
-    isActive: false
-  }];
-
   return <>
       <SidebarHeader className="p-6 border-b">
         <div className="flex items-center justify-between">
