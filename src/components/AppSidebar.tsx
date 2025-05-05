@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import NewDocumentDialog from './NewDocumentDialog';
@@ -39,6 +38,32 @@ const AppSidebar = () => {
   const [dragOverItem, setDragOverItem] = useState<any>(null);
   const [isSettingsDrawerOpen, setIsSettingsDrawerOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [draggedMenuItemIndex, setDraggedMenuItemIndex] = useState<number | null>(null);
+  const [mainMenuItems, setMainMenuItems] = useState([{
+    id: 'dashboard',
+    title: "Dashboard",
+    icon: LayoutDashboard,
+    onClick: () => setViewMode('welcome'),
+    isActive: viewMode === 'welcome' || !viewMode
+  }, {
+    id: 'office',
+    title: "Office Manager",
+    icon: Building2,
+    onClick: () => setViewMode('office'),
+    isActive: viewMode === 'office'
+  }, {
+    id: 'knowledge',
+    title: "Knowledge Base",
+    icon: Brain,
+    onClick: () => setViewMode('knowledge'),
+    isActive: viewMode === 'knowledge'
+  }, {
+    id: 'calendar',
+    title: "Calendar",
+    icon: Calendar,
+    onClick: () => setIsCalendarOpen(true),
+    isActive: false
+  }]);
 
   const handleFileClick = (file: any) => {
     if (file.type === 'folder') return;
@@ -234,6 +259,39 @@ const AppSidebar = () => {
     setDragOverItem(null);
   };
   
+  const handleMenuItemDragStart = (e: React.DragEvent, index: number) => {
+    e.stopPropagation();
+    setDraggedMenuItemIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.classList.add('opacity-50');
+  };
+
+  const handleMenuItemDragEnter = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (draggedMenuItemIndex === null || draggedMenuItemIndex === index) return;
+    
+    // Reorder the items in the menu (visually)
+    const newItems = [...mainMenuItems];
+    const draggedItem = newItems[draggedMenuItemIndex];
+    newItems.splice(draggedMenuItemIndex, 1);
+    newItems.splice(index, 0, draggedItem);
+
+    setMainMenuItems(newItems);
+    setDraggedMenuItemIndex(index);
+  };
+
+  const handleMenuItemDragEnd = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('opacity-50');
+    setDraggedMenuItemIndex(null);
+    toast({
+      title: "Menu updated",
+      description: "Menu items have been reordered"
+    });
+  };
+  
   const renderFileTree = (files: any[], level = 0) => {
     return files.map(file => <SidebarMenuItem key={file.id}>
         {file.type === 'folder' ? <Collapsible>
@@ -329,12 +387,23 @@ const AppSidebar = () => {
           <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainMenuItems.map(item => <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton onClick={item.onClick} data-active={item.isActive}>
-                    <item.icon className="w-4 h-4 mr-2" />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>)}
+              {mainMenuItems.map((item, index) => (
+                <SidebarMenuItem key={item.id}>
+                  <div
+                    draggable
+                    onDragStart={(e) => handleMenuItemDragStart(e, index)}
+                    onDragEnter={(e) => handleMenuItemDragEnter(e, index)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDragEnd={handleMenuItemDragEnd}
+                    className="cursor-grab active:cursor-grabbing"
+                  >
+                    <SidebarMenuButton onClick={item.onClick} data-active={item.isActive}>
+                      <item.icon className="w-4 h-4 mr-2" />
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                  </div>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
