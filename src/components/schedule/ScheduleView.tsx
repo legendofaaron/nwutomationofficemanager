@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Plus, CalendarIcon, List, FileUp } from 'lucide-react';
+import { Plus, CalendarIcon, List, FileUp, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAppContext } from '@/context/AppContext';
@@ -12,6 +13,7 @@ import { Task, TaskFormData, AssignmentType, LocationType } from './ScheduleType
 import TaskCalendarView from './TaskCalendarView';
 import TaskListView from './TaskListView';
 import TeamEventDialog from './TeamEventDialog';
+import TaskEditDialog from './TaskEditDialog';
 import UploadAnalyzeSection from './UploadAnalyzeSection';
 
 const ScheduleView = () => {
@@ -63,6 +65,9 @@ const ScheduleView = () => {
       clientLocationId: '1'
     },
   ]);
+  
+  const [currentEditTask, setCurrentEditTask] = useState<Task | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Effect to synchronize selected date with App context
   useEffect(() => {
@@ -208,6 +213,26 @@ const ScheduleView = () => {
     
     // Open the dialog
     setIsTaskDialogOpen(true);
+  };
+
+  // Handle editing a task
+  const handleEditTask = (taskId: string) => {
+    const taskToEdit = tasks.find(t => t.id === taskId);
+    if (taskToEdit) {
+      setCurrentEditTask(taskToEdit);
+      setIsEditDialogOpen(true);
+    }
+  };
+
+  // Handle saving task edit changes
+  const handleSaveTaskChanges = (taskId: string, updatedData: Partial<Task>) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, ...updatedData } : task
+    ));
+
+    toast.success("Task updated successfully", { 
+      description: updatedData.title || "Changes have been saved" 
+    });
   };
 
   // Handle applying analyzed schedule data
@@ -379,6 +404,7 @@ const ScheduleView = () => {
             crews={crews}
             onAddNewTask={handleOpenAddTaskDialog}
             onMoveTask={handleMoveTask}
+            onEditTask={handleEditTask}
           />
         </TabsContent>
         
@@ -389,6 +415,7 @@ const ScheduleView = () => {
             crews={crews}
             clients={clients}
             clientLocations={clientLocations}
+            onEditTask={handleEditTask}
           />
         </TabsContent>
       </Tabs>
@@ -425,6 +452,25 @@ const ScheduleView = () => {
         clients={clients}
         clientLocations={clientLocations}
       />
+
+      {/* Task Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+          </DialogHeader>
+          <TaskEditDialog
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            onSaveChanges={handleSaveTaskChanges}
+            task={currentEditTask}
+            crews={crews}
+            employees={employees}
+            clients={clients}
+            clientLocations={clientLocations}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

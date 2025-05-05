@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Task, Crew } from './ScheduleTypes';
 import { cn } from '@/lib/utils';
-import { User, Users, MapPin, CheckCircle, Clock, Calendar as CalendarIcon, Plus } from 'lucide-react';
+import { User, Users, MapPin, CheckCircle, Clock, Calendar as CalendarIcon, Plus, Pencil } from 'lucide-react';
 import { getCrewDisplayCode } from './ScheduleHelpers';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -21,6 +21,7 @@ interface TaskCalendarViewProps {
   crews: Crew[];
   onAddNewTask: () => void;
   onMoveTask?: (taskId: string, newDate: Date) => void;
+  onEditTask?: (taskId: string) => void;
 }
 
 const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({ 
@@ -30,7 +31,8 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   onToggleTaskCompletion,
   crews,
   onAddNewTask,
-  onMoveTask
+  onMoveTask,
+  onEditTask
 }) => {
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
@@ -248,6 +250,20 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                         )}>
                           {task.title}
                         </span>
+                        
+                        {onEditTask && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 ml-auto"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditTask(task.id);
+                            }}
+                          >
+                            <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                          </Button>
+                        )}
                       </div>
                       
                       <div className="pl-8 space-y-2 text-sm text-muted-foreground">
