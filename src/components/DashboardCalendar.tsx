@@ -1,7 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar, getCrewLetterCode } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -398,6 +397,12 @@ const DashboardCalendar = () => {
     );
   };
 
+  // Helper function to get crew display code
+  const getCrewDisplayCode = (crewId: string): string => {
+    const crewIndex = crews ? crews.findIndex(crew => crew.id === crewId) : -1;
+    return crewIndex >= 0 ? getCrewLetterCode(crewIndex) : '';
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div 
@@ -541,7 +546,11 @@ const DashboardCalendar = () => {
                         {todo.crewName && (
                           <div className="flex items-center">
                             <Users className="h-2.5 w-2.5 mr-0.5" />
-                            {todo.crewName}
+                            {todo.crewId ? (
+                              <span>Crew {getCrewDisplayCode(todo.crewId)}: {todo.crewName}</span>
+                            ) : (
+                              <span>{todo.crewName}</span>
+                            )}
                           </div>
                         )}
                         

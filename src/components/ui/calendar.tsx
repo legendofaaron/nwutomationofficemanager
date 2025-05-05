@@ -8,6 +8,19 @@ import { buttonVariants } from "@/components/ui/button";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
+// Helper function to generate crew letter codes
+export const getCrewLetterCode = (index: number): string => {
+  // For the first 26 crews, use A-Z
+  if (index < 26) {
+    return String.fromCharCode(65 + index); // A = 65 in ASCII
+  } 
+  
+  // For crews beyond 26, use A2, B2, C2, etc.
+  const cycle = Math.floor(index / 26);
+  const letter = String.fromCharCode(65 + (index % 26));
+  return `${letter}${cycle + 1}`;
+};
+
 function Calendar({
   className,
   classNames,

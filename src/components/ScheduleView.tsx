@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar, getCrewLetterCode } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -274,6 +274,12 @@ const ScheduleView = () => {
     toast.success("Team event scheduled successfully");
   };
 
+  // Helper function to get crew letter code
+  const getCrewDisplayCode = (crewId: string): string => {
+    const crewIndex = crews.findIndex(crew => crew.id === crewId);
+    return crewIndex >= 0 ? getCrewLetterCode(crewIndex) : '';
+  };
+
   return (
     <div 
       className="p-4" 
@@ -286,261 +292,264 @@ const ScheduleView = () => {
           <TabsTrigger value="list">List</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="calendar" className="mt-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Calendar</CardTitle>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="gap-2">
-                      <Plus className="h-4 w-4" />
+      <TabsContent value="calendar" className="mt-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Calendar</CardTitle>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Schedule
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Schedule</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Task Title</Label>
+                      <Input
+                        id="title"
+                        value={newTask.title}
+                        onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Assignment Type</Label>
+                      <div className="flex space-x-4">
+                        <Button 
+                          variant={assignmentType === 'individual' ? 'default' : 'outline'} 
+                          onClick={() => setAssignmentType('individual')}
+                          className="flex items-center"
+                          type="button"
+                        >
+                          <User className="h-4 w-4 mr-2" />
+                          Individual
+                        </Button>
+                        <Button 
+                          variant={assignmentType === 'crew' ? 'default' : 'outline'} 
+                          onClick={() => setAssignmentType('crew')}
+                          className="flex items-center"
+                          type="button"
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          Crew
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {assignmentType === 'individual' ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="employee">Assign To</Label>
+                        <Select
+                          value={newTask.assignedTo}
+                          onValueChange={(value) => setNewTask({ ...newTask, assignedTo: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select employee" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {getEmployeeOptions()}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label htmlFor="crew">Assign To Crew</Label>
+                        <Select
+                          value={newTask.assignedCrew}
+                          onValueChange={(value) => setNewTask({ ...newTask, assignedCrew: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select crew" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {getCrewOptions()}
+                          </SelectContent>
+                        </Select>
+                        
+                        {newTask.assignedCrew && (
+                          <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
+                            <strong>Crew members:</strong> {getCrewMemberNames(newTask.assignedCrew)}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="startTime">Start Time</Label>
+                        <Input
+                          id="startTime"
+                          type="time"
+                          value={newTask.startTime}
+                          onChange={(e) => setNewTask({ ...newTask, startTime: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="endTime">End Time</Label>
+                        <Input
+                          id="endTime"
+                          type="time"
+                          value={newTask.endTime}
+                          onChange={(e) => setNewTask({ ...newTask, endTime: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <Button onClick={handleAddTask} className="w-full">
                       Add Schedule
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add New Schedule</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 pt-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="title">Task Title</Label>
-                        <Input
-                          id="title"
-                          value={newTask.title}
-                          onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label>Assignment Type</Label>
-                        <div className="flex space-x-4">
-                          <Button 
-                            variant={assignmentType === 'individual' ? 'default' : 'outline'} 
-                            onClick={() => setAssignmentType('individual')}
-                            className="flex items-center"
-                            type="button"
-                          >
-                            <User className="h-4 w-4 mr-2" />
-                            Individual
-                          </Button>
-                          <Button 
-                            variant={assignmentType === 'crew' ? 'default' : 'outline'} 
-                            onClick={() => setAssignmentType('crew')}
-                            className="flex items-center"
-                            type="button"
-                          >
-                            <Users className="h-4 w-4 mr-2" />
-                            Crew
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      {assignmentType === 'individual' ? (
-                        <div className="space-y-2">
-                          <Label htmlFor="employee">Assign To</Label>
-                          <Select
-                            value={newTask.assignedTo}
-                            onValueChange={(value) => setNewTask({ ...newTask, assignedTo: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select employee" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {getEmployeeOptions()}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <Label htmlFor="crew">Assign To Crew</Label>
-                          <Select
-                            value={newTask.assignedCrew}
-                            onValueChange={(value) => setNewTask({ ...newTask, assignedCrew: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select crew" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {getCrewOptions()}
-                            </SelectContent>
-                          </Select>
-                          
-                          {newTask.assignedCrew && (
-                            <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-md">
-                              <strong>Crew members:</strong> {getCrewMemberNames(newTask.assignedCrew)}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="startTime">Start Time</Label>
-                          <Input
-                            id="startTime"
-                            type="time"
-                            value={newTask.startTime}
-                            onChange={(e) => setNewTask({ ...newTask, startTime: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="endTime">End Time</Label>
-                          <Input
-                            id="endTime"
-                            type="time"
-                            value={newTask.endTime}
-                            onChange={(e) => setNewTask({ ...newTask, endTime: e.target.value })}
-                          />
-                        </div>
-                      </div>
-                      <Button onClick={handleAddTask} className="w-full">
-                        Add Schedule
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </CardHeader>
-              <CardContent>
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  className={cn("rounded-md border", "pointer-events-auto")}
-                />
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Tasks for {selectedDate.toLocaleDateString()}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {tasks
-                    .filter(task => 
-                      task.date.toDateString() === selectedDate.toDateString()
-                    )
-                    .map((task) => (
-                      <div
-                        key={task.id}
-                        className={cn(
-                          "flex items-center justify-between p-4 rounded-lg border",
-                          task.completed ? "bg-muted/50" : "bg-card"
-                        )}
-                      >
-                        <div className="space-y-1">
-                          <span className={cn("font-medium", task.completed && "line-through text-muted-foreground")}>
-                            {task.title}
-                          </span>
-                          <div className="text-sm text-muted-foreground">
-                            <p>{task.startTime} - {task.endTime}</p>
-                            
-                            {/* Show assignment info */}
-                            {task.assignedTo && (
-                              <div className="flex items-center mt-1">
-                                <User className="h-3 w-3 mr-1" />
-                                <span>Assigned to: {task.assignedTo}</span>
-                              </div>
-                            )}
-                            
-                            {task.crew && task.crew.length > 0 && (
-                              <div className="flex items-center mt-1">
-                                <Users className="h-3 w-3 mr-1" />
-                                <span>Crew: {task.crew.length} members</span>
-                                
-                                <div className="flex -space-x-1 ml-2">
-                                  {task.crew.slice(0, 3).map((member, i) => (
-                                    <Avatar key={i} className="h-5 w-5 border border-background">
-                                      <AvatarFallback className="text-[0.6rem]">
-                                        {member.substring(0, 1)}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                  ))}
-                                  {task.crew.length > 3 && (
-                                    <Badge variant="secondary" className="h-5 w-5 rounded-full flex items-center justify-center text-[0.6rem] p-0">
-                                      +{task.crew.length - 3}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={task.completed}
-                          onChange={() => {
-                            setTasks(tasks.map(t =>
-                              t.id === task.id ? { ...t, completed: !t.completed } : t
-                            ));
-                          }}
-                          className="h-4 w-4"
-                        />
-                      </div>
-                    ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="list" className="mt-4">
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                className={cn("rounded-md border", "pointer-events-auto")}
+              />
+            </CardContent>
+          </Card>
+          
           <Card>
             <CardHeader>
-              <CardTitle>All Tasks</CardTitle>
+              <CardTitle>Tasks for {selectedDate.toLocaleDateString()}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className={cn(
-                      "flex items-center justify-between p-4 rounded-lg border",
-                      task.completed ? "bg-muted/50" : "bg-card"
-                    )}
-                  >
-                    <div className="space-y-1">
-                      <span className={cn("font-medium", task.completed && "line-through text-muted-foreground")}>
-                        {task.title}
-                      </span>
-                      <div className="text-sm text-muted-foreground">
-                        <p>Date: {task.date.toLocaleDateString()}</p>
-                        <p>{task.startTime} - {task.endTime}</p>
-                        
-                        {/* Show assignment info */}
-                        {task.assignedTo && (
-                          <div className="flex items-center mt-1">
-                            <User className="h-3 w-3 mr-1" />
-                            <span>Assigned to: {task.assignedTo}</span>
-                          </div>
-                        )}
-                        
-                        {task.crew && task.crew.length > 0 && (
-                          <div className="flex items-center mt-1">
-                            <Users className="h-3 w-3 mr-1" />
-                            <span>Crew: {task.crew.join(', ')}</span>
-                          </div>
-                        )}
+                {tasks
+                  .filter(task => 
+                    task.date.toDateString() === selectedDate.toDateString()
+                  )
+                  .map((task) => (
+                    <div
+                      key={task.id}
+                      className={cn(
+                        "flex items-center justify-between p-4 rounded-lg border",
+                        task.completed ? "bg-muted/50" : "bg-card"
+                      )}
+                    >
+                      <div className="space-y-1">
+                        <span className={cn("font-medium", task.completed && "line-through text-muted-foreground")}>
+                          {task.title}
+                        </span>
+                        <div className="text-sm text-muted-foreground">
+                          <p>{task.startTime} - {task.endTime}</p>
+                          
+                          {/* Show assignment info */}
+                          {task.assignedTo && (
+                            <div className="flex items-center mt-1">
+                              <User className="h-3 w-3 mr-1" />
+                              <span>Assigned to: {task.assignedTo}</span>
+                            </div>
+                          )}
+                          
+                          {task.crew && task.crew.length > 0 && (
+                            <div className="flex items-center mt-1">
+                              <Users className="h-3 w-3 mr-1" />
+                              <span>
+                                Crew {newTask.assignedCrew ? getCrewDisplayCode(newTask.assignedCrew) : ''}: {task.crew.length} members
+                              </span>
+                              
+                              <div className="flex -space-x-1 ml-2">
+                                {task.crew.slice(0, 3).map((member, i) => (
+                                  <Avatar key={i} className="h-5 w-5 border border-background">
+                                    <AvatarFallback className="text-[0.6rem]">
+                                      {member.substring(0, 1)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                ))}
+                                {task.crew.length > 3 && (
+                                  <Badge variant="secondary" className="h-5 w-5 rounded-full flex items-center justify-center text-[0.6rem] p-0">
+                                    +{task.crew.length - 3}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
+                      <input
+                        type="checkbox"
+                        checked={task.completed}
+                        onChange={() => {
+                          setTasks(tasks.map(t =>
+                            t.id === task.id ? { ...t, completed: !t.completed } : t
+                          ));
+                        }}
+                        className="h-4 w-4"
+                      />
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={task.completed}
-                      onChange={() => {
-                        setTasks(tasks.map(t =>
-                          t.id === task.id ? { ...t, completed: !t.completed } : t
-                        ));
-                      }}
-                      className="h-4 w-4"
-                    />
-                  </div>
-                ))}
+                  ))}
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </TabsContent>
+      
+      <TabsContent value="list" className="mt-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>All Tasks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className={cn(
+                    "flex items-center justify-between p-4 rounded-lg border",
+                    task.completed ? "bg-muted/50" : "bg-card"
+                  )}
+                >
+                  <div className="space-y-1">
+                    <span className={cn("font-medium", task.completed && "line-through text-muted-foreground")}>
+                      {task.title}
+                    </span>
+                    <div className="text-sm text-muted-foreground">
+                      <p>Date: {task.date.toLocaleDateString()}</p>
+                      <p>{task.startTime} - {task.endTime}</p>
+                      
+                      {/* Show assignment info */}
+                      {task.assignedTo && (
+                        <div className="flex items-center mt-1">
+                          <User className="h-3 w-3 mr-1" />
+                          <span>Assigned to: {task.assignedTo}</span>
+                        </div>
+                      )}
+                      
+                      {task.crew && task.crew.length > 0 && (
+                        <div className="flex items-center mt-1">
+                          <Users className="h-3 w-3 mr-1" />
+                          <span>
+                            Crew {task.crewId ? getCrewDisplayCode(task.crewId) : ''}: {task.crew.join(', ')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={task.completed}
+                    onChange={() => {
+                      setTasks(tasks.map(t =>
+                        t.id === task.id ? { ...t, completed: !t.completed } : t
+                      ));
+                    }}
+                    className="h-4 w-4"
+                  />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
 
       {/* Upload and Analyze Section at the bottom */}
       <Card className="mt-8">
