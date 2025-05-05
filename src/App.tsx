@@ -1,38 +1,44 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Toaster } from '@/components/ui/toaster';
 import { AppProvider } from '@/context/AppContext';
 import MainLayout from '@/components/MainLayout';
 import { ThemeProvider } from '@/context/ThemeContext';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import SetupAssistant from './pages/SetupAssistant';
 import NotFound from './pages/NotFound';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Home from './pages/Home';
 import { LoadingScreen } from './components/LoadingScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// Protected route component
+// Protected route component with enhanced security
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, isLoading } = useAuth();
+  const location = useLocation();
   
   if (isLoading) {
     return <LoadingScreen />;
   }
   
-  return session ? <>{children}</> : <Navigate to="/login" />;
+  return session ? (
+    <>{children}</>
+  ) : (
+    <Navigate to="/login" state={{ from: location.pathname }} replace />
+  );
 };
 
 // Public route that redirects authenticated users
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, isLoading } = useAuth();
+  const location = useLocation();
+  const from = location.state?.from || '/dashboard';
   
   if (isLoading) {
     return <LoadingScreen />;
   }
   
-  return session ? <Navigate to="/dashboard" /> : <>{children}</>;
+  return session ? <Navigate to={from} replace /> : <>{children}</>;
 };
 
 const AppRoutes = () => {
@@ -53,7 +59,7 @@ const AppRoutes = () => {
       <Route path="/setup-assistant" element={<ProtectedRoute><SetupAssistant /></ProtectedRoute>} />
       
       {/* Home page - redirect based on authentication */}
-      <Route path="/" element={<Navigate to="/dashboard" />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       
       {/* 404 Route */}
       <Route path="*" element={<NotFound />} />

@@ -8,7 +8,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle, Shield } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/Logo';
 import { useAppContext } from '@/context/AppContext';
@@ -27,6 +27,8 @@ const Login = () => {
   const { branding } = useAppContext();
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -49,6 +51,15 @@ const Login = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (isLocked) {
+      toast({
+        title: "Account locked",
+        description: "Too many failed attempts. Please try again later.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     setLoginError(null);
     
@@ -63,24 +74,39 @@ const Login = () => {
       }
       
       if (data.session) {
-        // Successful login
-        toast({
-          title: "Login successful",
-          description: "Welcome back to Office Manager",
-        });
-        
-        // Navigate to dashboard
+        // Reset login attempts on successful login
+        setLoginAttempts(0);
         navigate('/dashboard');
       }
     } catch (error) {
       // Handle login errors
       const authError = error as AuthError;
       setLoginError(authError.message || 'Failed to sign in. Please check your credentials and try again.');
-      toast({
-        title: "Login failed",
-        description: authError.message || "Invalid email or password",
-        variant: "destructive",
-      });
+      
+      // Increment failed login attempts
+      const newAttempts = loginAttempts + 1;
+      setLoginAttempts(newAttempts);
+      
+      // Lock account after 5 failed attempts
+      if (newAttempts >= 5) {
+        setIsLocked(true);
+        setTimeout(() => {
+          setIsLocked(false);
+          setLoginAttempts(0);
+        }, 60000); // 1 minute lockout
+        
+        toast({
+          title: "Account temporarily locked",
+          description: "Too many failed login attempts. Please try again in 1 minute.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Login failed",
+          description: authError.message || "Invalid email or password",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -89,18 +115,25 @@ const Login = () => {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-[#080a0c] dark:to-[#111418]">
       <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <Logo />
-          <h1 className="mt-6 text-2xl font-bold">Welcome to Office Manager</h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex flex-col items-center justify-center mb-8">
+          <div className="mb-4">
+            <Logo />
+          </div>
+          <h1 className="text-2xl font-bold text-center">Welcome to Office Manager</h1>
+          <p className="mt-2 text-sm text-center text-gray-600 dark:text-gray-400">
             Log in to continue to {branding.companyName}
           </p>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Log In</CardTitle>
-            <CardDescription>Enter your credentials to access your account</CardDescription>
+        <Card className="shadow-lg border-opacity-50">
+          <CardHeader className="space-y-1">
+            <div className="flex items-center justify-center space-x-2">
+              <Shield className="h-5 w-5 text-primary" />
+              <CardTitle>Secure Login</CardTitle>
+            </div>
+            <CardDescription className="text-center">
+              Enter your credentials to access your account
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {loginError && (
@@ -123,6 +156,8 @@ const Login = () => {
                           <Input 
                             placeholder="Enter your email" 
                             className="pl-10" 
+                            autoComplete="email"
+                            disabled={isLocked || isLoading}
                             {...field} 
                           />
                         </div>
@@ -145,6 +180,8 @@ const Login = () => {
                             placeholder="Enter your password" 
                             type="password" 
                             className="pl-10" 
+                            autoComplete="current-password"
+                            disabled={isLocked || isLoading}
                             {...field} 
                           />
                         </div>
@@ -154,9 +191,13 @@ const Login = () => {
                   )}
                 />
                 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Logging in..." : "Log In"}
-                  {!isLoading && <ArrowRight className="ml-1 h-4 w-4" />}
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isLoading || isLocked}
+                >
+                  {isLoading ? "Authenticating..." : isLocked ? "Account Locked" : "Log In Securely"}
+                  {!isLoading && !isLocked && <ArrowRight className="ml-1 h-4 w-4" />}
                 </Button>
               </form>
             </Form>
@@ -164,7 +205,7 @@ const Login = () => {
           <CardFooter className="flex justify-center border-t p-4">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Don't have an account?{" "}
-              <Link to="/signup" className="text-blue-600 hover:underline">
+              <Link to="/signup" className="text-primary hover:underline font-medium">
                 Sign Up
               </Link>
             </p>
