@@ -1,12 +1,12 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'light' | 'dark' | 'system';
+type Theme = 'light' | 'dark' | 'superdark' | 'system';
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  resolvedTheme: 'light' | 'dark';
+  resolvedTheme: 'light' | 'dark' | 'superdark';
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -16,11 +16,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     () => (localStorage.getItem('theme') as Theme) || 'dark'
   );
   
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark' | 'superdark'>(
     () => {
       const savedTheme = localStorage.getItem('theme') as Theme;
       if (savedTheme === 'dark') return 'dark';
       if (savedTheme === 'light') return 'light';
+      if (savedTheme === 'superdark') return 'superdark';
       
       // Check system preference
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -30,18 +31,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const root = window.document.documentElement;
     
-    let newResolvedTheme: 'light' | 'dark';
+    let newResolvedTheme: 'light' | 'dark' | 'superdark';
     
     if (theme === 'system') {
       newResolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     } else {
-      newResolvedTheme = theme as 'light' | 'dark';
+      newResolvedTheme = theme as 'light' | 'dark' | 'superdark';
     }
     
     setResolvedTheme(newResolvedTheme);
     
     // Remove the old theme class and apply the new one
-    root.classList.remove('light', 'dark');
+    root.classList.remove('light', 'dark', 'superdark');
     root.classList.add(newResolvedTheme);
     
     // Save theme preference to localStorage
@@ -59,7 +60,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setResolvedTheme(newTheme);
       
       const root = window.document.documentElement;
-      root.classList.remove('light', 'dark');
+      root.classList.remove('light', 'dark', 'superdark');
       root.classList.add(newTheme);
     };
     

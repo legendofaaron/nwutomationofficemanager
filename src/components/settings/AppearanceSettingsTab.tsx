@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { useTheme } from '@/context/ThemeContext';
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Moon, Sun, Monitor, MoonStar } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 
@@ -22,13 +22,13 @@ export const AppearanceSettingsTab = () => {
           <RadioGroup
             defaultValue={theme}
             onValueChange={(value) => {
-              setTheme(value as 'light' | 'dark' | 'system');
+              setTheme(value as 'light' | 'dark' | 'superdark' | 'system');
               toast({
                 title: "Appearance updated",
                 description: `Theme changed to ${value} mode.`,
               });
             }}
-            className="grid grid-cols-3 gap-4 pt-2"
+            className="grid grid-cols-4 gap-4 pt-2"
           >
             <div>
               <RadioGroupItem
@@ -60,7 +60,22 @@ export const AppearanceSettingsTab = () => {
               >
                 <Moon className="h-5 w-5 mb-2" />
                 <span className="text-sm font-medium">Dark</span>
-                <span className="text-xs text-muted-foreground">Super Dark</span>
+              </Label>
+            </div>
+            <div>
+              <RadioGroupItem
+                value="superdark"
+                id="theme-superdark"
+                className="sr-only"
+              />
+              <Label
+                htmlFor="theme-superdark"
+                className={`flex flex-col items-center justify-between rounded-md border-2 border-muted p-4 hover:bg-accent hover:text-accent-foreground ${
+                  theme === 'superdark' ? 'border-primary' : ''
+                }`}
+              >
+                <MoonStar className="h-5 w-5 mb-2" />
+                <span className="text-sm font-medium">Super Dark</span>
               </Label>
             </div>
             <div>
