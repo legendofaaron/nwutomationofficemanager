@@ -43,14 +43,20 @@ const Login = () => {
       
       // Simple mock validation - in a real app, this would be your API validation
       if (values.email === 'admin@example.com' && values.password === 'password123') {
-        // Successful login
+        // Successful login - set localStorage first
         localStorage.setItem('isLoggedIn', 'true');
+        
+        // Show toast
         toast({
           title: "Login successful",
           description: "Welcome back to Office Manager",
         });
         
-        navigate('/dashboard');
+        // Use setTimeout to ensure navigation happens after state updates
+        setTimeout(() => {
+          console.log("Navigating to dashboard...");
+          navigate('/dashboard');
+        }, 100);
       } else {
         // Failed login
         setLoginError('Invalid email or password. Please try again.');
