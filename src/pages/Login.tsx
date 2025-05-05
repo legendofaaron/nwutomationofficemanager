@@ -16,7 +16,7 @@ import { localAuth } from '@/services/localAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address' }),
+  username: z.string().min(3, { message: 'Username must be at least 3 characters' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
 });
 
@@ -44,7 +44,7 @@ const Login = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
+      username: '',
       password: '',
     },
   });
@@ -63,8 +63,8 @@ const Login = () => {
     setLoginError(null);
     
     try {
-      const { data, error } = await localAuth.signInWithPassword({
-        email: values.email,
+      const { data, error } = await localAuth.signInWithUsername({
+        username: values.username,
         password: values.password,
       });
       
@@ -102,7 +102,7 @@ const Login = () => {
       } else {
         toast({
           title: "Login failed",
-          description: authError.message || "Invalid email or password",
+          description: authError.message || "Invalid username or password",
           variant: "destructive",
         });
       }
@@ -143,17 +143,17 @@ const Login = () => {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="email"
+                  name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Address</FormLabel>
+                      <FormLabel>Username</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                          <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                           <Input 
-                            placeholder="Enter your email address" 
+                            placeholder="Enter your username" 
                             className="pl-10" 
-                            autoComplete="email"
+                            autoComplete="username"
                             disabled={isLocked || isLoading}
                             {...field} 
                           />

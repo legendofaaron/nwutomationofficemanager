@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTimeout(() => {
           toast({
             title: "Signed in successfully",
-            description: `Welcome${currentSession?.user?.user_metadata?.full_name ? ', ' + currentSession.user.user_metadata.full_name : ''}!`,
+            description: `Welcome${currentSession?.user?.username ? ', ' + currentSession.user.username : ''}!`,
           });
         }, 0);
       } else if (event === 'SIGNED_OUT') {

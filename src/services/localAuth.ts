@@ -3,11 +3,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 export interface LocalUser {
   id: string;
-  email: string;
+  username: string;
+  email?: string;
   password: string; // In a real app, this should be hashed
   user_metadata: {
     full_name?: string;
-    username?: string;
     avatar_url?: string;
     bio?: string;
     location?: string;
@@ -75,7 +75,37 @@ const updateCurrentUser = (updates: Partial<Omit<LocalUser, 'id' | 'created_at'>
     }
     
     // Apply updates
+    if (updates.username) {
+      // Check if username is already taken by another user
+      const existingUserWithUsername = users.find(u => 
+        u.username === updates.username && u.id !== session.user.id
+      );
+      
+      if (existingUserWithUsername) {
+        return {
+          data: { user: null },
+          error: new Error('Username already taken')
+        };
+      }
+      
+      users[userIndex].username = updates.username;
+    }
+    
     if (updates.email) {
+      // Check if email is already taken by another user
+      if (updates.email) {
+        const existingUserWithEmail = users.find(u => 
+          u.email === updates.email && u.id !== session.user.id
+        );
+        
+        if (existingUserWithEmail) {
+          return {
+            data: { user: null },
+            error: new Error('Email already taken')
+          };
+        }
+      }
+      
       users[userIndex].email = updates.email;
     }
     
@@ -140,26 +170,39 @@ export const localAuth = {
   },
   
   // Sign up new user
-  signUp: ({ email, password, options }: { 
-    email: string; 
+  signUp: ({ username, email, password, options }: { 
+    username: string;
+    email?: string;
     password: string; 
     options?: { data?: Record<string, any> }
   }): { data: { user: LocalUser | null }; error: Error | null } => {
     try {
       const users = getUsers();
       
-      // Check if user already exists
-      const existingUser = users.find(user => user.email === email);
-      if (existingUser) {
+      // Check if username already exists
+      const existingUserByUsername = users.find(user => user.username === username);
+      if (existingUserByUsername) {
         return {
           data: { user: null },
-          error: new Error('User with this email already exists')
+          error: new Error('Username is already taken')
         };
+      }
+      
+      // Check if email already exists (if provided)
+      if (email) {
+        const existingUserByEmail = users.find(user => user.email === email);
+        if (existingUserByEmail) {
+          return {
+            data: { user: null },
+            error: new Error('Email is already registered')
+          };
+        }
       }
       
       // Create new user
       const newUser: LocalUser = {
         id: uuidv4(),
+        username,
         email,
         password,
         user_metadata: options?.data || {},
@@ -170,7 +213,7 @@ export const localAuth = {
       saveUsers(users);
       
       // Auto sign in after sign up
-      const result = localAuth.signInWithPassword({ email, password });
+      const result = localAuth.signInWithUsername({ username, password });
       
       return { 
         data: { user: newUser },
@@ -184,7 +227,49 @@ export const localAuth = {
     }
   },
   
-  // Sign in user
+  // Sign in user with username
+  signInWithUsername: ({ username, password }: { 
+    username: string; 
+    password: string 
+  }): { data: { session: LocalSession | null }; error: Error | null } => {
+    try {
+      const users = getUsers();
+      
+      // Find user by username
+      const user = users.find(user => user.username === username && user.password === password);
+      
+      if (!user) {
+        return {
+          data: { session: null },
+          error: new Error('Invalid username or password')
+        };
+      }
+      
+      // Create session (valid for 7 days)
+      const session: LocalSession = {
+        user: { ...user, password: '[REDACTED]' }, // Don't include password in session
+        access_token: uuidv4(),
+        expires_at: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
+      };
+      
+      saveSession(session);
+      
+      // Manually trigger auth state change
+      dispatchAuthEvent('SIGNED_IN', session);
+      
+      return {
+        data: { session },
+        error: null
+      };
+    } catch (error) {
+      return {
+        data: { session: null },
+        error: error instanceof Error ? error : new Error('Failed to sign in')
+      };
+    }
+  },
+  
+  // Sign in with password (maintaining backwards compatibility)
   signInWithPassword: ({ email, password }: { 
     email: string; 
     password: string 
@@ -192,10 +277,8 @@ export const localAuth = {
     try {
       const users = getUsers();
       
-      // Find user by exact email match only
-      const user = users.find(user => 
-        user.email === email && user.password === password
-      );
+      // Find user by email
+      const user = users.find(user => user.email === email && user.password === password);
       
       if (!user) {
         return {
