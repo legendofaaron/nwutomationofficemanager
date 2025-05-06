@@ -40,7 +40,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ onClose }) => {
 
   const handleGenerateDocument = async () => {
     // Check for premium access to AI document generation
-    if (!checkAccess('AI Document Generation')) {
+    if (!checkAccess('Document Generation')) {
       return;
     }
 
@@ -195,3 +195,4 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ onClose }) => {
 };
 
 export default DocumentGenerator;
+
