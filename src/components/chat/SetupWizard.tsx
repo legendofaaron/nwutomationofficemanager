@@ -11,7 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings, Brain, Link, Check } from 'lucide-react';
+import { Settings, Brain, Link, Check, ExternalLink, Lock } from 'lucide-react';
 
 interface SetupWizardProps {
   messages: Message[];
@@ -31,11 +31,21 @@ export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupW
     contextLength: 8000,
     temperature: 0.7
   });
+  const [openAiConfig, setOpenAiConfig] = useState({
+    enabled: false,
+    apiKey: '',
+    model: 'gpt-4o-mini'
+  });
+  const [testingOpenAi, setTestingOpenAi] = useState(false);
 
   const updateSetupProgress = () => {
     let progress = 0;
     
-    if (customModelInfo.enabled) {
+    if (openAiConfig.enabled) {
+      // If using OpenAI
+      if (openAiConfig.apiKey) progress = 100;
+      else progress = 25;
+    } else if (customModelInfo.enabled) {
       // If using custom model
       if (customModelInfo.name) progress += 25;
       if (customModelInfo.apiKey) progress += 50;
@@ -57,7 +67,14 @@ export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupW
         model: 'default'
       };
       
-      if (customModelInfo.enabled) {
+      if (openAiConfig.enabled) {
+        config.openAi = {
+          apiKey: openAiConfig.apiKey,
+          enabled: true
+        };
+        config.model = openAiConfig.model;
+        delete config.customModel;
+      } else if (customModelInfo.enabled) {
         config.customModel = {
           name: customModelInfo.name || 'Custom Model',
           apiKey: customModelInfo.apiKey,
@@ -66,24 +83,28 @@ export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupW
           temperature: customModelInfo.temperature,
           isCustom: true
         };
+        delete config.openAi;
       } else {
         delete config.customModel;
+        delete config.openAi;
       }
       
       localStorage.setItem('llmConfig', JSON.stringify(config));
       
       toast({
         title: 'Configuration Saved',
-        description: customModelInfo.enabled 
-          ? `Custom model "${customModelInfo.name}" configured successfully` 
-          : 'Using default language model settings'
+        description: openAiConfig.enabled 
+          ? 'OpenAI API configuration saved successfully'
+          : customModelInfo.enabled 
+            ? `Custom model "${customModelInfo.name}" configured successfully` 
+            : 'Using default language model settings'
       });
       
       setIsConfiguring(false);
     } catch (error) {
       toast({
         title: 'Error Saving Configuration',
-        description: 'Failed to save custom model settings',
+        description: 'Failed to save model settings',
         variant: 'destructive'
       });
     }
@@ -111,6 +132,48 @@ export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupW
         description: `Successfully connected to ${customModelInfo.name || 'Custom Model'}`
       });
     }, 1500);
+  };
+  
+  const testOpenAiKey = async () => {
+    if (!openAiConfig.apiKey) {
+      toast({
+        title: 'Missing API Key',
+        description: 'Please enter an OpenAI API key to test',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setTestingOpenAi(true);
+    
+    try {
+      // Simple test request to OpenAI API
+      const response = await fetch('https://api.openai.com/v1/models', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${openAiConfig.apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        toast({
+          title: 'OpenAI Connection Successful',
+          description: 'Your API key is valid and working correctly'
+        });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Invalid API key');
+      }
+    } catch (error) {
+      toast({
+        title: 'Connection Failed',
+        description: error instanceof Error ? error.message : 'Failed to validate OpenAI API key',
+        variant: 'destructive'
+      });
+    } finally {
+      setTestingOpenAi(false);
+    }
   };
 
   return (
@@ -143,21 +206,112 @@ export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupW
                 </TabsList>
                 
                 <TabsContent value="model" className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="enable-custom-model" className="text-gray-300">
-                      Enable Custom Model
-                    </Label>
-                    <Switch 
-                      id="enable-custom-model"
-                      checked={customModelInfo.enabled}
-                      onCheckedChange={(checked) => {
-                        setCustomModelInfo(prev => ({...prev, enabled: checked}));
-                        setSetupProgress(checked ? 25 : 100);
-                      }}
-                    />
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="enable-custom-model" className="text-gray-300">
+                          Enable Custom Model
+                        </Label>
+                        <Switch 
+                          id="enable-custom-model"
+                          checked={customModelInfo.enabled && !openAiConfig.enabled}
+                          onCheckedChange={(checked) => {
+                            setCustomModelInfo(prev => ({...prev, enabled: checked}));
+                            if (checked) {
+                              setOpenAiConfig(prev => ({...prev, enabled: false}));
+                            }
+                            setSetupProgress(checked ? 25 : 100);
+                          }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="enable-openai-api" className="text-gray-300">
+                          Use OpenAI API
+                        </Label>
+                        <Switch 
+                          id="enable-openai-api"
+                          checked={openAiConfig.enabled}
+                          onCheckedChange={(checked) => {
+                            setOpenAiConfig(prev => ({...prev, enabled: checked}));
+                            if (checked) {
+                              setCustomModelInfo(prev => ({...prev, enabled: false}));
+                            }
+                            updateSetupProgress();
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
                   
-                  {customModelInfo.enabled ? (
+                  {openAiConfig.enabled ? (
+                    <div className="space-y-3 border border-[#30363d] rounded-md p-4 bg-[#0D1117]/50">
+                      <div className="flex items-center gap-2">
+                        <Lock className="h-4 w-4 text-blue-400" />
+                        <h4 className="text-sm font-medium text-blue-300">OpenAI API Configuration</h4>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="openai-api-key" className="text-gray-300">API Key</Label>
+                        <Input
+                          id="openai-api-key"
+                          type="password"
+                          value={openAiConfig.apiKey}
+                          onChange={(e) => {
+                            setOpenAiConfig(prev => ({...prev, apiKey: e.target.value}));
+                            updateSetupProgress();
+                          }}
+                          placeholder="sk-..."
+                          className="bg-[#0D1117] border-[#30363d] text-gray-200"
+                        />
+                        <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                          <Lock className="h-3 w-3" />
+                          <span>Your API key is stored securely in your browser's local storage</span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="openai-model" className="text-gray-300">Model</Label>
+                        <Select 
+                          value={openAiConfig.model}
+                          onValueChange={(value) => setOpenAiConfig(prev => ({...prev, model: value}))}
+                        >
+                          <SelectTrigger id="openai-model" className="bg-[#0D1117] border-[#30363d] text-gray-200">
+                            <SelectValue placeholder="Select model" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#161B22] border-[#30363d] text-gray-200">
+                            <SelectItem value="gpt-4o-mini">GPT-4o Mini (Faster, more affordable)</SelectItem>
+                            <SelectItem value="gpt-4o">GPT-4o (More capable)</SelectItem>
+                            <SelectItem value="gpt-4.5-preview">GPT-4.5 Preview (Most capable)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <Button 
+                          onClick={testOpenAiKey} 
+                          disabled={!openAiConfig.apiKey || testingOpenAi}
+                          className="mt-2 bg-blue-600 hover:bg-blue-700 text-white"
+                          size="sm"
+                        >
+                          <Link className="h-4 w-4 mr-2" />
+                          {testingOpenAi ? 'Testing...' : 'Test Connection'}
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2 text-xs border-[#30363d] text-gray-300 hover:bg-[#30363d]/30"
+                          onClick={() => window.open('https://platform.openai.com/api-keys', '_blank')}
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          Get API Key
+                        </Button>
+                      </div>
+                    </div>
+                  ) : customModelInfo.enabled ? (
                     <div className="space-y-3">
                       <div className="space-y-2">
                         <Label htmlFor="custom-model-name" className="text-gray-300">Model Name</Label>
@@ -257,7 +411,23 @@ export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupW
                 </TabsContent>
                 
                 <TabsContent value="connection" className="space-y-4">
-                  {customModelInfo.enabled && (
+                  {openAiConfig.enabled ? (
+                    <div className="space-y-4">
+                      <div className="rounded-md border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30 p-4">
+                        <div className="flex gap-3">
+                          <div className="mt-0.5">
+                            <Check className="h-5 w-5 text-green-500" />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-green-900 dark:text-green-400">OpenAI Connection</h4>
+                            <p className="text-sm text-green-700 dark:text-green-500 mt-1">
+                              Your app will connect directly to OpenAI's API using your key
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : customModelInfo.enabled ? (
                     <>
                       <div className="space-y-2">
                         <Label htmlFor="custom-model-api-key" className="text-gray-300">API Key</Label>
@@ -299,9 +469,7 @@ export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupW
                         Test Connection
                       </Button>
                     </>
-                  )}
-                  
-                  {!customModelInfo.enabled && (
+                  ) : (
                     <div className="flex flex-col items-center justify-center h-24 text-center">
                       <Check className="h-10 w-10 text-green-500 mb-2" />
                       <p className="text-gray-400">Default connection is configured</p>

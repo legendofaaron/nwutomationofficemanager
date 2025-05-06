@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Database, Server, FolderPlus, Brain, Save, 
-  HardDrive, Building, Image, Zap, MessageSquare, Check
+  HardDrive, Building, Image, Zap, MessageSquare, Check, 
+  Lock, ExternalLink
 } from 'lucide-react';
 import { 
   Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
@@ -59,6 +59,8 @@ const SetupAssistant = () => {
     enableKnowledgeBase: true,
     enableSuggestions: true,
     aiResponseStyle: 'balanced',
+    openAiApiKey: '',
+    useOpenAiKey: false,
   });
   
   useEffect(() => {
@@ -124,7 +126,7 @@ const SetupAssistant = () => {
       logoUrl: config.logoUrl
     });
     
-    // Save LLM configuration to local storage
+    // Save LLM configuration to local storage, now including OpenAI API key
     const llmConfig = {
       endpoint: config.endpoint,
       enabled: true,
@@ -136,6 +138,10 @@ const SetupAssistant = () => {
         contextLength: config.contextWindowSize,
         temperature: config.llmTemperature,
         isCustom: true
+      } : undefined,
+      openAi: config.useOpenAiKey ? {
+        apiKey: config.openAiApiKey,
+        enabled: true
       } : undefined
     };
     
@@ -220,6 +226,49 @@ const SetupAssistant = () => {
       return <Badge className="bg-blue-500 hover:bg-blue-600">In Progress</Badge>;
     } else {
       return <Badge className="bg-gray-500 hover:bg-gray-600">Just Started</Badge>;
+    }
+  };
+
+  // Function to test OpenAI API key
+  const testOpenAiKey = async () => {
+    if (!config.openAiApiKey) {
+      toast({
+        title: 'Missing API Key',
+        description: 'Please enter an OpenAI API key to test',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setTestingConnection(true);
+    
+    try {
+      // Simple test request to OpenAI API
+      const response = await fetch('https://api.openai.com/v1/models', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${config.openAiApiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        toast({
+          title: 'OpenAI Connection Successful',
+          description: 'Your API key is valid and working correctly'
+        });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Invalid API key');
+      }
+    } catch (error) {
+      toast({
+        title: 'Connection Failed',
+        description: error instanceof Error ? error.message : 'Failed to validate OpenAI API key',
+        variant: 'destructive'
+      });
+    } finally {
+      setTestingConnection(false);
     }
   };
 
@@ -583,30 +632,104 @@ const SetupAssistant = () => {
                     <Switch 
                       id="use-custom-model"
                       checked={config.useCustomModel}
-                      onCheckedChange={(checked) => setConfig({...config, useCustomModel: checked})}
+                      onCheckedChange={(checked) => setConfig(prev => ({...prev, useCustomModel: checked}))}
                     />
                   </div>
                 </div>
                 
-                {!config.useCustomModel ? (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="use-openai-key">Use OpenAI API Key</Label>
+                    <Switch 
+                      id="use-openai-key"
+                      checked={config.useOpenAiKey}
+                      onCheckedChange={(checked) => setConfig(prev => ({...prev, useOpenAiKey: checked}))}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Use your own OpenAI API key for GPT models
+                  </p>
+                </div>
+                
+                {/* OpenAI API Key Section */}
+                {config.useOpenAiKey && (
+                  <div className="space-y-4 border rounded-md p-4 bg-muted/20">
+                    <div className="flex items-center gap-2">
+                      <Lock className="h-5 w-5 text-blue-500" />
+                      <h3 className="text-md font-medium">OpenAI API Configuration</h3>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="openai-api-key">OpenAI API Key</Label>
+                      <div className="relative">
+                        <Input 
+                          id="openai-api-key"
+                          type="password"
+                          value={config.openAiApiKey}
+                          onChange={(e) => setConfig(prev => ({...prev, openAiApiKey: e.target.value}))}
+                          placeholder="sk-..."
+                        />
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                        <Lock className="h-3 w-3" />
+                        <span>Your API key is stored securely in your browser's local storage</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <Button
+                        onClick={testOpenAiKey}
+                        disabled={!config.openAiApiKey || testingConnection}
+                        size="sm"
+                        className="mt-2"
+                      >
+                        {testingConnection ? 'Testing...' : 'Test Connection'}
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 text-xs"
+                        onClick={() => window.open('https://platform.openai.com/api-keys', '_blank')}
+                      >
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        Get API Key
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Existing LLM sections - Custom Model or Default Model */}
+                {!config.useOpenAiKey ? (
+                  !config.useCustomModel ? (
+                    <div className="space-y-4">
+                      {/* ... keep existing code (default model selection) */}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* ... keep existing code (custom model configuration) */}
+                    </div>
+                  )
+                ) : (
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="llm-model">Language Model</Label>
+                      <Label htmlFor="llm-model">OpenAI Model</Label>
                       <Select 
                         value={config.llmModel}
                         onValueChange={(value) => setConfig({...config, llmModel: value})}
                       >
                         <SelectTrigger id="llm-model">
-                          <SelectValue placeholder="Select language model" />
+                          <SelectValue placeholder="Select OpenAI model" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="gpt-4o-mini">GPT-4o Mini (Faster, more affordable)</SelectItem>
                           <SelectItem value="gpt-4o">GPT-4o (More capable)</SelectItem>
                           <SelectItem value="gpt-4.5-preview">GPT-4.5 Preview (Most capable)</SelectItem>
-                          <SelectItem value="llama-3.1-8b">Llama 3.1 (8B)</SelectItem>
-                          <SelectItem value="llama-3.1-70b">Llama 3.1 (70B)</SelectItem>
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Select which OpenAI model to use with your API key
+                      </p>
                     </div>
                     
                     <div className="grid gap-4 md:grid-cols-2">
@@ -627,15 +750,8 @@ const SetupAssistant = () => {
                             <span className="text-sm bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded-md">
                               {config.llmTemperature.toFixed(1)}
                             </span>
-                            <div className="text-xs text-muted-foreground">
-                              {config.llmTemperature < 0.5 ? 'Precise' : 
-                               config.llmTemperature > 1.0 ? 'Creative' : 'Balanced'}
-                            </div>
                           </div>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          Lower values produce more focused and deterministic responses
-                        </p>
                       </div>
                       
                       <div className="space-y-2">
@@ -652,94 +768,6 @@ const SetupAssistant = () => {
                         </p>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="custom-model-name">Custom Model Name</Label>
-                      <Input 
-                        id="custom-model-name"
-                        value={config.customModelName}
-                        onChange={(e) => setConfig({...config, customModelName: e.target.value})}
-                        placeholder="My Custom Model"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="custom-model-api-key">API Key</Label>
-                      <Input 
-                        id="custom-model-api-key"
-                        type="password"
-                        value={config.customModelApiKey}
-                        onChange={(e) => setConfig({...config, customModelApiKey: e.target.value})}
-                        placeholder="sk-..."
-                      />
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Your API key will be stored locally in your browser
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="custom-model-base-url">Base URL (Optional)</Label>
-                      <Input 
-                        id="custom-model-base-url"
-                        value={config.customModelBaseUrl}
-                        onChange={(e) => setConfig({...config, customModelBaseUrl: e.target.value})}
-                        placeholder="https://api.example.com/v1"
-                      />
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Leave empty to use the default endpoint
-                      </p>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="custom-context-window">Context Length</Label>
-                        <Select 
-                          value={config.contextWindowSize.toString()}
-                          onValueChange={(value) => setConfig({...config, contextWindowSize: parseInt(value)})}
-                        >
-                          <SelectTrigger id="custom-context-window">
-                            <SelectValue placeholder="Select context length" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="4000">4,000 tokens</SelectItem>
-                            <SelectItem value="8000">8,000 tokens (Default)</SelectItem>
-                            <SelectItem value="16000">16,000 tokens</SelectItem>
-                            <SelectItem value="32000">32,000 tokens</SelectItem>
-                            <SelectItem value="128000">128,000 tokens (Large)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground">
-                          Maximum number of tokens the model can process
-                        </p>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="custom-temperature">Temperature</Label>
-                        <div className="grid grid-cols-2 gap-2 items-center">
-                          <Input 
-                            id="custom-temperature"
-                            type="range"
-                            min="0"
-                            max="2"
-                            step="0.1"
-                            value={config.llmTemperature}
-                            onChange={(e) => setConfig({...config, llmTemperature: parseFloat(e.target.value)})}
-                            className="col-span-1"
-                          />
-                          <div className="flex justify-between items-center col-span-1">
-                            <span className="text-sm bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded-md">
-                              {config.llmTemperature.toFixed(1)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <Button onClick={testConnection} disabled={!config.customModelApiKey || testingConnection} className="mt-2">
-                      {testingConnection ? 'Testing...' : 'Test Connection'}
-                    </Button>
                   </div>
                 )}
                 

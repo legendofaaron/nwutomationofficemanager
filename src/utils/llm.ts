@@ -12,6 +12,11 @@ export async function queryLlm(prompt: string, endpoint: string, model: string =
     const config = storedConfig ? JSON.parse(storedConfig) : {};
     const effectiveWebhookUrl = webhookUrl || config.webhookUrl;
     
+    // Check if OpenAI integration is enabled
+    if (config.openAi?.enabled && config.openAi?.apiKey) {
+      return await queryOpenAi(prompt, model, config.openAi.apiKey);
+    }
+    
     const payload: Record<string, any> = {
       message: prompt,
       model: model
@@ -51,6 +56,41 @@ export async function queryLlm(prompt: string, endpoint: string, model: string =
     };
   } catch (error) {
     console.error('Error querying language model:', error);
+    throw error;
+  }
+}
+
+// New function to query OpenAI API directly
+async function queryOpenAi(prompt: string, model: string, apiKey: string): Promise<LlmResponse> {
+  try {
+    // Map our model names to OpenAI model names if needed
+    const openAiModel = model === 'default' ? 'gpt-4o-mini' : model;
+    
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: openAiModel,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 2000
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Failed to query OpenAI');
+    }
+    
+    const data = await response.json();
+    return {
+      message: data.choices[0]?.message?.content || "No response received from OpenAI"
+    };
+  } catch (error) {
+    console.error('Error querying OpenAI:', error);
     throw error;
   }
 }

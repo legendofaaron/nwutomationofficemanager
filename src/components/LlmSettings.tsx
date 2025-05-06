@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,12 +13,17 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { ExternalLink, Lock } from 'lucide-react';
 
 export interface LlmConfig {
   endpoint: string;
   enabled: boolean;
   model: string;
   webhookUrl?: string;
+  openAi?: {
+    apiKey: string;
+    enabled: boolean;
+  };
   customModel?: {
     name: string;
     apiKey?: string;
@@ -39,6 +43,8 @@ export const LlmSettings = () => {
 
   const [activeTab, setActiveTab] = useState<string>('general');
   const [isCustomModel, setIsCustomModel] = useState<boolean>(false);
+  const [useOpenAiKey, setUseOpenAiKey] = useState<boolean>(false);
+  const [testingOpenAi, setTestingOpenAi] = useState<boolean>(false);
 
   // Load config from localStorage on component mount
   useEffect(() => {
@@ -48,6 +54,7 @@ export const LlmSettings = () => {
         const parsedConfig = JSON.parse(savedConfig);
         setConfig(parsedConfig);
         setIsCustomModel(!!parsedConfig.customModel?.isCustom);
+        setUseOpenAiKey(!!parsedConfig.openAi?.enabled);
       } catch (error) {
         console.error('Failed to parse saved LLM config:', error);
       }
@@ -129,6 +136,48 @@ export const LlmSettings = () => {
     }
   };
 
+  const testOpenAiKey = async () => {
+    if (!config.openAi?.apiKey) {
+      toast({
+        title: 'Missing API Key',
+        description: 'Please enter an OpenAI API key to test',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setTestingOpenAi(true);
+    
+    try {
+      // Simple test request to OpenAI API
+      const response = await fetch('https://api.openai.com/v1/models', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${config.openAi.apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        toast({
+          title: 'OpenAI Connection Successful',
+          description: 'Your API key is valid and working correctly'
+        });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Invalid API key');
+      }
+    } catch (error) {
+      toast({
+        title: 'Connection Failed',
+        description: error instanceof Error ? error.message : 'Failed to validate OpenAI API key',
+        variant: 'destructive'
+      });
+    } finally {
+      setTestingOpenAi(false);
+    }
+  };
+
   const handleModelTypeChange = (isCustom: boolean) => {
     setIsCustomModel(isCustom);
     if (isCustom) {
@@ -151,12 +200,35 @@ export const LlmSettings = () => {
     }
   };
 
+  const handleOpenAiToggle = (enabled: boolean) => {
+    setUseOpenAiKey(enabled);
+    
+    if (enabled) {
+      setConfig(prev => ({
+        ...prev,
+        openAi: {
+          apiKey: prev.openAi?.apiKey || '',
+          enabled: true
+        }
+      }));
+    } else {
+      setConfig(prev => ({
+        ...prev,
+        openAi: {
+          ...prev.openAi,
+          enabled: false
+        }
+      }));
+    }
+  };
+
   return (
     <div className="space-y-6 p-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="general">General Settings</TabsTrigger>
           <TabsTrigger value="custom">Custom Model</TabsTrigger>
+          <TabsTrigger value="openai">OpenAI</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-6">
@@ -330,6 +402,90 @@ export const LlmSettings = () => {
               </p>
             </div>
           </div>
+        </TabsContent>
+        
+        <TabsContent value="openai" className="space-y-6">
+          <div>
+            <h3 className="text-lg font-medium">OpenAI Configuration</h3>
+            <p className="text-sm text-gray-500 mb-4">Configure your OpenAI API key to use with the application</p>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Enable OpenAI Integration</h4>
+              <p className="text-sm text-gray-500">Use your own OpenAI API key</p>
+            </div>
+            <Switch
+              checked={useOpenAiKey}
+              onCheckedChange={handleOpenAiToggle}
+            />
+          </div>
+          
+          {useOpenAiKey && (
+            <div className="space-y-4 border rounded-md p-4 bg-muted/20">
+              <div className="space-y-2">
+                <Label htmlFor="openai-api-key">OpenAI API Key</Label>
+                <div className="relative">
+                  <Input 
+                    id="openai-api-key"
+                    type="password"
+                    value={config.openAi?.apiKey || ''}
+                    onChange={(e) => setConfig(prev => ({
+                      ...prev,
+                      openAi: {
+                        ...(prev.openAi || {}),
+                        apiKey: e.target.value,
+                        enabled: true
+                      }
+                    }))}
+                    placeholder="sk-..."
+                  />
+                </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                  <Lock className="h-3 w-3" />
+                  <span>Your API key is stored securely in your browser's local storage</span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="openai-model">OpenAI Model</Label>
+                <Select 
+                  value={config.model}
+                  onValueChange={(value) => setConfig(prev => ({ ...prev, model: value }))}
+                >
+                  <SelectTrigger id="openai-model">
+                    <SelectValue placeholder="Select OpenAI model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gpt-4o-mini">GPT-4o Mini (Faster, more affordable)</SelectItem>
+                    <SelectItem value="gpt-4o">GPT-4o (More capable)</SelectItem>
+                    <SelectItem value="gpt-4.5-preview">GPT-4.5 Preview (Most capable)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Button
+                  onClick={testOpenAiKey}
+                  disabled={!config.openAi?.apiKey || testingOpenAi}
+                  size="sm"
+                  className="mt-2"
+                >
+                  {testingOpenAi ? 'Testing...' : 'Test Connection'}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 text-xs"
+                  onClick={() => window.open('https://platform.openai.com/api-keys', '_blank')}
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Get API Key
+                </Button>
+              </div>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
