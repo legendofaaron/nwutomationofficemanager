@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Message, MessageBubble } from './MessageBubble';
@@ -36,6 +37,13 @@ export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupW
     model: 'gpt-4o-mini'
   });
   const [testingOpenAi, setTestingOpenAi] = useState(false);
+
+  // Define the missing handleSendMessage function
+  const handleSendMessage = (message: string) => {
+    if (onSendResponse) {
+      onSendResponse(message);
+    }
+  };
 
   const updateSetupProgress = () => {
     let progress = 0;
