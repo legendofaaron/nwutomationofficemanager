@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ExternalLink, Lock, Cpu, Download } from 'lucide-react';
+import { ExternalLink, Lock, Cpu, Download, CheckCircle } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
