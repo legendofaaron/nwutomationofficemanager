@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -295,7 +294,11 @@ const SetupAssistant = () => {
   };
 
   // Function to test OpenAI API key
-  const testOpenAiKey = async (silent = false) => {
+  const testOpenAiKey = async (event?: React.MouseEvent<HTMLButtonElement>) => {
+    // If event exists, it means this was triggered by a button click
+    // In this case, we want silent to be false
+    const silent = event ? false : true;
+    
     if (!config.openAiApiKey) {
       if (!silent) {
         toast({

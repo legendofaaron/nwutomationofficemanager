@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Message, MessageBubble } from './MessageBubble';
-import { ChatInput } from './ChatInput';
+import ChatInput from './ChatInput';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';

@@ -1,8 +1,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import ChatInput from './ChatInput';
-import MessageBubble, { Message } from './MessageBubble';
-import QuickActions from './QuickActions';
+import { MessageBubble, Message } from './MessageBubble';
+import { QuickActions } from './QuickActions';
 
 interface ChatContainerProps {
   messages: Message[];
