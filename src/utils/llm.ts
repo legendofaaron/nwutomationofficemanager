@@ -1,3 +1,4 @@
+
 import { LlmConfig } from '@/components/LlmSettings';
 import { toast } from '@/hooks/use-toast';
 
@@ -13,7 +14,7 @@ interface LlmResponse {
 export async function queryLlm(
   prompt: string, 
   endpoint: string, 
-  model: string = 'default', 
+  model: string = 'llama-3.2-3b', 
   webhookUrl?: string,
   systemPrompt?: string
 ): Promise<LlmResponse> {

@@ -37,6 +37,7 @@ const ChatUI = () => {
   const [connectionTested, setConnectionTested] = useState(false);
   const isMobile = useIsMobile();
   const [useN8nChat, setUseN8nChat] = useState(false);
+  const defaultModel = 'llama-3.2-3b';
 
   // Use effect to sync with aiAssistantOpen state from context
   useEffect(() => {
@@ -382,7 +383,7 @@ How can I assist you today?`
           const chatResponse = await queryLlm(
             input, 
             config.endpoint || '', 
-            config.openAi?.enabled ? 'gpt-4o-mini' : 'default'
+            config.openAi?.enabled ? 'gpt-4o-mini' : defaultModel
           );
           
           // Add the chat response to messages
@@ -407,7 +408,7 @@ How can I assist you today?`
           const responseText = await queryLlm(
             input,
             config.endpoint || '',
-            config.openAi?.enabled ? 'gpt-4o-mini' : 'default'
+            config.openAi?.enabled ? 'gpt-4o-mini' : defaultModel
           );
           
           setMessages(prev => [
@@ -472,7 +473,7 @@ How can I assist you today?`
           const chatResponse = await queryLlm(
             action,
             config.endpoint || '',
-            config.openAi?.enabled ? 'gpt-4o-mini' : 'default'
+            config.openAi?.enabled ? 'gpt-4o-mini' : defaultModel
           );
           
           // Add the chat response to messages
@@ -492,7 +493,7 @@ How can I assist you today?`
           const responseText = await queryLlm(
             action,
             config.endpoint || '',
-            config.openAi?.enabled ? 'gpt-4o-mini' : 'default'
+            config.openAi?.enabled ? 'gpt-4o-mini' : defaultModel
           );
           
           setMessages(prev => [
