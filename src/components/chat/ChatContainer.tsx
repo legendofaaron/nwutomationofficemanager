@@ -6,6 +6,7 @@ import { MessageBubble } from './MessageBubble';
 import { QuickActions } from './QuickActions';
 import ChatInput from './ChatInput';
 import { ArrowDown, MessageSquare, WifiOff, AlertCircle, Upload, HardDriveDownload } from 'lucide-react';
+import { usePremiumFeature } from '@/hooks/usePremiumFeature';
 
 interface ChatContainerProps {
   messages: Array<{
@@ -42,6 +43,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [scrollAreaElement, setScrollAreaElement] = useState<HTMLElement | null>(null);
+  const { checkAccess, PremiumFeatureGate } = usePremiumFeature();
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -81,6 +83,28 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     }
   };
 
+  const handleSendCustomMessage = (message: string) => {
+    // For advanced AI features, check premium access
+    if (message.toLowerCase().includes('customize') || 
+        message.toLowerCase().includes('advanced') || 
+        message.toLowerCase().includes('train')) {
+      if (!checkAccess('Advanced AI Features')) return;
+    }
+    
+    onSendMessage(message);
+  };
+
+  const handleCustomQuickAction = (action: string) => {
+    // For advanced actions, check premium access
+    if (action.toLowerCase().includes('customize') || 
+        action.toLowerCase().includes('advanced') || 
+        action.toLowerCase().includes('train')) {
+      if (!checkAccess('Advanced AI Features')) return;
+    }
+    
+    onQuickAction(action);
+  };
+
   // If model is not configured, show the LLM setup prompt
   if (!isModelConfigured) {
     return (
@@ -117,7 +141,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       <div className="flex flex-col h-full">
         {!isSetupMode && (
           <QuickActions 
-            onActionClick={onQuickAction} 
+            onActionClick={handleCustomQuickAction} 
             disabled={isLoading} 
           />
         )}
@@ -133,12 +157,13 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
           </div>
         </div>
         <ChatInput 
-          onSendMessage={onSendMessage} 
+          onSendMessage={handleSendCustomMessage} 
           isLoading={isLoading} 
           disabled={isLoading} 
           placeholder="Send a message to your local LLM..."
           useN8n={useN8n}
         />
+        <PremiumFeatureGate />
       </div>
     );
   }
@@ -149,12 +174,13 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       <div className="flex flex-col h-full">
         {!isSetupMode && (
           <QuickActions 
-            onActionClick={onQuickAction} 
+            onActionClick={handleCustomQuickAction} 
             disabled={isLoading} 
           />
         )}
         
         <div id="n8n-chat-container" className="flex-1 p-3 overflow-y-auto relative"></div>
+        <PremiumFeatureGate />
       </div>
     );
   }
@@ -163,7 +189,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     <div className="flex flex-col h-full">
       {!isSetupMode && (
         <QuickActions 
-          onActionClick={onQuickAction} 
+          onActionClick={handleCustomQuickAction} 
           disabled={isLoading} 
         />
       )}
@@ -204,12 +230,14 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       )}
 
       <ChatInput 
-        onSendMessage={onSendMessage} 
+        onSendMessage={handleSendCustomMessage} 
         isLoading={isLoading} 
         disabled={isLoading} 
         placeholder="Send a message to your local LLM..."
         useN8n={useN8n}
       />
+
+      <PremiumFeatureGate />
     </div>
   );
 };

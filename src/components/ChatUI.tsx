@@ -13,6 +13,7 @@ import { Message } from './chat/MessageBubble';
 import { queryLlm, isLlmConfigured, getLlmConfig, generateDocumentContent, loadLlamaModel } from '@/utils/llm';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileSettingsDrawer } from './settings/MobileSettingsDrawer';
+import { usePremiumFeature } from '@/hooks/usePremiumFeature';
 
 const ChatUI = () => {
   const { aiAssistantOpen, setAiAssistantOpen, assistantConfig, setAssistantConfig, 
@@ -30,6 +31,7 @@ const ChatUI = () => {
   const [activeLlamaModel, setActiveLlamaModel] = useState<any>(null);
   const [isModelConfigured, setIsModelConfigured] = useState(false);
   const navigate = useNavigate();
+  const { checkAccess, PremiumFeatureGate } = usePremiumFeature();
 
   // Use effect to sync with aiAssistantOpen state from context
   useEffect(() => {
@@ -93,6 +95,9 @@ const ChatUI = () => {
   
   // Function to create or update document with generated content
   const updateDocumentWithContent = (content: string, documentName?: string) => {
+    // Check if this is a premium feature
+    if (!checkAccess('Document Generation')) return;
+    
     // If there's a current document open, update it
     if (currentFile && currentFile.type === 'document') {
       const updatedFile = { ...currentFile, content };
@@ -141,6 +146,14 @@ const ChatUI = () => {
 
   // Handle message sending with local LLM
   const handleSendMessage = async (input: string) => {
+    // For advanced AI requests, check premium access
+    if (input.toLowerCase().includes('customize') || 
+        input.toLowerCase().includes('advanced') || 
+        input.toLowerCase().includes('train') || 
+        isDocumentContentRequest(input)) {
+      if (!checkAccess('Advanced AI Features')) return;
+    }
+    
     if (isLoading || !isModelConfigured) return;
     
     const userMessageId = Date.now().toString();
@@ -213,6 +226,14 @@ const ChatUI = () => {
 
   // Handle quick actions
   const handleQuickAction = async (action: string) => {
+    // For advanced AI actions, check premium access
+    if (action.toLowerCase().includes('customize') || 
+        action.toLowerCase().includes('advanced') || 
+        action.toLowerCase().includes('train') || 
+        action === 'create document') {
+      if (!checkAccess('Advanced AI Features')) return;
+    }
+    
     if (isLoading || !isModelConfigured) return;
     
     const userMessageId = Date.now().toString();
@@ -275,6 +296,12 @@ const ChatUI = () => {
     setAiAssistantOpen(!isOpen);
   };
 
+  const handleOpenSettings = () => {
+    if (checkAccess('AI Settings')) {
+      setShowSettings(!showSettings);
+    }
+  };
+
   if (!isOpen) {
     return (
       <Button
@@ -294,10 +321,14 @@ const ChatUI = () => {
       <ChatHeader 
         assistantName={assistantConfig?.name || 'Local LLM Assistant'} 
         companyName={assistantConfig?.companyName}
-        onSettingsClick={() => setShowSettings(!showSettings)}
+        onSettingsClick={handleOpenSettings}
         onCloseClick={() => handleToggleChat()}
         useN8n={useN8nChat}
-        onToggleN8n={() => setUseN8nChat(!useN8nChat)}
+        onToggleN8n={() => {
+          if (checkAccess('N8N Integration')) {
+            setUseN8nChat(!useN8nChat);
+          }
+        }}
       />
       
       {showSettings ? (
@@ -306,7 +337,11 @@ const ChatUI = () => {
             open={showSettings} 
             onClose={() => setShowSettings(false)} 
             useN8nChat={useN8nChat}
-            onToggleN8n={() => setUseN8nChat(!useN8nChat)}
+            onToggleN8n={() => {
+              if (checkAccess('N8N Integration')) {
+                setUseN8nChat(!useN8nChat);
+              }
+            }}
           />
         ) : (
           <LlmSettings 
@@ -327,9 +362,11 @@ const ChatUI = () => {
           companyName={assistantConfig?.companyName}
           useN8n={useN8nChat}
           isModelConfigured={isModelConfigured}
-          onOpenModelSettings={() => setShowSettings(true)}
+          onOpenModelSettings={handleOpenSettings}
         />
       )}
+      
+      <PremiumFeatureGate />
     </div>
   );
 };
