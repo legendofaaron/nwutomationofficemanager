@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, Users } from 'lucide-react';
 import { TaskFormData, AssignmentType, Crew, Employee } from '../ScheduleTypes';
-import { getEmployeeOptions, getCrewOptions, getCrewMemberNames } from '../ScheduleHelpers';
+import { getEmployeeOptions, getCrewOptions } from '../ScheduleHelpers';
 
 interface AssignmentTabProps {
   formData: TaskFormData;
@@ -24,6 +24,20 @@ const AssignmentTab: React.FC<AssignmentTabProps> = ({
   crews,
   employees
 }) => {
+  // Get crew member names as a comma-separated string
+  const getCrewMemberNames = (crewId: string, crewsList: Crew[]): string => {
+    const crew = crewsList.find(c => c.id === crewId);
+    if (!crew) return 'No crew members';
+    
+    return crew.memberIds
+      .map(id => {
+        const employee = employees.find(e => e.id === id);
+        return employee ? employee.name : '';
+      })
+      .filter(name => name) // Remove empty names
+      .join(', ');
+  };
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">

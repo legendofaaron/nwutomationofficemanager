@@ -1,15 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Calendar as CalendarIcon, Users, User, Building2 } from 'lucide-react';
-import { format, addDays, isSameDay } from 'date-fns';
 import { Task, Crew, Employee, Client, ClientLocation, ScheduleFilter } from './ScheduleTypes';
 import TaskCalendarView from './calendar/TaskCalendarView';
 import TaskListView from './TaskListView';
 import TaskEditDialog from './taskEdit/TaskEditDialog';
 import { generateMockTasks, generateMockEmployees, generateMockCrews, generateMockClients, generateMockClientLocations } from './MockScheduleData';
-import { initializeFormData, getInitialAssignmentType, getInitialLocationType } from './taskEdit/TaskEditFormData';
 import ScheduleFilterBar from './ScheduleFilterBar';
 
 const ScheduleView: React.FC = () => {
@@ -122,7 +120,7 @@ const ScheduleView: React.FC = () => {
           employees={employees}
           crews={crews}
           clients={clients}
-          activeFilter={activeFilter}
+          currentFilter={activeFilter}
           onFilterChange={setActiveFilter}
         />
       </div>
@@ -168,8 +166,6 @@ const ScheduleView: React.FC = () => {
         <TabsContent value="list" className="m-0">
           <TaskListView 
             tasks={filteredTasks}
-            employees={employees}
-            crews={crews}
             onToggleTaskCompletion={handleToggleTaskCompletion}
             onEditTask={handleEditTask}
           />

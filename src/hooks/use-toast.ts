@@ -143,12 +143,26 @@ function dispatch(action: Action) {
 interface Toast extends Omit<ToasterToast, "id"> {}
 
 function toast({ variant = "default", ...props }: Toast) {
-  // Use Sonner toast directly
-  return sonnerToast[variant === "destructive" ? "error" : variant === "success" ? "success" : "default"](props.title, {
-    description: props.description,
-    duration: props.duration,
-    action: props.action?.action,
-  })
+  // Fix: Properly access sonnerToast methods
+  if (variant === "destructive") {
+    return sonnerToast.error(props.title, {
+      description: props.description,
+      duration: props.duration,
+      action: props.action?.action,
+    });
+  } else if (variant === "success") {
+    return sonnerToast.success(props.title, {
+      description: props.description,
+      duration: props.duration,
+      action: props.action?.action,
+    });
+  } else {
+    return sonnerToast(props.title, {
+      description: props.description,
+      duration: props.duration,
+      action: props.action?.action,
+    });
+  }
 }
 
 function useToast() {
