@@ -55,7 +55,20 @@ const SubscriptionPlan = () => {
         return;
       }
 
-      setSubscription(data);
+      if (data) {
+        // Ensure the data matches the Subscription interface
+        const typedSubscription: Subscription = {
+          id: data.id,
+          status: data.status as 'active' | 'cancelled' | 'expired' | 'trial',
+          payment_provider: data.payment_provider,
+          payment_id: data.payment_id || undefined,
+          subscription_plan: data.subscription_plan,
+          price_amount: data.price_amount,
+          currency: data.currency,
+          current_period_end: data.current_period_end
+        };
+        setSubscription(typedSubscription);
+      }
     } catch (error) {
       console.error('Unexpected error:', error);
     }

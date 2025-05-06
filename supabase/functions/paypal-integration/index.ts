@@ -7,9 +7,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// For testing purposes, we'll use sandbox credentials
-const PAYPAL_CLIENT_ID = Deno.env.get('PAYPAL_CLIENT_ID') || '';
-const PAYPAL_SECRET_KEY = Deno.env.get('PAYPAL_SECRET_KEY') || '';
+// Using the PayPal credentials
+const PAYPAL_CLIENT_ID = Deno.env.get('PAYPAL_CLIENT_ID') || 'AbTv2xGDDT32w7XR_Ufdea9NvNefzMb8slQY-VFQ7y9fPtsAZIGxiSQH0_6cfDWbEBUoQg8SLu57xXOg';
+const PAYPAL_SECRET_KEY = Deno.env.get('PAYPAL_SECRET_KEY') || 'EKDbVbU-JGYnK1MCpZ-jVtSAXSyhLrSiWh55pSuLNzxt36A19_Ua_zGYB5_gDnR_xBtX5fDak-GHcVSH';
 const PAYPAL_BASE_URL = 'https://api-m.sandbox.paypal.com'; // Use sandbox for testing
 
 // Supabase client initialization
