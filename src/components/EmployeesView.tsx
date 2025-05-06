@@ -218,7 +218,7 @@ const EmployeesView = () => {
   // Add new state for managing multiple crew assignments
   const [crewsToAssign, setCrewsToAssign] = useState<string[]>([]);
   
-  // Add the missing handleCrewSelection function
+  // Add the handleCrewSelection function
   const handleCrewSelection = (crewId: string) => {
     setCrewsToAssign(prev => {
       if (prev.includes(crewId)) {
@@ -719,14 +719,14 @@ const EmployeesView = () => {
                               {crew.members.length > 0 ? (
                                 <div className="flex -space-x-2">
                                   {crew.members.slice(0, 3).map((memberId, index) => (
-                                    <Avatar key={memberId} className="h-6 w-6 border-2 border-background">
+                                    <Avatar key={memberId} className="h-6 w-6 border-2 border-dashed border-gray-300">
                                       <AvatarFallback className="text-xs">
                                         {getEmployeeNameById(memberId).substring(0, 2).toUpperCase()}
                                       </AvatarFallback>
                                     </Avatar>
                                   ))}
                                   {crew.members.length > 3 && (
-                                    <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border-2 border-background text-xs">
+                                    <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border-2 border-dashed text-xs">
                                       +{crew.members.length - 3}
                                     </div>
                                   )}
@@ -954,4 +954,269 @@ const EmployeesView = () => {
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a crew" />
-                  </Select
+                  </SelectTrigger>
+                  <SelectContent>
+                    {crews.map(crew => (
+                      <SelectItem key={crew.id} value={crew.id}>
+                        {crew.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddEmployeeOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddEmployee}>Add Employee</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Crew Dialog */}
+      <Dialog open={isAddCrewOpen} onOpenChange={setIsAddCrewOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Crew</DialogTitle>
+            <DialogDescription>
+              Enter crew details and add members
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="crewName">Crew Name</Label>
+              <Input 
+                id="crewName" 
+                name="name" 
+                placeholder="Crew Name" 
+                value={newCrew.name}
+                onChange={handleCrewInputChange}
+                required
+              />
+            </div>
+            
+            {employees.length > 0 && (
+              <div className="grid gap-2">
+                <Label>Initial Members</Label>
+                <div className="border rounded-md p-4 space-y-2 max-h-[200px] overflow-y-auto">
+                  {employees.map(employee => (
+                    <div 
+                      key={employee.id}
+                      className="flex items-center gap-2"
+                    >
+                      <input 
+                        type="checkbox" 
+                        id={`member-${employee.id}`}
+                        checked={newCrew.members.includes(employee.id)}
+                        onChange={() => {
+                          setNewCrew(prev => {
+                            const updatedMembers = prev.members.includes(employee.id)
+                              ? prev.members.filter(id => id !== employee.id)
+                              : [...prev.members, employee.id];
+                            return { ...prev, members: updatedMembers };
+                          });
+                        }}
+                        className="h-4 w-4"
+                      />
+                      <Label htmlFor={`member-${employee.id}`} className="flex items-center gap-2 cursor-pointer text-sm">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback>{employee.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span>{employee.name}</span>
+                          <span className="text-xs text-muted-foreground">{employee.position}</span>
+                        </div>
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddCrewOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddCrew}>Create Crew</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Assign to Crew Dialog */}
+      <Dialog open={isCrewAssignOpen} onOpenChange={setIsCrewAssignOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Assign to Crews</DialogTitle>
+            <DialogDescription>
+              Select crews to assign the employee
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {!selectedEmployee ? (
+              <div className="grid gap-4">
+                <Label>Select Employee</Label>
+                <Select onValueChange={(value) => setSelectedEmployee(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose an employee" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {employees.map(employee => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 pb-2 border-b">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>
+                      {(employees.find(e => e.id === selectedEmployee)?.name || "").substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-medium">{employees.find(e => e.id === selectedEmployee)?.name}</div>
+                    <div className="text-sm text-muted-foreground">{employees.find(e => e.id === selectedEmployee)?.position}</div>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="block mb-2">Available Crews</Label>
+                  <div className="border rounded-md p-3 space-y-2 max-h-[200px] overflow-y-auto">
+                    {crews.length > 0 ? crews.map(crew => (
+                      <div 
+                        key={crew.id}
+                        className="flex items-center gap-2"
+                      >
+                        <input 
+                          type="checkbox" 
+                          id={`crew-${crew.id}`}
+                          checked={crewsToAssign.includes(crew.id)}
+                          onChange={() => handleCrewSelection(crew.id)}
+                          className="h-4 w-4"
+                        />
+                        <Label htmlFor={`crew-${crew.id}`} className="flex items-center gap-2 cursor-pointer text-sm">
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          <span>{crew.name}</span>
+                        </Label>
+                      </div>
+                    )) : (
+                      <div className="text-sm text-muted-foreground text-center py-2">
+                        No crews available
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setIsCrewAssignOpen(false);
+              setSelectedEmployee(null);
+              setCrewsToAssign([]);
+            }}>Cancel</Button>
+            <Button onClick={handleEmployeeCrewAssignment} disabled={!selectedEmployee || crewsToAssign.length === 0}>
+              Assign
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Task Dialog */}
+      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Task</DialogTitle>
+            <DialogDescription>
+              Schedule a new task
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="taskTitle">Task Title</Label>
+              <Input 
+                id="taskTitle"
+                value={newTask.title}
+                onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                placeholder="Task description"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="startTime">Start Time</Label>
+                <Input 
+                  id="startTime"
+                  type="time" 
+                  value={newTask.startTime}
+                  onChange={(e) => setNewTask({...newTask, startTime: e.target.value})}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="endTime">End Time</Label>
+                <Input 
+                  id="endTime"
+                  type="time" 
+                  value={newTask.endTime}
+                  onChange={(e) => setNewTask({...newTask, endTime: e.target.value})}
+                />
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="location">Location</Label>
+              <Input 
+                id="location" 
+                value={newTask.location}
+                onChange={(e) => setNewTask({...newTask, location: e.target.value})}
+                placeholder="Task location"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="assignedTo">Assigned To</Label>
+              <Input 
+                id="assignedTo" 
+                value={newTask.assignedTo}
+                onChange={(e) => setNewTask({...newTask, assignedTo: e.target.value})}
+                placeholder="Assignment"
+                disabled={newTask.crew.length > 0}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsTaskDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateTask}>Create Task</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add the Employee Schedule Download dialog */}
+      <Dialog open={isEmployeeScheduleDownloadOpen} onOpenChange={setIsEmployeeScheduleDownloadOpen}>
+        <DialogContent className="sm:max-w-md">
+          {selectedEmployeeForDownload && (
+            <EmployeeScheduleDownload 
+              employeeId={selectedEmployeeForDownload.id}
+              employeeName={selectedEmployeeForDownload.name}
+              onClose={() => setIsEmployeeScheduleDownloadOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add the Crew Schedule Download dialog */}
+      <Dialog open={isCrewScheduleDownloadOpen} onOpenChange={setIsCrewScheduleDownloadOpen}>
+        <DialogContent className="sm:max-w-md">
+          <CrewScheduleDownload 
+            crews={crews}
+            selectedCrewId={selectedCrew}
+            onClose={() => setIsCrewScheduleDownloadOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default EmployeesView;
