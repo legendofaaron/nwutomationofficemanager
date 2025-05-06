@@ -1,5 +1,5 @@
 
 import React from 'react';
-import TaskCalendarView from './schedule/TaskCalendarView';
+import ScheduleView from './schedule/ScheduleView';
 
-export default () => <TaskCalendarView />;
+export default () => <ScheduleView />;
