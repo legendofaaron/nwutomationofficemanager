@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -25,6 +26,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Hexagon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { queryLlm } from '@/utils/llm';
 
 const SetupAssistant = () => {
   const { setAiAssistantOpen, setAssistantConfig, branding, setBranding } = useAppContext();
@@ -34,6 +36,7 @@ const SetupAssistant = () => {
   const [setupProgress, setSetupProgress] = useState(0);
   const [setupComplete, setSetupComplete] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Form state
   const [config, setConfig] = useState({
@@ -105,80 +108,142 @@ const SetupAssistant = () => {
     calculateSetupProgress();
   }, [config]);
 
-  const handleSave = () => {
-    // Test connection before saving if using custom model
-    if (config.useCustomModel && config.customModelApiKey) {
-      testConnection();
+  const handleSave = async () => {
+    setIsSaving(true);
+    
+    try {
+      // Test connection before saving if using custom model
+      if (config.useCustomModel && config.customModelApiKey) {
+        await testConnection();
+      }
+      
+      // Test OpenAI connection if using OpenAI API key
+      if (config.useOpenAiKey && config.openAiApiKey) {
+        const success = await testOpenAiKey(true);
+        if (!success) {
+          setIsSaving(false);
+          return;
+        }
+      }
+      
+      // Update global assistant configuration
+      setAssistantConfig({
+        name: config.name,
+        companyName: config.companyName,
+        companyDescription: config.companyDescription,
+        purpose: config.assistantPurpose
+      });
+      
+      // Update branding configuration with proper type checking
+      setBranding({
+        companyName: config.companyName,
+        logoType: config.logoType as 'default' | 'text' | 'image',
+        logoUrl: config.logoUrl
+      });
+      
+      // Save LLM configuration to local storage, now including OpenAI API key
+      const llmConfig = {
+        endpoint: config.endpoint,
+        enabled: true,
+        model: config.useCustomModel ? 'custom' : config.llmModel,
+        webhookUrl: '',
+        customModel: config.useCustomModel ? {
+          name: config.customModelName || 'Custom Model',
+          apiKey: config.customModelApiKey,
+          baseUrl: config.customModelBaseUrl,
+          contextLength: config.contextWindowSize,
+          temperature: config.llmTemperature,
+          isCustom: true
+        } : undefined,
+        openAi: config.useOpenAiKey ? {
+          apiKey: config.openAiApiKey,
+          enabled: true
+        } : undefined
+      };
+      
+      localStorage.setItem('llmConfig', JSON.stringify(llmConfig));
+      
+      // Optional: Initialize the assistant with a test query
+      if (config.useOpenAiKey) {
+        try {
+          await queryLlm(
+            `Initialize as ${config.name} for ${config.companyName}. Purpose: ${config.assistantPurpose}. Respond with: "Assistant initialized successfully."`,
+            config.endpoint,
+            config.llmModel
+          );
+        } catch (error) {
+          console.error('Error initializing assistant:', error);
+          // Continue despite initialization error
+        }
+      }
+      
+      // Show success toast
+      toast({
+        title: 'Setup complete',
+        description: 'Your assistant has been configured successfully!'
+      });
+      
+      // Open the assistant
+      setAiAssistantOpen(true);
+      
+      // Navigate back to dashboard
+      navigate('/');
+    } catch (error) {
+      console.error('Error during setup:', error);
+      toast({
+        title: 'Setup Error',
+        description: 'There was a problem completing the setup. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSaving(false);
     }
-    
-    // Update global assistant configuration
-    setAssistantConfig({
-      name: config.name,
-      companyName: config.companyName,
-      companyDescription: config.companyDescription,
-      purpose: config.assistantPurpose
-    });
-    
-    // Update branding configuration with proper type checking
-    setBranding({
-      companyName: config.companyName,
-      logoType: config.logoType as 'default' | 'text' | 'image',
-      logoUrl: config.logoUrl
-    });
-    
-    // Save LLM configuration to local storage, now including OpenAI API key
-    const llmConfig = {
-      endpoint: config.endpoint,
-      enabled: true,
-      model: config.useCustomModel ? 'custom' : config.llmModel,
-      customModel: config.useCustomModel ? {
-        name: config.customModelName || 'Custom Model',
-        apiKey: config.customModelApiKey,
-        baseUrl: config.customModelBaseUrl,
-        contextLength: config.contextWindowSize,
-        temperature: config.llmTemperature,
-        isCustom: true
-      } : undefined,
-      openAi: config.useOpenAiKey ? {
-        apiKey: config.openAiApiKey,
-        enabled: true
-      } : undefined
-    };
-    
-    localStorage.setItem('llmConfig', JSON.stringify(llmConfig));
-    
-    // Show success toast
-    toast({
-      title: 'Setup complete',
-      description: 'Your assistant has been configured successfully!'
-    });
-    
-    // Open the assistant
-    setAiAssistantOpen(true);
-    
-    // Navigate back to dashboard
-    navigate('/');
   };
   
   const handleCancel = () => {
     navigate('/');
   };
   
-  const testConnection = () => {
+  const testConnection = async () => {
     if (!config.useCustomModel) {
-      return;
+      return true;
     }
     
     setTestingConnection(true);
     
-    // Simulate connection test
-    setTimeout(() => {
-      setTestingConnection(false);
-      toast({
-        title: 'Connection successful',
-        description: `Successfully connected to ${config.customModelName || 'Custom Model'}`
+    try {
+      // Simulate connection test or make a real API call
+      const response = await fetch(config.customModelBaseUrl || config.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(config.customModelApiKey ? { 'Authorization': `Bearer ${config.customModelApiKey}` } : {})
+        },
+        body: JSON.stringify({
+          message: "Test connection",
+          model: config.customModelName
+        }),
       });
-    }, 2000);
+      
+      if (response.ok) {
+        toast({
+          title: 'Connection successful',
+          description: `Successfully connected to ${config.customModelName || 'Custom Model'}`
+        });
+        return true;
+      } else {
+        throw new Error('Failed to connect');
+      }
+    } catch (error) {
+      toast({
+        title: 'Connection Failed',
+        description: 'Could not connect to the specified model. Please check your configuration.',
+        variant: 'destructive'
+      });
+      return false;
+    } finally {
+      setTestingConnection(false);
+    }
   };
 
   // Logo preview component
@@ -230,14 +295,16 @@ const SetupAssistant = () => {
   };
 
   // Function to test OpenAI API key
-  const testOpenAiKey = async () => {
+  const testOpenAiKey = async (silent = false) => {
     if (!config.openAiApiKey) {
-      toast({
-        title: 'Missing API Key',
-        description: 'Please enter an OpenAI API key to test',
-        variant: 'destructive'
-      });
-      return;
+      if (!silent) {
+        toast({
+          title: 'Missing API Key',
+          description: 'Please enter an OpenAI API key to test',
+          variant: 'destructive'
+        });
+      }
+      return false;
     }
     
     setTestingConnection(true);
@@ -253,20 +320,26 @@ const SetupAssistant = () => {
       });
       
       if (response.ok) {
-        toast({
-          title: 'OpenAI Connection Successful',
-          description: 'Your API key is valid and working correctly'
-        });
+        if (!silent) {
+          toast({
+            title: 'OpenAI Connection Successful',
+            description: 'Your API key is valid and working correctly'
+          });
+        }
+        return true;
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error?.message || 'Invalid API key');
       }
     } catch (error) {
-      toast({
-        title: 'Connection Failed',
-        description: error instanceof Error ? error.message : 'Failed to validate OpenAI API key',
-        variant: 'destructive'
-      });
+      if (!silent) {
+        toast({
+          title: 'Connection Failed',
+          description: error instanceof Error ? error.message : 'Failed to validate OpenAI API key',
+          variant: 'destructive'
+        });
+      }
+      return false;
     } finally {
       setTestingConnection(false);
     }
@@ -886,9 +959,22 @@ const SetupAssistant = () => {
           </Button>
           
           <div className="flex gap-2">
-            <Button onClick={handleSave} className="gap-2" disabled={!setupComplete}>
-              <Save className="h-4 w-4" />
-              Save & Launch Assistant
+            <Button 
+              onClick={handleSave} 
+              className="gap-2" 
+              disabled={!setupComplete || isSaving || testingConnection}
+            >
+              {isSaving ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  <span>Save & Launch Assistant</span>
+                </>
+              )}
             </Button>
           </div>
         </CardFooter>

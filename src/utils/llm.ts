@@ -38,6 +38,11 @@ export async function queryLlm(prompt: string, endpoint: string, model: string =
       payload.callbackEnabled = true;
     }
 
+    // Handle empty or missing endpoint
+    if (!endpoint) {
+      throw new Error('Missing endpoint configuration');
+    }
+
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
@@ -47,7 +52,8 @@ export async function queryLlm(prompt: string, endpoint: string, model: string =
     });
 
     if (!response.ok) {
-      throw new Error('Failed to query language model');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to query language model');
     }
 
     const data = await response.json();
