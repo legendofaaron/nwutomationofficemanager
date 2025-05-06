@@ -1,8 +1,7 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { Bot } from 'lucide-react';
+import { Bot, Loader2 } from 'lucide-react';
 import { LlmSettings } from './LlmSettings';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +10,7 @@ import { ChatHeader } from './chat/ChatHeader';
 import { ChatContainer } from './chat/ChatContainer';
 import { SetupWizard } from './chat/SetupWizard';
 import { Message } from './chat/MessageBubble';
-import { queryLlm } from '@/utils/llm';
+import { queryLlm, isLlmConfigured, getLlmConfig } from '@/utils/llm';
 
 type SetupStep = 'welcome' | 'name' | 'company' | 'purpose' | 'complete' | null;
 
@@ -28,10 +27,11 @@ const ChatUI = () => {
     purpose: assistantConfig?.purpose || ''
   });
   const navigate = useNavigate();
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark' || resolvedTheme === 'superdark';
   const [isLoading, setIsLoading] = useState(false);
+  const [connectionTested, setConnectionTested] = useState(false);
 
   // Use effect to sync with aiAssistantOpen state from context
   useEffect(() => {
@@ -76,7 +76,7 @@ You can:
 2. Type natural language requests like "create a new document"
 3. Ask questions about any feature
 
-Your data remains secure on your local system. Need assistance? Just ask me anything!`
+Need assistance? Just ask me anything!`
     };
   };
   
@@ -90,6 +90,20 @@ Your data remains secure on your local system. Need assistance? Just ask me anyt
       setMessages([generateWelcomeMessage()]);
     }
   }, [assistantConfig]);
+
+  // Check if API is configured on component mount
+  useEffect(() => {
+    const checkApiConfiguration = async () => {
+      // Check if LLM is configured
+      const isConfigured = isLlmConfigured();
+      if (isConfigured && !connectionTested) {
+        // Maybe test connection here later
+        setConnectionTested(true);
+      }
+    };
+    
+    checkApiConfiguration();
+  }, []);
 
   // Check if setup is needed when assistant opens
   useEffect(() => {
@@ -125,7 +139,7 @@ Would you like to:
     ]);
   };
 
-  const handleSetupResponse = (response: string) => {
+  const handleSetupResponse = async (response: string) => {
     // Add user response to messages
     const userMessageId = Date.now().toString();
     setMessages(prev => [...prev, { id: userMessageId, type: 'user', content: response }]);
@@ -235,6 +249,29 @@ How can I assist you today?`
     }]);
   };
 
+  const callLlmApi = async (userPrompt: string): Promise<string> => {
+    try {
+      // Get stored configuration
+      const config = getLlmConfig();
+      if (!config) {
+        throw new Error('No LLM configuration found');
+      }
+      
+      // Create a prompt that includes the context
+      const prompt = `As ${assistantConfig?.name || 'Office Manager'} for ${assistantConfig?.companyName || 'the user'}, 
+        respond to: "${userPrompt}". 
+        Purpose: ${assistantConfig?.purpose || 'help with office tasks'}.
+        Be helpful, informative, and conversational.`;
+      
+      // Call the LLM API
+      const response = await queryLlm(prompt, config.endpoint, config.model);
+      return response.message;
+    } catch (error) {
+      console.error('Error calling LLM API:', error);
+      return `I'm having trouble connecting to my language model. Please check your API configuration in settings. In the meantime, how else can I assist you?`;
+    }
+  };
+
   const handleQuickAction = async (action: string) => {
     if (isSetupMode || isLoading) return;
     
@@ -243,52 +280,32 @@ How can I assist you today?`
     
     setIsLoading(true);
     
-    // Try to get response from LLM if configured
-    const storedConfig = localStorage.getItem('llmConfig');
-    const config = storedConfig ? JSON.parse(storedConfig) : null;
-    const isLlmConfigured = config && (
-      (config.openAi?.enabled && config.openAi?.apiKey) || 
-      (config.customModel?.isCustom && config.customModel?.apiKey)
-    );
-    
-    if (isLlmConfigured) {
-      try {
-        const prompt = `As ${assistantConfig?.name || 'Office Manager'} for ${assistantConfig?.companyName || 'the user'}, 
-          respond to this user action: "${action}". 
-          Purpose: ${assistantConfig?.purpose || 'help with office tasks'}.
-          Give a helpful response to get started with this action.`;
-        
-        const response = await queryLlm(prompt, config.endpoint, config.model);
-        
+    try {
+      // Check if LLM is configured
+      if (isLlmConfigured()) {
+        const responseText = await callLlmApi(action);
         setMessages(prev => [
           ...prev, 
-          { id: Date.now().toString(), type: 'ai', content: response.message }
+          { id: Date.now().toString(), type: 'ai', content: responseText }
         ]);
-        setIsLoading(false);
-        return;
-      } catch (error) {
-        console.error('Error getting LLM response:', error);
-        // Fall back to default responses
-      }
-    }
-    
-    // Default responses if LLM is not configured or fails
-    let response = '';
-    switch (action) {
-      case 'create document':
-        response = "I'd be happy to help you create a new document. What type of document would you like to create?";
-        break;
-      case 'create schedule':
-        response = "Let's organize a schedule for you. What type of schedule would you like to create?";
-        break;
-      case 'create invoice':
-        response = "I can help you generate a professional invoice. Who will be the recipient of this invoice?";
-        break;
-      case 'analyze receipt':
-        response = "I can assist with receipt analysis. Please upload or share the receipt details so I can process the information.";
-        break;
-      case 'explain how to use':
-        response = `Here's how to make the most of ${assistantConfig?.name || 'Office Manager'}:
+      } else {
+        // Fall back to default responses if LLM is not configured
+        let response = '';
+        switch (action) {
+          case 'create document':
+            response = "I'd be happy to help you create a new document. What type of document would you like to create?";
+            break;
+          case 'create schedule':
+            response = "Let's organize a schedule for you. What type of schedule would you like to create?";
+            break;
+          case 'create invoice':
+            response = "I can help you generate a professional invoice. Who will be the recipient of this invoice?";
+            break;
+          case 'analyze receipt':
+            response = "I can assist with receipt analysis. Please upload or share the receipt details so I can process the information.";
+            break;
+          case 'explain how to use':
+            response = `Here's how to make the most of ${assistantConfig?.name || 'Office Manager'}:
 
 1. Quick Actions: Use the buttons above for common tasks
 2. Natural Language: Type requests like "create a new document" or "set up a meeting schedule"
@@ -297,18 +314,31 @@ How can I assist you today?`
 5. Schedule Management: Create and organize calendars and schedules
 
 Your data remains secure on your local system. How can I assist you today?`;
-        break;
-      default:
-        response = "I'll help you with that request.";
-    }
-    
-    setTimeout(() => {
+            break;
+          default:
+            response = "I'll help you with that request.";
+        }
+        
+        setTimeout(() => {
+          setMessages(prev => [
+            ...prev, 
+            { id: Date.now().toString(), type: 'ai', content: response }
+          ]);
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error handling quick action:', error);
       setMessages(prev => [
         ...prev, 
-        { id: (Date.now() + 1).toString(), type: 'ai', content: response }
+        { 
+          id: Date.now().toString(), 
+          type: 'ai', 
+          content: "I'm sorry, I encountered an error processing your request. Please try again or check the settings."
+        }
       ]);
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   const handleSendMessage = async (input: string) => {
@@ -326,53 +356,42 @@ Your data remains secure on your local system. How can I assist you today?`;
     setIsLoading(true);
     
     try {
-      // Check for LLM configuration
-      const storedConfig = localStorage.getItem('llmConfig');
-      const config = storedConfig ? JSON.parse(storedConfig) : null;
-      const isLlmConfigured = config && (
-        (config.openAi?.enabled && config.openAi?.apiKey) || 
-        (config.customModel?.isCustom && config.customModel?.apiKey)
-      );
-      
-      if (isLlmConfigured) {
-        try {
-          const prompt = `As ${assistantConfig?.name || 'Office Manager'} for ${assistantConfig?.companyName || 'the user'}, 
-            respond to: "${input}". 
-            Purpose: ${assistantConfig?.purpose || 'help with office tasks'}.
-            Be helpful, informative, and conversational.`;
-          
-          const response = await queryLlm(prompt, config.endpoint, config.model);
-          
-          setMessages(current => [
-            ...current,
-            { id: Date.now().toString(), type: 'ai', content: response.message }
-          ]);
-          setIsLoading(false);
-          return;
-        } catch (error) {
-          console.error('Error getting LLM response:', error);
-          // Fall back to default response
-        }
-      }
-      
-      // Simple AI response simulation for immediate feedback
-      setTimeout(() => {
-        setMessages(current => [
-          ...current,
-          {
-            id: (Date.now() + 1).toString(),
-            type: 'ai',
-            content: `I'll help you with "${input}". How would you like to proceed?`
-          }
+      // Check if LLM is configured
+      if (isLlmConfigured()) {
+        const responseText = await callLlmApi(input);
+        setMessages(prev => [
+          ...prev, 
+          { id: Date.now().toString(), type: 'ai', content: responseText }
         ]);
-        setIsLoading(false);
-      }, 800);
+      } else {
+        // Simple AI response simulation for immediate feedback
+        setTimeout(() => {
+          setMessages(prev => [
+            ...prev,
+            {
+              id: Date.now().toString(),
+              type: 'ai',
+              content: `I'll help you with "${input}". To get more helpful responses, please configure an AI model in the settings.`
+            }
+          ]);
+        }, 800);
+      }
     } catch (error) {
+      console.error('Error handling message:', error);
       toast({
         title: 'Connection Error',
         description: 'Unable to connect to the assistant. Please try again later.',
         variant: 'destructive'
       });
+      setMessages(prev => [
+        ...prev, 
+        { 
+          id: Date.now().toString(), 
+          type: 'ai', 
+          content: "I'm sorry, I encountered an error processing your request. Please try again or check the settings."
+        }
+      ]);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -386,7 +405,7 @@ Your data remains secure on your local system. How can I assist you today?`;
     return (
       <Button
         onClick={handleToggleChat}
-        className="fixed bottom-4 right-4 h-11 w-11 rounded-full p-0 shadow-lg hover:shadow-xl transition-all bg-blue-600 hover:bg-blue-700 text-white border-none"
+        className="fixed bottom-4 right-4 h-12 w-12 rounded-full p-0 shadow-lg hover:shadow-xl transition-all bg-blue-600 hover:bg-blue-700 text-white border-none"
         aria-label="Open chat assistant"
       >
         <Bot className="h-5 w-5" />
@@ -395,7 +414,7 @@ Your data remains secure on your local system. How can I assist you today?`;
   }
 
   return (
-    <div className="fixed right-4 bottom-4 w-[320px] bg-[#0D1117] rounded-xl shadow-2xl border border-[#1E2430]/80 flex flex-col h-[520px] z-20 overflow-hidden">
+    <div className="fixed right-4 bottom-4 w-[350px] bg-[#0D1117] rounded-xl shadow-xl border border-[#1E2430]/80 flex flex-col h-[550px] z-20 overflow-hidden">
       <ChatHeader 
         assistantName={assistantConfig?.name || 'Office Manager'} 
         companyName={assistantConfig?.companyName}
@@ -418,6 +437,9 @@ Your data remains secure on your local system. How can I assist you today?`;
           onQuickAction={handleQuickAction}
           isSetupMode={isSetupMode}
           isLoading={isLoading}
+          assistantName={assistantConfig?.name || 'Office Manager'}
+          assistantPurpose={assistantConfig?.purpose || 'help with tasks'}
+          companyName={assistantConfig?.companyName}
         />
       )}
     </div>

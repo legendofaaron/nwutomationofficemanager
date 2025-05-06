@@ -18,16 +18,17 @@ export const QuickActions = ({ onActionClick, disabled = false }: QuickActionPro
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-1.5 p-3 border-b border-[#1E2430]/80 bg-[#0D1117]">
+    <div className="flex p-2 gap-2 border-b border-[#1E2430]/80 bg-[#0D1117] overflow-x-auto">
       {quickActions.map((action, index) => (
         <Button
           key={index}
-          variant="ghost"
-          className="w-full justify-start text-xs py-2 h-auto bg-transparent hover:bg-[#161B22] text-gray-300 transition-colors"
+          variant="outline"
+          size="sm"
+          className="whitespace-nowrap flex-shrink-0 bg-[#161B22] border-[#2D3747]/50 hover:border-blue-500 hover:bg-[#1E2430] text-gray-300 transition-colors text-xs py-2 h-auto"
           onClick={action.action}
           disabled={disabled}
         >
-          <action.icon className="mr-2 h-4 w-4 text-gray-400" />
+          <action.icon className="mr-2 h-3.5 w-3.5 text-gray-400" />
           {action.label}
         </Button>
       ))}

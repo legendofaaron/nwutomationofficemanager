@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
 import { QuickActions } from './QuickActions';
 import ChatInput from './ChatInput';
+import { ArrowDown } from 'lucide-react';
+import { queryLlm, isLlmConfigured } from '@/utils/llm';
+import { toast } from '@/hooks/use-toast';
 
 interface ChatContainerProps {
   messages: Array<{
@@ -16,6 +19,9 @@ interface ChatContainerProps {
   onQuickAction: (action: string) => void;
   isSetupMode?: boolean;
   isLoading?: boolean;
+  assistantName?: string;
+  assistantPurpose?: string;
+  companyName?: string;
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = ({
@@ -23,18 +29,57 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   onSendMessage,
   onQuickAction,
   isSetupMode = false,
-  isLoading = false
+  isLoading = false,
+  assistantName = 'Assistant',
+  assistantPurpose = 'help with tasks',
+  companyName = '',
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [scrollAreaElement, setScrollAreaElement] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (scrollAreaRef.current) {
+      const scrollableElement = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollableElement instanceof HTMLElement) {
+        setScrollAreaElement(scrollableElement);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollAreaElement) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollAreaElement;
+        const isScrolledUp = scrollHeight - scrollTop - clientHeight > 50;
+        setShowScrollToBottom(isScrolledUp);
+      }
+    };
+
+    if (scrollAreaElement) {
+      scrollAreaElement.addEventListener('scroll', handleScroll);
+      return () => {
+        scrollAreaElement.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, [scrollAreaElement]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      scrollToBottom();
+    }
+  }, [messages, isLoading]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleSendMessage = async (message: string) => {
+    // Call the parent handler to add the user message to the state
+    onSendMessage(message);
   };
 
   return (
@@ -46,8 +91,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         />
       )}
       
-      <ScrollArea className="flex-1 p-3 overflow-y-auto" ref={scrollAreaRef}>
-        <div className="space-y-4">
+      <ScrollArea className="flex-1 p-3 overflow-y-auto relative" ref={scrollAreaRef}>
+        <div className="space-y-4 pb-1">
           {messages.map((message) => (
             <MessageBubble 
               key={message.id} 
@@ -60,20 +105,21 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 
       {showScrollToBottom && (
         <Button
-          variant="outline"
-          size="sm"
-          className="absolute right-4 bottom-20 rounded-full p-2 h-8 w-8"
+          variant="secondary"
+          size="icon"
+          className="absolute right-4 bottom-20 rounded-full p-2 h-8 w-8 shadow-md opacity-80 hover:opacity-100 bg-[#1E2430] hover:bg-[#2E3C54] text-white transition-all z-10"
           onClick={scrollToBottom}
+          aria-label="Scroll to bottom"
         >
-          <span className="sr-only">Scroll to bottom</span>
-          ↓
+          <ArrowDown className="h-4 w-4" />
         </Button>
       )}
 
       <ChatInput 
-        onSendMessage={onSendMessage} 
+        onSendMessage={handleSendMessage} 
         isLoading={isLoading} 
         disabled={isLoading} 
+        placeholder={`Message ${assistantName}...`}
       />
     </div>
   );
