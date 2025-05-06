@@ -132,7 +132,7 @@ const ProductionReadiness = () => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Production Readiness Check</CardTitle>
-          <Badge variant={allCriticalSystemsGo ? "success" : "destructive"}>
+          <Badge variant={allCriticalSystemsGo ? "secondary" : "destructive"}>
             {allCriticalSystemsGo ? 'READY FOR PRODUCTION' : 'ISSUES DETECTED'}
           </Badge>
         </div>
