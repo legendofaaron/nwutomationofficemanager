@@ -66,7 +66,7 @@ module.exports = {
   },
   publish: {
     provider: "generic",
-    url: "https://your-update-server.com/",
+    url: "https://northwesternautomation.app/updates/",
     channel: "latest"
   },
   afterSign: "scripts/notarize.js"

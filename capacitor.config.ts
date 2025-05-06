@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   appName: 'Northwestern Office Manager',
   webDir: 'dist',
   server: {
-    url: 'https://01b48752-b4f5-46f3-b097-2535d8e730c6.lovableproject.com?forceHideBadge=true',
+    url: 'https://northwesternautomation.app',
     cleartext: true
   },
   plugins: {
