@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
-import { Check, ThumbsUp, Send } from 'lucide-react';
+import { Check, ThumbsUp, Send, Save } from 'lucide-react';
 
 interface SetupWizardProps {
   messages: Message[];
@@ -32,6 +32,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
     model: 'gpt-4o-mini'
   });
   const [testingOpenAi, setTestingOpenAi] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Define the handleSendMessage function to fix the TS error
   const handleSendMessage = (message: string) => {
@@ -72,6 +73,35 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
     }
   };
 
+  const handleSaveAndLaunch = async () => {
+    setSaving(true);
+    try {
+      // Save API key and other configuration to localStorage
+      const llmConfig = {
+        endpoint: setupConfig.endpoint,
+        enabled: true,
+        model: setupConfig.model,
+        webhookUrl: '',
+        openAi: {
+          apiKey: setupConfig.apiKey,
+          enabled: setupConfig.useOpenAI
+        }
+      };
+      
+      localStorage.setItem('llmConfig', JSON.stringify(llmConfig));
+      
+      // Send confirmation message to user
+      onSendResponse("Save and launch assistant");
+      
+      // Wait a bit before considering it complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (error) {
+      console.error('Error saving configuration:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-3 border-b border-[#1E2430]/80 bg-[#0D1117] flex items-center justify-between">
@@ -97,6 +127,28 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
           ))}
           <div ref={messagesEndRef} />
         </div>
+
+        {setupProgress >= 75 && (
+          <div className="mt-4 mb-2">
+            <Button 
+              onClick={handleSaveAndLaunch}
+              disabled={saving || setupProgress < 75}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded flex items-center justify-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  <span>Save & Launch Assistant</span>
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </ScrollArea>
       
       <div className="p-3 border-t border-[#1E2430]/80">
