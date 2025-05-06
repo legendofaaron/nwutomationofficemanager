@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Input } from '@/components/ui/input';
@@ -13,7 +12,9 @@ import {
   Calendar,
   Cog,
   ListCheck,
-  GripHorizontal
+  GripHorizontal,
+  Download,
+  FileDown
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -26,7 +27,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogClose
+  DialogClose,
+  DialogTrigger
 } from "@/components/ui/dialog";
 import { format } from 'date-fns';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -40,6 +42,8 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
+import EmployeeScheduleDownload from './schedule/EmployeeScheduleDownload';
+import CrewScheduleDownload from './schedule/CrewScheduleDownload';
 
 const EmployeesView = () => {
   const { 
@@ -421,6 +425,11 @@ const EmployeesView = () => {
     }, 0);
   };
 
+  // Add new state for download dialogs
+  const [isEmployeeScheduleDownloadOpen, setIsEmployeeScheduleDownloadOpen] = useState(false);
+  const [isCrewScheduleDownloadOpen, setIsCrewScheduleDownloadOpen] = useState(false);
+  const [selectedEmployeeForDownload, setSelectedEmployeeForDownload] = useState<{id: string, name: string} | null>(null);
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
@@ -487,6 +496,14 @@ const EmployeesView = () => {
           >
             <Users className="h-4 w-4" />
             Add Crew
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => setIsCrewScheduleDownloadOpen(true)}
+          >
+            <FileDown className="h-4 w-4" />
+            Crew Schedules
           </Button>
         </div>
       </div>
@@ -601,6 +618,21 @@ const EmployeesView = () => {
                               >
                                 <Calendar className="h-4 w-4" />
                               </Button>
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                className="h-8 w-8 p-0"
+                                title="Download schedule"
+                                onClick={() => {
+                                  setSelectedEmployeeForDownload({
+                                    id: employee.id,
+                                    name: employee.name
+                                  });
+                                  setIsEmployeeScheduleDownloadOpen(true);
+                                }}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -709,6 +741,18 @@ const EmployeesView = () => {
                               >
                                 <ListCheck className="h-4 w-4" />
                               </Button>
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                className="h-8 w-8 p-0"
+                                title="Download crew schedule"
+                                onClick={() => {
+                                  setSelectedCrew(crew.id);
+                                  setIsCrewScheduleDownloadOpen(true);
+                                }}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -727,6 +771,66 @@ const EmployeesView = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* New section for schedule downloads */}
+      <div className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">Schedule Downloads</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="bg-gradient-to-br from-blue-50/80 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 border-blue-200 dark:border-blue-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserPlus className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                Employee Schedules
+              </CardTitle>
+              <CardDescription>
+                Download schedules for individual employees within specific date ranges
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Select an employee from the list and click the download icon to generate their personalized schedule.
+              </p>
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={() => {
+                  if (employees.length > 0) {
+                    setSelectedEmployeeForDownload({
+                      id: employees[0].id,
+                      name: employees[0].name
+                    });
+                    setIsEmployeeScheduleDownloadOpen(true);
+                  } else {
+                    toast.error("No employees available");
+                  }
+                }}>
+                  Download Employee Schedule
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-amber-50/80 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/10 border-amber-200 dark:border-amber-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                Crew Schedules
+              </CardTitle>
+              <CardDescription>
+                Download schedules for entire crews within specific date ranges
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Select a crew and generate a comprehensive schedule for all members and assignments.
+              </p>
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={() => setIsCrewScheduleDownloadOpen(true)}>
+                  Download Crew Schedule
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Add Employee Dialog */}
       <Dialog open={isAddEmployeeOpen} onOpenChange={setIsAddEmployeeOpen}>
@@ -1148,6 +1252,62 @@ const EmployeesView = () => {
               Create Task
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Employee Schedule Download Dialog */}
+      <Dialog open={isEmployeeScheduleDownloadOpen} onOpenChange={setIsEmployeeScheduleDownloadOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Download Employee Schedule</DialogTitle>
+            <DialogDescription>
+              Download schedule for {selectedEmployeeForDownload?.name || "employee"}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedEmployeeForDownload && (
+            <EmployeeScheduleDownload
+              employeeId={selectedEmployeeForDownload.id}
+              employeeName={selectedEmployeeForDownload.name}
+              tasks={todos.map(todo => ({
+                id: todo.id,
+                title: todo.text,
+                date: todo.date,
+                completed: todo.completed,
+                assignedTo: todo.assignedTo,
+                crew: todo.crew,
+                startTime: todo.startTime,
+                endTime: todo.endTime,
+                location: todo.location
+              }))}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Crew Schedule Download Dialog */}
+      <Dialog open={isCrewScheduleDownloadOpen} onOpenChange={setIsCrewScheduleDownloadOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Download Crew Schedule</DialogTitle>
+            <DialogDescription>
+              Select a crew and date range to download their schedule
+            </DialogDescription>
+          </DialogHeader>
+          <CrewScheduleDownload
+            crews={crews}
+            tasks={todos.map(todo => ({
+              id: todo.id,
+              title: todo.text,
+              date: todo.date,
+              completed: todo.completed,
+              assignedTo: todo.assignedTo,
+              crew: todo.crew,
+              crewId: todo.crew?.[0], // In the app context, crew is stored as an array with crewId
+              startTime: todo.startTime,
+              endTime: todo.endTime,
+              location: todo.location
+            }))}
+          />
         </DialogContent>
       </Dialog>
     </div>

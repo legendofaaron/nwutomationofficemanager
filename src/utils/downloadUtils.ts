@@ -226,3 +226,41 @@ export const downloadScheduleAsPdf = (tasks: Task[], filter?: ScheduleFilter): v
   
   pdf.save(filename);
 };
+
+// New utility functions for date range filtering
+export const filterTasksByDateRange = (tasks: Task[], startDate?: Date, endDate?: Date): Task[] => {
+  if (!startDate) return tasks;
+  
+  return tasks.filter(task => {
+    const taskDate = new Date(task.date);
+    if (endDate) {
+      return taskDate >= startDate && taskDate <= endDate;
+    }
+    return taskDate >= startDate;
+  });
+};
+
+// Utility to get employee tasks
+export const getEmployeeTasks = (tasks: Task[], employeeName: string): Task[] => {
+  return tasks.filter(task => 
+    task.assignedTo === employeeName || 
+    (task.crew && task.crew.includes(employeeName))
+  );
+};
+
+// Utility to get crew tasks
+export const getCrewTasks = (tasks: Task[], crewId: string): Task[] => {
+  return tasks.filter(task => task.crewId === crewId);
+};
+
+// Utility to format date range into a readable string
+export const formatDateRange = (startDate?: Date, endDate?: Date): string => {
+  if (!startDate) return 'No date selected';
+  
+  if (endDate) {
+    return `${format(startDate, 'MMM dd, yyyy')} to ${format(endDate, 'MMM dd, yyyy')}`;
+  }
+  
+  return format(startDate, 'MMMM dd, yyyy');
+};
+
