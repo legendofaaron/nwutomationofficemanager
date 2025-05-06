@@ -1,12 +1,13 @@
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { useDragDrop } from './DragDropContext';
 
 interface DraggableItemProps {
   id: string;
   type: string;
   data: any;
-  onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDragStart?: (data: any, e: React.DragEvent<HTMLDivElement>) => void;
   onDragEnd?: (e: React.DragEvent<HTMLDivElement>) => void;
   className?: string;
   children: React.ReactNode;
@@ -21,7 +22,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
   className,
   children
 }) => {
-  const [isDragging, setIsDragging] = useState(false);
+  const { setIsDragging } = useDragDrop();
   const dragImageRef = useRef<HTMLDivElement | null>(null);
   
   useEffect(() => {
@@ -57,11 +58,13 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     e.stopPropagation();
     
     // Set data
-    e.dataTransfer.setData('application/json', JSON.stringify({
+    const transferData = {
       id,
       type,
       ...data
-    }));
+    };
+    
+    e.dataTransfer.setData('application/json', JSON.stringify(transferData));
     
     // Set drag image
     if (dragImageRef.current) {
@@ -73,11 +76,12 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     // Set effects
     e.dataTransfer.effectAllowed = 'move';
     
+    // Set global dragging state
     setIsDragging(true);
     document.body.classList.add('dragging');
     
     // Call custom handler
-    if (onDragStart) onDragStart(e);
+    if (onDragStart) onDragStart(transferData, e);
   };
   
   const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
@@ -96,7 +100,6 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       onDragEnd={handleDragEnd}
       className={cn(
         'transition-all duration-200',
-        isDragging && 'opacity-50 border-dashed',
         className
       )}
       data-draggable-id={id}

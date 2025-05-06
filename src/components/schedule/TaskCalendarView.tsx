@@ -14,6 +14,9 @@ import { format, addMonths, subMonths } from 'date-fns';
 import { DayProps } from 'react-day-picker';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
+import DraggableItem from './DraggableItem';
+import DroppableArea from './DroppableArea';
+import { useDragDrop } from './DragDropContext';
 
 interface TaskCalendarViewProps {
   tasks: Task[];
@@ -36,45 +39,8 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   onMoveTask,
   onEditTask
 }) => {
-  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-  const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
   const [currentMonth, setCurrentMonth] = useState<Date>(selectedDate || new Date());
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [dragImage] = useState<HTMLDivElement | null>(() => {
-    // Create a custom drag image element
-    const el = document.createElement('div');
-    el.className = 'task-drag-preview';
-    el.style.position = 'absolute';
-    el.style.top = '-1000px';
-    el.style.backgroundColor = 'rgba(59, 130, 246, 0.9)';
-    el.style.color = 'white';
-    el.style.padding = '6px 8px';
-    el.style.borderRadius = '4px';
-    el.style.fontSize = '12px';
-    el.style.pointerEvents = 'none';
-    el.style.zIndex = '9999';
-    el.style.maxWidth = '200px';
-    el.style.whiteSpace = 'nowrap';
-    el.style.overflow = 'hidden';
-    el.style.textOverflow = 'ellipsis';
-    el.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
-    document.body.appendChild(el);
-    return el;
-  });
-
-  // Effect to add/remove dragging class on body
-  useEffect(() => {
-    if (isDragging) {
-      document.body.classList.add('dragging');
-    } else {
-      document.body.classList.remove('dragging');
-    }
-
-    // Cleanup function to ensure class is removed
-    return () => {
-      document.body.classList.remove('dragging');
-    };
-  }, [isDragging]);
+  const { isDragging, setIsDragging, draggedItemId, setDraggedItemId, draggedItemType, setDraggedItemType, draggedItemData, setDraggedItemData } = useDragDrop();
 
   // Effect to update currentMonth when selectedDate changes significantly (different month)
   useEffect(() => {
@@ -82,15 +48,6 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
       setCurrentMonth(selectedDate);
     }
   }, [selectedDate, currentMonth]);
-
-  // Cleanup function for drag image on unmount
-  useEffect(() => {
-    return () => {
-      if (dragImage && document.body.contains(dragImage)) {
-        document.body.removeChild(dragImage);
-      }
-    };
-  }, [dragImage]);
 
   // Filter tasks for the selected date
   const tasksForSelectedDate = tasks.filter(task => task.date.toDateString() === selectedDate.toDateString());
@@ -100,36 +57,29 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   const pendingTasks = tasksForSelectedDate.length - completedTasks;
 
   // Handle task drag start
-  const handleDragStart = (e: React.DragEvent, task: Task) => {
-    // Set data for drag operation
-    e.dataTransfer.setData('application/json', JSON.stringify({
-      type: 'task',
-      id: task.id,
-      title: task.title
-    }));
-
-    // Update drag image content
-    if (dragImage) {
-      dragImage.textContent = `📋 ${task.title || 'Task'}`;
-      e.dataTransfer.setDragImage(dragImage, 10, 10);
-    }
-
-    // Store dragged task id in state
-    setDraggedTaskId(task.id);
+  const handleDragStart = (data: any, event: React.DragEvent) => {
     setIsDragging(true);
-
-    // Add dragging class for visual feedback
-    const element = e.currentTarget as HTMLElement;
-    element.classList.add('dragging');
+    setDraggedItemId(data.id);
+    setDraggedItemType('task');
+    setDraggedItemData(data);
   };
 
   // Handle drag end
-  const handleDragEnd = (e: React.DragEvent) => {
-    const element = e.currentTarget as HTMLElement;
-    element.classList.remove('dragging');
-    setDraggedTaskId(null);
-    setDragOverDate(null);
+  const handleDragEnd = () => {
     setIsDragging(false);
+    setDraggedItemId(null);
+    setDraggedItemType(null);
+    setDraggedItemData(null);
+  };
+
+  // Handle dropping a task on a day
+  const handleDayDrop = (data: any, event: React.DragEvent, date: Date) => {
+    if (data.type === 'task' && onMoveTask) {
+      onMoveTask(data.id, date);
+      toast.success(`Task rescheduled to ${format(date, 'MMMM d')}`, {
+        description: data.title
+      });
+    }
   };
 
   // Handle month navigation
@@ -193,92 +143,17 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                 const hasCompletedTasks = dayTasks.some(task => task.completed);
                 const hasPendingTasks = dayTasks.some(task => !task.completed);
 
-                // Is this date being dragged over
-                const isDragOver = dragOverDate && dragOverDate.toDateString() === dayDate.toDateString();
-
-                // Event handlers for day cells
-                const handleDayDragOver = (e: React.DragEvent) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (draggedTaskId) {
-                    setDragOverDate(dayDate);
-                    // Add visual feedback class
-                    const cell = e.currentTarget.closest('.rdp-cell');
-                    if (cell) {
-                      cell.classList.add('drag-over');
-                    }
-                  }
-                };
-                
-                const handleDayDragLeave = (e: React.DragEvent) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  // Remove visual feedback
-                  const cell = e.currentTarget.closest('.rdp-cell');
-                  if (cell) {
-                    cell.classList.remove('drag-over');
-                  }
-                  if (dragOverDate && dragOverDate.toDateString() === dayDate.toDateString()) {
-                    setDragOverDate(null);
-                  }
-                };
-                
-                const handleDayDrop = (e: React.DragEvent) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-
-                  // Remove visual feedback
-                  const cell = e.currentTarget.closest('.rdp-cell');
-                  if (cell) {
-                    cell.classList.remove('drag-over');
-                  }
-                  try {
-                    const data = e.dataTransfer.getData('application/json');
-                    if (data && onMoveTask) {
-                      const dragData = JSON.parse(data);
-                      if (dragData.type === 'task' && dragData.id) {
-                        // Get the task being moved
-                        const taskToMove = tasks.find(t => t.id === dragData.id);
-
-                        // Only proceed with move if day is different or if same day, only update UI
-                        if (taskToMove) {
-                          const isSameDay = taskToMove.date.toDateString() === dayDate.toDateString();
-                          if (!isSameDay) {
-                            // Different day, proceed with actual move
-                            onMoveTask(dragData.id, dayDate);
-                            
-                            // Show feedback toast
-                            toast.success(`Task rescheduled to ${format(dayDate, 'MMMM d')}`, {
-                              description: dragData.title
-                            });
-                          } else {
-                            // Same day, just cleanup UI but don't trigger move
-                            console.log("Task dropped on same day, no move needed");
-                          }
-                        } else {
-                          onMoveTask(dragData.id, dayDate);
-                        }
-                      }
-                    }
-                  } catch (error) {
-                    console.error('Error handling day drop:', error);
-                    toast.error('Error moving task');
-                  }
-                  setDragOverDate(null);
-                };
-                
                 return (
-                  <div 
+                  <DroppableArea
+                    id={`day-${dayDate.toISOString()}`}
+                    acceptTypes={['task']}
+                    onDrop={(data, event) => handleDayDrop(data, event, dayDate)}
                     className={cn(
                       "calendar-day-cell relative h-full flex items-center justify-center", 
-                      draggedTaskId && "valid-drop-target", 
                       dayDate.toDateString() === selectedDate?.toDateString() && "selected-day",
-                      isDragOver && "bg-blue-100 dark:bg-blue-800/30 transition-colors duration-200",
                       hasTasks && "font-medium"
-                    )} 
-                    onDragOver={handleDayDragOver}
-                    onDragLeave={handleDayDragLeave}
-                    onDrop={handleDayDrop}
+                    )}
+                    activeClassName="bg-blue-100 dark:bg-blue-800/30 border-dashed border-blue-400"
                   >
                     {/* Day number */}
                     <div className={cn(
@@ -303,12 +178,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                         )}
                       </div>
                     )}
-                    
-                    {/* Visual feedback for drag and drop */}
-                    {isDragOver && (
-                      <div className="absolute inset-0 border-2 border-dashed border-blue-500 rounded-md pointer-events-none"></div>
-                    )}
-                  </div>
+                  </DroppableArea>
                 );
               }
             }} 
@@ -367,18 +237,22 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
             ) : (
               <div className="space-y-3">
                 {tasksForSelectedDate.map(task => (
-                  <div 
-                    key={task.id} 
+                  <DraggableItem
+                    key={task.id}
+                    id={task.id}
+                    type="task"
+                    data={{ 
+                      ...task, 
+                      title: task.title 
+                    }}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
                     className={cn(
                       "task-item flex items-start justify-between p-4 rounded-lg border transition-all duration-200",
                       task.completed 
                         ? "completed bg-green-50/80 dark:bg-green-900/10 border-green-100 dark:border-green-900/30" 
-                        : "bg-card hover:shadow-sm border-blue-100/60 dark:border-blue-900/20 hover:border-blue-200 dark:hover:border-blue-800/40",
-                      isDragging && draggedTaskId === task.id && "opacity-50 border-dashed"
-                    )} 
-                    draggable 
-                    onDragStart={e => handleDragStart(e, task)} 
-                    onDragEnd={handleDragEnd}
+                        : "bg-card hover:shadow-sm border-blue-100/60 dark:border-blue-900/20 hover:border-blue-200 dark:hover:border-blue-800/40"
+                    )}
                   >
                     <div className="space-y-2 flex-1 min-w-0">
                       <div className="flex items-start gap-3">
@@ -499,7 +373,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                         )}
                       </div>
                     </div>
-                  </div>
+                  </DraggableItem>
                 ))}
               </div>
             )}

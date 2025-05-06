@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useDragDrop } from './DragDropContext';
 
 interface DroppableAreaProps {
   id: string;
@@ -22,6 +23,7 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
   disabled = false
 }) => {
   const [isOver, setIsOver] = useState(false);
+  const { isDragging, draggedItemType } = useDragDrop();
   
   const handleDragOver = (e: React.DragEvent) => {
     if (disabled) return;
@@ -30,16 +32,37 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
     e.stopPropagation();
     
     try {
-      // Try to read data type
+      // Try to read data type from the dataTransfer
       if (e.dataTransfer.types.includes('application/json')) {
+        // Check if the dragged item type is acceptable
+        const rawData = e.dataTransfer.getData('application/json');
+        if (rawData) {
+          try {
+            const data = JSON.parse(rawData);
+            if (acceptTypes.includes(data.type)) {
+              setIsOver(true);
+              e.dataTransfer.dropEffect = 'move';
+            }
+          } catch (error) {
+            // If we can't parse the data, just check if we're in a general drag operation
+            if (isDragging && acceptTypes.includes(draggedItemType || '')) {
+              setIsOver(true);
+              e.dataTransfer.dropEffect = 'move';
+            }
+          }
+        } else if (isDragging && acceptTypes.includes(draggedItemType || '')) {
+          // If no data is available but we know we're dragging an acceptable type
+          setIsOver(true);
+          e.dataTransfer.dropEffect = 'move';
+        }
+      }
+    } catch (error) {
+      // Browser security might prevent reading data during dragover
+      // Just check if we're in a drag operation with an acceptable type
+      if (isDragging && acceptTypes.includes(draggedItemType || '')) {
         setIsOver(true);
         e.dataTransfer.dropEffect = 'move';
       }
-    } catch (error) {
-      // Browser security might prevent reading data
-      // Just check if any data is being dragged
-      setIsOver(true);
-      e.dataTransfer.dropEffect = 'move';
     }
   };
   
@@ -80,7 +103,8 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
       className={cn(
         'transition-colors duration-200',
         className,
-        isOver && !disabled && activeClassName
+        isOver && !disabled && activeClassName,
+        isDragging && acceptTypes.includes(draggedItemType || '') && !disabled && 'valid-drop-target'
       )}
       data-droppable-id={id}
     >

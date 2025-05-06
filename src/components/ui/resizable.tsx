@@ -2,7 +2,7 @@
 import { GripVertical } from "lucide-react";
 import * as ResizablePrimitive from "react-resizable-panels";
 import { cn } from "@/lib/utils";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const ResizablePanelGroup = ({
   className,
@@ -39,7 +39,7 @@ const ResizableHandle = ({
   };
 
   // Global event listeners for mouseup
-  React.useEffect(() => {
+  useEffect(() => {
     const handleMouseUp = () => {
       if (isResizing) {
         setIsResizing(false);

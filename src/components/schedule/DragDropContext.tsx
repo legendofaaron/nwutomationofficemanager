@@ -1,15 +1,14 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
-import './dragAndDrop.css';
 
 interface DragDropContextType {
   isDragging: boolean;
   setIsDragging: React.Dispatch<React.SetStateAction<boolean>>;
   draggedItemId: string | null;
   setDraggedItemId: React.Dispatch<React.SetStateAction<string | null>>;
-  draggedItemType: 'task' | 'crew' | null;
-  setDraggedItemType: React.Dispatch<React.SetStateAction<'task' | 'crew' | null>>;
+  draggedItemType: string | null;
+  setDraggedItemType: React.Dispatch<React.SetStateAction<string | null>>;
   draggedItemData: any;
   setDraggedItemData: React.Dispatch<React.SetStateAction<any>>;
 }
@@ -31,7 +30,7 @@ interface DragDropProviderProps {
 export const DragDropProvider: React.FC<DragDropProviderProps> = ({ children }) => {
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
-  const [draggedItemType, setDraggedItemType] = useState<'task' | 'crew' | null>(null);
+  const [draggedItemType, setDraggedItemType] = useState<string | null>(null);
   const [draggedItemData, setDraggedItemData] = useState<any>(null);
 
   // Effect to handle global drag state
