@@ -23,6 +23,7 @@ import { UserAvatar } from './UserAvatar';
 import { ProLayout } from './ProLayout';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import { Button } from './ui/button';
 
 const MainLayout = () => {
   const {
@@ -117,7 +118,7 @@ const MainLayout = () => {
     }));
   };
 
-  const handleViewChange = (newView: string) => {
+  const handleViewChange = (newView: ViewMode) => {
     setViewMode(newView);
     if (isMobile) {
       setMobileMenuOpen(false);
