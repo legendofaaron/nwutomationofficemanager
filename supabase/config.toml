@@ -3,3 +3,6 @@ project_id = "nbgxyfrxmorlgdgytlui"
 
 [functions.paypal-integration]
 verify_jwt = true
+
+[functions.stripe-integration]
+verify_jwt = true

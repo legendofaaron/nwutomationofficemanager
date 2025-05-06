@@ -8,10 +8,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Subscription {
   id: string;
-  status: 'active' | 'cancelled' | 'expired' | 'trial';
+  status: 'active' | 'cancelled' | 'expired' | 'trial' | 'pending';
   payment_provider: string;
   payment_id?: string;
   subscription_plan: string;
@@ -33,6 +34,7 @@ const SubscriptionPlan = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(false);
   const [subscribeDialog, setSubscribeDialog] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe');
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -59,7 +61,7 @@ const SubscriptionPlan = () => {
         // Ensure the data matches the Subscription interface
         const typedSubscription: Subscription = {
           id: data.id,
-          status: data.status as 'active' | 'cancelled' | 'expired' | 'trial',
+          status: data.status as 'active' | 'cancelled' | 'expired' | 'trial' | 'pending',
           payment_provider: data.payment_provider,
           payment_id: data.payment_id || undefined,
           subscription_plan: data.subscription_plan,
@@ -82,7 +84,8 @@ const SubscriptionPlan = () => {
         .from('subscriptions')
         .insert({
           user_id: user?.id,
-          status: 'trial',
+          status: 'pending',
+          payment_provider: paymentMethod,
           price_amount: 500,
           current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         })
@@ -93,8 +96,9 @@ const SubscriptionPlan = () => {
         throw new Error(`Failed to create subscription record: ${subError.message}`);
       }
 
-      // Then call PayPal to create actual subscription
-      const response = await supabase.functions.invoke('paypal-integration', {
+      // Call the appropriate payment provider integration
+      const functionName = paymentMethod === 'paypal' ? 'paypal-integration' : 'stripe-integration';
+      const response = await supabase.functions.invoke(functionName, {
         body: {
           action: 'create_subscription',
           userId: user?.id,
@@ -103,11 +107,15 @@ const SubscriptionPlan = () => {
       });
 
       if (!response.data.success) {
-        throw new Error(response.data.error || 'Failed to create PayPal subscription');
+        throw new Error(response.data.error || `Failed to create ${paymentMethod} subscription`);
       }
 
-      // Redirect user to PayPal approval URL
-      window.location.href = response.data.approvalUrl;
+      // Redirect user to the payment provider's checkout URL
+      const redirectUrl = paymentMethod === 'paypal' 
+        ? response.data.approvalUrl 
+        : response.data.checkoutUrl;
+      
+      window.location.href = redirectUrl;
       
     } catch (error: any) {
       console.error('Error creating subscription:', error);
@@ -123,14 +131,15 @@ const SubscriptionPlan = () => {
   };
 
   const cancelSubscription = async () => {
-    if (!subscription || !subscription.payment_id) return;
+    if (!subscription) return;
     
     setIsLoading(true);
     try {
-      const response = await supabase.functions.invoke('paypal-integration', {
+      const functionName = subscription.payment_provider === 'paypal' ? 'paypal-integration' : 'stripe-integration';
+      const response = await supabase.functions.invoke(functionName, {
         body: {
           action: 'cancel_subscription',
-          subscriptionId: subscription.payment_id,
+          subscriptionId: subscription.id,
         },
       });
 
@@ -179,6 +188,11 @@ const SubscriptionPlan = () => {
                 Active
               </Badge>
             )}
+            {subscription?.status === 'pending' && (
+              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                Pending
+              </Badge>
+            )}
           </CardTitle>
           <CardDescription>Access all premium features</CardDescription>
         </CardHeader>
@@ -213,7 +227,7 @@ const SubscriptionPlan = () => {
               className="w-full" 
               onClick={() => setSubscribeDialog(true)}
             >
-              <CreditCard className="mr-2 h-4 w-4" /> Subscribe with PayPal
+              <CreditCard className="mr-2 h-4 w-4" /> Subscribe
             </Button>
           )}
         </CardFooter>
@@ -246,16 +260,34 @@ const SubscriptionPlan = () => {
           <DialogHeader>
             <DialogTitle>Confirm Subscription</DialogTitle>
             <DialogDescription>
-              You're about to subscribe to the Professional Plan for {formatCurrency(500)} per month using PayPal.
+              You're about to subscribe to the Professional Plan for {formatCurrency(500)} per month.
             </DialogDescription>
           </DialogHeader>
+          
+          <Tabs defaultValue="stripe" onValueChange={(value) => setPaymentMethod(value as 'stripe' | 'paypal')}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="stripe">Pay with Card</TabsTrigger>
+              <TabsTrigger value="paypal">Pay with PayPal</TabsTrigger>
+            </TabsList>
+            <TabsContent value="stripe" className="py-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                You'll be redirected to our secure payment provider to complete your subscription.
+              </p>
+            </TabsContent>
+            <TabsContent value="paypal" className="py-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                You'll be redirected to PayPal to complete your subscription.
+              </p>
+            </TabsContent>
+          </Tabs>
+          
           <DialogFooter>
             <Button variant="outline" onClick={() => setSubscribeDialog(false)} disabled={isLoading}>
               Cancel
             </Button>
             <Button onClick={createSubscription} disabled={isLoading}>
               {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-              Continue to PayPal
+              {paymentMethod === 'stripe' ? 'Continue to Payment' : 'Continue to PayPal'}
             </Button>
           </DialogFooter>
         </DialogContent>
