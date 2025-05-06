@@ -29,7 +29,7 @@ const AssignmentTab: React.FC<AssignmentTabProps> = ({
     const crew = crewsList.find(c => c.id === crewId);
     if (!crew) return 'No crew members';
     
-    return crew.memberIds
+    return crew.members
       .map(id => {
         const employee = employees.find(e => e.id === id);
         return employee ? employee.name : '';

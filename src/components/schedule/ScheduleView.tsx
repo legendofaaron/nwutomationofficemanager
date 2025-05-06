@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -168,6 +167,9 @@ const ScheduleView: React.FC = () => {
             tasks={filteredTasks}
             onToggleTaskCompletion={handleToggleTaskCompletion}
             onEditTask={handleEditTask}
+            crews={crews}
+            clients={clients}
+            clientLocations={clientLocations}
           />
         </TabsContent>
       </Tabs>
