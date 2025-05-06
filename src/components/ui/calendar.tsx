@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
-import { DayPicker, CaptionProps } from "react-day-picker";
+import { DayPicker } from "react-day-picker";
 import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
@@ -22,8 +22,15 @@ export const getCrewLetterCode = (index: number): string => {
   return `${letter}${cycle + 1}`;
 };
 
+// Define a custom caption props interface that includes the navigation handlers
+interface CustomCaptionProps {
+  displayMonth: Date;
+  onPreviousClick: () => void;
+  onNextClick: () => void;
+}
+
 // Custom caption component to show month and year with better styling
-const CustomCaption = ({ displayMonth, onPreviousClick, onNextClick }: CaptionProps) => {
+const CustomCaption = ({ displayMonth, onPreviousClick, onNextClick }: CustomCaptionProps) => {
   return (
     <div className="flex items-center justify-between px-2 py-1">
       <button
@@ -97,7 +104,14 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        Caption: CustomCaption,
+        Caption: (props) => {
+          // Type cast and pass the needed properties to our custom component
+          return <CustomCaption 
+            displayMonth={props.displayMonth} 
+            onPreviousClick={() => props.onPreviousClick()} 
+            onNextClick={() => props.onNextClick()} 
+          />;
+        },
       }}
       {...props}
     />
