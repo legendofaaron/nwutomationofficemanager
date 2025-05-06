@@ -33,7 +33,7 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
  
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
  
   .dark {
@@ -68,33 +68,33 @@
   
   /* Super Dark Mode Variables - Enhanced with professional colors */
   .superdark {
-    --background: 0 0% 0%;        /* Pure black background */
-    --foreground: 0 0% 90%;       /* Light gray text for readability */
+    --background: 0 0% 2%;         /* Almost pure black background */
+    --foreground: 0 0% 90%;        /* Light gray text for readability */
  
-    --card: 0 0% 4%;             /* Very dark gray for cards, slightly lighter than bg */
-    --card-foreground: 0 0% 90%;  /* Same light gray for readability */
+    --card: 0 0% 4%;              /* Very dark gray for cards, slightly lighter than bg */
+    --card-foreground: 0 0% 90%;   /* Same light gray for readability */
  
-    --popover: 0 0% 4%;          /* Same as card */
+    --popover: 0 0% 4%;           /* Same as card */
     --popover-foreground: 0 0% 90%; /* Same as card foreground */
  
-    --primary: 210 100% 50%;     /* Vibrant blue */
+    --primary: 214 100% 50%;      /* Vibrant blue */
     --primary-foreground: 0 0% 100%; /* White text on primary */
  
-    --secondary: 0 0% 10%;       /* Slightly lighter black for subtle contrast */
+    --secondary: 0 0% 10%;        /* Slightly lighter black for subtle contrast */
     --secondary-foreground: 0 0% 90%; /* Light gray for readability */
  
-    --muted: 0 0% 8%;            /* Dark gray that's still visible */
-    --muted-foreground: 0 0% 60%; /* Medium gray for less important text */
+    --muted: 0 0% 8%;             /* Dark gray that's still visible */
+    --muted-foreground: 0 0% 60%;  /* Medium gray for less important text */
  
-    --accent: 210 100% 20%;      /* Dark blue accent */
+    --accent: 214 100% 20%;       /* Dark blue accent */
     --accent-foreground: 0 0% 100%; /* White text on accent */
  
-    --destructive: 0 100% 30%;   /* Deep red, less harsh than bright red */
+    --destructive: 0 100% 30%;    /* Deep red, less harsh than bright red */
     --destructive-foreground: 0 0% 90%; /* Light gray for readability */
  
-    --border: 0 0% 15%;          /* Dark gray borders - subtle but visible */
-    --input: 0 0% 15%;           /* Same as border */
-    --ring: 210 100% 50%;        /* Match primary color for focus rings */
+    --border: 0 0% 15%;           /* Dark gray borders - subtle but visible */
+    --input: 0 0% 15%;            /* Same as border */
+    --ring: 214 100% 50%;         /* Match primary color for focus rings */
   }
 }
 
@@ -142,244 +142,177 @@ body.dragging {
   cursor: grabbing !important;
 }
 
-/* Enhanced Calendar Styling */
-.calendar-grid {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  border-radius: 0.75rem;
-  overflow: hidden;
-  border-color: rgba(0, 0, 0, 0.08);
+/* Enhanced animations */
+@keyframes fade-in {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
-.dark .calendar-grid {
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+@keyframes fade-out {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(8px); }
 }
 
-.calendar-grid .rdp-cell {
-  margin-bottom: 4px;
+@keyframes slide-in {
+  0% { transform: translateY(16px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
 }
 
-.calendar-grid .rdp-button {
-  width: 100%;
-  height: 100%;
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Improved scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
   border-radius: 6px;
-  transition: all 0.2s ease;
 }
 
-.calendar-grid .rdp-button:hover {
-  background-color: hsl(var(--accent)) !important;
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
 }
 
-.calendar-grid .rdp-day {
-  font-weight: 500;
+.dark ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
 }
 
-.calendar-grid .rdp-day_selected,
-.calendar-grid .rdp-day_selected:hover {
-  background-color: hsl(var(--primary)) !important;
-  color: hsl(var(--primary-foreground)) !important;
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
 }
 
-.calendar-grid .rdp-day_today {
-  background-color: hsl(var(--accent)) !important;
-  font-weight: 600;
+.light ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
 }
 
-.calendar-grid .selected-day .rdp-button {
-  background-color: hsl(var(--primary)) !important;
-  color: hsl(var(--primary-foreground)) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
 }
 
-/* Calendar day drop styling */
-.calendar-day-cell {
-  position: relative;
-  cursor: pointer;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.calendar-day-cell.drag-over .rdp-button {
-  background-color: rgba(59, 130, 246, 0.15) !important;
-  border: 2px dashed hsl(var(--primary));
-}
-
-.calendar-day-cell.valid-drop-target {
-  cursor: pointer;
-}
-
-.calendar-day-cell.valid-drop-target:hover {
-  background-color: rgba(59, 130, 246, 0.05);
-}
-
-/* Empty day state styling */
-.empty-day-container {
-  min-height: 200px;
-  border: 2px dashed #E6E8EB;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.dark .empty-day-container {
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.empty-day-container:hover {
-  border-color: rgba(59, 130, 246, 0.5);
-  background-color: rgba(59, 130, 246, 0.03);
-}
-
-.dark .empty-day-container:hover {
-  border-color: rgba(59, 130, 246, 0.3);
-  background-color: rgba(59, 130, 246, 0.05);
-}
-
-/* Task item styling */
-.task-item {
-  transition: all 0.2s ease;
-  cursor: grab;
-  border-left: 3px solid transparent;
-  position: relative;
-}
-
-.task-item:not(.completed) {
-  border-left-color: #3B82F6;
-}
-
-.task-item.completed {
-  border-left-color: #10B981;
-}
-
-.dark .task-item:not(.completed) {
-  border-left-color: #60A5FA;
-}
-
-.dark .task-item.completed {
-  border-left-color: #34D399;
-}
-
-.task-item:active {
-  cursor: grabbing;
-}
-
-.task-item.dragging {
-  opacity: 0.7;
-  transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-/* Fix for calendar numbers */
-.rdp-button:not(.rdp-day_selected) {
-  color: currentColor !important;
-}
-
-.rdp-day_selected, 
-.rdp-day_selected:hover {
-  background-color: hsl(var(--primary)) !important;
-  color: hsl(var(--primary-foreground)) !important;
-}
-
-.rdp-day_today {
-  background-color: hsl(var(--accent)) !important;
-}
-
-/* Card styling */
-.card {
-  transition: all 0.2s ease;
-}
-
-.card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.dark .card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* Schedule tab styling */
-.schedule-tab {
-  position: relative;
+/* Core styles */
+#root {
+  width: 100%;
   overflow: hidden;
-  border-radius: 8px;
+}
+
+/* Transitions */
+.light *, .dark * {
+  transition: all 0.2s ease-in-out;
+}
+
+.superdark * {
+  transition: none;
+}
+
+/* Light mode professional enhancements */
+.light {
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --hover-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --subtle-bg: #f9fafb;
+  --header-bg: #ffffff;
+  --border-color: #e5e7eb;
+}
+
+/* Light mode card improvements */
+.light .card {
+  box-shadow: var(--card-shadow);
+}
+
+.light .card:hover {
+  box-shadow: var(--hover-shadow);
+}
+
+/* Light mode form controls */
+.light input:not([type="checkbox"]):not([type="radio"]),
+.light textarea, 
+.light select {
+  border-color: #e2e8f0;
+  background-color: #ffffff;
+}
+
+.light input:focus, 
+.light textarea:focus, 
+.light select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Professional text styling */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.025em;
+}
+
+p {
+  line-height: 1.6;
+}
+
+/* Input focus styles */
+input:focus, 
+textarea:focus, 
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
+}
+
+/* Professional transitions */
+button, a, input, select, textarea {
   transition: all 0.15s ease-in-out;
 }
 
-.schedule-tab:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.schedule-tab.active {
-  background-color: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-}
-
-.schedule-tab.active:hover {
-  background-color: hsl(var(--primary));
-  opacity: 0.95;
-}
-
-.dark .schedule-tab:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Crew badge styling */
-.crew-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1;
-  background-color: rgba(59, 130, 246, 0.1);
-  color: rgb(37, 99, 235);
-  margin-right: 0.5rem;
-}
-
-.dark .crew-badge {
-  background-color: rgba(59, 130, 246, 0.2);
-  color: rgb(96, 165, 250);
-}
-
-/* Custom scrollbar for task lists */
-.task-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.task-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.task-list::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 20px;
-}
-
-.dark .task-list::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-/* Fix for calendar month caption */
-.rdp-months {
-  padding: 0.5rem;
-}
-
-/* Drag and Drop Styling */
-.schedule-drop-zone {
-  border: 2px dashed transparent;
-  transition: all 0.2s ease;
-}
-
-.schedule-drop-zone.drag-over {
-  border-color: hsl(var(--primary));
-  background-color: hsl(var(--accent));
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  /* Reduce padding and margins for mobile */
+  .container, .p-4, .p-6, .p-8 {
+    padding: 0.75rem !important;
+  }
+  
+  .m-4, .m-6, .m-8 {
+    margin: 0.75rem !important;
+  }
+  
+  /* Make buttons more touch-friendly */
+  button, 
+  .btn, 
+  [role="button"], 
+  input[type="submit"], 
+  input[type="reset"], 
+  input[type="button"] {
+    min-height: 44px;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  /* Improve form input touch targets */
+  input, 
+  select, 
+  textarea {
+    font-size: 16px !important; /* Prevent zoom on focus in iOS */
+    min-height: 44px;
+  }
+  
+  /* Reduce font sizes for better readability */
+  h1 {
+    font-size: 1.5rem !important;
+  }
+  
+  h2 {
+    font-size: 1.25rem !important;
+  }
+  
+  h3 {
+    font-size: 1.125rem !important;
+  }
 }
 
 /* Superdark specific professional enhancements */
@@ -435,4 +368,88 @@ body.dragging {
 
 .superdark ::-webkit-scrollbar-thumb:hover {
   background: rgba(80, 80, 80, 0.8);
+}
+
+/* New elegant transition effects */
+.fade-in {
+  animation: fade-in 0.5s ease forwards;
+}
+
+.fade-out {
+  animation: fade-out 0.5s ease forwards;
+}
+
+.slide-in {
+  animation: slide-in 0.4s ease-out forwards;
+}
+
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+/* Professional hover effects */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.dark .hover-lift:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+.superdark .hover-lift:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+}
+
+/* Glass morphism effects */
+.glass {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.light .glass {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+  background: rgba(17, 24, 39, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.superdark .glass {
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Enhanced focus styles */
+*:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+.superdark *:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.7);
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

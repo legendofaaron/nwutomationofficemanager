@@ -1,64 +1,66 @@
 
 import React from 'react';
+import { cn } from '@/lib/utils';
 import { Hexagon } from 'lucide-react';
-import { useAppContext } from '@/context/AppContext';
 import { useTheme } from '@/context/ThemeContext';
 
-type LogoType = 'default' | 'text' | 'image';
-
-interface DefaultBranding {
-  companyName: string;
-  logoType: LogoType;
-  logoUrl: string;
+interface LogoProps {
+  className?: string;
+  size?: 'sm' | 'md' | 'lg';
+  showText?: boolean;
 }
 
-export const Logo = ({
-  small,
-  onClick
-}: {
-  small?: boolean;
-  onClick?: () => void;
+export const Logo: React.FC<LogoProps> = ({ 
+  className, 
+  size = 'md',
+  showText = false
 }) => {
   const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  const isSuperDark = resolvedTheme === 'superdark';
   
-  // Try to use AppContext, but don't fail if it's not available
-  // This allows the Logo to work in the LoadingScreen where AppContext isn't available
-  let branding: DefaultBranding = {
-    companyName: 'Northwestern Automation',
-    logoType: 'default',
-    logoUrl: ''
+  const sizeClasses = {
+    sm: 'w-8 h-8',
+    md: 'w-12 h-12',
+    lg: 'w-16 h-16'
   };
+  
+  const logoColor = isSuperDark 
+    ? 'text-blue-600' 
+    : isDark 
+      ? 'text-blue-500' 
+      : 'text-blue-600';
 
-  try {
-    const appContext = useAppContext();
-    if (appContext) {
-      branding = appContext.branding as DefaultBranding;
-    }
-  } catch (error) {
-    // AppContext not available, use default branding
-  }
-
-  // Use blue colors for both light and dark modes
-  const textColor = 'text-blue-600';
-  const logoColor = 'text-blue-500';
+  const innerColor = isSuperDark 
+    ? 'text-blue-400' 
+    : isDark 
+      ? 'text-blue-300' 
+      : 'text-blue-400';
+  
+  const textColor = isSuperDark 
+    ? 'text-gray-200' 
+    : isDark 
+      ? 'text-gray-100' 
+      : 'text-gray-800';
 
   return (
-    <div className="flex items-center gap-2 hover:opacity-90 transition-opacity cursor-pointer" onClick={onClick}>
-      {branding.logoType === 'image' && branding.logoUrl ? (
-        <img 
-          src={branding.logoUrl} 
-          alt={`${branding.companyName} logo`} 
-          className={`h-${small ? '4' : '6'} w-auto`} 
+    <div className={cn('flex items-center gap-2', className)}>
+      <div className="relative">
+        <Hexagon className={cn('stroke-2', sizeClasses[size], logoColor)} />
+        <Hexagon 
+          className={cn(
+            'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 scale-60', 
+            sizeClasses[size],
+            innerColor
+          )}
+          style={{ transform: 'translate(-50%, -50%) scale(0.6)' }}
         />
-      ) : (
-        <div className="relative">
-          <Hexagon className={`h-${small ? '4' : '6'} w-${small ? '4' : '6'} ${logoColor}`} />
+      </div>
+      
+      {showText && (
+        <div className={cn('font-bold tracking-tight', textColor)}>
+          Office Manager
         </div>
-      )}
-      {(!small || branding.logoType === 'text') && (
-        <span className={`font-medium ${small ? 'text-sm' : 'text-lg'} ${textColor}`}>
-          {branding.companyName}
-        </span>
       )}
     </div>
   );

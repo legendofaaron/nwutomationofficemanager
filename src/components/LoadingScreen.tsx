@@ -28,33 +28,40 @@ export const LoadingScreen = () => {
   return (
     <div className={cn(
       "h-screen w-full flex flex-col items-center justify-center transition-colors duration-300",
-      isDarkMode ? "bg-[#0d1117]" : 
-      isSuperDarkMode ? "bg-black" : 
-      "bg-gradient-to-br from-white to-gray-50"
+      isDarkMode ? "bg-gradient-to-br from-[#0d1117] to-[#1a222e]" : 
+      isSuperDarkMode ? "bg-gradient-to-br from-black to-[#070707]" : 
+      "bg-gradient-to-br from-white to-blue-50"
     )}>
       <div className="relative">
-        <div className="animate-spin-slow">
-          <Logo />
+        <div className={cn(
+          "animate-spin-slow rounded-full p-2",
+          isDarkMode ? "bg-[#0d1117] shadow-md" : 
+          isSuperDarkMode ? "bg-black shadow-superdark-md" : 
+          "bg-white shadow-elegant-sm"
+        )}>
+          <Logo className="w-24 h-24" />
         </div>
-        <div className="mt-8 relative">
+        <div className="mt-12 relative">
           <div className={cn(
-            "h-1 w-40 rounded-full overflow-hidden",
+            "h-1.5 w-48 rounded-full overflow-hidden",
             isDarkMode ? "bg-gray-800" : 
             isSuperDarkMode ? "bg-gray-900" : 
             "bg-gray-200"
           )}>
             <div className={cn(
               "h-full rounded-full animate-pulse",
-              isDarkMode || isSuperDarkMode ? "bg-blue-500" : "bg-blue-600"
+              isDarkMode ? "bg-blue-500" : 
+              isSuperDarkMode ? "bg-blue-600" : 
+              "bg-blue-500"
             )} style={{width: '75%'}}></div>
           </div>
           <div className={cn(
-            "mt-3 text-sm animate-pulse text-center", 
-            isDarkMode ? "text-gray-400" : 
-            isSuperDarkMode ? "text-gray-500" : 
-            "text-gray-500"
+            "mt-4 text-sm animate-pulse text-center font-medium", 
+            isDarkMode ? "text-gray-300" : 
+            isSuperDarkMode ? "text-gray-400" : 
+            "text-gray-600"
           )}>
-            Loading your workspace...
+            <span className="animate-fade-in inline-block">Loading your workspace...</span>
           </div>
         </div>
       </div>

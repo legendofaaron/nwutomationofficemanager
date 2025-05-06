@@ -1,3 +1,4 @@
+
 import { type Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
@@ -162,6 +163,12 @@ export default {
         'superdark-xl': '0 15px 25px rgba(0, 0, 0, 0.8)',
         'superdark-2xl': '0 25px 50px rgba(0, 0, 0, 0.9)',
         'superdark-inner': 'inset 0 2px 4px rgba(0, 0, 0, 0.5)',
+        'elegant-sm': '0 2px 5px -1px rgba(0, 0, 0, 0.1)',
+        'elegant': '0 4px 12px -2px rgba(0, 0, 0, 0.12)',
+        'elegant-lg': '0 12px 24px -6px rgba(0, 0, 0, 0.15)',
+        'glow-blue': '0 0 15px rgba(30, 144, 255, 0.5)',
+        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        'button-press': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
       }
     }
   },

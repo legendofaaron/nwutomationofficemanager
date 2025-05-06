@@ -27,22 +27,22 @@ const WelcomeDashboard = () => {
   const isDark = resolvedTheme === 'dark' || isSuperDark;
   
   const bgClass = isSuperDark 
-    ? 'bg-black' 
+    ? 'bg-gradient-to-br from-black to-[#050505]' 
     : isDark 
-      ? 'bg-[#0a0f1a]' 
+      ? 'bg-gradient-to-br from-[#0a0f1a] to-[#111827]' 
       : 'bg-gradient-to-br from-gray-50 to-blue-50/30';
   
   const cardBgClass = isSuperDark
-    ? 'bg-[#090909] border-[#151515]'
+    ? 'bg-[#090909] border-[#151515] shadow-superdark'
     : isDark
-      ? 'bg-[#0d1117] border-[#1a1e26]'
-      : 'bg-white/90 backdrop-blur-sm';
+      ? 'bg-[#0d1117] border-[#1a1e26] shadow-md'
+      : 'bg-white/90 backdrop-blur-sm shadow-elegant hover-lift';
   
   const buttonClass = isSuperDark
-    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+    ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-superdark-sm'
     : isDark
-      ? 'bg-blue-500 hover:bg-blue-600 text-white'
-      : 'bg-blue-600 hover:bg-blue-700 text-white';
+      ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-md'
+      : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm';
 
   const outlineButtonClass = isSuperDark
     ? 'border-[#202020] bg-black hover:bg-[#0a0a0a] text-white'
@@ -52,12 +52,12 @@ const WelcomeDashboard = () => {
 
   return (
     <ScrollArea className="h-full">
-      <div className={`mx-auto px-4 pt-6 pb-8 max-w-5xl animate-fade-in ${bgClass} min-h-full`}>
-        <div className="flex justify-center mb-6 animate-slide-in">
-          <Logo />
+      <div className={`mx-auto px-4 pt-6 pb-8 max-w-5xl ${bgClass} min-h-full`}>
+        <div className="flex justify-center mb-6 animate-fade-in">
+          <Logo className="w-16 h-16" />
         </div>
         
-        <div className="text-center mb-10 animate-slide-in" style={{animationDelay: '100ms'}}>
+        <div className="text-center mb-10 animate-fade-in" style={{animationDelay: '100ms'}}>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-3 tracking-tight">
             Welcome to Office Manager
           </h1>
@@ -68,7 +68,7 @@ const WelcomeDashboard = () => {
         </div>
 
         {/* Intelligent Assistant Card */}
-        <Card className={`mb-10 shadow-lg transition-all ${cardBgClass} animate-slide-in border-l-blue-600`} style={{animationDelay: '200ms', borderLeftWidth: '4px'}}>
+        <Card className={`mb-10 transition-all ${cardBgClass} animate-fade-in border-l-blue-600`} style={{animationDelay: '200ms', borderLeftWidth: '4px'}}>
           <CardContent className={`py-6 md:py-8 px-4 md:px-6`}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
               <div className="space-y-3 md:space-y-4">
@@ -88,7 +88,7 @@ const WelcomeDashboard = () => {
               
               <Button 
                 onClick={startAssistantSetup} 
-                className={`px-4 md:px-6 py-4 md:py-6 h-auto text-sm md:text-base ${buttonClass} shadow-sm whitespace-nowrap`}
+                className={`px-4 md:px-6 py-4 md:py-6 h-auto text-sm md:text-base ${buttonClass} whitespace-nowrap`}
               >
                 Set Up Assistant <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
               </Button>
@@ -104,7 +104,7 @@ const WelcomeDashboard = () => {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-            <Card className={`${cardBgClass} shadow-sm hover:shadow transition-all animate-slide-in`} style={{animationDelay: '300ms'}}>
+            <Card className={`${cardBgClass} transition-all animate-fade-in`} style={{animationDelay: '300ms'}}>
               <CardHeader className="pb-2">
                 <div className="flex items-center mb-2">
                   <div className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 mr-3">
@@ -128,7 +128,7 @@ const WelcomeDashboard = () => {
               </CardContent>
             </Card>
             
-            <Card className={`${cardBgClass} shadow-sm hover:shadow transition-all animate-slide-in`} style={{animationDelay: '400ms'}}>
+            <Card className={`${cardBgClass} transition-all animate-fade-in`} style={{animationDelay: '400ms'}}>
               <CardHeader className="pb-2">
                 <div className="flex items-center mb-2">
                   <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30 mr-3">
@@ -152,7 +152,7 @@ const WelcomeDashboard = () => {
               </CardContent>
             </Card>
             
-            <Card className={`${cardBgClass} shadow-sm hover:shadow transition-all animate-slide-in sm:col-span-2 md:col-span-1`} style={{animationDelay: '500ms'}}>
+            <Card className={`${cardBgClass} transition-all animate-fade-in sm:col-span-2 md:col-span-1`} style={{animationDelay: '500ms'}}>
               <CardHeader className="pb-2">
                 <div className="flex items-center mb-2">
                   <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30 mr-3">
