@@ -13,13 +13,15 @@ interface KnowledgeTrainingProps {
   trainingProgress: number;
   isTraining: boolean;
   onStartTraining: () => void;
+  isPremium?: boolean; // Added isPremium as an optional prop
 }
 
 export const KnowledgeTraining: React.FC<KnowledgeTrainingProps> = ({
   knowledgeItems,
   trainingProgress,
   isTraining,
-  onStartTraining
+  onStartTraining,
+  isPremium = false // Default value if not provided
 }) => {
   return (
     <Card className="h-full overflow-hidden">
