@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,18 +45,23 @@ export interface LlmConfig {
 }
 
 export const LlmSettings = () => {
+  // Set default active tab to "local" instead of "general"
+  const [activeTab, setActiveTab] = useState<string>('local');
+  
   const [config, setConfig] = useState<LlmConfig>({
     endpoint: 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk',
-    enabled: false,
-    model: 'llama-3.2-3b',
+    enabled: true,
+    model: 'local', // Change default model to 'local'
     webhookUrl: 'http://localhost:5678/webhook-test/bf4dd093-bb02-472c-9454-7ab9af97bd1d'
   });
 
-  const [activeTab, setActiveTab] = useState<string>('general');
   const [isCustomModel, setIsCustomModel] = useState<boolean>(false);
   const [useOpenAiKey, setUseOpenAiKey] = useState<boolean>(false);
   const [testingOpenAi, setTestingOpenAi] = useState<boolean>(false);
-  const [useLocalLlama, setUseLocalLlama] = useState<boolean>(false);
+  
+  // Enable local LLama by default
+  const [useLocalLlama, setUseLocalLlama] = useState<boolean>(true);
+  
   const [downloadProgress, setDownloadProgress] = useState<number>(0);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [downloadModelName, setDownloadModelName] = useState<string>('');
@@ -72,10 +76,37 @@ export const LlmSettings = () => {
         setConfig(parsedConfig);
         setIsCustomModel(!!parsedConfig.customModel?.isCustom);
         setUseOpenAiKey(!!parsedConfig.openAi?.enabled);
-        setUseLocalLlama(!!parsedConfig.localLlama?.enabled);
+        
+        // If there's no explicit setting for local LLama, default to enabled
+        setUseLocalLlama(parsedConfig.localLlama?.enabled !== false);
+        
+        // If not explicitly set, initialize localLlama with enabled:true
+        if (parsedConfig.localLlama === undefined) {
+          setConfig(prev => ({
+            ...prev,
+            localLlama: {
+              enabled: true,
+              threads: navigator.hardwareConcurrency || 4,
+              contextSize: 2048,
+              batchSize: 512
+            }
+          }));
+        }
       } catch (error) {
         console.error('Failed to parse saved LLM config:', error);
       }
+    } else {
+      // If no config exists, initialize with local LLama enabled
+      setConfig(prev => ({
+        ...prev,
+        model: 'local',
+        localLlama: {
+          enabled: true,
+          threads: navigator.hardwareConcurrency || 4,
+          contextSize: 2048,
+          batchSize: 512
+        }
+      }));
     }
 
     // Load saved uploaded models
@@ -261,6 +292,7 @@ export const LlmSettings = () => {
     if (enabled) {
       setConfig(prev => ({
         ...prev,
+        model: 'local', // Set the model to local when local LLama is enabled
         localLlama: {
           enabled: true,
           modelPath: prev.localLlama?.modelPath || '',
@@ -272,6 +304,7 @@ export const LlmSettings = () => {
     } else {
       setConfig(prev => ({
         ...prev,
+        model: 'default', // Reset to default model when local LLama is disabled
         localLlama: {
           ...prev.localLlama,
           enabled: false
@@ -323,6 +356,7 @@ export const LlmSettings = () => {
     // Automatically select this model
     setConfig(prev => ({
       ...prev,
+      model: 'local', // Set model to local when a model is uploaded
       localLlama: {
         ...prev.localLlama,
         enabled: true,
@@ -332,17 +366,32 @@ export const LlmSettings = () => {
     
     // Enable local LLaMA
     setUseLocalLlama(true);
+    
+    // Show success message
+    toast({
+      title: 'Model Uploaded',
+      description: `${modelName} has been uploaded and selected as your local model.`,
+      duration: 3000
+    });
   };
 
   const selectUploadedModel = (modelPath: string) => {
     setConfig(prev => ({
       ...prev,
+      model: 'local', // Set model to local when selecting a local model
       localLlama: {
         ...prev.localLlama,
         enabled: true,
         modelPath: modelPath
       }
     }));
+    
+    // Show confirmation
+    toast({
+      title: 'Model Selected',
+      description: `Model has been selected for local inference.`,
+      duration: 2000
+    });
   };
 
   // Initialize LLaMA.cpp when local model setting is enabled
@@ -398,97 +447,237 @@ export const LlmSettings = () => {
     <div className="space-y-6 p-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
-          <TabsTrigger value="general">General Settings</TabsTrigger>
-          <TabsTrigger value="custom">Custom Model</TabsTrigger>
-          <TabsTrigger value="openai">OpenAI</TabsTrigger>
           <TabsTrigger value="local">Local Models</TabsTrigger>
+          <TabsTrigger value="openai">OpenAI</TabsTrigger>
+          <TabsTrigger value="custom">Custom Model</TabsTrigger>
+          <TabsTrigger value="general">External API</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="space-y-6">
+        <TabsContent value="local" className="space-y-6">
+          <div>
+            <h3 className="text-lg font-medium">Local AI Models</h3>
+            <p className="text-sm text-gray-500 mb-4">Run language models directly on your device for privacy and offline use</p>
+          </div>
+          
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-medium">Language Model Settings</h3>
-              <p className="text-sm text-gray-500">Configure your language model connection</p>
+              <h4 className="font-medium">Enable Local Models</h4>
+              <p className="text-sm text-gray-500">Process all queries on your device</p>
             </div>
             <Switch
-              checked={config.enabled}
-              onCheckedChange={(checked) => setConfig(prev => ({ ...prev, enabled: checked }))}
+              checked={useLocalLlama}
+              onCheckedChange={handleLocalLlamaToggle}
             />
           </div>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="endpoint">Workflow Endpoint</Label>
-              <Input
-                id="endpoint"
-                value={config.endpoint}
-                onChange={(e) => setConfig(prev => ({ ...prev, endpoint: e.target.value }))}
-                placeholder="http://localhost:5678/workflow/[ID]"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="webhookUrl">Webhook URL</Label>
-              <Input
-                id="webhookUrl"
-                value={config.webhookUrl}
-                onChange={(e) => setConfig(prev => ({ ...prev, webhookUrl: e.target.value }))}
-                placeholder="http://localhost:5678/webhook-test/[ID]"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Enter the webhook URL for bidirectional communication
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="model-type">Model Type</Label>
-                <Switch 
-                  id="custom-model-toggle"
-                  checked={isCustomModel}
-                  onCheckedChange={handleModelTypeChange}
-                />
-                <Label htmlFor="custom-model-toggle" className="text-sm ml-2">
-                  Use Custom Model
-                </Label>
+          
+          {useLocalLlama && (
+            <div className="space-y-6 border rounded-md p-4 bg-muted/20">
+              <div className="space-y-2">
+                <Label htmlFor="cpu-threads">CPU Threads</Label>
+                <div className="flex items-center space-x-2">
+                  <Slider
+                    id="cpu-threads"
+                    defaultValue={[config.localLlama?.threads || navigator.hardwareConcurrency || 4]}
+                    max={16}
+                    min={1}
+                    step={1}
+                    onValueChange={(value) => setConfig(prev => ({
+                      ...prev,
+                      localLlama: {
+                        ...prev.localLlama,
+                        threads: value[0]
+                      }
+                    }))}
+                    className="flex-1"
+                  />
+                  <span className="w-12 text-center">{config.localLlama?.threads || 4}</span>
+                </div>
+                <p className="text-xs text-gray-500">Higher values may improve performance on multi-core systems</p>
               </div>
               
-              {!isCustomModel && (
-                <div className="mt-4">
-                  <Label htmlFor="model">Predefined Model</Label>
-                  <Select
-                    value={config.model}
-                    onValueChange={(value) => setConfig(prev => ({ ...prev, model: value }))}
-                    disabled={isCustomModel}
-                  >
-                    <SelectTrigger id="model" className="w-full">
-                      <SelectValue placeholder="Select a model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="llama-3.2-3b">Llama 3.2 (3B)</SelectItem>
-                      <SelectItem value="default">Default</SelectItem>
-                      <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                      <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
-                      <SelectItem value="gpt-4.5-preview">GPT-4.5 Preview</SelectItem>
-                      <SelectItem value="llama-3.1-8b">Llama 3.1 (8B)</SelectItem>
-                      <SelectItem value="llama-3.1-70b">Llama 3.1 (70B)</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div className="space-y-2">
+                <Label htmlFor="context-size">Context Size (tokens)</Label>
+                <div className="flex items-center space-x-2">
+                  <Slider
+                    id="context-size"
+                    defaultValue={[config.localLlama?.contextSize || 2048]}
+                    max={8192}
+                    min={512}
+                    step={512}
+                    onValueChange={(value) => setConfig(prev => ({
+                      ...prev,
+                      localLlama: {
+                        ...prev.localLlama,
+                        contextSize: value[0]
+                      }
+                    }))}
+                    className="flex-1"
+                  />
+                  <span className="w-16 text-center">{config.localLlama?.contextSize || 2048}</span>
                 </div>
-              )}
+                <p className="text-xs text-gray-500">Larger context allows for longer conversations (uses more memory)</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label>Your Models</Label>
+                  <p className="text-xs text-gray-500 mb-2">Upload a model or select an existing one</p>
+                </div>
+                
+                {/* Add model uploader component */}
+                <div className="mt-2 border border-dashed rounded-md p-4 bg-muted/10">
+                  <ModelUploader onModelUploaded={handleModelUploaded} />
+                </div>
+                
+                {/* Uploaded models section */}
+                {uploadedModels.length > 0 && (
+                  <div className="mt-4">
+                    <Label>Your Uploaded Models</Label>
+                    <div className="grid grid-cols-1 gap-2 mt-2">
+                      {uploadedModels.map((model, index) => (
+                        <Card 
+                          key={index}
+                          className={`p-3 cursor-pointer hover:bg-muted/50 transition-colors ${
+                            config.localLlama?.modelPath === model.path ? 'border-primary' : ''
+                          }`}
+                          onClick={() => selectUploadedModel(model.path)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="text-sm font-medium">{model.name}</h4>
+                              <p className="text-xs text-muted-foreground">{model.path}</p>
+                            </div>
+                            {config.localLlama?.modelPath === model.path && (
+                              <CheckCircle className="h-4 w-4 text-primary" />
+                            )}
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {uploadedModels.length === 0 && (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <p>No models uploaded yet</p>
+                    <p className="text-xs mt-1">Upload a GGUF model file to get started</p>
+                  </div>
+                )}
+                
+                <div className="space-y-2">
+                  <Label htmlFor="model-path">Custom Model Path</Label>
+                  <Input
+                    id="model-path"
+                    placeholder="/path/to/your/model.gguf"
+                    value={config.localLlama?.modelPath || ''}
+                    onChange={(e) => setConfig(prev => ({
+                      ...prev,
+                      localLlama: {
+                        ...prev.localLlama,
+                        modelPath: e.target.value
+                      }
+                    }))}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter the file path to a custom GGUF model
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center text-xs text-muted-foreground gap-1">
+                  <Cpu className="h-3 w-3" />
+                  <span>Processing happens locally for privacy</span>
+                </div>
+              </div>
             </div>
-
-            <div className="flex space-x-2 pt-2">
-              <Button onClick={testConnection}>
-                Test Connection
-              </Button>
-              <Button onClick={testWebhook} variant="outline">
-                Test Webhook
-              </Button>
-            </div>
-          </div>
+          )}
         </TabsContent>
-
+        
+        <TabsContent value="openai" className="space-y-6">
+          <div>
+            <h3 className="text-lg font-medium">OpenAI Configuration</h3>
+            <p className="text-sm text-gray-500 mb-4">Configure your OpenAI API key to use with the application</p>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Enable OpenAI Integration</h4>
+              <p className="text-sm text-gray-500">Use your own OpenAI API key</p>
+            </div>
+            <Switch
+              checked={useOpenAiKey}
+              onCheckedChange={handleOpenAiToggle}
+            />
+          </div>
+          
+          {useOpenAiKey && (
+            <div className="space-y-4 border rounded-md p-4 bg-muted/20">
+              <div className="space-y-2">
+                <Label htmlFor="openai-api-key">OpenAI API Key</Label>
+                <div className="relative">
+                  <Input 
+                    id="openai-api-key"
+                    type="password"
+                    value={config.openAi?.apiKey || ''}
+                    onChange={(e) => setConfig(prev => ({
+                      ...prev,
+                      openAi: {
+                        ...(prev.openAi || {}),
+                        apiKey: e.target.value,
+                        enabled: true
+                      }
+                    }))}
+                    placeholder="sk-..."
+                  />
+                </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                  <Lock className="h-3 w-3" />
+                  <span>Your API key is stored securely in your browser's local storage</span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="openai-model">OpenAI Model</Label>
+                <Select 
+                  value={config.model}
+                  onValueChange={(value) => setConfig(prev => ({ ...prev, model: value }))}
+                >
+                  <SelectTrigger id="openai-model">
+                    <SelectValue placeholder="Select OpenAI model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gpt-4o-mini">GPT-4o Mini (Faster, more affordable)</SelectItem>
+                    <SelectItem value="gpt-4o">GPT-4o (More capable)</SelectItem>
+                    <SelectItem value="gpt-4.5-preview">GPT-4.5 Preview (Most capable)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Button
+                  onClick={testOpenAiKey}
+                  disabled={!config.openAi?.apiKey || testingOpenAi}
+                  size="sm"
+                  className="mt-2"
+                >
+                  {testingOpenAi ? 'Testing...' : 'Test Connection'}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 text-xs"
+                  onClick={() => window.open('https://platform.openai.com/api-keys', '_blank')}
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Get API Key
+                </Button>
+              </div>
+            </div>
+          )}
+        </TabsContent>
+        
         <TabsContent value="custom" className="space-y-6">
           <div>
             <h3 className="text-lg font-medium">Custom Language Model</h3>
@@ -578,289 +767,83 @@ export const LlmSettings = () => {
           </div>
         </TabsContent>
         
-        <TabsContent value="openai" className="space-y-6">
+        <TabsContent value="general" className="space-y-6">
           <div>
-            <h3 className="text-lg font-medium">OpenAI Configuration</h3>
-            <p className="text-sm text-gray-500 mb-4">Configure your OpenAI API key to use with the application</p>
+            <h3 className="text-lg font-medium">External API</h3>
+            <p className="text-sm text-gray-500 mb-4">Configure your external API settings</p>
           </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Enable OpenAI Integration</h4>
-              <p className="text-sm text-gray-500">Use your own OpenAI API key</p>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="endpoint">Workflow Endpoint</Label>
+              <Input
+                id="endpoint"
+                value={config.endpoint}
+                onChange={(e) => setConfig(prev => ({ ...prev, endpoint: e.target.value }))}
+                placeholder="http://localhost:5678/workflow/[ID]"
+              />
             </div>
-            <Switch
-              checked={useOpenAiKey}
-              onCheckedChange={handleOpenAiToggle}
-            />
+
+            <div className="space-y-2">
+              <Label htmlFor="webhookUrl">Webhook URL</Label>
+              <Input
+                id="webhookUrl"
+                value={config.webhookUrl}
+                onChange={(e) => setConfig(prev => ({ ...prev, webhookUrl: e.target.value }))}
+                placeholder="http://localhost:5678/webhook-test/[ID]"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Enter the webhook URL for bidirectional communication
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="model-type">Model Type</Label>
+                <Switch 
+                  id="custom-model-toggle"
+                  checked={isCustomModel}
+                  onCheckedChange={handleModelTypeChange}
+                />
+                <Label htmlFor="custom-model-toggle" className="text-sm ml-2">
+                  Use Custom Model
+                </Label>
+              </div>
+              
+              {!isCustomModel && (
+                <div className="mt-4">
+                  <Label htmlFor="model">Predefined Model</Label>
+                  <Select
+                    value={config.model}
+                    onValueChange={(value) => setConfig(prev => ({ ...prev, model: value }))}
+                    disabled={isCustomModel}
+                  >
+                    <SelectTrigger id="model" className="w-full">
+                      <SelectValue placeholder="Select a model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="llama-3.2-3b">Llama 3.2 (3B)</SelectItem>
+                      <SelectItem value="default">Default</SelectItem>
+                      <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                      <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
+                      <SelectItem value="gpt-4.5-preview">GPT-4.5 Preview</SelectItem>
+                      <SelectItem value="llama-3.1-8b">Llama 3.1 (8B)</SelectItem>
+                      <SelectItem value="llama-3.1-70b">Llama 3.1 (70B)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            <div className="flex space-x-2 pt-2">
+              <Button onClick={testConnection}>
+                Test Connection
+              </Button>
+              <Button onClick={testWebhook} variant="outline">
+                Test Webhook
+              </Button>
+            </div>
           </div>
-          
-          {useOpenAiKey && (
-            <div className="space-y-4 border rounded-md p-4 bg-muted/20">
-              <div className="space-y-2">
-                <Label htmlFor="openai-api-key">OpenAI API Key</Label>
-                <div className="relative">
-                  <Input 
-                    id="openai-api-key"
-                    type="password"
-                    value={config.openAi?.apiKey || ''}
-                    onChange={(e) => setConfig(prev => ({
-                      ...prev,
-                      openAi: {
-                        ...(prev.openAi || {}),
-                        apiKey: e.target.value,
-                        enabled: true
-                      }
-                    }))}
-                    placeholder="sk-..."
-                  />
-                </div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                  <Lock className="h-3 w-3" />
-                  <span>Your API key is stored securely in your browser's local storage</span>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="openai-model">OpenAI Model</Label>
-                <Select 
-                  value={config.model}
-                  onValueChange={(value) => setConfig(prev => ({ ...prev, model: value }))}
-                >
-                  <SelectTrigger id="openai-model">
-                    <SelectValue placeholder="Select OpenAI model" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="gpt-4o-mini">GPT-4o Mini (Faster, more affordable)</SelectItem>
-                    <SelectItem value="gpt-4o">GPT-4o (More capable)</SelectItem>
-                    <SelectItem value="gpt-4.5-preview">GPT-4.5 Preview (Most capable)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Button
-                  onClick={testOpenAiKey}
-                  disabled={!config.openAi?.apiKey || testingOpenAi}
-                  size="sm"
-                  className="mt-2"
-                >
-                  {testingOpenAi ? 'Testing...' : 'Test Connection'}
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-2 text-xs"
-                  onClick={() => window.open('https://platform.openai.com/api-keys', '_blank')}
-                >
-                  <ExternalLink className="h-3 w-3 mr-1" />
-                  Get API Key
-                </Button>
-              </div>
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="local" className="space-y-6">
-          <div>
-            <h3 className="text-lg font-medium">Local LLaMa Models</h3>
-            <p className="text-sm text-gray-500 mb-4">Run language models locally using llama.cpp</p>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Enable Local Models</h4>
-              <p className="text-sm text-gray-500">Run models directly on your device</p>
-            </div>
-            <Switch
-              checked={useLocalLlama}
-              onCheckedChange={handleLocalLlamaToggle}
-            />
-          </div>
-          
-          {useLocalLlama && (
-            <div className="space-y-6 border rounded-md p-4 bg-muted/20">
-              <div className="space-y-2">
-                <Label htmlFor="cpu-threads">CPU Threads</Label>
-                <div className="flex items-center space-x-2">
-                  <Slider
-                    id="cpu-threads"
-                    defaultValue={[config.localLlama?.threads || 4]}
-                    max={16}
-                    min={1}
-                    step={1}
-                    onValueChange={(value) => setConfig(prev => ({
-                      ...prev,
-                      localLlama: {
-                        ...prev.localLlama,
-                        threads: value[0]
-                      }
-                    }))}
-                    className="flex-1"
-                  />
-                  <span className="w-12 text-center">{config.localLlama?.threads || 4}</span>
-                </div>
-                <p className="text-xs text-gray-500">Number of CPU threads to use for inference</p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="context-size">Context Size</Label>
-                <div className="flex items-center space-x-2">
-                  <Slider
-                    id="context-size"
-                    defaultValue={[config.localLlama?.contextSize || 2048]}
-                    max={8192}
-                    min={512}
-                    step={512}
-                    onValueChange={(value) => setConfig(prev => ({
-                      ...prev,
-                      localLlama: {
-                        ...prev.localLlama,
-                        contextSize: value[0]
-                      }
-                    }))}
-                    className="flex-1"
-                  />
-                  <span className="w-16 text-center">{config.localLlama?.contextSize || 2048}</span>
-                </div>
-                <p className="text-xs text-gray-500">Maximum context size in tokens (higher values use more memory)</p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="batch-size">Batch Size</Label>
-                <div className="flex items-center space-x-2">
-                  <Slider
-                    id="batch-size"
-                    defaultValue={[config.localLlama?.batchSize || 512]}
-                    max={1024}
-                    min={64}
-                    step={64}
-                    onValueChange={(value) => setConfig(prev => ({
-                      ...prev,
-                      localLlama: {
-                        ...prev.localLlama,
-                        batchSize: value[0]
-                      }
-                    }))}
-                    className="flex-1"
-                  />
-                  <span className="w-16 text-center">{config.localLlama?.batchSize || 512}</span>
-                </div>
-                <p className="text-xs text-gray-500">Batch size for prompt processing (lower uses less memory)</p>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label>Select Model</Label>
-                  <p className="text-xs text-gray-500 mb-2">Download a model or select an existing one</p>
-                </div>
-                
-                {!isDownloading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card className="p-4 hover:bg-muted/50 cursor-pointer transition-colors" 
-                          onClick={() => downloadLocalModel('llama-3.2-3b')}>
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium">LLaMa 3.2 3B</h4>
-                          <p className="text-xs text-gray-500">3 billion parameters, 4.7GB</p>
-                        </div>
-                        <Download className="h-5 w-5 text-primary" />
-                      </div>
-                    </Card>
-                    <Card className="p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                          onClick={() => downloadLocalModel('llama-3.2-1b')}>
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium">LLaMa 3.2 1B</h4>
-                          <p className="text-xs text-gray-500">1 billion parameters, 1.8GB</p>
-                        </div>
-                        <Download className="h-5 w-5 text-primary" />
-                      </div>
-                    </Card>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Downloading {downloadModelName}...</span>
-                      <span className="text-sm text-muted-foreground">{Math.round(downloadProgress)}%</span>
-                    </div>
-                    <Progress value={downloadProgress} className="h-2" />
-                    <p className="text-xs text-muted-foreground">This may take several minutes depending on your connection</p>
-                  </div>
-                )}
-                
-                {/* Add uploaded models section */}
-                {uploadedModels.length > 0 && (
-                  <div className="mt-4 pt-4 border-t">
-                    <Label>Your Uploaded Models</Label>
-                    <div className="grid grid-cols-1 gap-2 mt-2">
-                      {uploadedModels.map((model, index) => (
-                        <Card 
-                          key={index}
-                          className={`p-3 cursor-pointer hover:bg-muted/50 transition-colors ${
-                            config.localLlama?.modelPath === model.path ? 'border-primary' : ''
-                          }`}
-                          onClick={() => selectUploadedModel(model.path)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="text-sm font-medium">{model.name}</h4>
-                              <p className="text-xs text-muted-foreground">{model.path}</p>
-                            </div>
-                            {config.localLlama?.modelPath === model.path && (
-                              <CheckCircle className="h-4 w-4 text-primary" />
-                            )}
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Add model uploader component */}
-                <div className="mt-4 pt-4 border-t">
-                  <ModelUploader onModelUploaded={handleModelUploaded} />
-                </div>
-                
-                <div className="space-y-2 pt-2">
-                  <Label htmlFor="model-path">Custom Model Path</Label>
-                  <Input
-                    id="model-path"
-                    placeholder="/path/to/your/model.gguf"
-                    value={config.localLlama?.modelPath || ''}
-                    onChange={(e) => setConfig(prev => ({
-                      ...prev,
-                      localLlama: {
-                        ...prev.localLlama,
-                        modelPath: e.target.value
-                      }
-                    }))}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Enter the file path to a custom GGUF model
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center text-xs text-muted-foreground gap-1">
-                  <Cpu className="h-3 w-3" />
-                  <span>Local models run directly on your device hardware</span>
-                </div>
-                
-                <Button
-                  onClick={testLocalModel}
-                  variant="outline"
-                  size="sm"
-                  className="mt-2"
-                  disabled={!config.localLlama?.modelPath}
-                >
-                  Test Local Model
-                </Button>
-              </div>
-            </div>
-          )}
         </TabsContent>
       </Tabs>
     </div>

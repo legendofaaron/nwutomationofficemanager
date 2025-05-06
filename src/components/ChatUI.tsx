@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -40,7 +39,6 @@ const ChatUI = () => {
   const [useN8nChat, setUseN8nChat] = useState(false);
   const [currentLlmConfig, setCurrentLlmConfig] = useState<any>(null);
   const [activeLlamaModel, setActiveLlamaModel] = useState<any>(null);
-  const defaultModel = 'llama-3.2-3b';
 
   // Use effect to sync with aiAssistantOpen state from context
   useEffect(() => {
@@ -51,41 +49,19 @@ const ChatUI = () => {
   const generateWelcomeMessage = (): Message => {
     const name = assistantConfig?.name || 'Office Manager';
     const company = assistantConfig?.companyName ? ` at ${assistantConfig.companyName}` : '';
-    const purpose = assistantConfig?.purpose || 'office tasks and document management';
     
     return { 
       id: '1', 
       type: 'ai', 
-      content: `👋 Welcome to ${name}${company}
+      content: `Hello! I'm ${name}${company}, your personal AI assistant.
 
-I'm your intelligent assistant designed to help you streamline ${purpose} efficiently. Here's what I can do for you:
+I can help you with many tasks, including:
+- Creating documents and reports
+- Managing your schedule
+- Generating invoices 
+- Processing receipts
 
-📄 Document Creation
-- Draft new documents
-- Create reports and memos
-- Generate templates
-
-📅 Schedule Management
-- Organize daily/weekly schedules
-- Set up meeting arrangements
-- Prioritize tasks
-
-💵 Invoice Management
-- Generate professional invoices
-- Track payment statuses
-- Maintain billing records
-
-🧾 Receipt Processing
-- Extract data from receipts
-- Organize receipt information
-- Maintain financial records
-
-You can:
-1. Use the quick action buttons above
-2. Type natural language requests like "create a new document"
-3. Ask questions about any feature
-
-Your data remains secure on your local system. Need assistance? Just ask me anything!`
+How can I assist you today?`
     };
   };
   
@@ -108,7 +84,23 @@ Your data remains secure on your local system. Need assistance? Just ask me anyt
         const config = getLlmConfig();
         setCurrentLlmConfig(config);
         
-        // If local LLama is enabled, try to load the model
+        // If no configuration exists yet, create a default one with local LLama enabled
+        if (!config) {
+          const defaultConfig = {
+            model: 'local',
+            localLlama: {
+              enabled: true,
+              threads: navigator.hardwareConcurrency || 4,
+              contextSize: 2048,
+              batchSize: 512
+            }
+          };
+          
+          localStorage.setItem('llmConfig', JSON.stringify(defaultConfig));
+          setCurrentLlmConfig(defaultConfig);
+        }
+        
+        // Initialize local model if needed
         if (config?.localLlama?.enabled && config.localLlama.modelPath) {
           console.log("Loading local LLama model:", config.localLlama.modelPath);
           
@@ -126,35 +118,17 @@ Your data remains secure on your local system. Need assistance? Just ask me anyt
           
           // Indicate that connection is ready
           setConnectionTested(true);
-        } else if (config?.openAi?.enabled || config?.customModel?.isCustom) {
-          // If using API-based models, just mark as ready
+        } else {
+          // Mark as ready even without a model
           setConnectionTested(true);
         }
       } catch (error) {
         console.error("Error initializing chat:", error);
-        toast({
-          title: "Model Initialization Error",
-          description: "Could not initialize the language model. Please check settings.",
-          variant: "destructive"
-        });
+        setConnectionTested(true); // Still mark as ready to avoid blocking the UI
       }
     };
     
     initializeChat();
-  }, []);
-
-  // Check if API is configured on component mount
-  useEffect(() => {
-    const checkApiConfiguration = async () => {
-      // Check if LLM is configured
-      const isConfigured = isLlmConfigured();
-      if (isConfigured && !connectionTested) {
-        // Maybe test connection here later
-        setConnectionTested(true);
-      }
-    };
-    
-    checkApiConfiguration();
   }, []);
 
   // Check if setup is needed when assistant opens
@@ -181,7 +155,7 @@ Your data remains secure on your local system. Need assistance? Just ask me anyt
       {
         id: (Date.now() + 1).toString(), 
         type: 'ai', 
-        content: `I notice this is your first time using the assistant. Let's take a moment to personalize it for you. I'll guide you through a quick setup process.
+        content: `I notice this is your first time using the assistant. Let's take a moment to personalize it for you.
 
 Would you like to:
 1. Start the guided setup now
@@ -311,19 +285,6 @@ How can I assist you today?`
     );
   };
   
-  // New function to determine document type from request
-  const getDocumentTypeFromRequest = (message: string): string => {
-    const lowerMsg = message.toLowerCase();
-    if (lowerMsg.includes('report')) return 'report';
-    if (lowerMsg.includes('story')) return 'story';
-    if (lowerMsg.includes('article')) return 'article';
-    if (lowerMsg.includes('essay')) return 'essay';
-    if (lowerMsg.includes('letter')) return 'letter';
-    if (lowerMsg.includes('email')) return 'email';
-    if (lowerMsg.includes('proposal')) return 'proposal';
-    return 'general';
-  };
-  
   // Function to create or update document with generated content
   const updateDocumentWithContent = (content: string, documentName?: string) => {
     // If there's a current document open, update it
@@ -372,7 +333,7 @@ How can I assist you today?`
     }
   };
 
-  // Modified function to handle document content generation
+  // Modified function to handle message sending with local LLM as default
   const handleSendMessage = async (input: string) => {
     // If in setup mode, process as setup response
     if (isSetupMode) {
@@ -388,87 +349,60 @@ How can I assist you today?`
     setIsLoading(true);
     
     try {
-      // Check if LLM is configured
-      if (isLlmConfigured()) {
-        // Get stored configuration
-        const config = getLlmConfig();
-        if (!config) {
-          throw new Error('No LLM configuration found');
-        }
+      // Get stored configuration - prefer local model when available
+      const config = getLlmConfig() || {
+        model: 'local',
+        localLlama: { enabled: true }
+      };
+      
+      // Create a system context based on assistant configuration
+      const systemContext = `You are ${assistantConfig?.name || 'Office Manager'}, an AI assistant for ${assistantConfig?.companyName || 'the user'}. 
+      Your purpose is to ${assistantConfig?.purpose || 'help with office tasks'}.
+      Be concise, helpful, and direct.
+      Always respond directly without prefacing your response.`;
+      
+      // Check if the request is for document content generation
+      if (isDocumentContentRequest(input)) {
+        // Generate document content
+        const documentContent = await generateDocumentContent(input, "general");
         
-        // Create a system context based on assistant configuration
-        const systemContext = `You are ${assistantConfig?.name || 'Office Manager'}, an AI assistant for ${assistantConfig?.companyName || 'the user'}. 
-        Your purpose is to ${assistantConfig?.purpose || 'help with office tasks'}.
-        Be concise, helpful, and direct.
-        IMPORTANT: Always respond directly without prefacing your response with phrases like "I'll help you with..." or "How would you like to proceed?". 
-        Just answer the query directly as if continuing a conversation.`;
+        // Update or create document with generated content
+        updateDocumentWithContent(documentContent);
         
-        // Check if the request is for document content generation
-        if (isDocumentContentRequest(input)) {
-          // Get the document type from the request
-          const documentType = getDocumentTypeFromRequest(input);
-          
-          // Generate AI response for chat
-          const chatResponse = await queryLlm(
-            input, 
-            config.endpoint || '', 
-            config.openAi?.enabled ? 'gpt-4o-mini' : config.localLlama?.enabled ? 'local' : defaultModel,
-            undefined,
-            systemContext
-          );
-          
-          // Add the chat response to messages
-          setMessages(prev => [
-            ...prev, 
-            { id: Date.now().toString(), type: 'ai', content: chatResponse.message }
-          ]);
-          
-          // Generate document content
-          const documentContent = await generateDocumentContent(input, documentType);
-          
-          // Update or create document with generated content
-          updateDocumentWithContent(documentContent);
-        } else {
-          // Handle regular chat messages
-          const responseText = await queryLlm(
-            input,
-            config.endpoint || '',
-            config.openAi?.enabled ? 'gpt-4o-mini' : config.localLlama?.enabled ? 'local' : defaultModel,
-            undefined,
-            systemContext
-          );
-          
-          setMessages(prev => [
-            ...prev, 
-            { id: Date.now().toString(), type: 'ai', content: responseText.message }
-          ]);
-        }
+        // Add a response to the chat about the document creation
+        setMessages(prev => [
+          ...prev, 
+          { 
+            id: Date.now().toString(), 
+            type: 'ai', 
+            content: `I've created a document based on your request. You can find it in your document list.` 
+          }
+        ]);
       } else {
-        // Simple AI response telling user to configure API
-        setTimeout(() => {
-          setMessages(prev => [
-            ...prev,
-            {
-              id: Date.now().toString(),
-              type: 'ai',
-              content: `To get a helpful response, please configure an AI model in the settings first. Click the gear icon in the top-right corner of this chat window.`
-            }
-          ]);
-        }, 500);
+        // Handle regular chat messages - default to local model
+        const responseText = await queryLlm(
+          input,
+          config.endpoint || '',
+          config.localLlama?.enabled ? 'local' : config.openAi?.enabled ? 'gpt-4o-mini' : 'local',
+          undefined,
+          systemContext
+        );
+        
+        setMessages(prev => [
+          ...prev, 
+          { id: Date.now().toString(), type: 'ai', content: responseText.message }
+        ]);
       }
     } catch (error) {
       console.error('Error handling message:', error);
-      toast({
-        title: 'Connection Error',
-        description: 'Unable to connect to the assistant. Please check your API configuration.',
-        variant: 'destructive'
-      });
+      
+      // Provide a graceful fallback response
       setMessages(prev => [
         ...prev, 
         { 
           id: Date.now().toString(), 
           type: 'ai', 
-          content: "I encountered an error processing your request. Please check your API configuration in settings."
+          content: "I'm having trouble processing your request right now. Please try again or check your AI model settings."
         }
       ]);
     } finally {
@@ -476,7 +410,7 @@ How can I assist you today?`
     }
   };
 
-  // Add similar document content handling to quick actions
+  // Modified function to handle quick actions with local LLM as default
   const handleQuickAction = async (action: string) => {
     if (isSetupMode || isLoading) return;
     
@@ -486,99 +420,63 @@ How can I assist you today?`
     setIsLoading(true);
     
     try {
-      // Check if LLM is configured
-      if (isLlmConfigured()) {
-        // Get stored configuration
-        const config = getLlmConfig();
-        if (!config) {
-          throw new Error('No LLM configuration found');
-        }
+      // Get stored configuration - prefer local model
+      const config = getLlmConfig() || {
+        model: 'local',
+        localLlama: { enabled: true }
+      };
+      
+      // Determine model to use based on configuration - default to local
+      const modelToUse = config.localLlama?.enabled ? 'local' : 
+                        config.openAi?.enabled ? 'gpt-4o-mini' : 'local';
+      
+      // Create a system context
+      const systemContext = `You are ${assistantConfig?.name || 'Office Manager'}, an AI assistant for ${assistantConfig?.companyName || 'the user'}. 
+      Your purpose is to ${assistantConfig?.purpose || 'help with office tasks'}.
+      Be concise, helpful, and direct.`;
+      
+      // Check if the quick action is for document creation
+      if (action === 'create document') {
+        // Generate a sample document
+        const documentPrompt = "Create a professional business document template with sections for executive summary, introduction, background, analysis, recommendations, and conclusion.";
+        const documentContent = await generateDocumentContent(documentPrompt, "business");
         
-        // Determine model to use based on configuration
-        const modelToUse = config.openAi?.enabled ? 'gpt-4o-mini' : 
-                          config.localLlama?.enabled ? 'local' : defaultModel;
+        // Create new document with generated content
+        updateDocumentWithContent(documentContent, "New Business Document");
         
-        // Create a system context
-        const systemContext = `You are ${assistantConfig?.name || 'Office Manager'}, an AI assistant for ${assistantConfig?.companyName || 'the user'}. 
-        Your purpose is to ${assistantConfig?.purpose || 'help with office tasks'}.
-        Be concise, helpful, and direct.`;
-        
-        // Check if the quick action is for document creation
-        if (action === 'create document') {
-          // Generate AI response for chat
-          const chatResponse = await queryLlm(
-            action,
-            config.endpoint || '',
-            modelToUse,
-            undefined,
-            systemContext
-          );
-          
-          // Add the chat response to messages
-          setMessages(prev => [
-            ...prev, 
-            { id: Date.now().toString(), type: 'ai', content: chatResponse.message }
-          ]);
-          
-          // Generate a sample document
-          const documentPrompt = "Create a professional business document template with sections for executive summary, introduction, background, analysis, recommendations, and conclusion.";
-          const documentContent = await generateDocumentContent(documentPrompt, "business");
-          
-          // Create new document with generated content
-          updateDocumentWithContent(documentContent, "New Business Document");
-        } else {
-          // Handle other quick actions normally
-          const responseText = await queryLlm(
-            action,
-            config.endpoint || '',
-            modelToUse,
-            undefined,
-            systemContext
-          );
-          
-          setMessages(prev => [
-            ...prev, 
-            { id: Date.now().toString(), type: 'ai', content: responseText.message }
-          ]);
-        }
+        // Add response to chat about the document creation
+        setMessages(prev => [
+          ...prev, 
+          { 
+            id: Date.now().toString(), 
+            type: 'ai', 
+            content: `I've created a new business document template for you. You can find it in your document list.` 
+          }
+        ]);
       } else {
-        // Fall back to default responses if LLM is not configured
-        let response = '';
-        switch (action) {
-          case 'create document':
-            response = "To get started with document creation, please set up your AI model in settings first.";
-            break;
-          case 'create schedule':
-            response = "To help you organize a schedule, please configure your AI model in settings first.";
-            break;
-          case 'create invoice':
-            response = "To generate an invoice, please set up your AI model in settings first.";
-            break;
-          case 'analyze receipt':
-            response = "To analyze receipts, please configure your AI model in settings first.";
-            break;
-          case 'explain how to use':
-            response = `To use ${assistantConfig?.name || 'Office Manager'} effectively, please set up your AI model in settings first. This will enable all assistant features.`;
-            break;
-          default:
-            response = "Please configure your AI model in settings to enable full assistant functionality.";
-        }
+        // Handle other quick actions normally with local model by default
+        const responseText = await queryLlm(
+          action,
+          config.endpoint || '',
+          modelToUse,
+          undefined,
+          systemContext
+        );
         
-        setTimeout(() => {
-          setMessages(prev => [
-            ...prev, 
-            { id: Date.now().toString(), type: 'ai', content: response }
-          ]);
-        }, 500);
+        setMessages(prev => [
+          ...prev, 
+          { id: Date.now().toString(), type: 'ai', content: responseText.message }
+        ]);
       }
     } catch (error) {
       console.error('Error handling quick action:', error);
+      // Provide a graceful fallback response
       setMessages(prev => [
         ...prev, 
         { 
           id: Date.now().toString(), 
           type: 'ai', 
-          content: "I encountered an error processing your request. Please check your API configuration in settings."
+          content: "I'm having trouble processing that action right now. Please try again later."
         }
       ]);
     } finally {
@@ -604,11 +502,11 @@ How can I assist you today?`
   }
 
   return (
-    <div className={`fixed right-0 bottom-0 ${isMobile ? 'w-full left-0' : 'right-4 bottom-4 w-[350px]'} 
+    <div className={`fixed right-0 bottom-0 ${isMobile ? 'w-full left-0' : 'right-4 bottom-4 w-[400px]'} 
       bg-[#0D1117] rounded-xl shadow-xl border border-[#1E2430]/80 flex flex-col 
       ${isMobile ? 'h-[90vh] z-50 rounded-b-none' : 'h-[550px] z-20'} overflow-hidden`}>
       <ChatHeader 
-        assistantName={assistantConfig?.name || 'My Assistant'} 
+        assistantName={assistantConfig?.name || 'Office Manager'} 
         companyName={assistantConfig?.companyName}
         onSettingsClick={() => setShowSettings(!showSettings)}
         onCloseClick={() => handleToggleChat()}

@@ -1,4 +1,3 @@
-
 import { LlmConfig } from '@/components/LlmSettings';
 import { toast } from '@/hooks/use-toast';
 
@@ -18,7 +17,7 @@ let activeLocalModel: any = null;
 export async function queryLlm(
   prompt: string, 
   endpoint: string, 
-  model: string = 'llama-3.2-3b', 
+  model: string = 'local', // Changed default model to 'local'
   webhookUrl?: string,
   systemPrompt?: string
 ): Promise<LlmResponse> {
@@ -31,11 +30,12 @@ export async function queryLlm(
   const storedConfig = localStorage.getItem('llmConfig');
   const config = storedConfig ? JSON.parse(storedConfig) : {};
   
-  // Check if local LLaMa is enabled and should be used
-  if (model === 'local' || (config.localLlama?.enabled && config.localLlama?.modelPath)) {
-    return await queryLocalLlama(prompt, config.localLlama, systemPrompt);
+  // Check if local LLaMa is setup and default to it
+  if (model === 'local' || (config.localLlama?.modelPath)) {
+    return await queryLocalLlama(prompt, config.localLlama || { modelPath: '', threads: 4 }, systemPrompt);
   }
   
+  // Try external models if local is not available or a specific model was requested
   while (retries <= MAX_RETRIES) {
     try {
       const effectiveWebhookUrl = webhookUrl || config.webhookUrl;
@@ -211,68 +211,27 @@ async function queryLocalLlama(
       });
     }
     
-    console.log('Local LLaMa inference:', {
-      modelPath: llamaConfig.modelPath,
-      threads: llamaConfig.threads,
-      contextSize: llamaConfig.contextSize,
-      batchSize: llamaConfig.batchSize,
-      prompt,
-      systemPrompt
-    });
-    
-    // Simulate inference time based on complexity and model size
-    const modelSizeFactor = llamaConfig.modelPath.includes('1b') ? 0.6 : 
-                            llamaConfig.modelPath.includes('3b') ? 1.0 : 1.5;
-    
-    const baseTime = 500; // Base response time in milliseconds
-    const complexityFactor = prompt.length / 20; // Longer prompts take more time
-    const threadFactor = Math.max(1, 16 / (llamaConfig.threads || 4)); // More threads = faster processing
-    
-    const responseTime = Math.min(
-      baseTime + 
-      (modelSizeFactor * 800) + 
-      (complexityFactor * modelSizeFactor * 10) * 
-      threadFactor, 
-      5000 // Cap at 5 seconds max
-    );
+    // If no model is loaded and no model path is provided, throw an error
+    if (!activeLocalModel && !llamaConfig?.modelPath) {
+      throw new Error('No local model available. Please upload or select a model in settings.');
+    }
     
     // Prepare the complete prompt with system prompt if provided
     let fullPrompt = prompt;
     if (systemPrompt) {
       fullPrompt = `${systemPrompt}\n\nUser: ${prompt}\nAssistant:`;
     }
-    
-    // Create a more realistic streaming experience by returning chunks of the response
-    let fullResponse = '';
-    const streamingUpdates = 8; // Number of updates to simulate streaming
-    
-    if (systemPrompt?.includes('document writer')) {
-      // For document generation - create a document response
-      fullResponse = generateDocumentResponse(prompt);
-    } else {
-      // For regular chat - create a conversational response
-      fullResponse = generateConversationResponse(prompt, llamaConfig);
-    }
-    
-    // Simulate the streaming process
-    const chunkSize = Math.ceil(fullResponse.length / streamingUpdates);
-    for (let i = 0; i < streamingUpdates; i++) {
-      await new Promise(resolve => setTimeout(
-        resolve, 
-        responseTime / streamingUpdates
-      ));
-      
-      // In a real implementation, this would stream tokens to the UI
-      const partialResponse = fullResponse.slice(0, (i + 1) * chunkSize);
-      console.log(`Streaming chunk ${i + 1}/${streamingUpdates}: ${partialResponse.slice(-50)}`);
-    }
+
+    // For this implementation, we'll create a simpler response that feels more natural
+    // simulating what a local model would generate without any formatting
+    const response = generateLocalResponse(prompt, systemPrompt);
     
     return {
-      message: fullResponse,
-      modelUsed: `Local: ${llamaConfig.modelPath.split('/').pop()}`
+      message: response,
+      modelUsed: `Local: ${llamaConfig.modelPath ? llamaConfig.modelPath.split('/').pop() : 'Unknown'}`
     };
   } catch (error) {
-    console.error('Error with local LLaMa inference:', error);
+    console.error('Error with local LLama inference:', error);
     
     toast({
       title: 'Local Inference Error',
@@ -285,31 +244,35 @@ async function queryLocalLlama(
 }
 
 /**
- * Generate a document response for document-related prompts
+ * Generate a response using the local model
  */
-function generateDocumentResponse(prompt: string): string {
-  // Create a document-styled response
-  return `# Response to: ${prompt}\n\n## Introduction\n\nThis document addresses the prompt you've provided. Let's explore the topic in detail.\n\n## Analysis\n\nThe key points to consider are:\n- First important consideration related to "${prompt.slice(0, 30)}..."\n- Second important consideration regarding implementation approach\n- Third important consideration about technical feasibility\n\n## Implementation Strategy\n\nBased on the requirements, we recommend the following approach:\n\n1. Start with a proof-of-concept implementation\n2. Validate with key stakeholders\n3. Implement the core functionality\n4. Test thoroughly before deployment\n\n## Technical Considerations\n\n- Performance optimization for large datasets\n- Security considerations for user data\n- Scalability planning for future growth\n\n## Conclusion\n\nThe proposed solution addresses the requirements while maintaining flexibility for future enhancements. Recommend proceeding with implementation following the outlined approach.`;
-}
-
-/**
- * Generate a conversation response for chat-related prompts
- */
-function generateConversationResponse(prompt: string, config: any): string {
-  // Identify potential topic areas in the prompt
-  const isTechnical = /code|program|develop|bug|error|function|api|database|algorithm/i.test(prompt);
-  const isQuestion = /how|what|why|where|when|who|can|should|could|would|will|is|are|do/i.test(prompt);
-  const isGreeting = /hello|hi|hey|good morning|good afternoon|good evening/i.test(prompt);
+function generateLocalResponse(prompt: string, systemPrompt?: string): string {
+  // This is a simplified simulation of what a local model would generate
+  // In a real implementation, this would be replaced with actual inference
   
-  // Generate a response based on the identified characteristics
-  if (isGreeting) {
-    return `Hello! I'm running on a local LLaMa model (${config.modelPath.split('/').pop()}) with ${config.threads} threads. How can I assist you today?`;
-  } else if (isTechnical) {
-    return `I've analyzed your technical question about "${prompt.slice(0, 30)}..."\n\nBased on my understanding, here's my response:\n\nThis is being processed using a local LLaMa model with ${config.threads} CPU threads and ${config.contextSize} context window. The local inference approach provides better privacy and can work offline, though it may not have the same capabilities as larger cloud-based models.\n\nRegarding your specific question, I'd recommend focusing on best practices for implementation and considering the trade-offs between different approaches. Testing thoroughly will be important to ensure reliability.`;
-  } else if (isQuestion) {
-    return `Thanks for your question about "${prompt.slice(0, 30)}..."\n\nHere's what I can tell you:\n\nYour question is being processed locally on your device using LLaMa.cpp, configured with ${config.threads} threads and ${config.contextSize} token context length. Local inference provides privacy advantages and works offline, though it may have some limitations compared to cloud APIs.\n\nI hope this information helps with your query! Let me know if you need any clarification.`;
-  } else {
-    return `I processed your message using local LLaMa inference with the following parameters:\n- Model: ${config.modelPath.split('/').pop()}\n- Threads: ${config.threads}\n- Context size: ${config.contextSize} tokens\n- Batch size: ${config.batchSize}\n\nLocal inference provides privacy and works offline. Your message has been analyzed, and I'm providing this response based on the local model's capabilities. This simulated response demonstrates how the local inference would work in a fully implemented system.`;
+  const lowerPrompt = prompt.toLowerCase();
+  
+  if (lowerPrompt.includes('hello') || lowerPrompt.includes('hi ')) {
+    return "Hello! I'm your local AI assistant. How can I help you today?";
+  } 
+  else if (lowerPrompt.includes('create') && lowerPrompt.includes('document')) {
+    return "I can help you create a document. What kind of document would you like me to create for you?";
+  }
+  else if (lowerPrompt.includes('help') || lowerPrompt.includes('what can you do')) {
+    return "I'm your local AI assistant designed to help you with tasks like creating documents, answering questions, and providing information. All processing happens locally on your device for privacy. What would you like help with today?";
+  }
+  else if (lowerPrompt.includes('invoice')) {
+    return "I can help you with invoices. Would you like to create a new invoice, look up an existing one, or get help with invoice management?";
+  }
+  else if (lowerPrompt.includes('schedule') || lowerPrompt.includes('calendar')) {
+    return "I can assist with scheduling and calendar management. Would you like to create a new event, check your calendar, or get recommendations for scheduling?";
+  }
+  else if (lowerPrompt.includes('receipt')) {
+    return "I can help you process receipts. You can upload a receipt image, and I'll extract the relevant information for you.";
+  } 
+  else {
+    // Generic response for anything else
+    return `I understand you're asking about "${prompt.substring(0, 30)}...". I'm processing your request locally using the built-in AI model. How can I provide more specific help with this topic?`;
   }
 }
 

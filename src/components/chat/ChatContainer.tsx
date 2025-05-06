@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
 import { QuickActions } from './QuickActions';
 import ChatInput from './ChatInput';
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, MessageSquare, WifiOff } from 'lucide-react';
 
 interface ChatContainerProps {
   messages: Array<{
@@ -77,10 +77,27 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     }
   };
 
-  const handleSendMessage = async (message: string) => {
-    // Pass the message to the parent component to process with LLM
-    onSendMessage(message);
-  };
+  // If there are no messages yet, show an empty state
+  if (messages.length === 0) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center text-center p-6">
+        <div className="bg-blue-100 dark:bg-blue-900/20 p-4 rounded-full mb-4">
+          <MessageSquare className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+        </div>
+        <h3 className="text-lg font-medium mb-2">Start a conversation</h3>
+        <p className="text-sm text-muted-foreground mb-6">
+          Send a message to start chatting with {assistantName}
+        </p>
+        <ChatInput 
+          onSendMessage={onSendMessage} 
+          isLoading={isLoading} 
+          disabled={isLoading} 
+          placeholder={`Message ${assistantName}...`}
+          useN8n={useN8n}
+        />
+      </div>
+    );
+  }
 
   // If using n8n chat, render a container for the n8n chat widget
   if (useN8n) {
@@ -115,6 +132,17 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
               message={message} 
             />
           ))}
+          {isLoading && (
+            <div className="flex justify-start mb-3">
+              <div className="bg-[#0A101B] text-gray-200 max-w-[80%] rounded-2xl rounded-bl-sm px-4 py-3 shadow-md">
+                <div className="flex space-x-2 items-center h-6">
+                  <div className="h-2 w-2 rounded-full bg-gray-400 animate-pulse"></div>
+                  <div className="h-2 w-2 rounded-full bg-gray-400 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="h-2 w-2 rounded-full bg-gray-400 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                </div>
+              </div>
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
@@ -132,7 +160,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       )}
 
       <ChatInput 
-        onSendMessage={handleSendMessage} 
+        onSendMessage={onSendMessage} 
         isLoading={isLoading} 
         disabled={isLoading} 
         placeholder={`Message ${assistantName}...`}
