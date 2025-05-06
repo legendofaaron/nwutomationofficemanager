@@ -57,18 +57,9 @@ export const BrandingSettingsTab = () => {
     });
   }
 
-  // Determine border and icon color based on theme
-  const borderColor = resolvedTheme === 'light' 
-    ? 'border-gray-700' 
-    : resolvedTheme === 'superdark'
-      ? 'border-gray-700'
-      : 'border-gray-400';
-  
-  const iconColor = resolvedTheme === 'light'
-    ? 'text-gray-700'
-    : resolvedTheme === 'superdark'
-      ? 'text-gray-400'
-      : 'text-gray-400';
+  // Use blue colors consistently in both themes
+  const borderColor = 'border-blue-500';
+  const iconColor = 'text-blue-500';
 
   return (
     <Form {...form}>
