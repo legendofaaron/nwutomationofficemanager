@@ -11,8 +11,10 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Production from './pages/Production';
 import { LoadingScreen } from './components/LoadingScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Protected route component with enhanced security
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -51,38 +53,43 @@ const AppRoutes = () => {
   }
 
   return (
-    <Routes>
-      {/* Authentication Routes */}
-      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-      <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
-      <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
-      <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
-      
-      {/* Protected Routes */}
-      <Route path="/dashboard" element={<ProtectedRoute><MainLayout /></ProtectedRoute>} />
-      <Route path="/setup-assistant" element={<ProtectedRoute><SetupAssistant /></ProtectedRoute>} />
-      
-      {/* Home page - redirect based on authentication */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      
-      {/* 404 Route */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <ErrorBoundary>
+      <Routes>
+        {/* Authentication Routes */}
+        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
+        <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+        <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
+        
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={<ProtectedRoute><MainLayout /></ProtectedRoute>} />
+        <Route path="/setup-assistant" element={<ProtectedRoute><SetupAssistant /></ProtectedRoute>} />
+        <Route path="/production" element={<ProtectedRoute><Production /></ProtectedRoute>} />
+        
+        {/* Home page - redirect based on authentication */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        
+        {/* 404 Route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </ErrorBoundary>
   );
 };
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <ThemeProvider>
-        <AuthProvider>
-          <AppProvider>
-            <Toaster />
-            <AppRoutes />
-          </AppProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <ThemeProvider>
+          <AuthProvider>
+            <AppProvider>
+              <Toaster />
+              <AppRoutes />
+            </AppProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 };
 

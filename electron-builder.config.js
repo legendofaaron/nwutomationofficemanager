@@ -14,30 +14,60 @@ module.exports = {
     "dist/**/*",
     "electron/**/*"
   ],
+  extraMetadata: {
+    main: "electron/main.js"
+  },
   mac: {
-    target: "dmg",
+    target: ["dmg", "zip"],
     category: "public.app-category.productivity",
     icon: "public/favicon.ico",
     hardenedRuntime: true,
     gatekeeperAssess: false,
-    darkModeSupport: true
+    darkModeSupport: true,
+    notarize: false, // Set to true if you have Apple Developer ID
+    entitlements: "build/entitlements.mac.plist",
+    entitlementsInherit: "build/entitlements.mac.plist"
   },
   win: {
-    target: "nsis",
-    icon: "public/favicon.ico"
+    target: ["nsis", "portable"],
+    icon: "public/favicon.ico",
+    publisherName: "Northwestern Automation",
+    verifyUpdateCodeSignature: false
   },
   linux: {
-    target: "AppImage",
+    target: ["AppImage", "deb", "rpm"],
     category: "Office",
-    icon: "public/favicon.ico"
+    icon: "public/favicon.ico",
+    maintainer: "Northwestern Automation"
   },
   nsis: {
     oneClick: false,
-    allowToChangeInstallationDirectory: true
+    allowToChangeInstallationDirectory: true,
+    createDesktopShortcut: true,
+    createStartMenuShortcut: true,
+    shortcutName: "Northwestern Office Manager"
   },
   dmg: {
     backgroundColor: "#000000",
     icon: "public/favicon.ico",
-    title: "${productName} ${version}"
-  }
+    title: "${productName} ${version}",
+    contents: [
+      {
+        x: 130,
+        y: 220
+      },
+      {
+        x: 410,
+        y: 220,
+        type: "link",
+        path: "/Applications"
+      }
+    ]
+  },
+  publish: {
+    provider: "generic",
+    url: "https://your-update-server.com/",
+    channel: "latest"
+  },
+  afterSign: "scripts/notarize.js"
 };
