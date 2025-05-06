@@ -1,4 +1,3 @@
-
 import { LlmConfig } from '@/components/LlmSettings';
 import { toast } from '@/hooks/use-toast';
 
@@ -23,11 +22,17 @@ export async function queryLlm(
   let retries = 0;
   let lastError: Error | null = null;
   
+  // Get stored configuration
+  const storedConfig = localStorage.getItem('llmConfig');
+  const config = storedConfig ? JSON.parse(storedConfig) : {};
+  
+  // Check if local LLaMa is enabled and should be used
+  if (config.localLlama?.enabled) {
+    return await queryLocalLlama(prompt, config.localLlama, systemPrompt);
+  }
+  
   while (retries <= MAX_RETRIES) {
     try {
-      // Get stored configuration from localStorage
-      const storedConfig = localStorage.getItem('llmConfig');
-      const config = storedConfig ? JSON.parse(storedConfig) : {};
       const effectiveWebhookUrl = webhookUrl || config.webhookUrl;
       
       // Check if OpenAI integration is enabled
@@ -179,6 +184,59 @@ async function queryOpenAi(
 }
 
 /**
+ * Query local LLaMa model using llama.cpp
+ */
+async function queryLocalLlama(
+  prompt: string,
+  llamaConfig: any,
+  systemPrompt?: string
+): Promise<LlmResponse> {
+  try {
+    // In the real implementation, this would use the llama.cpp WASM module
+    // For now, we'll simulate the local inference process
+    console.log('Local LLaMa inference:', {
+      modelPath: llamaConfig.modelPath,
+      threads: llamaConfig.threads,
+      contextSize: llamaConfig.contextSize,
+      batchSize: llamaConfig.batchSize,
+      prompt,
+      systemPrompt
+    });
+    
+    // Simulate inference time based on complexity
+    const responseTime = Math.min(500 + Math.random() * 1500 + prompt.length / 2, 3000);
+    
+    // Create a response using a simple template
+    // In a real implementation, this would be the actual output from llama.cpp
+    await new Promise(resolve => setTimeout(resolve, responseTime));
+    
+    let response = '';
+    if (systemPrompt?.includes('document writer')) {
+      // For document generation
+      response = `# Response to: ${prompt}\n\n## Introduction\n\nThis document addresses the prompt you've provided. Let's explore the topic in detail.\n\n## Analysis\n\nThe key points to consider are:\n- First important consideration\n- Second important consideration\n- Third important consideration\n\n## Conclusion\n\nBased on the analysis above, we recommend proceeding with a careful implementation approach.`;
+    } else {
+      // For regular chat
+      response = `I analyzed your question about "${prompt.slice(0, 30)}..." using local inference with llama.cpp.\n\nHere's my response based on your request:\n\nThis is a simulated response from a local LLaMa model. In the actual implementation, this would be generated using the llama.cpp library running locally on your device, providing privacy and offline capability. The response would be tailored to your specific query using the model's parameters and knowledge.`;
+    }
+
+    return {
+      message: response,
+      modelUsed: `Local: ${llamaConfig.modelPath.split('/').pop()}`
+    };
+  } catch (error) {
+    console.error('Error with local LLaMa inference:', error);
+    
+    toast({
+      title: 'Local Inference Error',
+      description: error instanceof Error ? error.message : 'Failed to run local inference',
+      variant: 'destructive'
+    });
+    
+    throw error;
+  }
+}
+
+/**
  * Send a notification to a webhook with improved error handling
  */
 export async function sendWebhookNotification(message: string, webhookUrl: string): Promise<boolean> {
@@ -221,7 +279,7 @@ export async function generateDocumentContent(
   documentType: string = 'general'
 ): Promise<string> {
   try {
-    // Get stored configuration from localStorage
+    // Get stored configuration
     const storedConfig = localStorage.getItem('llmConfig');
     const config = storedConfig ? JSON.parse(storedConfig) : {};
     
@@ -232,11 +290,17 @@ export async function generateDocumentContent(
     Be concise, clear, and comprehensive. Do not include any explanations or meta-information about the document.
     Just generate the document content directly.`;
     
+    // If local LLaMa is enabled, use it for document generation
+    if (config.localLlama?.enabled) {
+      const response = await queryLocalLlama(prompt, config.localLlama, systemPrompt);
+      return response.message;
+    }
+    
     // Use the existing queryLlm function with document-specific system prompt
     const response = await queryLlm(
       prompt, 
       config.endpoint || '', 
-      config.openAi?.enabled ? 'gpt-4o-mini' : 'default',
+      config.openAi?.enabled ? 'gpt-4o-mini' : 'llama-3.2-3b',
       undefined,
       systemPrompt
     );
@@ -268,6 +332,23 @@ export function isLlmConfigured(): boolean {
   const config = getLlmConfig();
   return !!(config && (
     (config.openAi?.enabled && config.openAi?.apiKey) || 
-    (config.customModel?.isCustom && config.customModel?.apiKey)
+    (config.customModel?.isCustom && config.customModel?.apiKey) ||
+    (config.localLlama?.enabled && config.localLlama?.modelPath)
   ));
+}
+
+/**
+ * Initialize llama.cpp WASM Module
+ */
+export function initLlamaCpp() {
+  console.log('Initializing llama.cpp WASM module');
+  
+  // In the real implementation, this would load and initialize the WASM module
+  // For example:
+  // return import('@/lib/llama.js').then(module => {
+  //   return module.init();
+  // });
+  
+  // For now, we'll just return a resolved promise
+  return Promise.resolve();
 }

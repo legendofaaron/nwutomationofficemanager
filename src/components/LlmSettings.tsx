@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +13,10 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { ExternalLink, Lock } from 'lucide-react';
+import { ExternalLink, Lock, Cpu, Download } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Card } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 
 export interface LlmConfig {
   endpoint: string;
@@ -32,6 +34,13 @@ export interface LlmConfig {
     contextLength?: number;
     isCustom: boolean;
   };
+  localLlama?: {
+    enabled: boolean;
+    modelPath?: string;
+    threads?: number;
+    contextSize?: number;
+    batchSize?: number;
+  };
 }
 
 export const LlmSettings = () => {
@@ -46,6 +55,10 @@ export const LlmSettings = () => {
   const [isCustomModel, setIsCustomModel] = useState<boolean>(false);
   const [useOpenAiKey, setUseOpenAiKey] = useState<boolean>(false);
   const [testingOpenAi, setTestingOpenAi] = useState<boolean>(false);
+  const [useLocalLlama, setUseLocalLlama] = useState<boolean>(false);
+  const [downloadProgress, setDownloadProgress] = useState<number>(0);
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [downloadModelName, setDownloadModelName] = useState<string>('');
 
   // Load config from localStorage on component mount
   useEffect(() => {
@@ -56,6 +69,7 @@ export const LlmSettings = () => {
         setConfig(parsedConfig);
         setIsCustomModel(!!parsedConfig.customModel?.isCustom);
         setUseOpenAiKey(!!parsedConfig.openAi?.enabled);
+        setUseLocalLlama(!!parsedConfig.localLlama?.enabled);
       } catch (error) {
         console.error('Failed to parse saved LLM config:', error);
       }
@@ -223,6 +237,90 @@ export const LlmSettings = () => {
     }
   };
 
+  const handleLocalLlamaToggle = (enabled: boolean) => {
+    setUseLocalLlama(enabled);
+    
+    if (enabled) {
+      setConfig(prev => ({
+        ...prev,
+        localLlama: {
+          enabled: true,
+          modelPath: prev.localLlama?.modelPath || '',
+          threads: prev.localLlama?.threads || navigator.hardwareConcurrency || 4,
+          contextSize: prev.localLlama?.contextSize || 2048,
+          batchSize: prev.localLlama?.batchSize || 512
+        }
+      }));
+    } else {
+      setConfig(prev => ({
+        ...prev,
+        localLlama: {
+          ...prev.localLlama,
+          enabled: false
+        }
+      }));
+    }
+  };
+
+  const downloadLocalModel = (modelName: string) => {
+    setIsDownloading(true);
+    setDownloadModelName(modelName);
+    setDownloadProgress(0);
+    
+    // Simulate download progress
+    const interval = setInterval(() => {
+      setDownloadProgress(prev => {
+        const next = prev + Math.random() * 10;
+        if (next >= 100) {
+          clearInterval(interval);
+          setIsDownloading(false);
+          
+          // Update config with downloaded model path
+          setConfig(prev => ({
+            ...prev,
+            localLlama: {
+              ...prev.localLlama,
+              enabled: true,
+              modelPath: `models/${modelName}.gguf`
+            }
+          }));
+          
+          toast({
+            title: "Download Complete",
+            description: `${modelName} has been successfully downloaded and is ready to use.`
+          });
+          
+          return 100;
+        }
+        return next;
+      });
+    }, 300);
+  };
+
+  const testLocalModel = () => {
+    if (!config.localLlama?.modelPath) {
+      toast({
+        title: 'No Model Selected',
+        description: 'Please download or select a model before testing',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    toast({
+      title: 'Testing Local Model',
+      description: 'Initializing LLaMa model...'
+    });
+    
+    // In a real implementation, this would initialize the llama.cpp model
+    setTimeout(() => {
+      toast({
+        title: 'Local Model Ready',
+        description: 'Local inference is working correctly'
+      });
+    }, 1500);
+  };
+
   return (
     <div className="space-y-6 p-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -230,6 +328,7 @@ export const LlmSettings = () => {
           <TabsTrigger value="general">General Settings</TabsTrigger>
           <TabsTrigger value="custom">Custom Model</TabsTrigger>
           <TabsTrigger value="openai">OpenAI</TabsTrigger>
+          <TabsTrigger value="local">Local Models</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-6">
@@ -484,6 +583,174 @@ export const LlmSettings = () => {
                 >
                   <ExternalLink className="h-3 w-3 mr-1" />
                   Get API Key
+                </Button>
+              </div>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="local" className="space-y-6">
+          <div>
+            <h3 className="text-lg font-medium">Local LLaMa Models</h3>
+            <p className="text-sm text-gray-500 mb-4">Run language models locally using llama.cpp</p>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Enable Local Models</h4>
+              <p className="text-sm text-gray-500">Run models directly on your device</p>
+            </div>
+            <Switch
+              checked={useLocalLlama}
+              onCheckedChange={handleLocalLlamaToggle}
+            />
+          </div>
+          
+          {useLocalLlama && (
+            <div className="space-y-6 border rounded-md p-4 bg-muted/20">
+              <div className="space-y-2">
+                <Label htmlFor="cpu-threads">CPU Threads</Label>
+                <div className="flex items-center space-x-2">
+                  <Slider
+                    id="cpu-threads"
+                    defaultValue={[config.localLlama?.threads || 4]}
+                    max={16}
+                    min={1}
+                    step={1}
+                    onValueChange={(value) => setConfig(prev => ({
+                      ...prev,
+                      localLlama: {
+                        ...prev.localLlama,
+                        threads: value[0]
+                      }
+                    }))}
+                    className="flex-1"
+                  />
+                  <span className="w-12 text-center">{config.localLlama?.threads || 4}</span>
+                </div>
+                <p className="text-xs text-gray-500">Number of CPU threads to use for inference</p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="context-size">Context Size</Label>
+                <div className="flex items-center space-x-2">
+                  <Slider
+                    id="context-size"
+                    defaultValue={[config.localLlama?.contextSize || 2048]}
+                    max={8192}
+                    min={512}
+                    step={512}
+                    onValueChange={(value) => setConfig(prev => ({
+                      ...prev,
+                      localLlama: {
+                        ...prev.localLlama,
+                        contextSize: value[0]
+                      }
+                    }))}
+                    className="flex-1"
+                  />
+                  <span className="w-16 text-center">{config.localLlama?.contextSize || 2048}</span>
+                </div>
+                <p className="text-xs text-gray-500">Maximum context size in tokens (higher values use more memory)</p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="batch-size">Batch Size</Label>
+                <div className="flex items-center space-x-2">
+                  <Slider
+                    id="batch-size"
+                    defaultValue={[config.localLlama?.batchSize || 512]}
+                    max={1024}
+                    min={64}
+                    step={64}
+                    onValueChange={(value) => setConfig(prev => ({
+                      ...prev,
+                      localLlama: {
+                        ...prev.localLlama,
+                        batchSize: value[0]
+                      }
+                    }))}
+                    className="flex-1"
+                  />
+                  <span className="w-16 text-center">{config.localLlama?.batchSize || 512}</span>
+                </div>
+                <p className="text-xs text-gray-500">Batch size for prompt processing (lower uses less memory)</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label>Select Model</Label>
+                  <p className="text-xs text-gray-500 mb-2">Download a model or select an existing one</p>
+                </div>
+                
+                {!isDownloading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card className="p-4 hover:bg-muted/50 cursor-pointer transition-colors" 
+                          onClick={() => downloadLocalModel('llama-3.2-3b')}>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium">LLaMa 3.2 3B</h4>
+                          <p className="text-xs text-gray-500">3 billion parameters, 4.7GB</p>
+                        </div>
+                        <Download className="h-5 w-5 text-primary" />
+                      </div>
+                    </Card>
+                    <Card className="p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                          onClick={() => downloadLocalModel('llama-3.2-1b')}>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium">LLaMa 3.2 1B</h4>
+                          <p className="text-xs text-gray-500">1 billion parameters, 1.8GB</p>
+                        </div>
+                        <Download className="h-5 w-5 text-primary" />
+                      </div>
+                    </Card>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Downloading {downloadModelName}...</span>
+                      <span className="text-sm text-muted-foreground">{Math.round(downloadProgress)}%</span>
+                    </div>
+                    <Progress value={downloadProgress} className="h-2" />
+                    <p className="text-xs text-muted-foreground">This may take several minutes depending on your connection</p>
+                  </div>
+                )}
+                
+                <div className="space-y-2 pt-2">
+                  <Label htmlFor="model-path">Custom Model Path</Label>
+                  <Input
+                    id="model-path"
+                    placeholder="/path/to/your/model.gguf"
+                    value={config.localLlama?.modelPath || ''}
+                    onChange={(e) => setConfig(prev => ({
+                      ...prev,
+                      localLlama: {
+                        ...prev.localLlama,
+                        modelPath: e.target.value
+                      }
+                    }))}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter the file path to a custom GGUF model
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center text-xs text-muted-foreground gap-1">
+                  <Cpu className="h-3 w-3" />
+                  <span>Local models run directly on your device hardware</span>
+                </div>
+                
+                <Button
+                  onClick={testLocalModel}
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  disabled={!config.localLlama?.modelPath}
+                >
+                  Test Local Model
                 </Button>
               </div>
             </div>

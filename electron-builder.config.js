@@ -12,11 +12,19 @@ module.exports = {
   },
   files: [
     "dist/**/*",
-    "electron/**/*"
+    "electron/**/*",
+    "models/**/*" // Include local LLM models directory
   ],
   extraMetadata: {
     main: "electron/main.js"
   },
+  extraResources: [
+    {
+      from: "models",
+      to: "models",
+      filter: ["*.gguf"]
+    }
+  ],
   mac: {
     target: ["dmg", "zip"],
     category: "public.app-category.productivity",

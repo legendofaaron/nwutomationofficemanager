@@ -27,9 +27,14 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           react: ['react', 'react-dom'],
           shadcn: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
-          llm: ['@tanstack/react-query']
+          llm: ['@tanstack/react-query'],
+          llama: ['wasm-llm'] // this is a placeholder chunk for llama.cpp WASM files
         }
       }
-    }
+    },
+    assetsInlineLimit: 0, // Don't inline WASM files
+  },
+  optimizeDeps: {
+    exclude: ['llama-cpp-wasm'] // Exclude llama.cpp WASM bindings from optimization
   }
 }));

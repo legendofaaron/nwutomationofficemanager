@@ -53,19 +53,25 @@ const config: CapacitorConfig = {
     },
     PrivacyScreen: {
       enable: true
+    },
+    LlamaCpp: {
+      modelsDirectory: "models",
+      defaultThreads: 4
     }
   },
   ios: {
     contentInset: "automatic",
     preferredContentMode: "mobile",
     backgroundColor: "#000000",
-    allowsLinkPreview: true
+    allowsLinkPreview: true,
+    limitsBackgroundDownloads: false
   },
   android: {
     backgroundColor: "#000000", 
     allowMixedContent: false,
     captureInput: true,
-    webContentsDebuggingEnabled: false
+    webContentsDebuggingEnabled: false,
+    initialLoadUrlTimeoutDuration: 60
   },
   loggingBehavior: 'production'
 };

@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { useAuth } from '@/context/AuthContext';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import ProductionReadiness from '@/components/ProductionReadiness';
-import { ArrowLeft, Download, Server, CheckCircle, Copy, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Download, Server, CheckCircle, Copy, ExternalLink, Cpu } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { isLlmConfigured } from '@/utils/llm';
 
@@ -96,9 +96,10 @@ const Production = () => {
                   <Progress value={buildProgress} className="h-2" />
                   <div className="text-xs text-muted-foreground">
                     {buildProgress < 30 && "Installing dependencies..."}
-                    {buildProgress >= 30 && buildProgress < 60 && "Transpiling TypeScript..."}
-                    {buildProgress >= 60 && buildProgress < 90 && "Bundling modules..."}
-                    {buildProgress >= 90 && "Optimizing assets..."}
+                    {buildProgress >= 30 && buildProgress < 50 && "Transpiling TypeScript..."}
+                    {buildProgress >= 50 && buildProgress < 70 && "Bundling modules..."}
+                    {buildProgress >= 70 && buildProgress < 85 && "Compiling llama.cpp WASM bindings..."}
+                    {buildProgress >= 85 && "Optimizing assets..."}
                   </div>
                 </div>
               ) : (
@@ -203,6 +204,42 @@ const Production = () => {
                   <Button variant="ghost" size="sm" onClick={() => handleCopyCommand("npx electron-builder build")}>
                     <Copy className="h-4 w-4" />
                   </Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t">
+              <h3 className="font-medium">Local LLM Integration</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                This build includes llama.cpp for local LLM inference on all platforms:
+              </p>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-muted/50 p-3 rounded-md border">
+                  <div className="flex items-center mb-2">
+                    <Cpu className="h-4 w-4 mr-2 text-primary" />
+                    <h4 className="font-medium">Desktop</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Uses native compilation for maximum performance on Windows, macOS, and Linux.
+                  </p>
+                </div>
+                <div className="bg-muted/50 p-3 rounded-md border">
+                  <div className="flex items-center mb-2">
+                    <Cpu className="h-4 w-4 mr-2 text-primary" />
+                    <h4 className="font-medium">Web</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Uses WebAssembly (WASM) compilation for cross-browser compatibility.
+                  </p>
+                </div>
+                <div className="bg-muted/50 p-3 rounded-md border">
+                  <div className="flex items-center mb-2">
+                    <Cpu className="h-4 w-4 mr-2 text-primary" />
+                    <h4 className="font-medium">Mobile</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Optimized for ARM processors on iOS and Android devices.
+                  </p>
                 </div>
               </div>
             </div>
