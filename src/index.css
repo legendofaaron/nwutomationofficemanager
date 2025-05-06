@@ -97,26 +97,17 @@ body.dragging {
   cursor: grabbing !important;
 }
 
-/* Fix for calendar numbers */
-.rdp-button:not(.rdp-day_selected) {
-  color: currentColor !important;
-}
-
-.rdp-day_selected, 
-.rdp-day_selected:hover {
-  background-color: hsl(var(--primary)) !important;
-  color: hsl(var(--primary-foreground)) !important;
-}
-
-.rdp-day_today {
-  background-color: hsl(var(--accent)) !important;
-}
-
 /* Enhanced Calendar Styling */
 .calendar-grid {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 0.75rem;
   overflow: hidden;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.dark .calendar-grid {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .calendar-grid .rdp-cell {
@@ -138,62 +129,31 @@ body.dragging {
   font-weight: 500;
 }
 
-.calendar-grid .rdp-nav_button {
-  background-color: white !important;
-  border: 1px solid #e2e8f0 !important;
-  color: #4b5563 !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+.calendar-grid .rdp-day_selected,
+.calendar-grid .rdp-day_selected:hover {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
 }
 
-.dark .rdp-nav_button {
-  background-color: #1f2937 !important;
-  border-color: #374151 !important;
-  color: #d1d5db !important;
+.calendar-grid .rdp-day_today {
+  background-color: hsl(var(--accent)) !important;
+  font-weight: 600;
 }
 
-.rdp-nav_button svg {
-  color: #4b5563 !important;
-}
-
-.dark .rdp-nav_button svg {
-  color: #d1d5db !important;
-}
-
-.rdp-nav_button:hover {
-  background-color: #f3f4f6 !important;
-}
-
-.dark .rdp-nav_button:hover {
-  background-color: #374151 !important;
-}
-
-.rdp-caption_label {
-  font-weight: 600 !important;
-  font-size: 1rem !important;
-}
-
-/* Fix calendar month caption */
-.rdp-months {
-  padding: 0.5rem;
-}
-
-/* Drag and Drop Styling */
-.schedule-drop-zone {
-  border: 2px dashed transparent;
-  transition: all 0.2s ease;
-}
-
-.schedule-drop-zone.drag-over {
-  border-color: hsl(var(--primary));
-  background-color: hsl(var(--accent));
+.calendar-grid .selected-day .rdp-button {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Calendar day drop styling */
 .calendar-day-cell {
   position: relative;
   cursor: pointer;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .calendar-day-cell.drag-over .rdp-button {
@@ -213,7 +173,7 @@ body.dragging {
 .empty-day-container {
   min-height: 200px;
   border: 2px dashed #E6E8EB;
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -251,6 +211,7 @@ body.dragging {
   transition: all 0.2s ease;
   cursor: grab;
   border-left: 3px solid transparent;
+  position: relative;
 }
 
 .task-item:not(.completed) {
@@ -259,7 +220,6 @@ body.dragging {
 
 .task-item.completed {
   border-left-color: #10B981;
-  opacity: 0.85;
 }
 
 .dark .task-item:not(.completed) {
@@ -280,7 +240,22 @@ body.dragging {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Professional card styling */
+/* Fix for calendar numbers */
+.rdp-button:not(.rdp-day_selected) {
+  color: currentColor !important;
+}
+
+.rdp-day_selected, 
+.rdp-day_selected:hover {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+.rdp-day_today {
+  background-color: hsl(var(--accent)) !important;
+}
+
+/* Card styling */
 .card {
   transition: all 0.2s ease;
 }
@@ -291,4 +266,83 @@ body.dragging {
 
 .dark .card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Schedule tab styling */
+.schedule-tab {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  transition: all 0.15s ease-in-out;
+}
+
+.schedule-tab:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.schedule-tab.active {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.schedule-tab.active:hover {
+  background-color: hsl(var(--primary));
+  opacity: 0.95;
+}
+
+.dark .schedule-tab:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Crew badge styling */
+.crew-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  background-color: rgba(59, 130, 246, 0.1);
+  color: rgb(37, 99, 235);
+  margin-right: 0.5rem;
+}
+
+.dark .crew-badge {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: rgb(96, 165, 250);
+}
+
+/* Custom scrollbar for task lists */
+.task-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.task-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.task-list::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+}
+
+.dark .task-list::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Fix for calendar month caption */
+.rdp-months {
+  padding: 0.5rem;
+}
+
+/* Drag and Drop Styling */
+.schedule-drop-zone {
+  border: 2px dashed transparent;
+  transition: all 0.2s ease;
+}
+
+.schedule-drop-zone.drag-over {
+  border-color: hsl(var(--primary));
+  background-color: hsl(var(--accent));
 }
