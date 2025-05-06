@@ -1,0 +1,157 @@
+
+/* Drag and Drop Styling */
+
+/* Add a subtle visual indication for draggable items */
+[draggable=true] {
+  cursor: grab;
+}
+
+/* Visual feedback while dragging */
+[draggable=true]:active {
+  cursor: grabbing;
+}
+
+/* Show visual cues when dragging over a valid drop target */
+.valid-drop-target.drag-over {
+  background-color: rgba(59, 130, 246, 0.15);
+  box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.5);
+  transition: all 0.2s ease;
+}
+
+/* Animation for the dragging item */
+.dragging {
+  opacity: 0.6;
+  transform: scale(0.95);
+  border-style: dashed !important;
+  transition: opacity 0.2s, transform 0.2s, border 0.2s;
+}
+
+/* Body class when dragging is happening */
+body.dragging {
+  cursor: grabbing !important;
+}
+
+/* Body class when resizing is happening */
+body.resizing {
+  cursor: col-resize !important;
+}
+
+body.resizing .react-resizable-handle {
+  background-color: rgba(59, 130, 246, 0.3);
+}
+
+body.resizing * {
+  user-select: none !important;
+}
+
+/* Task item hover effects */
+.task-item {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.task-item:hover:not(.completed) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Calendar day styling */
+.calendar-day-cell {
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.calendar-day-cell.valid-drop-target:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.calendar-day-cell.selected-day {
+  background-color: rgba(59, 130, 246, 0.1);
+  font-weight: 600;
+}
+
+/* Custom drag image that appears when dragging */
+.task-drag-preview {
+  padding: 4px 8px;
+  background-color: rgba(59, 130, 246, 0.9);
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 9999;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Smooth fade-in animation for empty state */
+.empty-day-container {
+  animation: fadeIn 0.3s ease-in-out;
+  transition: background-color 0.2s ease;
+}
+
+.empty-day-container:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+  cursor: pointer;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Additional styles for the calendar to make it more appealing */
+:root {
+  --day-border-color: rgba(226, 232, 240, 0.8);
+  --day-border-color-hover: rgba(203, 213, 225, 1);
+}
+
+.dark {
+  --day-border-color: rgba(51, 65, 85, 0.5);
+  --day-border-color-hover: rgba(71, 85, 105, 0.8);
+}
+
+.rdp-cell {
+  border: 1px solid var(--day-border-color);
+  transition: border-color 0.2s ease;
+}
+
+.rdp-cell:hover {
+  border-color: var(--day-border-color-hover);
+}
+
+.rdp-day_today {
+  font-weight: 600;
+}
+
+/* Add styles for resizable panels */
+.react-resizable-handle {
+  position: absolute;
+  width: 10px;
+  height: 100%;
+  bottom: 0;
+  right: -5px;
+  cursor: col-resize;
+  z-index: 1;
+}
+
+.react-resizable-handle:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .calendar-grid {
+    font-size: 0.875rem;
+  }
+  
+  .task-item {
+    padding: 0.75rem;
+  }
+}

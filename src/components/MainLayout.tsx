@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
@@ -24,6 +25,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { Button } from './ui/button';
 import type { ViewMode } from '@/context/AppContext';
+import { DragDropProvider } from './schedule/DragDropContext';
+import '../components/schedule/dragAndDrop.css';
 
 const MainLayout = () => {
   const {
@@ -202,96 +205,98 @@ const MainLayout = () => {
 
   return (
     <ProLayout>
-      <SidebarProvider defaultOpen={!isMobile && sidebarOpen}>
-        <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gradient-to-br from-white to-gray-100'} flex w-full overflow-hidden`}>
-          {isMobile ? (
-            renderMobileHeader()
-          ) : (
-            <div className="relative sidebar-container">
-              <Sidebar className="shadow-md border-r border-gray-100 dark:border-gray-800">
-                <div className="flex justify-between items-center p-4">
-                  <Logo onClick={() => setViewMode('welcome')} />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="outline-none">
-                      <UserAvatar className="h-9 w-9 transition-all hover:scale-105 cursor-pointer" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuLabel className="flex items-center gap-2">
-                        <UserAvatar className="h-7 w-7" />
-                        <div className="flex flex-col">
-                          <span className="font-medium">{user?.user_metadata?.full_name || 'User'}</span>
-                          <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
-                        </div>
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={navigateToProfile} className="cursor-pointer">
-                        Profile
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setViewMode('settings')} className="cursor-pointer">
-                        Settings
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500 dark:text-red-400">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Log out</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <AppSidebar />
-              </Sidebar>
-              <div 
-                className="absolute -right-12 z-20" 
-                style={{ top: `${triggerPosition}px` }}
-              >
-                <SidebarTrigger 
-                  className={`h-16 w-12 ${sidebarButtonBg} rounded-r-lg flex items-center justify-center ${sidebarHoverBg} transition-all group cursor-move`}
-                  onMouseDown={handleDragStart}
-                >
-                  <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
-                    <Logo small />
+      <DragDropProvider>
+        <SidebarProvider defaultOpen={!isMobile && sidebarOpen}>
+          <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gradient-to-br from-white to-gray-100'} flex w-full overflow-hidden`}>
+            {isMobile ? (
+              renderMobileHeader()
+            ) : (
+              <div className="relative sidebar-container">
+                <Sidebar className="shadow-md border-r border-gray-100 dark:border-gray-800">
+                  <div className="flex justify-between items-center p-4">
+                    <Logo onClick={() => setViewMode('welcome')} />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="outline-none">
+                        <UserAvatar className="h-9 w-9 transition-all hover:scale-105 cursor-pointer" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel className="flex items-center gap-2">
+                          <UserAvatar className="h-7 w-7" />
+                          <div className="flex flex-col">
+                            <span className="font-medium">{user?.user_metadata?.full_name || 'User'}</span>
+                            <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
+                          </div>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={navigateToProfile} className="cursor-pointer">
+                          Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setViewMode('settings')} className="cursor-pointer">
+                          Settings
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500 dark:text-red-400">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Log out</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                </SidebarTrigger>
+                  <AppSidebar />
+                </Sidebar>
+                <div 
+                  className="absolute -right-12 z-20" 
+                  style={{ top: `${triggerPosition}px` }}
+                >
+                  <SidebarTrigger 
+                    className={`h-16 w-12 ${sidebarButtonBg} rounded-r-lg flex items-center justify-center ${sidebarHoverBg} transition-all group cursor-move`}
+                    onMouseDown={handleDragStart}
+                  >
+                    <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
+                      <Logo small />
+                    </div>
+                  </SidebarTrigger>
+                </div>
               </div>
-            </div>
-          )}
-          
-          <main 
-            className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", 
-              isMobile ? "pt-14" : (sidebarOpen ? "ml-0" : "ml-0"))}
-            onClick={handleCloseCalendars}
-          >
-            <div className={`w-full ${mainBg} h-full rounded-md overflow-auto`}>
-              {viewMode === 'document' && <DocumentViewer />}
-              {viewMode === 'database' && <DatabaseViewer />}
-              {viewMode === 'knowledge' && <KnowledgeBase />}
-              {viewMode === 'office' && <OfficeManagerDashboard />}
-              {viewMode === 'spreadsheet' && <SpreadsheetViewer />}
-              {viewMode === 'welcome' && <WelcomeDashboard />}
-              {!viewMode && <WelcomeDashboard />}
-            </div>
-          </main>
-          
-          <TodoCalendarBubble />
-          
-          {/* AI Assistant Button with improved styling */}
-          <div className={`fixed bottom-6 right-6 z-50 ${isMobile ? 'mb-4' : ''}`}>
-            <button 
-              onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
-              className={`h-14 w-14 rounded-full shadow-lg ${isDark || isSuperDark ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'} 
-              relative flex items-center justify-center transition-colors text-white hover:shadow-xl hover:scale-105 active:scale-95 transition-transform duration-200`}
-              aria-label="Toggle AI Assistant"
+            )}
+            
+            <main 
+              className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", 
+                isMobile ? "pt-14" : (sidebarOpen ? "ml-0" : "ml-0"))}
+              onClick={handleCloseCalendars}
             >
-              <Sparkles className="h-6 w-6" />
-              {aiAssistantOpen && (
-                <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-background animate-pulse"></span>
-              )}
-            </button>
+              <div className={`w-full ${mainBg} h-full rounded-md overflow-auto`}>
+                {viewMode === 'document' && <DocumentViewer />}
+                {viewMode === 'database' && <DatabaseViewer />}
+                {viewMode === 'knowledge' && <KnowledgeBase />}
+                {viewMode === 'office' && <OfficeManagerDashboard />}
+                {viewMode === 'spreadsheet' && <SpreadsheetViewer />}
+                {viewMode === 'welcome' && <WelcomeDashboard />}
+                {!viewMode && <WelcomeDashboard />}
+              </div>
+            </main>
+            
+            <TodoCalendarBubble />
+            
+            {/* AI Assistant Button with improved styling */}
+            <div className={`fixed bottom-6 right-6 z-50 ${isMobile ? 'mb-4' : ''}`}>
+              <button 
+                onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
+                className={`h-14 w-14 rounded-full shadow-lg ${isDark || isSuperDark ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'} 
+                relative flex items-center justify-center transition-colors text-white hover:shadow-xl hover:scale-105 active:scale-95 transition-transform duration-200`}
+                aria-label="Toggle AI Assistant"
+              >
+                <Sparkles className="h-6 w-6" />
+                {aiAssistantOpen && (
+                  <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-background animate-pulse"></span>
+                )}
+              </button>
+            </div>
+            
+            {/* AI Assistant Panel */}
+            <AiAssistant />
           </div>
-          
-          {/* AI Assistant Panel */}
-          <AiAssistant />
-        </div>
-      </SidebarProvider>
+        </SidebarProvider>
+      </DragDropProvider>
     </ProLayout>
   );
 };
