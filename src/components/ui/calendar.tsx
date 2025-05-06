@@ -104,22 +104,24 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        // Fixed: TypeScript now correctly recognizes the props passed to the Caption component
-        Caption: ({ displayMonth, goToMonth, ...captionProps }: DayPickerCaptionProps) => {
-          // Create handlers for previous/next month that use the goToMonth function
+        // Fixed the type issue by properly handling the DayPickerCaptionProps
+        Caption: ({ displayMonth }: DayPickerCaptionProps) => {
+          // Create handlers for previous/next month navigation
           const handlePrevious = () => {
-            if (goToMonth) {
-              const prevMonth = new Date(displayMonth);
-              prevMonth.setMonth(prevMonth.getMonth() - 1);
-              goToMonth(prevMonth);
+            const prevMonth = new Date(displayMonth);
+            prevMonth.setMonth(prevMonth.getMonth() - 1);
+            // Check if onMonthChange prop exists on the DayPicker
+            if (props.onMonthChange) {
+              props.onMonthChange(prevMonth);
             }
           };
           
           const handleNext = () => {
-            if (goToMonth) {
-              const nextMonth = new Date(displayMonth);
-              nextMonth.setMonth(nextMonth.getMonth() + 1);
-              goToMonth(nextMonth);
+            const nextMonth = new Date(displayMonth);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            // Check if onMonthChange prop exists on the DayPicker
+            if (props.onMonthChange) {
+              props.onMonthChange(nextMonth);
             }
           };
           
