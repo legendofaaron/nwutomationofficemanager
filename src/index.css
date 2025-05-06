@@ -107,6 +107,7 @@
   }
 }
 
+/* Fixed spin-slow animation */
 @keyframes spin-slow {
   from {
     transform: rotate(0deg);
@@ -238,16 +239,6 @@ body.dragging {
 .dark .empty-day-container:hover {
   border-color: rgba(59, 130, 246, 0.3);
   background-color: rgba(59, 130, 246, 0.05);
-}
-
-/* Animation for new content */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
 }
 
 /* Task item styling */
