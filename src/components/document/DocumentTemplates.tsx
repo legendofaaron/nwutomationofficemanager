@@ -94,7 +94,7 @@ export const documentTemplates: DocumentTemplate[] = [
 export const generateDocumentFromTemplate = async (
   template: DocumentTemplate,
   placeholderValues: Record<string, string>
-): Promise<string> {
+) => {
   let content = template.template;
   
   // Fill in user-provided placeholders
