@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { FreePlan } from './plans/FreePlan';
-import { SubscriptionPlanFeatures } from '@/components/subscription/SubscriptionPlanFeatures';
+import SubscriptionPlanFeatures from '@/components/subscription/SubscriptionPlanFeatures';
 
 export const PaymentPlans = () => {
   const [isLoading, setIsLoading] = useState(false);

@@ -7,6 +7,7 @@ import { Logo } from '@/components/Logo';
 import { PaymentPlans } from './PaymentPlans';
 import { PaymentError } from './PaymentError';
 import { DemoModeRedirect } from './DemoModeRedirect';
+import { Shield } from 'lucide-react';
 
 const PaymentPage = () => {
   const { user, isDemoMode } = useAuth();
