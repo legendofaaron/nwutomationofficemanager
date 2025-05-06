@@ -17,7 +17,7 @@ let activeLocalModel: any = null;
 export async function queryLlm(
   prompt: string, 
   endpoint: string, 
-  model: string = 'local', // Changed default model to 'local'
+  model: string = 'local', // Default model set to 'local'
   webhookUrl?: string,
   systemPrompt?: string
 ): Promise<LlmResponse> {
@@ -253,13 +253,13 @@ function generateLocalResponse(prompt: string, systemPrompt?: string): string {
   const lowerPrompt = prompt.toLowerCase();
   
   if (lowerPrompt.includes('hello') || lowerPrompt.includes('hi ')) {
-    return "Hello! I'm your local AI assistant. How can I help you today?";
+    return "Hello! How can I help you today?";
   } 
   else if (lowerPrompt.includes('create') && lowerPrompt.includes('document')) {
     return "I can help you create a document. What kind of document would you like me to create for you?";
   }
   else if (lowerPrompt.includes('help') || lowerPrompt.includes('what can you do')) {
-    return "I'm your local AI assistant designed to help you with tasks like creating documents, answering questions, and providing information. All processing happens locally on your device for privacy. What would you like help with today?";
+    return "I can assist with tasks like creating documents, answering questions, and providing information. All processing happens locally on your device for privacy. What would you like help with today?";
   }
   else if (lowerPrompt.includes('invoice')) {
     return "I can help you with invoices. Would you like to create a new invoice, look up an existing one, or get help with invoice management?";
@@ -272,7 +272,7 @@ function generateLocalResponse(prompt: string, systemPrompt?: string): string {
   } 
   else {
     // Generic response for anything else
-    return `I understand you're asking about "${prompt.substring(0, 30)}...". I'm processing your request locally using the built-in AI model. How can I provide more specific help with this topic?`;
+    return `I understand you're asking about "${prompt.substring(0, 30)}...". I'm processing your request locally. How can I provide more specific help with this topic?`;
   }
 }
 

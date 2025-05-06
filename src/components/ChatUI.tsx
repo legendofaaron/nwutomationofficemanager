@@ -1,281 +1,88 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { Bot, Loader2 } from 'lucide-react';
+import { Bot, Loader2, Settings } from 'lucide-react';
 import { LlmSettings } from './LlmSettings';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
 import { ChatHeader } from './chat/ChatHeader';
 import { ChatContainer } from './chat/ChatContainer';
-import { SetupWizard } from './chat/SetupWizard';
 import { Message } from './chat/MessageBubble';
 import { queryLlm, isLlmConfigured, getLlmConfig, generateDocumentContent, loadLlamaModel } from '@/utils/llm';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileSettingsDrawer } from './settings/MobileSettingsDrawer';
-
-type SetupStep = 'welcome' | 'name' | 'company' | 'purpose' | 'complete' | null;
 
 const ChatUI = () => {
   const { aiAssistantOpen, setAiAssistantOpen, assistantConfig, setAssistantConfig, 
          files, setFiles, currentFile, setCurrentFile, setViewMode } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [isSetupMode, setIsSetupMode] = useState(false);
-  const [currentSetupStep, setCurrentSetupStep] = useState<SetupStep>(null);
-  const [setupData, setSetupData] = useState({
-    name: assistantConfig?.name || 'Office Manager',
-    companyName: assistantConfig?.companyName || '',
-    companyDescription: assistantConfig?.companyDescription || '',
-    purpose: assistantConfig?.purpose || ''
-  });
-  const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark' || resolvedTheme === 'superdark';
   const [isLoading, setIsLoading] = useState(false);
-  const [connectionTested, setConnectionTested] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
   const isMobile = useIsMobile();
   const [useN8nChat, setUseN8nChat] = useState(false);
   const [currentLlmConfig, setCurrentLlmConfig] = useState<any>(null);
   const [activeLlamaModel, setActiveLlamaModel] = useState<any>(null);
+  const [isModelConfigured, setIsModelConfigured] = useState(false);
+  const navigate = useNavigate();
 
   // Use effect to sync with aiAssistantOpen state from context
   useEffect(() => {
     setIsOpen(aiAssistantOpen);
   }, [aiAssistantOpen]);
   
-  // Generate welcome message based on assistant config
-  const generateWelcomeMessage = (): Message => {
-    const name = assistantConfig?.name || 'Office Manager';
-    const company = assistantConfig?.companyName ? ` at ${assistantConfig.companyName}` : '';
-    
-    return { 
-      id: '1', 
-      type: 'ai', 
-      content: `Hello! I'm ${name}${company}, your personal AI assistant.
-
-I can help you with many tasks, including:
-- Creating documents and reports
-- Managing your schedule
-- Generating invoices 
-- Processing receipts
-
-How can I assist you today?`
-    };
-  };
-  
-  const [messages, setMessages] = useState<Message[]>([
-    generateWelcomeMessage()
-  ]);
-
-  // Update welcome message when assistant config changes
+  // Load LLM config and check if model is configured
   useEffect(() => {
-    if (messages.length === 1 && messages[0].id === '1') {
-      setMessages([generateWelcomeMessage()]);
-    }
-  }, [assistantConfig]);
-
-  // Load LLM config and initialize local model if needed
-  useEffect(() => {
-    const initializeChat = async () => {
+    const checkLlmConfiguration = async () => {
       try {
         // Get current LLM configuration
         const config = getLlmConfig();
         setCurrentLlmConfig(config);
         
-        // If no configuration exists yet, create a default one with local LLama enabled
-        if (!config) {
-          const defaultConfig = {
-            model: 'local',
-            localLlama: {
-              enabled: true,
-              threads: navigator.hardwareConcurrency || 4,
-              contextSize: 2048,
-              batchSize: 512
-            }
-          };
-          
-          localStorage.setItem('llmConfig', JSON.stringify(defaultConfig));
-          setCurrentLlmConfig(defaultConfig);
+        // Check if a valid configuration exists
+        const configured = isLlmConfigured();
+        setIsModelConfigured(configured);
+        
+        // If we have a local model path, try to load it
+        if (config?.localLlama?.enabled && config.localLlama.modelPath) {
+          try {
+            console.log("Loading local LLama model:", config.localLlama.modelPath);
+            
+            const model = await loadLlamaModel(
+              config.localLlama.modelPath, 
+              {
+                threads: config.localLlama.threads || 4,
+                contextSize: config.localLlama.contextSize || 2048,
+                batchSize: config.localLlama.batchSize || 512
+              }
+            );
+            
+            setActiveLlamaModel(model);
+            console.log("Local model loaded successfully:", model);
+          } catch (err) {
+            console.error("Error loading local model:", err);
+            // Still allow chat if there's another valid configuration
+          }
         }
         
-        // Initialize local model if needed
-        if (config?.localLlama?.enabled && config.localLlama.modelPath) {
-          console.log("Loading local LLama model:", config.localLlama.modelPath);
-          
-          const model = await loadLlamaModel(
-            config.localLlama.modelPath, 
-            {
-              threads: config.localLlama.threads || 4,
-              contextSize: config.localLlama.contextSize || 2048,
-              batchSize: config.localLlama.batchSize || 512
-            }
-          );
-          
-          setActiveLlamaModel(model);
-          console.log("Local model loaded successfully:", model);
-          
-          // Indicate that connection is ready
-          setConnectionTested(true);
-        } else {
-          // Mark as ready even without a model
-          setConnectionTested(true);
+        // If no configuration exists, prompt to configure in settings
+        if (!configured && isOpen) {
+          setShowSettings(true);
         }
       } catch (error) {
-        console.error("Error initializing chat:", error);
-        setConnectionTested(true); // Still mark as ready to avoid blocking the UI
+        console.error("Error checking LLM configuration:", error);
       }
     };
     
-    initializeChat();
-  }, []);
-
-  // Check if setup is needed when assistant opens
-  useEffect(() => {
-    if (isOpen && !assistantConfig?.companyName) {
-      const shouldStartSetup = !setupData.companyName;
-      if (shouldStartSetup) {
-        startSetupProcess();
-      }
-    }
-  }, [isOpen, assistantConfig]);
-
-  const startSetupProcess = () => {
-    setIsSetupMode(true);
-    setCurrentSetupStep('welcome');
-    
-    // Add welcome setup message
-    setMessages([
-      {
-        id: Date.now().toString(), 
-        type: 'system', 
-        content: "🔧 Setup Mode"
-      },
-      {
-        id: (Date.now() + 1).toString(), 
-        type: 'ai', 
-        content: `I notice this is your first time using the assistant. Let's take a moment to personalize it for you.
-
-Would you like to:
-1. Start the guided setup now
-2. Go to the setup page for more detailed configuration
-3. Skip setup for now`
-      }
-    ]);
-  };
-
-  const handleSetupResponse = async (response: string) => {
-    // Add user response to messages
-    const userMessageId = Date.now().toString();
-    setMessages(prev => [...prev, { id: userMessageId, type: 'user', content: response }]);
-    
-    // Process response based on current setup step
-    switch (currentSetupStep) {
-      case 'welcome':
-        if (response.toLowerCase().includes('1') || response.toLowerCase().includes('start')) {
-          processNextSetupStep('name');
-        } else if (response.toLowerCase().includes('2') || response.toLowerCase().includes('setup page')) {
-          navigate('/setup-assistant');
-          setIsOpen(false);
-          return;
-        } else {
-          // Skip setup
-          setIsSetupMode(false);
-          setCurrentSetupStep(null);
-          setMessages(prev => [...prev, { 
-            id: (Date.now() + 1).toString(), 
-            type: 'ai', 
-            content: "No problem! You can always configure me later through the setup page. How can I help you today?" 
-          }]);
-        }
-        break;
-        
-      case 'name':
-        setSetupData(prev => ({ ...prev, name: response }));
-        processNextSetupStep('company');
-        break;
-        
-      case 'company':
-        setSetupData(prev => ({ ...prev, companyName: response }));
-        processNextSetupStep('purpose');
-        break;
-        
-      case 'purpose':
-        setSetupData(prev => ({ ...prev, purpose: response }));
-        processNextSetupStep('complete');
-        break;
-        
-      case 'complete':
-        if (response.toLowerCase().includes('yes')) {
-          // Navigate to full setup
-          navigate('/setup-assistant');
-          setIsOpen(false);
-        } else {
-          // Save settings and exit setup mode
-          completeSetup();
-        }
-        break;
-    }
-  };
-
-  const processNextSetupStep = (nextStep: SetupStep) => {
-    setCurrentSetupStep(nextStep);
-    
-    let message = '';
-    switch (nextStep) {
-      case 'name':
-        message = "What would you like to name your assistant?";
-        break;
-      case 'company':
-        message = "Great! What's the name of your company or organization?";
-        break;
-      case 'purpose':
-        message = "What kind of tasks would you like me to help you with primarily? (e.g., document creation, schedule management, invoice processing)";
-        break;
-      case 'complete':
-        message = `Thank you! I've saved your basic setup:
-
-- Assistant name: ${setupData.name}
-- Company: ${setupData.companyName}
-- Primary tasks: ${setupData.purpose}
-
-Would you like to go to the full setup page for more detailed configuration?`;
-        break;
-    }
-    
-    setMessages(prev => [...prev, { 
-      id: (Date.now() + 1).toString(), 
-      type: 'ai', 
-      content: message 
-    }]);
-  };
-
-  const completeSetup = () => {
-    // Save to context
-    if (setAssistantConfig) {
-      setAssistantConfig({
-        name: setupData.name,
-        companyName: setupData.companyName,
-        purpose: setupData.purpose
-      });
-    }
-    
-    // Exit setup mode
-    setIsSetupMode(false);
-    setCurrentSetupStep(null);
-    
-    // Add completion message
-    setMessages(prev => [...prev, { 
-      id: (Date.now() + 1).toString(), 
-      type: 'ai', 
-      content: `Perfect! Your assistant is now set up as "${setupData.name}" for ${setupData.companyName}. I'll focus on helping you with ${setupData.purpose}.
-
-How can I assist you today?` 
-    }]);
-  };
-
-  // New function to detect if the request is related to document content generation
+    checkLlmConfiguration();
+  }, [isOpen]);
+  
+  // Function to detect if the request is related to document content generation
   const isDocumentContentRequest = (message: string): boolean => {
     const lowerMsg = message.toLowerCase();
     return (
@@ -333,15 +140,9 @@ How can I assist you today?`
     }
   };
 
-  // Modified function to handle message sending with local LLM as default
+  // Handle message sending with local LLM as default
   const handleSendMessage = async (input: string) => {
-    // If in setup mode, process as setup response
-    if (isSetupMode) {
-      handleSetupResponse(input);
-      return;
-    }
-    
-    if (isLoading) return;
+    if (isLoading || !isModelConfigured) return;
     
     const userMessageId = Date.now().toString();
     setMessages([...messages, { id: userMessageId, type: 'user', content: input }]);
@@ -356,8 +157,8 @@ How can I assist you today?`
       };
       
       // Create a system context based on assistant configuration
-      const systemContext = `You are ${assistantConfig?.name || 'Office Manager'}, an AI assistant for ${assistantConfig?.companyName || 'the user'}. 
-      Your purpose is to ${assistantConfig?.purpose || 'help with office tasks'}.
+      const systemContext = `You are ${assistantConfig?.name || 'Office Manager'}, an AI assistant${assistantConfig?.companyName ? ` for ${assistantConfig.companyName}` : ''}. 
+      ${assistantConfig?.purpose ? `Your purpose is to ${assistantConfig.purpose}.` : 'You help with office tasks.'}
       Be concise, helpful, and direct.
       Always respond directly without prefacing your response.`;
       
@@ -402,7 +203,7 @@ How can I assist you today?`
         { 
           id: Date.now().toString(), 
           type: 'ai', 
-          content: "I'm having trouble processing your request right now. Please try again or check your AI model settings."
+          content: "I'm having trouble processing your request right now. Please check your AI model settings."
         }
       ]);
     } finally {
@@ -410,9 +211,9 @@ How can I assist you today?`
     }
   };
 
-  // Modified function to handle quick actions with local LLM as default
+  // Handle quick actions with local LLM as default
   const handleQuickAction = async (action: string) => {
-    if (isSetupMode || isLoading) return;
+    if (isLoading || !isModelConfigured) return;
     
     const userMessageId = Date.now().toString();
     setMessages(prev => [...prev, { id: userMessageId, type: 'user', content: action }]);
@@ -431,8 +232,8 @@ How can I assist you today?`
                         config.openAi?.enabled ? 'gpt-4o-mini' : 'local';
       
       // Create a system context
-      const systemContext = `You are ${assistantConfig?.name || 'Office Manager'}, an AI assistant for ${assistantConfig?.companyName || 'the user'}. 
-      Your purpose is to ${assistantConfig?.purpose || 'help with office tasks'}.
+      const systemContext = `You are ${assistantConfig?.name || 'Office Manager'}, an AI assistant${assistantConfig?.companyName ? ` for ${assistantConfig.companyName}` : ''}. 
+      ${assistantConfig?.purpose ? `Your purpose is to ${assistantConfig.purpose}.` : 'You help with office tasks.'}
       Be concise, helpful, and direct.`;
       
       // Check if the quick action is for document creation
@@ -523,25 +324,19 @@ How can I assist you today?`
             onToggleN8n={() => setUseN8nChat(!useN8nChat)}
           />
         ) : (
-          <LlmSettings />
+          <LlmSettings onConfigured={() => setIsModelConfigured(true)} />
         )
-      ) : isSetupMode ? (
-        <SetupWizard 
-          messages={messages}
-          onSendResponse={handleSetupResponse}
-          messagesEndRef={messagesEndRef}
-        />
       ) : (
         <ChatContainer 
           messages={messages}
           onSendMessage={handleSendMessage}
           onQuickAction={handleQuickAction}
-          isSetupMode={isSetupMode}
           isLoading={isLoading}
           assistantName={assistantConfig?.name || 'Office Manager'}
           assistantPurpose={assistantConfig?.purpose || 'help with tasks'}
           companyName={assistantConfig?.companyName}
           useN8n={useN8nChat}
+          isModelConfigured={isModelConfigured}
         />
       )}
     </div>

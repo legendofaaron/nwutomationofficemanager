@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
 import { QuickActions } from './QuickActions';
 import ChatInput from './ChatInput';
-import { ArrowDown, MessageSquare, WifiOff } from 'lucide-react';
+import { ArrowDown, MessageSquare, WifiOff, AlertCircle } from 'lucide-react';
 
 interface ChatContainerProps {
   messages: Array<{
@@ -21,6 +21,7 @@ interface ChatContainerProps {
   assistantPurpose?: string;
   companyName?: string;
   useN8n?: boolean;
+  isModelConfigured?: boolean;
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = ({
@@ -32,7 +33,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   assistantName = 'Assistant',
   assistantPurpose = 'help with tasks',
   companyName = '',
-  useN8n = false
+  useN8n = false,
+  isModelConfigured = false
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
@@ -77,22 +79,36 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     }
   };
 
-  // If there are no messages yet, show an empty state
+  // If there are no messages yet, show an empty state that prompts to configure an LLM
   if (messages.length === 0) {
     return (
       <div className="flex flex-col h-full items-center justify-center text-center p-6">
-        <div className="bg-blue-100 dark:bg-blue-900/20 p-4 rounded-full mb-4">
-          <MessageSquare className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-        </div>
-        <h3 className="text-lg font-medium mb-2">Start a conversation</h3>
-        <p className="text-sm text-muted-foreground mb-6">
-          Send a message to start chatting with {assistantName}
-        </p>
+        {!isModelConfigured ? (
+          <>
+            <div className="bg-amber-100 dark:bg-amber-900/20 p-4 rounded-full mb-4">
+              <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+            </div>
+            <h3 className="text-lg font-medium mb-2">No LLM Configured</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Please configure a local language model in the settings to start using the chat functionality.
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="bg-blue-100 dark:bg-blue-900/20 p-4 rounded-full mb-4">
+              <MessageSquare className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h3 className="text-lg font-medium mb-2">Start a conversation</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Send a message to start using the LLM
+            </p>
+          </>
+        )}
         <ChatInput 
           onSendMessage={onSendMessage} 
           isLoading={isLoading} 
-          disabled={isLoading} 
-          placeholder={`Message ${assistantName}...`}
+          disabled={isLoading || !isModelConfigured} 
+          placeholder={isModelConfigured ? `Send a message...` : "Configure an LLM first..."}
           useN8n={useN8n}
         />
       </div>
@@ -162,8 +178,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       <ChatInput 
         onSendMessage={onSendMessage} 
         isLoading={isLoading} 
-        disabled={isLoading} 
-        placeholder={`Message ${assistantName}...`}
+        disabled={isLoading || !isModelConfigured} 
+        placeholder={isModelConfigured ? `Send a message...` : "Configure an LLM first..."}
         useN8n={useN8n}
       />
     </div>
