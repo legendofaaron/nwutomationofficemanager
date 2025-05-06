@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { Task, Crew } from './ScheduleTypes';
+import { Task, Crew, DragItem } from './ScheduleTypes';
 import { cn } from '@/lib/utils';
 import { User, Users, MapPin, CheckCircle, Clock, CalendarIcon, Calendar as CalendarIcon2, Plus, Pencil, CalendarCheck, MoveHorizontal } from 'lucide-react';
 import { getCrewDisplayCode } from './ScheduleHelpers';
@@ -40,7 +40,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   onEditTask
 }) => {
   const [currentMonth, setCurrentMonth] = useState<Date>(selectedDate || new Date());
-  const { isDragging, setIsDragging, draggedItemId, setDraggedItemId, draggedItemType, setDraggedItemType, draggedItemData, setDraggedItemData } = useDragDrop();
+  const { isDragging } = useDragDrop();
 
   // Effect to update currentMonth when selectedDate changes significantly (different month)
   useEffect(() => {
@@ -56,29 +56,27 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   const completedTasks = tasksForSelectedDate.filter(task => task.completed).length;
   const pendingTasks = tasksForSelectedDate.length - completedTasks;
 
-  // Handle task drag start
-  const handleDragStart = (data: any, event: React.DragEvent) => {
-    setIsDragging(true);
-    setDraggedItemId(data.id);
-    setDraggedItemType('task');
-    setDraggedItemData(data);
-  };
-
-  // Handle drag end
-  const handleDragEnd = () => {
-    setIsDragging(false);
-    setDraggedItemId(null);
-    setDraggedItemType(null);
-    setDraggedItemData(null);
-  };
-
   // Handle dropping a task on a day
-  const handleDayDrop = (data: any, event: React.DragEvent, date: Date) => {
-    if (data.type === 'task' && onMoveTask) {
-      onMoveTask(data.id, date);
+  const handleDayDrop = (item: DragItem, date: Date) => {
+    if (item.type === 'task' && onMoveTask) {
+      onMoveTask(item.id, date);
+      
+      const taskTitle = item.data.title || 'Task';
       toast.success(`Task rescheduled to ${format(date, 'MMMM d')}`, {
-        description: data.title
+        description: taskTitle
       });
+    } else if (item.type === 'employee') {
+      // Handle employee drops - add logic here if needed
+      toast.info(`Employee dropped on ${format(date, 'MMMM d')}`, {
+        description: item.data.name || 'Employee'
+      });
+      // You might want to open a task creation dialog pre-filled with this employee
+    } else if (item.type === 'crew') {
+      // Handle crew drops - add logic here if needed
+      toast.info(`Crew dropped on ${format(date, 'MMMM d')}`, {
+        description: item.data.name || 'Crew'
+      });
+      // You might want to open a task creation dialog pre-filled with this crew
     }
   };
 
@@ -142,14 +140,15 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                 const hasTasks = dayTasks.length > 0;
                 const hasCompletedTasks = dayTasks.some(task => task.completed);
                 const hasPendingTasks = dayTasks.some(task => !task.completed);
+                const droppableId = `day-${dayDate.toISOString()}`;
 
                 return (
                   <DroppableArea
-                    id={`day-${dayDate.toISOString()}`}
-                    acceptTypes={['task']}
-                    onDrop={(data, event) => handleDayDrop(data, event, dayDate)}
+                    id={droppableId}
+                    acceptTypes={['task', 'employee', 'crew', 'client']}
+                    onDrop={(item, event) => handleDayDrop(item, dayDate)}
                     className={cn(
-                      "calendar-day-cell relative h-full flex items-center justify-center", 
+                      "calendar-day-cell relative h-full flex items-center justify-center rounded-md transition-colors", 
                       dayDate.toDateString() === selectedDate?.toDateString() && "selected-day",
                       hasTasks && "font-medium"
                     )}
@@ -222,7 +221,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
               </Badge>}
           </div>
         </CardHeader>
-        <CardContent className="p-5">
+        <CardContent className={cn("p-5", isDragging && "bg-muted/20 border-dashed border-2 border-primary/20 rounded-b-xl")}>
           <div className="space-y-3 max-h-[calc(100vh-20rem)] overflow-y-auto pr-1">
             {tasksForSelectedDate.length === 0 ? (
               <div className="empty-day-container rounded-xl py-10 animate-fade-in" onClick={onAddNewTask}>
@@ -245,8 +244,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                       ...task, 
                       title: task.title 
                     }}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
+                    disabled={task.completed}
                     className={cn(
                       "task-item flex items-start justify-between p-4 rounded-lg border transition-all duration-200",
                       task.completed 

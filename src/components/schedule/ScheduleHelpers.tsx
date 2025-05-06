@@ -1,21 +1,18 @@
 import React from 'react';
-import { SelectItem, SelectLabel, SelectGroup } from "@/components/ui/select";
-import { 
-  Task, Employee, Crew, Client, ClientLocation, ClientLocationInfo 
-} from "./ScheduleTypes";
-import { getCrewLetterCode } from "@/components/ui/calendar";
+import { SelectItem } from '@/components/ui/select';
+import { Client, ClientLocation, ClientLocationInfo, Crew, Employee } from './ScheduleTypes';
 
-// Helper to get employee options for select
-export const getEmployeeOptions = (employees: Employee[]) => {
+// Helper function to get employee options for dropdowns
+export const getEmployeeOptions = (employees: Employee[]): React.ReactNode[] => {
   return employees.map(employee => (
-    <SelectItem key={employee.id} value={employee.name}>
-      {employee.name}
+    <SelectItem key={employee.id} value={employee.id}>
+      {employee.name} {employee.position ? `- ${employee.position}` : ''}
     </SelectItem>
   ));
 };
 
-// Helper to get crew options for select
-export const getCrewOptions = (crews: Crew[]) => {
+// Helper function to get crew options for dropdowns
+export const getCrewOptions = (crews: Crew[]): React.ReactNode[] => {
   return crews.map(crew => (
     <SelectItem key={crew.id} value={crew.id}>
       {crew.name} ({crew.members.length} members)
@@ -23,82 +20,61 @@ export const getCrewOptions = (crews: Crew[]) => {
   ));
 };
 
-// Helper to get client location options for select
-export const getClientLocationOptions = (clients: Client[], clientLocations: ClientLocation[]) => {
-  const options: JSX.Element[] = [];
+// Helper function to get client location options for dropdowns
+export const getClientLocationOptions = (
+  clients: Client[],
+  clientLocations: ClientLocation[]
+): React.ReactNode[] => {
+  const options: React.ReactNode[] = [];
   
   clients.forEach(client => {
-    const clientLocationsFiltered = clientLocations.filter(
-      location => location.clientId === client.id
-    );
+    const clientLocs = clientLocations.filter(loc => loc.clientId === client.id);
     
-    if (clientLocationsFiltered.length > 0) {
-      // Add a SelectGroup with a label for this client
+    if (clientLocs.length > 0) {
+      // Add client group label
       options.push(
-        <SelectGroup key={`client-group-${client.id}`}>
-          <SelectLabel key={`client-${client.id}`} className="font-medium">
-            {client.name}
-          </SelectLabel>
-          
-          {/* Add each location under this client */}
-          {clientLocationsFiltered.map(location => {
-            const value = `${client.id}:${location.id}`;
-            const displayText = `${location.name}${location.isPrimary ? " (Primary)" : ""}`;
-            
-            return (
-              <SelectItem 
-                key={value} 
-                value={value}
-                className="pl-6"
-              >
-                {displayText}
-              </SelectItem>
-            );
-          })}
-        </SelectGroup>
+        <SelectItem key={client.id} value={`group-${client.id}`} disabled className="font-semibold">
+          {client.name}
+        </SelectItem>
       );
+      
+      // Add locations for this client
+      clientLocs.forEach(location => {
+        options.push(
+          <SelectItem key={location.id} value={`${client.id}:${location.id}`} className="pl-6">
+            {location.name} {location.isPrimary ? "(Primary)" : ""}
+          </SelectItem>
+        );
+      });
     }
   });
   
   return options;
 };
 
-// Helper to parse the combined client:location value
-export const parseClientLocationValue = (value: string): { clientId: string, locationId: string } | null => {
+// Helper function to parse client location value from dropdown
+export const parseClientLocationValue = (value: string): { clientId: string; locationId: string } | null => {
   if (!value || !value.includes(':')) return null;
   
   const [clientId, locationId] = value.split(':');
   return { clientId, locationId };
 };
 
-// Helper to get crew member names for display
-export const getCrewMemberNames = (crewId: string, crews: Crew[], employees: Employee[]) => {
-  const crew = crews.find(c => c.id === crewId);
-  if (!crew) return "No members";
-  
-  const memberNames = crew.members.map(memberId => {
-    const employee = employees.find(emp => emp.id === memberId);
-    return employee ? employee.name : "";
+// Helper function to get crew member names from member IDs
+export const getCrewMemberNames = (memberIds: string[], employees: Employee[]): string[] => {
+  return memberIds.map(id => {
+    const employee = employees.find(emp => emp.id === id);
+    return employee ? employee.name : '';
   }).filter(Boolean);
-  
-  return memberNames.join(", ");
 };
 
-// Helper function to get crew letter code
-export const getCrewDisplayCode = (crewId: string, crews: Crew[]): string => {
-  const crewIndex = crews.findIndex(crew => crew.id === crewId);
-  return crewIndex >= 0 ? getCrewLetterCode(crewIndex) : '';
-};
-
-// Helper to get client location info
+// Helper function to get client location details
 export const getClientLocationInfo = (
-  clientId: string, 
-  locationId: string, 
-  clients: Client[], 
+  clientId: string,
+  locationId: string,
+  clients: Client[],
   clientLocations: ClientLocation[]
 ): ClientLocationInfo | null => {
-  if (!clientId || !locationId) return null;
-  
   const client = clients.find(c => c.id === clientId);
   const location = clientLocations.find(l => l.id === locationId);
   
@@ -112,4 +88,64 @@ export const getClientLocationInfo = (
     state: location.state,
     zipCode: location.zipCode
   };
+};
+
+// Helper function to get crew display code
+export const getCrewDisplayCode = (crewId: string, crews: Crew[]): string => {
+  const crewIndex = crews.findIndex(crew => crew.id === crewId);
+  return crewIndex >= 0 ? getCrewLetterCode(crewIndex) : '';
+};
+
+// Helper function to generate crew letter codes
+export const getCrewLetterCode = (index: number): string => {
+  // For the first 26 crews, use A-Z
+  if (index < 26) {
+    return String.fromCharCode(65 + index); // A = 65 in ASCII
+  } 
+  
+  // For crews beyond 26, use A2, B2, C2, etc.
+  const cycle = Math.floor(index / 26);
+  const letter = String.fromCharCode(65 + (index % 26));
+  return `${letter}${cycle + 1}`;
+};
+
+// Helper function to format date range for display
+export const formatDateRange = (start: Date, end: Date): string => {
+  // If same day, just show one date
+  if (start.toDateString() === end.toDateString()) {
+    return start.toLocaleDateString();
+  }
+  
+  // Otherwise show range
+  return `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+};
+
+// Helper function to create drag preview element
+export const createDragPreview = (title: string, type: string): HTMLElement => {
+  const preview = document.createElement('div');
+  preview.className = `${type}-drag-preview`;
+  
+  let icon = '📄';
+  switch (type) {
+    case 'task':
+      icon = '📋';
+      break;
+    case 'employee':
+      icon = '👤';
+      break;
+    case 'crew':
+      icon = '👥';
+      break;
+    case 'client':
+      icon = '🏢';
+      break;
+    default:
+      icon = '📄';
+  }
+  
+  preview.innerHTML = `<div class="flex items-center gap-1.5 px-2 py-1 bg-primary text-primary-foreground rounded-md shadow-md whitespace-nowrap text-sm max-w-[200px] truncate">
+    <span class="inline-block">${icon}</span> ${title || type}
+  </div>`;
+  
+  return preview;
 };

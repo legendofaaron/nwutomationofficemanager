@@ -71,3 +71,32 @@ export interface ScheduleFilter {
   id?: string;
   name?: string;
 }
+
+// Enhanced DragDrop Types
+export type DraggableItemType = 'task' | 'employee' | 'crew' | 'client' | 'location';
+
+export interface DragItem {
+  id: string;
+  type: DraggableItemType;
+  sourceContainerId?: string;
+  data: any;
+}
+
+export interface DroppableConfig {
+  id: string;
+  acceptTypes: DraggableItemType[];
+  onDrop: (item: DragItem, dropData?: any) => void;
+}
+
+export interface DragStartEventData {
+  item: DragItem;
+  node: HTMLElement;
+  clientX: number;
+  clientY: number;
+}
+
+export interface DragEndEventData {
+  item: DragItem;
+  dropped: boolean;
+  dropTarget?: string;
+}
