@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -236,7 +235,21 @@ const ChatUI = () => {
       ${assistantConfig?.purpose ? `Your purpose is to ${assistantConfig.purpose}.` : 'You help with office tasks.'}
       Be concise, helpful, and direct.`;
       
-      // Check if the quick action is for document creation
+      // Query the LLM directly for all actions to ensure consistent LLM responses
+      const responseText = await queryLlm(
+        action,
+        config.endpoint || '',
+        modelToUse,
+        undefined,
+        systemContext
+      );
+      
+      setMessages(prev => [
+        ...prev, 
+        { id: Date.now().toString(), type: 'ai', content: responseText.message }
+      ]);
+        
+      // If the action is a document creation request, also create the document
       if (action === 'create document') {
         // Generate a sample document
         const documentPrompt = "Create a professional business document template with sections for executive summary, introduction, background, analysis, recommendations, and conclusion.";
@@ -244,31 +257,8 @@ const ChatUI = () => {
         
         // Create new document with generated content
         updateDocumentWithContent(documentContent, "New Business Document");
-        
-        // Add response to chat about the document creation
-        setMessages(prev => [
-          ...prev, 
-          { 
-            id: Date.now().toString(), 
-            type: 'ai', 
-            content: `I've created a new business document template for you. You can find it in your document list.` 
-          }
-        ]);
-      } else {
-        // Handle other quick actions normally with local model by default
-        const responseText = await queryLlm(
-          action,
-          config.endpoint || '',
-          modelToUse,
-          undefined,
-          systemContext
-        );
-        
-        setMessages(prev => [
-          ...prev, 
-          { id: Date.now().toString(), type: 'ai', content: responseText.message }
-        ]);
       }
+
     } catch (error) {
       console.error('Error handling quick action:', error);
       // Provide a graceful fallback response

@@ -79,7 +79,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     }
   };
 
-  // If there are no messages yet, show an empty state that prompts to configure an LLM
+  // If there are no messages yet and model is not configured, show configuration prompt
   if (messages.length === 0) {
     return (
       <div className="flex flex-col h-full items-center justify-center text-center p-6">
@@ -98,9 +98,9 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
             <div className="bg-blue-100 dark:bg-blue-900/20 p-4 rounded-full mb-4">
               <MessageSquare className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             </div>
-            <h3 className="text-lg font-medium mb-2">Start a conversation</h3>
+            <h3 className="text-lg font-medium mb-2">Chat Ready</h3>
             <p className="text-sm text-muted-foreground mb-6">
-              Send a message to start using the LLM
+              Send a message to start a conversation
             </p>
           </>
         )}
