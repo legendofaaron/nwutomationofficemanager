@@ -17,6 +17,12 @@ const supabaseUrl = 'https://nbgxyfrxmorlgdgytlui.supabase.co';
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
+// Helper function to log steps for debugging
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[PAYPAL-INTEGRATION] ${step}${detailsStr}`);
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -24,13 +30,20 @@ serve(async (req) => {
   }
 
   try {
-    const { action, userId, subscriptionId, amount = 500, productName = 'Professional Plan' } = await req.json();
+    logStep("Function started");
+    
+    // Parse request body
+    const requestData = await req.json();
+    const { action, userId, subscriptionId, amount = 500, productName = 'Professional Plan' } = requestData;
+    
+    logStep("Request parsed", { action, userId, subscriptionId });
 
     if (!PAYPAL_CLIENT_ID || !PAYPAL_SECRET_KEY) {
       throw new Error('PayPal credentials not configured');
     }
 
     // Get PayPal OAuth token
+    logStep("Requesting PayPal auth token");
     const tokenResponse = await fetch(`${PAYPAL_BASE_URL}/v1/oauth2/token`, {
       method: 'POST',
       headers: {
@@ -42,15 +55,19 @@ serve(async (req) => {
 
     const tokenData = await tokenResponse.json();
     if (!tokenResponse.ok) {
+      logStep("Failed to get PayPal token", tokenData);
       throw new Error(`Failed to get PayPal token: ${JSON.stringify(tokenData)}`);
     }
 
+    logStep("Received PayPal auth token");
     const accessToken = tokenData.access_token;
 
     let result;
 
     switch (action) {
       case 'create_subscription':
+        logStep("Creating subscription", { amount, productName });
+        
         // Create a PayPal subscription
         const subResponse = await fetch(`${PAYPAL_BASE_URL}/v1/billing/subscriptions`, {
           method: 'POST',
@@ -59,7 +76,7 @@ serve(async (req) => {
             'Authorization': `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            plan_id: 'P-12345678901234567', // Replace with your actual PayPal plan ID
+            plan_id: 'P-5ML4271244454362WXNWU5NQ', // This should be your actual PayPal plan ID
             subscriber: {
               name: {
                 given_name: 'Office',
@@ -68,8 +85,8 @@ serve(async (req) => {
               email_address: req.headers.get('x-email') || 'customer@example.com'
             },
             application_context: {
-              return_url: `${req.headers.get('origin')}/dashboard?success=true`,
-              cancel_url: `${req.headers.get('origin')}/dashboard?success=false`
+              return_url: `${req.headers.get('origin')}/payment?status=success`,
+              cancel_url: `${req.headers.get('origin')}/payment?status=cancelled`
             }
           }),
         });
@@ -77,52 +94,45 @@ serve(async (req) => {
         result = await subResponse.json();
         
         if (!subResponse.ok) {
-          console.error('PayPal subscription creation error:', result);
+          logStep("PayPal subscription creation error", result);
           throw new Error(`Failed to create subscription: ${JSON.stringify(result)}`);
         }
+
+        logStep("PayPal subscription created", { id: result.id });
 
         // Store subscription info in our database
         const { data: subData, error: subError } = await supabase
           .from('subscriptions')
           .update({
             payment_id: result.id,
-            status: 'active',
-            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+            status: 'pending', // Set to pending until approved
+            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
             is_subscription: true
           })
           .eq('id', subscriptionId)
           .select();
 
         if (subError) {
-          console.error('Database update error:', subError);
+          logStep("Database update error", { error: subError });
           throw new Error(`Failed to update subscription in database: ${subError.message}`);
         }
 
-        // Record the transaction
-        const { error: txError } = await supabase
-          .from('payment_transactions')
-          .insert({
-            user_id: userId,
-            subscription_id: subscriptionId,
-            payment_id: result.id,
-            amount: amount, // $5.00
-            status: 'completed',
-            is_subscription: true
-          });
-
-        if (txError) {
-          console.error('Transaction record error:', txError);
-        }
-
+        // Find the approval URL and return it
+        const approvalUrl = result.links.find(link => link.rel === 'approve').href;
+        
+        logStep("Returning approval URL", { url: approvalUrl });
+        
         return new Response(JSON.stringify({
           success: true,
           data: result,
-          approvalUrl: result.links.find(link => link.rel === 'approve').href
+          approvalUrl: approvalUrl
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
         
       case 'create_payment':
+        logStep("Creating one-time payment", { amount, productName });
+        
         // Create a one-time PayPal payment
         const orderResponse = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders`, {
           method: 'POST',
@@ -142,8 +152,9 @@ serve(async (req) => {
               },
             ],
             application_context: {
-              return_url: `${req.headers.get('origin')}/dashboard?success=true`,
-              cancel_url: `${req.headers.get('origin')}/dashboard?success=false`,
+              return_url: `${req.headers.get('origin')}/payment?status=success`,
+              cancel_url: `${req.headers.get('origin')}/payment?status=cancelled`,
+              user_action: 'PAY_NOW',
             },
           }),
         });
@@ -151,9 +162,11 @@ serve(async (req) => {
         const orderResult = await orderResponse.json();
         
         if (!orderResponse.ok) {
-          console.error('PayPal order creation error:', orderResult);
+          logStep("PayPal order creation error", orderResult);
           throw new Error(`Failed to create order: ${JSON.stringify(orderResult)}`);
         }
+
+        logStep("PayPal order created", { id: orderResult.id });
 
         // Store payment info in our database
         const { data: payData, error: payError } = await supabase
@@ -167,40 +180,41 @@ serve(async (req) => {
           .select();
 
         if (payError) {
-          console.error('Database update error:', payError);
+          logStep("Database update error", { error: payError });
           throw new Error(`Failed to update payment in database: ${payError.message}`);
         }
 
-        // Record the transaction
-        const { error: payTxError } = await supabase
-          .from('payment_transactions')
-          .insert({
-            user_id: userId,
-            subscription_id: subscriptionId,
-            payment_id: orderResult.id,
-            amount: amount,
-            status: 'pending',
-            is_subscription: false
-          });
-
-        if (payTxError) {
-          console.error('Transaction record error:', payTxError);
-        }
-
         // Find the approval URL and return it
-        const approvalUrl = orderResult.links.find(link => link.rel === 'approve').href;
-
+        const payApprovalUrl = orderResult.links.find(link => link.rel === 'approve').href;
+        
+        logStep("Returning approval URL", { url: payApprovalUrl });
+        
         return new Response(JSON.stringify({
           success: true,
           data: orderResult,
-          approvalUrl: approvalUrl
+          approvalUrl: payApprovalUrl
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
 
       case 'cancel_subscription':
+        logStep("Cancelling subscription", { subscriptionId });
+        
+        // First get the PayPal subscription ID from our database
+        const { data: cancelData, error: cancelFetchError } = await supabase
+          .from('subscriptions')
+          .select('payment_id')
+          .eq('id', subscriptionId)
+          .single();
+          
+        if (cancelFetchError || !cancelData?.payment_id) {
+          logStep("Error fetching subscription", { error: cancelFetchError });
+          throw new Error(`Failed to fetch subscription: ${cancelFetchError?.message || 'No payment ID found'}`);
+        }
+        
         // Cancel a PayPal subscription
-        const cancelResponse = await fetch(`${PAYPAL_BASE_URL}/v1/billing/subscriptions/${subscriptionId}`, {
+        const paypalSubId = cancelData.payment_id;
+        const cancelResponse = await fetch(`${PAYPAL_BASE_URL}/v1/billing/subscriptions/${paypalSubId}/cancel`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -212,24 +226,28 @@ serve(async (req) => {
         });
 
         if (!cancelResponse.ok) {
-          const cancelError = await cancelResponse.text();
-          console.error('PayPal cancellation error:', cancelError);
-          throw new Error(`Failed to cancel subscription: ${cancelError}`);
+          const errorText = await cancelResponse.text();
+          logStep("PayPal cancellation error", { error: errorText });
+          // Continue with local cancellation even if PayPal call fails
+        } else {
+          logStep("PayPal subscription cancelled successfully");
         }
 
-        // Update our database
+        // Update our database regardless of PayPal response
         const { error: cancelError } = await supabase
           .from('subscriptions')
           .update({
             status: 'cancelled',
           })
-          .eq('payment_id', subscriptionId);
+          .eq('id', subscriptionId);
 
         if (cancelError) {
-          console.error('Database update error:', cancelError);
+          logStep("Database update error", { error: cancelError });
           throw new Error(`Failed to update subscription in database: ${cancelError.message}`);
         }
 
+        logStep("Successfully cancelled subscription in database");
+        
         return new Response(JSON.stringify({
           success: true,
           message: 'Subscription cancelled successfully'
@@ -238,6 +256,8 @@ serve(async (req) => {
         });
 
       case 'check_subscription':
+        logStep("Checking subscription status", { subscriptionId });
+        
         // Get the subscription details from our database
         const { data: checkData, error: checkError } = await supabase
           .from('subscriptions')
@@ -245,15 +265,18 @@ serve(async (req) => {
           .eq('id', subscriptionId)
           .single();
           
-        if (checkError) {
-          throw new Error(`Error fetching subscription: ${checkError.message}`);
+        if (checkError || !checkData?.payment_id) {
+          logStep("Error fetching subscription", { error: checkError });
+          throw new Error(`Error fetching subscription: ${checkError?.message || 'No payment ID found'}`);
         }
         
         let checkResponse;
+        const paymentId = checkData.payment_id;
         
         if (checkData.is_subscription) {
           // Check a subscription status
-          checkResponse = await fetch(`${PAYPAL_BASE_URL}/v1/billing/subscriptions/${checkData.payment_id}`, {
+          logStep("Checking PayPal subscription status", { id: paymentId });
+          checkResponse = await fetch(`${PAYPAL_BASE_URL}/v1/billing/subscriptions/${paymentId}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -261,8 +284,9 @@ serve(async (req) => {
             },
           });
         } else {
-          // Check a payment status
-          checkResponse = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders/${checkData.payment_id}`, {
+          // Check a payment/order status
+          logStep("Checking PayPal order status", { id: paymentId });
+          checkResponse = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders/${paymentId}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -271,16 +295,133 @@ serve(async (req) => {
           });
         }
 
-        result = await checkResponse.json();
+        const statusResult = await checkResponse.json();
         
         if (!checkResponse.ok) {
-          console.error('PayPal status check error:', result);
-          throw new Error(`Failed to check status: ${JSON.stringify(result)}`);
+          logStep("PayPal status check error", statusResult);
+          throw new Error(`Failed to check status: ${JSON.stringify(statusResult)}`);
+        }
+        
+        logStep("Status check complete", { status: statusResult.status });
+        
+        // Update our database with the current status
+        if (statusResult.status) {
+          const paypalStatus = statusResult.status.toLowerCase();
+          let dbStatus = 'pending';
+          
+          // Map PayPal status to our database status
+          if (['active', 'approved', 'completed'].includes(paypalStatus)) {
+            dbStatus = 'active';
+          } else if (['cancelled', 'suspended'].includes(paypalStatus)) {
+            dbStatus = 'cancelled';
+          }
+          
+          // Update the status in our database
+          await supabase
+            .from('subscriptions')
+            .update({ status: dbStatus })
+            .eq('payment_id', paymentId);
+            
+          logStep("Updated subscription status in database", { status: dbStatus });
         }
 
         return new Response(JSON.stringify({
           success: true,
-          data: result
+          data: statusResult
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+
+      case 'verify_payment_status':
+        // New function to verify payment status after redirect
+        logStep("Verifying payment status for user", { userId });
+        
+        const { data: verifyData, error: verifyError } = await supabase
+          .from('subscriptions')
+          .select('id, payment_id, is_subscription, status')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (verifyError || !verifyData?.payment_id) {
+          logStep("Error fetching recent payment", { error: verifyError });
+          throw new Error('No recent payment found');
+        }
+
+        logStep("Found payment for verification", { id: verifyData.id, paymentId: verifyData.payment_id });
+        
+        // Fetch current status from PayPal
+        let verifyResponse;
+        let paypalStatus;
+        
+        if (verifyData.is_subscription) {
+          verifyResponse = await fetch(`${PAYPAL_BASE_URL}/v1/billing/subscriptions/${verifyData.payment_id}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`,
+            },
+          });
+          
+          const subResult = await verifyResponse.json();
+          if (!verifyResponse.ok) {
+            logStep("PayPal verification error", subResult);
+          } else {
+            paypalStatus = subResult.status;
+          }
+        } else {
+          verifyResponse = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders/${verifyData.payment_id}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`,
+            },
+          });
+          
+          const orderResult = await verifyResponse.json();
+          if (!verifyResponse.ok) {
+            logStep("PayPal verification error", orderResult);
+          } else {
+            paypalStatus = orderResult.status;
+          }
+        }
+        
+        // Update our database if we got a status
+        if (paypalStatus) {
+          let dbStatus = 'pending';
+          
+          // Map PayPal status to our database status
+          if (['ACTIVE', 'APPROVED', 'COMPLETED'].includes(paypalStatus.toUpperCase())) {
+            dbStatus = 'active';
+          } else if (['CANCELLED', 'SUSPENDED'].includes(paypalStatus.toUpperCase())) {
+            dbStatus = 'cancelled';
+          }
+          
+          // Only update if status changed
+          if (dbStatus !== verifyData.status) {
+            await supabase
+              .from('subscriptions')
+              .update({ status: dbStatus })
+              .eq('id', verifyData.id);
+              
+            logStep("Updated payment status", { oldStatus: verifyData.status, newStatus: dbStatus });
+          }
+          
+          return new Response(JSON.stringify({
+            success: true,
+            status: dbStatus,
+            paypalStatus: paypalStatus
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        // If we couldn't verify with PayPal, return the current status
+        return new Response(JSON.stringify({
+          success: true,
+          status: verifyData.status,
+          message: "Couldn't verify status with PayPal"
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -289,10 +430,12 @@ serve(async (req) => {
         throw new Error(`Unknown action: ${action}`);
     }
   } catch (error) {
-    console.error('Error in PayPal integration function:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("Error in PayPal integration function", { error: errorMessage });
+    
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: errorMessage
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

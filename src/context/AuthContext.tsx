@@ -14,6 +14,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   refreshUser: () => void;
   setDemoMode: (isDemoMode: boolean) => void;
+  verifyPayment: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<LocalUser | null>(null);
   const [session, setSession] = useState<LocalSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(() => {
     // Initialize demo mode from localStorage if it exists
     const savedDemoMode = localStorage.getItem(DEMO_MODE_STORAGE_KEY);
@@ -54,22 +56,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // If there's no active subscription in the database, check with the payment provider
       if (!data) {
         try {
-          // Call the verification function to check with payment provider
-          const verifyResponse = await supabase.functions.invoke('stripe-integration', {
+          // Try Stripe first
+          const stripeResponse = await supabase.functions.invoke('stripe-integration', {
             body: {
-              action: 'check_subscription',
+              action: 'verify_payment_status',
               userId: user.id,
             },
           });
           
-          if (!verifyResponse.data.success) {
-            console.error('Payment provider verification failed:', verifyResponse.data.error);
-            setHasActiveSubscription(false);
-            return false;
+          if (!stripeResponse.data?.success) {
+            // Try PayPal if Stripe check failed
+            const paypalResponse = await supabase.functions.invoke('paypal-integration', {
+              body: {
+                action: 'verify_payment_status',
+                userId: user.id,
+              },
+            });
+            
+            if (!paypalResponse.data?.success) {
+              console.error('Payment provider verification failed');
+              setHasActiveSubscription(false);
+              return false;
+            }
+            
+            // Update from PayPal verification response
+            const isActive = paypalResponse.data.status === 'active';
+            setHasActiveSubscription(isActive);
+            return isActive;
           }
           
-          // Update from verification response
-          const isActive = verifyResponse.data.data?.status === 'active';
+          // Update from Stripe verification response
+          const isActive = stripeResponse.data.status === 'active';
           setHasActiveSubscription(isActive);
           return isActive;
           
@@ -90,6 +107,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
   }, [user]);
+
+  // Function to verify payment status
+  const verifyPayment = useCallback(async (): Promise<void> => {
+    if (!user || isVerifyingPayment) return;
+    
+    setIsVerifyingPayment(true);
+    try {
+      // Try Stripe verification
+      const stripeResponse = await supabase.functions.invoke('stripe-integration', {
+        body: {
+          action: 'verify_payment_status',
+          userId: user.id,
+        },
+      });
+      
+      if (stripeResponse.data?.status === 'active') {
+        setHasActiveSubscription(true);
+        return;
+      }
+      
+      // Try PayPal verification
+      const paypalResponse = await supabase.functions.invoke('paypal-integration', {
+        body: {
+          action: 'verify_payment_status',
+          userId: user.id,
+        },
+      });
+      
+      if (paypalResponse.data?.status === 'active') {
+        setHasActiveSubscription(true);
+      }
+    } catch (error) {
+      console.error('Error verifying payment status:', error);
+    } finally {
+      setIsVerifyingPayment(false);
+    }
+  }, [user, isVerifyingPayment]);
 
   // Function to refresh user data
   const refreshUser = useCallback(() => {
@@ -114,6 +168,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Check subscription if user is signed in
         if (currentSession?.user) {
           checkSubscription();
+          // Also verify payment status to catch any recent payments
+          verifyPayment();
         }
       }
       setIsLoading(false);
@@ -147,6 +203,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check subscription if user is signed in
       if (initialSession?.user) {
         checkSubscription();
+        // Also verify payment status to catch any recent payments
+        verifyPayment();
       }
     }
     
@@ -155,7 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       unsubscribe();
     };
-  }, [toast, isDemoMode, checkSubscription]);
+  }, [toast, isDemoMode, checkSubscription, verifyPayment]);
 
   const signOut = async () => {
     try {
@@ -203,7 +261,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       checkSubscription,
       signOut, 
       refreshUser,
-      setDemoMode 
+      setDemoMode,
+      verifyPayment
     }}>
       {children}
     </AuthContext.Provider>

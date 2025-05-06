@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -14,6 +14,7 @@ const PaymentPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   // Display payment status message if coming from a payment flow
   React.useEffect(() => {
@@ -54,7 +55,7 @@ const PaymentPage = () => {
             </p>
           </div>
           
-          <PaymentError />
+          {paymentError && <PaymentError error={paymentError} />}
           <PaymentPlans />
           
           <div className="mt-8 text-center">
