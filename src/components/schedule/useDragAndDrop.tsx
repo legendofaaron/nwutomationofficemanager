@@ -42,7 +42,7 @@ export function useDraggable({
   }, [isDragging, draggedItem, id, type]);
   
   // Create handlers
-  const handleDragStart = (e: React.DragEvent<HTMLElement>) => {
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     if (disabled) {
       e.preventDefault();
       return;
@@ -86,7 +86,7 @@ export function useDraggable({
     }
   };
   
-  const handleDragEnd = (e: React.DragEvent<HTMLElement>) => {
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
     e.stopPropagation();
     
     // Reset state
@@ -137,7 +137,7 @@ export function useDroppable({
     return () => {
       unregisterDropTarget(id);
     };
-  }, [id, acceptTypes.join(','), disabled]);
+  }, [id, acceptTypes.join(','), disabled, registerDropTarget, unregisterDropTarget]);
   
   // Check if this area can accept the currently dragged item
   useEffect(() => {
@@ -149,7 +149,7 @@ export function useDroppable({
   }, [isDragging, draggedItem, acceptTypes]);
   
   // Create handlers
-  const handleDragEnter = (e: React.DragEvent<HTMLElement>) => {
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -166,7 +166,7 @@ export function useDroppable({
     }
   };
   
-  const handleDragOver = (e: React.DragEvent<HTMLElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -178,7 +178,7 @@ export function useDroppable({
     }
   };
   
-  const handleDragLeave = (e: React.DragEvent<HTMLElement>) => {
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -195,7 +195,7 @@ export function useDroppable({
     }
   };
   
-  const handleDrop = (e: React.DragEvent<HTMLElement>) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -210,7 +210,7 @@ export function useDroppable({
       if (data) {
         const item: DragItem = JSON.parse(data);
         if (acceptTypes.includes(item.type) && !disabled) {
-          onDrop(item, e as any);
+          onDrop(item, e);
         }
       }
     } catch (error) {

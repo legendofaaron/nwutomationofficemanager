@@ -109,3 +109,32 @@ export interface DragEndEventData {
   dropped: boolean;
   dropTarget?: string;
 }
+
+// Add missing interfaces for files that are using them
+export interface DatabaseTable {
+  id: string;
+  name: string;
+  columns: { name: string; type: string }[];
+  rows: any[];
+  data?: any[];
+}
+
+export interface FileItem {
+  id: string;
+  name: string;
+  type: 'document' | 'spreadsheet' | 'folder';
+  content?: string;
+  spreadsheetData?: {
+    headers: string[];
+    rows: Record<string, any>[];
+  };
+  children?: FileItem[];
+}
+
+export interface Branding {
+  companyName: string;
+  logoType?: 'default' | 'text' | 'image';
+  logoUrl?: string;
+  primaryColor?: string;
+  accentColor?: string;
+}

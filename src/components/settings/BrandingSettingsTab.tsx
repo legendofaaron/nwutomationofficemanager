@@ -20,6 +20,7 @@ import { useAppContext } from '@/context/AppContext';
 import { Hexagon, Upload, Palette, Check } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { Card, CardContent } from '@/components/ui/card';
+import { Branding } from '@/components/schedule/ScheduleTypes';
 
 const brandingFormSchema = z.object({
   companyName: z.string().min(2, {

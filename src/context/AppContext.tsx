@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import DragDropProvider from '@/components/schedule/DragDropContext';
+import { Employee, Crew, Client, ClientLocation, FileItem, DatabaseTable, Branding } from '@/components/schedule/ScheduleTypes';
 
 // Define Todo interface
 interface Todo {
@@ -15,47 +16,6 @@ interface Todo {
   endTime?: string;
 }
 
-// Define Employee interface
-interface Employee {
-  id: string;
-  name: string;
-  position?: string;
-  email?: string;
-  phone?: string;
-  crews?: string[];
-}
-
-// Define Crew interface
-interface Crew {
-  id: string;
-  name: string;
-  members: string[];
-}
-
-// Define Client interface
-interface Client {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  contactPerson?: string;
-  notes?: string;
-  active?: boolean;
-}
-
-// Define ClientLocation interface
-interface ClientLocation {
-  id: string;
-  clientId: string;
-  name: string;
-  address: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  isPrimary?: boolean;
-}
-
 // Define ViewMode type
 export type ViewMode = 'welcome' | 'office' | 'knowledge' | 'document' | 'spreadsheet' | 'database' | 'files' | 'settings';
 
@@ -65,30 +25,6 @@ interface AssistantConfig {
   companyName?: string;
   companyDescription?: string;
   purpose?: string;
-}
-
-// Define Branding interface
-interface Branding {
-  companyName: string;
-  logoType?: string;
-  logoUrl?: string;
-}
-
-// Define DatabaseTable interface
-interface DatabaseTable {
-  id: string;
-  name: string;
-  columns?: any[];
-  data?: any[];
-}
-
-// Define File interface
-interface FileItem {
-  id: string;
-  name: string;
-  type: 'document' | 'spreadsheet' | 'folder';
-  content?: string;
-  children?: FileItem[];
 }
 
 // Define the context interface
@@ -155,9 +91,45 @@ const mockClientLocations: ClientLocation[] = [
 ];
 
 const mockDatabaseTables: DatabaseTable[] = [
-  { id: 'table1', name: 'Customers' },
-  { id: 'table2', name: 'Orders' },
-  { id: 'table3', name: 'Products' }
+  { 
+    id: 'table1', 
+    name: 'Customers',
+    columns: [
+      { name: 'id', type: 'uuid' },
+      { name: 'name', type: 'text' },
+      { name: 'email', type: 'text' }
+    ],
+    rows: [
+      { id: '1', name: 'John Doe', email: 'john@example.com' },
+      { id: '2', name: 'Jane Smith', email: 'jane@example.com' }
+    ]
+  },
+  { 
+    id: 'table2', 
+    name: 'Orders', 
+    columns: [
+      { name: 'id', type: 'uuid' },
+      { name: 'customer_id', type: 'uuid' },
+      { name: 'total', type: 'numeric' }
+    ],
+    rows: [
+      { id: '1', customer_id: '1', total: 99.99 },
+      { id: '2', customer_id: '2', total: 149.99 }
+    ]
+  },
+  { 
+    id: 'table3', 
+    name: 'Products',
+    columns: [
+      { name: 'id', type: 'uuid' },
+      { name: 'name', type: 'text' },
+      { name: 'price', type: 'numeric' }
+    ],
+    rows: [
+      { id: '1', name: 'Widget', price: 19.99 },
+      { id: '2', name: 'Gadget', price: 29.99 }
+    ]
+  }
 ];
 
 const mockFiles: FileItem[] = [
@@ -169,7 +141,24 @@ const mockFiles: FileItem[] = [
       { id: 'doc1', name: 'Annual Report', type: 'document', content: '# Annual Report\n\nThis is the annual report content.' }
     ]
   },
-  { id: 'doc2', name: 'Meeting Notes', type: 'document', content: '# Meeting Notes\n\nNotes from the last meeting.' }
+  { 
+    id: 'doc2', 
+    name: 'Meeting Notes', 
+    type: 'document', 
+    content: '# Meeting Notes\n\nNotes from the last meeting.' 
+  },
+  {
+    id: 'spreadsheet1',
+    name: 'Budget',
+    type: 'spreadsheet',
+    spreadsheetData: {
+      headers: ['Category', 'Amount', 'Notes'],
+      rows: [
+        { Category: 'Rent', Amount: '1500', Notes: 'Monthly' },
+        { Category: 'Utilities', Amount: '200', Notes: 'Average' }
+      ]
+    }
+  }
 ];
 
 // Provider component
@@ -212,7 +201,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [aiAssistantOpen, setAiAssistantOpen] = useState<boolean>(false);
   const [assistantConfig, setAssistantConfig] = useState<AssistantConfig>({ name: 'Office Assistant', companyName: 'Your Company' });
-  const [branding, setBranding] = useState<Branding>({ companyName: 'Your Company' });
+  const [branding, setBranding] = useState<Branding>({ 
+    companyName: 'Your Company',
+    logoType: 'default',
+    primaryColor: '#1E90FF',
+    accentColor: '#0066CC'
+  });
   const [files, setFiles] = useState<FileItem[]>(mockFiles);
   const [currentFile, setCurrentFile] = useState<FileItem | null>(null);
   const [databaseTables, setDatabaseTables] = useState<DatabaseTable[]>(mockDatabaseTables);
