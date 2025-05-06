@@ -12,6 +12,7 @@ import { SetupWizard } from './chat/SetupWizard';
 import { Message } from './chat/MessageBubble';
 import { queryLlm, isLlmConfigured, getLlmConfig, generateDocumentContent } from '@/utils/llm';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileSettingsDrawer } from './settings/MobileSettingsDrawer';
 
 type SetupStep = 'welcome' | 'name' | 'company' | 'purpose' | 'complete' | null;
 
@@ -575,7 +576,16 @@ How can I assist you today?`
       />
       
       {showSettings ? (
-        <LlmSettings />
+        isMobile ? (
+          <MobileSettingsDrawer 
+            open={showSettings} 
+            onClose={() => setShowSettings(false)} 
+            useN8nChat={useN8nChat}
+            onToggleN8n={() => setUseN8nChat(!useN8nChat)}
+          />
+        ) : (
+          <LlmSettings />
+        )
       ) : isSetupMode ? (
         <SetupWizard 
           messages={messages}
