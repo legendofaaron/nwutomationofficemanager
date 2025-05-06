@@ -5,9 +5,14 @@ import { SendHorizontal } from 'lucide-react';
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
+  isLoading?: boolean;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled = false }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ 
+  onSendMessage, 
+  disabled = false, 
+  isLoading = false 
+}) => {
   const [input, setInput] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -29,12 +34,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled = false }
         onChange={(e) => setInput(e.target.value)}
         placeholder={disabled ? "Please wait..." : "Message your assistant..."}
         className="flex-1 p-2 rounded bg-[#0D1117] text-[#E5EAF2] placeholder-[#8493A8] border border-[#2D3747]/80 focus:outline-none focus:border-blue-500"
-        disabled={disabled}
+        disabled={disabled || isLoading}
       />
       <button
         type="submit"
-        className={`ml-2 p-2 rounded-full ${disabled ? 'bg-[#1E2430] text-[#5D6B82]' : 'bg-blue-600 hover:bg-blue-700 text-white'} transition-colors`}
-        disabled={disabled || !input.trim()}
+        className={`ml-2 p-2 rounded-full ${disabled || isLoading ? 'bg-[#1E2430] text-[#5D6B82]' : 'bg-blue-600 hover:bg-blue-700 text-white'} transition-colors`}
+        disabled={disabled || isLoading || !input.trim()}
       >
         <SendHorizontal className="h-5 w-5" />
       </button>
