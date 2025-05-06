@@ -104,13 +104,14 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        Caption: (props) => {
-          // Type cast and pass the needed properties to our custom component
-          return <CustomCaption 
-            displayMonth={props.displayMonth} 
-            onPreviousClick={() => props.onPreviousClick()} 
-            onNextClick={() => props.onNextClick()} 
-          />;
+        Caption: ({ displayMonth, onNextClick: onNext, onPreviousClick: onPrev }) => {
+          return (
+            <CustomCaption 
+              displayMonth={displayMonth} 
+              onPreviousClick={() => onPrev?.()}
+              onNextClick={() => onNext?.()} 
+            />
+          );
         },
       }}
       {...props}
