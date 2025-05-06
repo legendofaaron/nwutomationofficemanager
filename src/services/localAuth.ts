@@ -19,6 +19,8 @@ export interface LocalUser {
     };
   };
   created_at: string;
+  reset_token?: string;
+  reset_token_expires?: number;
 }
 
 export interface LocalSession {
@@ -393,5 +395,113 @@ export const localAuth = {
         document.removeEventListener('auth-state-change', handleAuthStateChange);
       }
     };
+  },
+
+  // Request password reset
+  requestPasswordReset: ({ email }: { email: string }): { data: { success: boolean }; error: Error | null } => {
+    try {
+      const users = getUsers();
+      const userIndex = users.findIndex(user => user.email === email);
+      
+      if (userIndex === -1) {
+        // For security reasons, still return success even if email doesn't exist
+        return {
+          data: { success: true },
+          error: null
+        };
+      }
+      
+      // Generate a reset token and expiration (24 hours)
+      const resetToken = uuidv4();
+      const resetTokenExpires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+      
+      // Update user with reset token
+      users[userIndex].reset_token = resetToken;
+      users[userIndex].reset_token_expires = resetTokenExpires;
+      
+      saveUsers(users);
+      
+      // In a real app, we would send an email here with a link to the reset page
+      // For this demo, we'll just log the token to the console
+      console.log(`Password Reset Token for ${email}: ${resetToken}`);
+      
+      return {
+        data: { success: true },
+        error: null
+      };
+    } catch (error) {
+      return {
+        data: { success: false },
+        error: error instanceof Error ? error : new Error('Failed to request password reset')
+      };
+    }
+  },
+  
+  // Validate reset token
+  validateResetToken: ({ token }: { token: string }): { data: { valid: boolean, email?: string }; error: Error | null } => {
+    try {
+      const users = getUsers();
+      const user = users.find(user => 
+        user.reset_token === token && 
+        user.reset_token_expires && 
+        user.reset_token_expires > Date.now()
+      );
+      
+      if (!user) {
+        return {
+          data: { valid: false },
+          error: null
+        };
+      }
+      
+      return {
+        data: { 
+          valid: true,
+          email: user.email
+        },
+        error: null
+      };
+    } catch (error) {
+      return {
+        data: { valid: false },
+        error: error instanceof Error ? error : new Error('Failed to validate reset token')
+      };
+    }
+  },
+  
+  // Reset password with token
+  resetPassword: ({ token, password }: { token: string, password: string }): { data: { success: boolean }; error: Error | null } => {
+    try {
+      const users = getUsers();
+      const userIndex = users.findIndex(user => 
+        user.reset_token === token && 
+        user.reset_token_expires && 
+        user.reset_token_expires > Date.now()
+      );
+      
+      if (userIndex === -1) {
+        return {
+          data: { success: false },
+          error: new Error('Invalid or expired reset token')
+        };
+      }
+      
+      // Update password and clear reset token
+      users[userIndex].password = password;
+      users[userIndex].reset_token = undefined;
+      users[userIndex].reset_token_expires = undefined;
+      
+      saveUsers(users);
+      
+      return {
+        data: { success: true },
+        error: null
+      };
+    } catch (error) {
+      return {
+        data: { success: false },
+        error: error instanceof Error ? error : new Error('Failed to reset password')
+      };
+    }
   }
 };
