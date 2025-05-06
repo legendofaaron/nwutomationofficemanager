@@ -13,7 +13,7 @@ export const generateMockEmployees = (): Employee[] => {
   ];
 };
 
-// Generate mock crews - Fixed memberIds to members
+// Generate mock crews
 export const generateMockCrews = (employees: Employee[]): Crew[] => {
   return [
     { 
@@ -40,37 +40,41 @@ export const generateMockClients = (): Client[] => {
   ];
 };
 
-// Generate mock client locations - Removed 'notes' property
+// Generate mock client locations
 export const generateMockClientLocations = (clients: Client[]): ClientLocation[] => {
   return [
     { 
       id: 'loc-1', 
       clientId: 'client-1',
       name: 'Downtown Office', 
-      address: '123 Main St, Anytown, CA 12345'
+      address: '123 Main St, Anytown, CA 12345',
+      notes: 'Main headquarters' 
     },
     { 
       id: 'loc-2', 
       clientId: 'client-1',
       name: 'Warehouse', 
-      address: '456 Industrial Ave, Anytown, CA 12345'
+      address: '456 Industrial Ave, Anytown, CA 12345',
+      notes: 'Storage and distribution facility'
     },
     { 
       id: 'loc-3', 
       clientId: 'client-2',
       name: 'Headquarters', 
-      address: '789 Corporate Blvd, Othertown, CA 67890'
+      address: '789 Corporate Blvd, Othertown, CA 67890',
+      notes: 'Corporate offices'
     },
     { 
       id: 'loc-4', 
       clientId: 'client-3',
       name: 'Apartment Complex', 
-      address: '101 Residential Lane, Somewhere, CA 54321'
+      address: '101 Residential Lane, Somewhere, CA 54321',
+      notes: 'Residential property management'
     },
   ];
 };
 
-// Generate mock tasks - Removed 'description' property
+// Generate mock tasks
 export const generateMockTasks = (
   employees: Employee[], 
   crews: Crew[], 

@@ -1,4 +1,3 @@
-
 export interface Task {
   id: string;
   title: string;
@@ -11,6 +10,7 @@ export interface Task {
   endTime?: string;
   location?: string;
   clientId?: string;
+  locationId?: string; // Adding this field to match usage in MockScheduleData
   clientLocationId?: string;
 }
 
@@ -27,6 +27,7 @@ export interface Crew {
   id: string;
   name: string;
   members: string[];
+  lead?: string; // Adding this field to match usage in MockScheduleData
 }
 
 export interface Client {
@@ -49,6 +50,7 @@ export interface ClientLocation {
   state?: string;
   zipCode?: string;
   isPrimary?: boolean;
+  notes?: string; // Adding this field to match usage in MockScheduleData
 }
 
 export interface TaskFormData {
