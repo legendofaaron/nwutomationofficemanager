@@ -1,12 +1,16 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { localAuth, LocalSession, LocalUser } from '@/services/localAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   session: LocalSession | null;
   user: LocalUser | null;
   isLoading: boolean;
   isDemoMode: boolean;
+  hasActiveSubscription: boolean;
+  checkSubscription: () => Promise<boolean>;
   signOut: () => Promise<void>;
   refreshUser: () => void;
   setDemoMode: (isDemoMode: boolean) => void;
@@ -26,7 +30,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const savedDemoMode = localStorage.getItem(DEMO_MODE_STORAGE_KEY);
     return savedDemoMode === 'true';
   });
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const { toast } = useToast();
+
+  // Function to check if user has an active subscription
+  const checkSubscription = async (): Promise<boolean> => {
+    if (!user) return false;
+    
+    try {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+      
+      const isActive = !!data;
+      setHasActiveSubscription(isActive);
+      return isActive;
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
+      return false;
+    }
+  };
 
   // Function to refresh user data
   const refreshUser = () => {
@@ -34,6 +60,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (currentSession) {
       setSession(currentSession);
       setUser(currentSession.user);
+      
+      // Check subscription status when user is refreshed
+      checkSubscription();
     }
   };
 
@@ -44,6 +73,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!isDemoMode) {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
+        
+        // Check subscription if user is signed in
+        if (currentSession?.user) {
+          checkSubscription();
+        }
       }
       setIsLoading(false);
       
@@ -72,6 +106,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isDemoMode) {
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
+      
+      // Check subscription if user is signed in
+      if (initialSession?.user) {
+        checkSubscription();
+      }
     }
     
     setIsLoading(false);
@@ -123,6 +162,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user, 
       isLoading, 
       isDemoMode,
+      hasActiveSubscription,
+      checkSubscription,
       signOut, 
       refreshUser,
       setDemoMode 
