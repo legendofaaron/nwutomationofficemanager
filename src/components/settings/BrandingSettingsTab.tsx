@@ -18,6 +18,7 @@ import * as z from 'zod';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAppContext } from '@/context/AppContext';
 import { Hexagon } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
 
 const brandingFormSchema = z.object({
   companyName: z.string().min(2, {
@@ -32,6 +33,7 @@ type BrandingFormValues = z.infer<typeof brandingFormSchema>;
 export const BrandingSettingsTab = () => {
   const { branding, setBranding } = useAppContext();
   const { toast } = useToast();
+  const { resolvedTheme } = useTheme();
   
   const form = useForm<BrandingFormValues>({
     resolver: zodResolver(brandingFormSchema),
@@ -54,6 +56,19 @@ export const BrandingSettingsTab = () => {
       description: "Your company branding has been updated successfully.",
     });
   }
+
+  // Determine border and icon color based on theme
+  const borderColor = resolvedTheme === 'light' 
+    ? 'border-gray-700' 
+    : resolvedTheme === 'superdark'
+      ? 'border-gray-700'
+      : 'border-gray-400';
+  
+  const iconColor = resolvedTheme === 'light'
+    ? 'text-gray-700'
+    : resolvedTheme === 'superdark'
+      ? 'text-gray-400'
+      : 'text-gray-400';
 
   return (
     <Form {...form}>
@@ -92,8 +107,8 @@ export const BrandingSettingsTab = () => {
                       <RadioGroupItem value="default" />
                     </FormControl>
                     <FormLabel className="font-normal flex items-center gap-2">
-                      <div className="rounded-full border-2 border-app-blue p-1">
-                        <Hexagon className="h-4 w-4 text-app-blue" />
+                      <div className={`rounded-full border-2 ${borderColor} p-1`}>
+                        <Hexagon className={`h-4 w-4 ${iconColor}`} />
                       </div>
                       Default Logo
                     </FormLabel>
