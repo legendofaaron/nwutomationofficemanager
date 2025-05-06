@@ -83,7 +83,7 @@ const AssignmentTab: React.FC<AssignmentTabProps> = ({
           {formData.assignedCrew && (
             <div className="mt-2 text-sm text-muted-foreground bg-muted/30 dark:bg-[#1A1A1A] p-3 rounded-md">
               <div className="font-medium text-foreground dark:text-gray-100">Crew members:</div>
-              <div className="mt-1">{getCrewMemberNames(formData.assignedCrew, crews, employees)}</div>
+              <div className="mt-1">{getCrewMemberNames(formData.assignedCrew, crews)}</div>
             </div>
           )}
         </div>
