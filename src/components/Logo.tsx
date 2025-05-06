@@ -8,16 +8,23 @@ interface LogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
   showText?: boolean;
+  small?: boolean; // Added missing property
+  onClick?: () => void; // Added missing property
 }
 
 export const Logo: React.FC<LogoProps> = ({ 
   className, 
   size = 'md',
-  showText = false
+  showText = false,
+  small = false, // Default value for small
+  onClick // Added onClick handler
 }) => {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const isSuperDark = resolvedTheme === 'superdark';
+  
+  // If small prop is provided, override size to 'sm'
+  const logoSize = small ? 'sm' : size;
   
   const sizeClasses = {
     sm: 'w-8 h-8',
@@ -44,13 +51,16 @@ export const Logo: React.FC<LogoProps> = ({
       : 'text-gray-800';
 
   return (
-    <div className={cn('flex items-center gap-2', className)}>
+    <div 
+      className={cn('flex items-center gap-2', onClick && 'cursor-pointer', className)}
+      onClick={onClick}
+    >
       <div className="relative">
-        <Hexagon className={cn('stroke-2', sizeClasses[size], logoColor)} />
+        <Hexagon className={cn('stroke-2', sizeClasses[logoSize], logoColor)} />
         <Hexagon 
           className={cn(
             'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 scale-60', 
-            sizeClasses[size],
+            sizeClasses[logoSize],
             innerColor
           )}
           style={{ transform: 'translate(-50%, -50%) scale(0.6)' }}

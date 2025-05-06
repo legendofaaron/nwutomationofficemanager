@@ -44,8 +44,8 @@ export const BrandingSettingsTab = () => {
       companyName: branding.companyName || 'Northwestern Automation',
       logoType: branding.logoType || 'default',
       logoUrl: branding.logoUrl || '',
-      primaryColor: '#1E90FF',
-      accentColor: '#0066CC',
+      primaryColor: branding.primaryColor || '#1E90FF',
+      accentColor: branding.accentColor || '#0066CC',
     },
   });
 

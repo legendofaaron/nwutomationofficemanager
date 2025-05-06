@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export type ViewMode = 'welcome' | 'files' | 'database' | 'document' | 'knowledge' | 'office' | 'spreadsheet' | 'settings';
@@ -49,6 +50,7 @@ interface BrandingConfig {
   logoType: 'default' | 'text' | 'image';
   logoUrl?: string;
   primaryColor?: string;
+  accentColor?: string; // Added missing property
 }
 
 interface Crew {
@@ -358,7 +360,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
   const [branding, setBranding] = useState<BrandingConfig>({
     companyName: 'Northwestern Automation',
-    logoType: 'default'
+    logoType: 'default',
+    primaryColor: '#1E90FF',
+    accentColor: '#0066CC' // Added default accentColor
   });
   
   // Add missing state variables
