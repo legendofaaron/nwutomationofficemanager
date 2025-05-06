@@ -13,7 +13,7 @@ const PAYPAL_SECRET_KEY = Deno.env.get('PAYPAL_SECRET_KEY') || '';
 const PAYPAL_BASE_URL = 'https://api-m.sandbox.paypal.com'; // Use sandbox for testing
 
 // Supabase client initialization
-const supabaseUrl = 'https://pcdgpphpdzjgqcskyxup.supabase.co';
+const supabaseUrl = 'https://nbgxyfrxmorlgdgytlui.supabase.co';
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
@@ -145,7 +145,7 @@ serve(async (req) => {
           .update({
             status: 'cancelled',
           })
-          .eq('id', subscriptionId);
+          .eq('payment_id', subscriptionId);
 
         if (cancelError) {
           console.error('Database update error:', cancelError);

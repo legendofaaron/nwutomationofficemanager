@@ -13,6 +13,7 @@ interface Subscription {
   id: string;
   status: 'active' | 'cancelled' | 'expired' | 'trial';
   payment_provider: string;
+  payment_id?: string;
   subscription_plan: string;
   price_amount: number;
   currency: string;
@@ -95,7 +96,7 @@ const SubscriptionPlan = () => {
       // Redirect user to PayPal approval URL
       window.location.href = response.data.approvalUrl;
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating subscription:', error);
       toast({
         title: 'Subscription Error',
@@ -109,7 +110,7 @@ const SubscriptionPlan = () => {
   };
 
   const cancelSubscription = async () => {
-    if (!subscription) return;
+    if (!subscription || !subscription.payment_id) return;
     
     setIsLoading(true);
     try {
@@ -130,7 +131,7 @@ const SubscriptionPlan = () => {
       });
       
       fetchSubscription();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error cancelling subscription:', error);
       toast({
         title: 'Cancellation Error',
