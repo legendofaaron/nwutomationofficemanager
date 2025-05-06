@@ -21,6 +21,7 @@ export const PaymentVerifier = () => {
           title: "Payment verification completed",
           description: "Your subscription status has been updated.",
           duration: 3000,
+          variant: "success",
         });
       }).catch(err => {
         console.error("Payment verification error:", err);

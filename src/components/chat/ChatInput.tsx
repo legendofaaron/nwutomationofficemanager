@@ -72,11 +72,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
     return null; // n8n chat will render its own input UI
   }
 
+  // Theme-specific styling functions
   const getBorderColor = () => {
     if (isFocused) {
       return isSuperDark ? 'border-blue-600' : isDark ? 'border-blue-500' : 'border-blue-400';
     }
-    return isSuperDark ? 'border-[#2D3747]/80' : isDark ? 'border-[#2D3747]/80' : 'border-gray-200';
+    return isSuperDark ? 'border-[#1E1E1E]' : isDark ? 'border-[#2D3747]/80' : 'border-gray-200';
   };
 
   const getBackgroundColor = () => {
@@ -109,15 +110,19 @@ const ChatInput: React.FC<ChatInputProps> = ({
         : `${baseStyle} bg-blue-500 hover:bg-blue-600 text-white`;
   };
 
+  const getFormStyle = () => {
+    return isSuperDark 
+      ? 'border-[#181818] bg-black' 
+      : isDark 
+        ? 'border-[#1E2430]/80 bg-[#0D1117]' 
+        : 'border-gray-200 bg-white';
+  };
+
   return (
     <TooltipProvider>
       <form 
         onSubmit={handleSubmit} 
-        className={`p-3 border-t ${
-          isSuperDark ? 'border-[#181818] bg-black' : 
-          isDark ? 'border-[#1E2430]/80 bg-[#0D1117]' : 
-          'border-gray-200 bg-white'
-        } relative transition-all ${isFocused ? 'shadow-md' : ''}`}
+        className={`p-3 border-t ${getFormStyle()} relative transition-all ${isFocused ? 'shadow-md' : ''}`}
       >
         <div className={`flex items-end rounded-lg border ${getBorderColor()} ${getBackgroundColor()} transition-all overflow-hidden`}>
           <div className="flex items-center pl-2">
@@ -127,7 +132,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                   type="button" 
                   variant="ghost" 
                   size="icon" 
-                  className="h-8 w-8 text-gray-400 hover:text-gray-600 rounded-full"
+                  className={`h-8 w-8 text-gray-400 hover:text-gray-600 rounded-full ${isDark ? 'hover:bg-[#1E2430]/70' : ''}`}
                   disabled={disabled}
                 >
                   <Paperclip className="h-4 w-4" />
@@ -157,7 +162,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                       type="button" 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 text-gray-400 hover:text-gray-600 rounded-full"
+                      className={`h-8 w-8 text-gray-400 hover:text-gray-600 rounded-full ${isDark ? 'hover:bg-[#1E2430]/70' : ''}`}
                       disabled={disabled}
                     >
                       <Mic className="h-4 w-4" />
@@ -171,7 +176,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                       type="button" 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 mr-1 text-gray-400 hover:text-gray-600 rounded-full"
+                      className={`h-8 w-8 mr-1 text-gray-400 hover:text-gray-600 rounded-full ${isDark ? 'hover:bg-[#1E2430]/70' : ''}`}
                       disabled={disabled}
                     >
                       <Smile className="h-4 w-4" />

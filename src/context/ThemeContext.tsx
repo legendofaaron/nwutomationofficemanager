@@ -21,18 +21,23 @@ const addThemeInitScript = () => {
           const savedTheme = localStorage.getItem('theme');
           if (savedTheme === 'dark' || savedTheme === 'superdark') {
             document.documentElement.classList.add(savedTheme);
+            document.body.classList.add(savedTheme);
           } else if (savedTheme === 'system') {
             if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
               document.documentElement.classList.add('dark');
+              document.body.classList.add('dark');
             } else {
               document.documentElement.classList.add('light');
+              document.body.classList.add('light');
             }
           } else {
             document.documentElement.classList.add('light');
+            document.body.classList.add('light');
           }
         } catch (e) {
           console.error('Theme initialization error:', e);
           document.documentElement.classList.add('light');
+          document.body.classList.add('light');
         }
       })();
     `;
@@ -46,7 +51,7 @@ addThemeInitScript();
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(
-    () => (typeof localStorage !== 'undefined' ? (localStorage.getItem('theme') as Theme) : 'light') || 'light'
+    () => (typeof localStorage !== 'undefined' ? (localStorage.getItem('theme') as Theme) : 'system') || 'system'
   );
   
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark' | 'superdark'>(
@@ -65,6 +70,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const root = window.document.documentElement;
+    const body = window.document.body;
     
     let newResolvedTheme: 'light' | 'dark' | 'superdark';
     
@@ -76,9 +82,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     
     setResolvedTheme(newResolvedTheme);
     
-    // Remove the old theme class and apply the new one
+    // Remove the old theme class and apply the new one to both html and body
     root.classList.remove('light', 'dark', 'superdark');
+    body.classList.remove('light', 'dark', 'superdark');
     root.classList.add(newResolvedTheme);
+    body.classList.add(newResolvedTheme);
     
     // Save theme preference to localStorage
     localStorage.setItem('theme', theme);
@@ -95,8 +103,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setResolvedTheme(newTheme);
       
       const root = window.document.documentElement;
+      const body = window.document.body;
       root.classList.remove('light', 'dark', 'superdark');
+      body.classList.remove('light', 'dark', 'superdark');
       root.classList.add(newTheme);
+      body.classList.add(newTheme);
     };
     
     mediaQuery.addEventListener('change', handleChange);

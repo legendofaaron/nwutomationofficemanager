@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -291,6 +290,8 @@ const ChatUI = () => {
     }
   };
 
+  
+  // Handle toggle chat with theme-aware styling
   const handleToggleChat = () => {
     const newState = !isOpen;
     setIsOpen(newState);
@@ -305,10 +306,20 @@ const ChatUI = () => {
 
   // Fixed visibility logic to correctly render chat or button
   if (!isOpen) {
+    const getButtonStyles = () => {
+      if (resolvedTheme === 'superdark') {
+        return 'bg-blue-600 hover:bg-blue-700 shadow-superdark text-white';
+      }
+      if (resolvedTheme === 'dark') {
+        return 'bg-[#4661F1] hover:bg-[#3A51D6] shadow-md text-white';
+      }
+      return 'bg-blue-500 hover:bg-blue-600 shadow-lg text-white';
+    };
+
     return (
       <Button
         onClick={handleToggleChat}
-        className="fixed bottom-4 right-4 h-12 w-12 rounded-full p-0 shadow-lg hover:shadow-xl transition-all bg-blue-600 hover:bg-blue-700 text-white border-none z-50"
+        className={`fixed bottom-4 right-4 h-12 w-12 rounded-full p-0 hover:shadow-xl transition-all border-none z-50 ${getButtonStyles()}`}
         aria-label="Open chat assistant"
       >
         <Bot className="h-5 w-5" />
@@ -316,10 +327,22 @@ const ChatUI = () => {
     );
   }
 
+  // Get theme-specific styles for the chat container
+  const getChatContainerStyles = () => {
+    if (resolvedTheme === 'superdark') {
+      return 'bg-black border-[#181818]/80 shadow-superdark';
+    }
+    if (resolvedTheme === 'dark') {
+      return 'bg-[#0D1117] border-[#1E2430]/80 shadow-xl';
+    }
+    return 'bg-white border-gray-200 shadow-xl';
+  };
+
   return (
     <div className={`fixed right-0 bottom-0 ${isMobile ? 'w-full left-0' : 'right-4 bottom-4 w-[400px]'} 
-      bg-[#0D1117] rounded-xl shadow-xl border border-[#1E2430]/80 flex flex-col 
+      ${getChatContainerStyles()} rounded-xl border flex flex-col 
       ${isMobile ? 'h-[90vh] z-50 rounded-b-none' : 'h-[550px] z-20'} overflow-hidden`}>
+      
       <ChatHeader 
         assistantName={assistantConfig?.name || 'Local LLM Assistant'} 
         companyName={assistantConfig?.companyName}

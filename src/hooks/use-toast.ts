@@ -1,19 +1,17 @@
 
-import * as React from "react"
-import {
-  Toast,
-  ToastActionElement,
-  ToastProps,
-} from "@/components/ui/toast"
+import { useState, useEffect } from "react"
+import { toast as sonnerToast, type Toast } from "sonner"
+import { useTheme } from "@/context/ThemeContext"
 
 const TOAST_LIMIT = 5
 const TOAST_REMOVE_DELAY = 1000000
 
-type ToasterToast = ToastProps & {
+type ToasterToast = Toast & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
-  action?: ToastActionElement
+  action?: React.ReactElement
+  variant?: "default" | "destructive" | "success"
 }
 
 const actionTypes = {
@@ -91,8 +89,6 @@ export const reducer = (state: State, action: Action): State => {
     case actionTypes.DISMISS_TOAST: {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -143,6 +139,27 @@ type Toast = Omit<ToasterToast, "id">
 function toast({ ...props }: Toast) {
   const id = genId()
 
+  // Use sonner toast here for better theme integration
+  if (props.variant === "destructive") {
+    sonnerToast.error(props.title as string, {
+      description: props.description as string,
+      id,
+      duration: props.duration || 5000,
+    })
+  } else if (props.variant === "success") {
+    sonnerToast.success(props.title as string, {
+      description: props.description as string,
+      id,
+      duration: props.duration || 3000,
+    })
+  } else {
+    sonnerToast(props.title as string, {
+      description: props.description as string,
+      id,
+      duration: props.duration || 4000,
+    })
+  }
+
   const update = (props: Toast) =>
     dispatch({
       type: actionTypes.UPDATE_TOAST,
@@ -170,9 +187,10 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
-  const [state, setState] = React.useState<State>(memoryState)
+  const [state, setState] = useState<State>(memoryState)
+  const { resolvedTheme } = useTheme();
 
-  React.useEffect(() => {
+  useEffect(() => {
     listeners.push(setState)
     return () => {
       const index = listeners.indexOf(setState)
