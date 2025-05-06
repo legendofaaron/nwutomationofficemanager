@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import SubscriptionCard from './subscription/SubscriptionCard';
 import { useSubscription } from './subscription/useSubscription';
@@ -26,10 +26,10 @@ const SubscriptionPlan = () => {
   if (!user) {
     return (
       <Card>
-        <Card.Header>
-          <Card.Title>Professional Plan</Card.Title>
-          <Card.Description>Sign in to manage your subscription</Card.Description>
-        </Card.Header>
+        <CardHeader>
+          <CardTitle>Professional Plan</CardTitle>
+          <CardDescription>Sign in to manage your subscription</CardDescription>
+        </CardHeader>
       </Card>
     );
   }
