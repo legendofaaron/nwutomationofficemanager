@@ -291,14 +291,24 @@ const ChatUI = () => {
   };
 
   
-  // Handle toggle chat with theme-aware styling
-  const handleToggleChat = () => {
+  // Handle toggle chat with theme-aware styling and prevent event propagation
+  const handleToggleChat = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     const newState = !isOpen;
     setIsOpen(newState);
     setAiAssistantOpen(newState);
   };
 
-  const handleOpenSettings = () => {
+  const handleOpenSettings = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (checkAccess('AI Settings')) {
       setShowSettings(!showSettings);
     }
@@ -339,15 +349,18 @@ const ChatUI = () => {
   };
 
   return (
-    <div className={`fixed right-0 bottom-0 ${isMobile ? 'w-full left-0' : 'right-4 bottom-4 w-[400px]'} 
-      ${getChatContainerStyles()} rounded-xl border flex flex-col 
-      ${isMobile ? 'h-[90vh] z-50 rounded-b-none' : 'h-[550px] z-20'} overflow-hidden`}>
+    <div 
+      className={`fixed right-0 bottom-0 ${isMobile ? 'w-full left-0' : 'right-4 bottom-4 w-[400px]'} 
+        ${getChatContainerStyles()} rounded-xl border flex flex-col 
+        ${isMobile ? 'h-[90vh] z-50 rounded-b-none' : 'h-[550px] z-20'} overflow-hidden`}
+      onClick={(e) => e.stopPropagation()}
+    >
       
       <ChatHeader 
         assistantName={assistantConfig?.name || 'Local LLM Assistant'} 
         companyName={assistantConfig?.companyName}
-        onSettingsClick={handleOpenSettings}
         onCloseClick={handleToggleChat}
+        onSettingsClick={handleOpenSettings}
         useN8n={useN8nChat}
         onToggleN8n={() => {
           if (checkAccess('N8N Integration')) {

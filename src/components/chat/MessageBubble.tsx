@@ -18,9 +18,14 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   const isDark = resolvedTheme === 'dark';
   const isSuperDark = resolvedTheme === 'superdark';
   
+  // Stop propagation of click events
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+  
   if (message.type === 'system') {
     return (
-      <div className="flex justify-center mb-3">
+      <div className="flex justify-center mb-3" onClick={handleClick}>
         <div className={`px-3 py-1 rounded-full text-xs font-medium ${
           isSuperDark 
             ? 'bg-[#181818] text-gray-400' 
@@ -62,6 +67,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   return (
     <div 
       className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-3 group`}
+      onClick={handleClick}
     >
       {message.type === 'ai' && (
         <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-2 mt-1 shrink-0 ${getAIAvatarStyles()}`}>

@@ -50,6 +50,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
+    
     if (input.trim() && !disabled && !isLoading) {
       onSendMessage(input.trim());
       setInput('');
@@ -65,6 +67,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
       e.preventDefault();
       handleSubmit(e);
     }
+  };
+
+  // Prevent click events from bubbling up
+  const handleButtonClick = (callback?: () => void) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation(); // Stop event propagation
+    callback?.();
   };
 
   // If using n8n chat, don't render our custom input
@@ -122,6 +131,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     <TooltipProvider>
       <form 
         onSubmit={handleSubmit} 
+        onClick={(e) => e.stopPropagation()}
         className={`p-3 border-t ${getFormStyle()} relative transition-all ${isFocused ? 'shadow-md' : ''}`}
       >
         <div className={`flex items-end rounded-lg border ${getBorderColor()} ${getBackgroundColor()} transition-all overflow-hidden`}>
@@ -134,6 +144,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                   size="icon" 
                   className={`h-8 w-8 text-gray-400 hover:text-gray-600 rounded-full ${isDark ? 'hover:bg-[#1E2430]/70' : ''}`}
                   disabled={disabled}
+                  onClick={handleButtonClick()}
                 >
                   <Paperclip className="h-4 w-4" />
                 </Button>
@@ -152,6 +163,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             className={`flex-1 resize-none py-3 px-2 ${getBackgroundColor()} ${getTextColor()} ${getPlaceholderColor()} focus:outline-none min-h-[40px] max-h-[150px] overflow-y-auto`}
             disabled={disabled || isLoading}
             rows={1}
+            onClick={(e) => e.stopPropagation()}
           />
           <div className="flex items-center pr-1">
             {!isMobile && (
@@ -164,6 +176,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                       size="icon" 
                       className={`h-8 w-8 text-gray-400 hover:text-gray-600 rounded-full ${isDark ? 'hover:bg-[#1E2430]/70' : ''}`}
                       disabled={disabled}
+                      onClick={handleButtonClick()}
                     >
                       <Mic className="h-4 w-4" />
                     </Button>
@@ -178,6 +191,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                       size="icon" 
                       className={`h-8 w-8 mr-1 text-gray-400 hover:text-gray-600 rounded-full ${isDark ? 'hover:bg-[#1E2430]/70' : ''}`}
                       disabled={disabled}
+                      onClick={handleButtonClick()}
                     >
                       <Smile className="h-4 w-4" />
                     </Button>
@@ -190,6 +204,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
               type="submit"
               className={`mr-1 mb-1 h-10 ${isMobile ? 'px-3' : 'px-5'} ${getButtonStyle()}`}
               disabled={disabled || isLoading || !input.trim()}
+              onClick={handleButtonClick(() => handleSubmit(new Event('submit') as unknown as React.FormEvent))}
             >
               {isLoading ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
