@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useDragDrop } from './DragDropContext';
 import { DragItem, DraggableItemType } from './ScheduleTypes';
@@ -36,7 +36,10 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
   const itemRef = useRef<HTMLDivElement>(null);
   
   // Check if this item is being dragged
-  const isThisBeingDragged = isDragging && draggedItem?.id === id && draggedItem?.type === type;
+  useEffect(() => {
+    const isThisBeingDragged = isDragging && draggedItem?.id === id && draggedItem?.type === type;
+    setIsDraggingThis(isThisBeingDragged);
+  }, [isDragging, draggedItem, id, type]);
   
   // Handle drag start
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
@@ -73,8 +76,21 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('application/json', JSON.stringify(item));
     
-    // Set cursor style
-    e.dataTransfer.setDragImage(new Image(), 0, 0); // Invisible drag image
+    // Create a custom drag image with preview of content
+    try {
+      const dragImage = document.createElement('div');
+      dragImage.className = 'task-drag-preview';
+      dragImage.innerHTML = `<div class="bg-primary text-white px-2 py-1 rounded shadow text-xs">${data.title || 'Task'}</div>`;
+      document.body.appendChild(dragImage);
+      e.dataTransfer.setDragImage(dragImage, 10, 10);
+      
+      setTimeout(() => {
+        document.body.removeChild(dragImage);
+      }, 0);
+    } catch (error) {
+      // If custom drag image fails, fall back to default
+      console.warn('Failed to set custom drag image:', error);
+    }
     
     // Set state
     setIsDraggingThis(true);
@@ -119,7 +135,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       className={cn(
         'transition-all duration-200',
         className,
-        isThisBeingDragged && dragActiveClassName
+        isDraggingThis && dragActiveClassName
       )}
       data-draggable-id={id}
       data-draggable-type={type}

@@ -33,7 +33,7 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
 }) => {
   const [isOver, setIsOver] = useState(false);
   const [canAcceptCurrent, setCanAcceptCurrent] = useState(false);
-  const { isDragging, draggedItem, registerDropTarget, unregisterDropTarget, canAcceptType, setDragOverTarget } = useDragDrop();
+  const { isDragging, draggedItem, registerDropTarget, unregisterDropTarget, setDragOverTarget } = useDragDrop();
   const dragEnterCount = useRef(0);
   
   // Register this drop area with the context
@@ -45,7 +45,7 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
     return () => {
       unregisterDropTarget(id);
     };
-  }, [id, acceptTypes.join(','), disabled]);
+  }, [id, acceptTypes.join(','), disabled, registerDropTarget, unregisterDropTarget]);
   
   // Check if this area can accept the currently dragged item
   useEffect(() => {
@@ -114,6 +114,13 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
     dragEnterCount.current = 0;
     setIsOver(false);
     setDragOverTarget(null);
+    
+    // Add visual feedback for the drop
+    const element = e.currentTarget;
+    element.classList.add('drop-highlight');
+    setTimeout(() => {
+      element.classList.remove('drop-highlight');
+    }, 500);
     
     // Handle drop
     try {

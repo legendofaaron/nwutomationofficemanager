@@ -252,6 +252,7 @@ const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                   {formData.clientId && formData.clientLocationId && (
                     <div className="mt-2 text-sm text-muted-foreground bg-muted/30 dark:bg-[#1A1A1A] p-3 rounded-md">
                       {(() => {
+                        // Fix here: We're using only two arguments instead of three
                         const locationInfo = getClientLocationInfo(formData.clientId, formData.clientLocationId, clients, clientLocations);
                         if (!locationInfo) return null;
                         
