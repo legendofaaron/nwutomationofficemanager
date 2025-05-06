@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
+import { format, addMonths, subMonths } from 'date-fns';
 import { DayProps } from 'react-day-picker';
 
 interface TaskCalendarViewProps {
@@ -36,6 +36,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
 }) => {
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
   // Effect to add/remove dragging class on body
   useEffect(() => {
@@ -95,6 +96,15 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
     setDragOverDate(null);
   };
 
+  // Handle month navigation
+  const handlePreviousMonth = () => {
+    setCurrentMonth(prevMonth => subMonths(prevMonth, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(prevMonth => addMonths(prevMonth, 1));
+  };
+
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card className="shadow-sm border overflow-hidden">
@@ -111,6 +121,8 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
             mode="single"
             selected={selectedDate}
             onSelect={onSelectDate}
+            month={currentMonth}
+            onMonthChange={setCurrentMonth}
             className={cn("rounded-md border shadow-sm", "calendar-grid")}
             components={{
               DayContent: (props: DayProps) => {

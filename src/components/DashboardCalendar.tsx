@@ -67,6 +67,7 @@ const DashboardCalendar = () => {
   const [crewTaskDialogOpen, setCrewTaskDialogOpen] = useState(false);
   const [droppedItem, setDroppedItem] = useState<DroppedItem | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
   const form = useForm<TaskFormValues>({
     defaultValues: {
@@ -418,6 +419,8 @@ const DashboardCalendar = () => {
           mode="single"
           selected={selectedDate}
           onSelect={handleDateChange}
+          month={currentMonth}
+          onMonthChange={setCurrentMonth}
           className={cn("rounded-md border bg-card shadow-sm w-full", "pointer-events-auto")}
           components={{
             Day: customDayRender
