@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +18,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ModelUploader } from './ModelUploader';
 import { initLlamaCpp } from '@/utils/llm';
+import { usePremiumFeature } from '@/hooks/usePremiumFeature';
 
 export interface LlmConfig {
   endpoint: string;
@@ -71,6 +71,9 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [downloadModelName, setDownloadModelName] = useState<string>('');
   const [uploadedModels, setUploadedModels] = useState<Array<{name: string, path: string}>>([]);
+  
+  // Import and use the premium feature hook
+  const { checkAccess, PremiumFeatureGate } = usePremiumFeature();
 
   // Load config from localStorage on component mount
   useEffect(() => {
@@ -178,6 +181,9 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
   };
 
   const handleOpenAiToggle = (enabled: boolean) => {
+    // First check if this is a premium feature
+    if (enabled && !checkAccess('OpenAI Integration')) return;
+    
     setUseOpenAiKey(enabled);
     
     if (enabled) {
@@ -200,38 +206,43 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
   };
 
   const handleLocalLlamaToggle = (enabled: boolean) => {
-    setUseLocalLlama(enabled);
-    
-    if (enabled) {
-      setConfig(prev => ({
-        ...prev,
-        model: 'local', // Set the model to local when local LLama is enabled
-        localLlama: {
-          enabled: true,
-          modelPath: prev.localLlama?.modelPath || '',
-          threads: prev.localLlama?.threads || navigator.hardwareConcurrency || 4,
-          contextSize: prev.localLlama?.contextSize || 2048,
-          batchSize: prev.localLlama?.batchSize || 512
-        }
-      }));
+    if (!enabled || (enabled && checkAccess('Local Models'))) {
+      setUseLocalLlama(enabled);
       
-      // If the model path is already set, trigger configured callback
-      if (config.localLlama?.modelPath) {
-        onConfigured?.();
-      }
-    } else {
-      setConfig(prev => ({
-        ...prev,
-        model: 'default', // Reset to default model when local LLama is disabled
-        localLlama: {
-          ...prev.localLlama,
-          enabled: false
+      if (enabled) {
+        setConfig(prev => ({
+          ...prev,
+          model: 'local', // Set the model to local when local LLama is enabled
+          localLlama: {
+            enabled: true,
+            modelPath: prev.localLlama?.modelPath || '',
+            threads: prev.localLlama?.threads || navigator.hardwareConcurrency || 4,
+            contextSize: prev.localLlama?.contextSize || 2048,
+            batchSize: prev.localLlama?.batchSize || 512
+          }
+        }));
+        
+        // If the model path is already set, trigger configured callback
+        if (config.localLlama?.modelPath) {
+          onConfigured?.();
         }
-      }));
+      } else {
+        setConfig(prev => ({
+          ...prev,
+          model: 'default', // Reset to default model when local LLama is disabled
+          localLlama: {
+            ...prev.localLlama,
+            enabled: false
+          }
+        }));
+      }
     }
   };
 
   const downloadLocalModel = (modelName: string) => {
+    // Check if this is a premium feature
+    if (!checkAccess('Model Downloads')) return;
+    
     setIsDownloading(true);
     setDownloadModelName(modelName);
     setDownloadProgress(0);
@@ -270,6 +281,9 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
   };
 
   const handleModelUploaded = (modelPath: string, modelName: string) => {
+    // Check if this is a premium feature
+    if (!checkAccess('Custom Model Upload')) return;
+    
     // Add the newly uploaded model to the list
     const newModel = { name: modelName, path: modelPath };
     setUploadedModels(prev => [...prev, newModel]);
@@ -300,6 +314,9 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
   };
 
   const selectUploadedModel = (modelPath: string) => {
+    // Check if this is a premium feature
+    if (!checkAccess('Custom Models')) return;
+    
     setConfig(prev => ({
       ...prev,
       model: 'local', // Set model to local when selecting a local model
@@ -806,6 +823,9 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
           </div>
         </TabsContent>
       </Tabs>
+      
+      {/* Add PremiumFeatureGate component */}
+      <PremiumFeatureGate />
     </div>
   );
 };
