@@ -53,9 +53,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <form 
       onSubmit={handleSubmit} 
-      className={`p-3 border-t border-[#2D3747]/80 bg-[#1B222C] relative transition-all ${isFocused ? 'shadow-md' : ''}`}
+      className={`p-3 border-t border-[#1E2430]/80 bg-[#0D1117] relative transition-all ${isFocused ? 'shadow-md' : ''}`}
     >
-      <div className={`flex items-end rounded-lg border ${isFocused ? 'border-blue-500' : 'border-[#2D3747]/80'} bg-[#0D1117] pr-2 transition-all`}>
+      <div className={`flex items-end rounded-lg border ${isFocused ? 'border-blue-500' : 'border-[#2D3747]/80'} bg-[#0A101B] transition-all overflow-hidden`}>
         <textarea
           ref={inputRef}
           value={input}
@@ -64,24 +64,21 @@ const ChatInput: React.FC<ChatInputProps> = ({
           onBlur={() => setIsFocused(false)}
           onKeyDown={handleKeyDown}
           placeholder={disabled ? "Please wait..." : placeholder}
-          className="flex-1 resize-none py-3 px-3 rounded-l-lg bg-[#0D1117] text-[#E5EAF2] placeholder-[#8493A8] focus:outline-none min-h-[40px] max-h-[150px] overflow-y-auto"
+          className="flex-1 resize-none py-3 px-3 bg-[#0A101B] text-[#E5EAF2] placeholder-[#8493A8] focus:outline-none min-h-[40px] max-h-[150px] overflow-y-auto"
           disabled={disabled || isLoading}
           rows={1}
         />
-        <div className="flex items-center h-10">
-          <Button
-            type="submit"
-            size="icon"
-            className={`ml-1 h-8 w-8 rounded-md ${disabled || isLoading || !input.trim() ? 'bg-[#1E2430] text-[#5D6B82] hover:bg-[#1E2430] cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'} transition-colors`}
-            disabled={disabled || isLoading || !input.trim()}
-          >
-            {isLoading ? (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-            ) : (
-              <SendHorizontal className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
+        <Button
+          type="submit"
+          className={`mr-1 mb-1 h-10 px-5 rounded-md ${disabled || isLoading || !input.trim() ? 'bg-[#1E2430] text-[#5D6B82] hover:bg-[#1E2430] cursor-not-allowed' : 'bg-[#4661F1] hover:bg-[#3A51D6] text-white'} transition-colors font-medium`}
+          disabled={disabled || isLoading || !input.trim()}
+        >
+          {isLoading ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          ) : (
+            "Send"
+          )}
+        </Button>
       </div>
     </form>
   );

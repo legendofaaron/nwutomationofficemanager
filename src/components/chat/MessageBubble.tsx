@@ -32,7 +32,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-3 group`}
     >
       {message.type === 'ai' && (
-        <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center mr-2 mt-1 shrink-0">
+        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mr-2 mt-1 shrink-0">
           <Bot className="h-4 w-4 text-white" />
         </div>
       )}
@@ -40,8 +40,8 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       <div 
         className={`${
           message.type === 'user' 
-            ? 'bg-blue-600 text-white max-w-[80%] rounded-t-lg rounded-bl-lg' 
-            : 'bg-[#161B22] text-gray-200 max-w-[80%] rounded-t-lg rounded-br-lg'
+            ? 'bg-[#4661F1] text-white max-w-[80%] rounded-2xl rounded-br-sm' 
+            : 'bg-[#0A101B] text-gray-200 max-w-[80%] rounded-2xl rounded-bl-sm'
         } px-4 py-3 shadow-md text-sm whitespace-pre-wrap`}
       >
         {message.content}

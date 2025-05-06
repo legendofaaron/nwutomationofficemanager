@@ -18,20 +18,30 @@ export const QuickActions = ({ onActionClick, disabled = false }: QuickActionPro
   ];
 
   return (
-    <div className="flex p-2 gap-2 border-b border-[#1E2430]/80 bg-[#0D1117] overflow-x-auto">
-      {quickActions.map((action, index) => (
+    <div className="grid grid-cols-2 gap-2 p-2 border-b border-[#1E2430]/80 bg-[#0D1117]">
+      {quickActions.slice(0, 4).map((action, index) => (
         <Button
           key={index}
           variant="outline"
           size="sm"
-          className="whitespace-nowrap flex-shrink-0 bg-[#161B22] border-[#2D3747]/50 hover:border-blue-500 hover:bg-[#1E2430] text-gray-300 transition-colors text-xs py-2 h-auto"
+          className="flex items-center justify-start whitespace-nowrap bg-[#0A101B] border-[#2D3747]/50 hover:border-blue-500 hover:bg-[#1E2430] text-gray-300 transition-colors text-xs py-3 h-auto gap-2"
           onClick={action.action}
           disabled={disabled}
         >
-          <action.icon className="mr-2 h-3.5 w-3.5 text-gray-400" />
+          <action.icon className="h-4 w-4 text-gray-400" />
           {action.label}
         </Button>
       ))}
+      <Button
+        className="col-span-2 flex items-center justify-start whitespace-nowrap bg-[#0A101B] border-[#2D3747]/50 hover:border-blue-500 hover:bg-[#1E2430] text-gray-300 transition-colors text-xs py-3 h-auto mt-0"
+        variant="outline"
+        size="sm"
+        onClick={quickActions[4].action}
+        disabled={disabled}
+      >
+        <quickActions[4].icon className="h-4 w-4 text-gray-400 mr-2" />
+        {quickActions[4].label}
+      </Button>
     </div>
   );
 };

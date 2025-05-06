@@ -17,7 +17,7 @@ export const ChatHeader = ({
   onCloseClick 
 }: ChatHeaderProps) => {
   return (
-    <div className="flex items-center justify-between p-3 border-b border-[#1E2430]/80 bg-[#0D1117] rounded-t-xl">
+    <div className="flex items-center justify-between p-3 border-b border-[#1E2430]/80 bg-[#0A101B] rounded-t-xl">
       <div className="flex items-center gap-2">
         <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-md">
           <Bot className="h-4 w-4 text-white" />

@@ -11,7 +11,13 @@ interface LlmResponse {
 /**
  * Query the language model with improved error handling and retry logic
  */
-export async function queryLlm(prompt: string, endpoint: string, model: string = 'default', webhookUrl?: string): Promise<LlmResponse> {
+export async function queryLlm(
+  prompt: string, 
+  endpoint: string, 
+  model: string = 'default', 
+  webhookUrl?: string,
+  systemPrompt?: string
+): Promise<LlmResponse> {
   // Maximum number of retries
   const MAX_RETRIES = 2;
   let retries = 0;
@@ -26,13 +32,18 @@ export async function queryLlm(prompt: string, endpoint: string, model: string =
       
       // Check if OpenAI integration is enabled
       if (config.openAi?.enabled && config.openAi?.apiKey) {
-        return await queryOpenAi(prompt, model, config.openAi.apiKey);
+        return await queryOpenAi(prompt, model, config.openAi.apiKey, systemPrompt);
       }
       
       const payload: Record<string, any> = {
         message: prompt,
         model: model
       };
+      
+      // Include system prompt if provided
+      if (systemPrompt) {
+        payload.systemPrompt = systemPrompt;
+      }
       
       // Include custom model configuration if it exists and is enabled
       if (config.customModel?.isCustom) {
@@ -102,15 +113,29 @@ export async function queryLlm(prompt: string, endpoint: string, model: string =
 }
 
 /**
- * Query OpenAI API directly with improved error handling
+ * Query OpenAI API directly with improved error handling and system prompt support
  */
-async function queryOpenAi(prompt: string, model: string, apiKey: string): Promise<LlmResponse> {
+async function queryOpenAi(
+  prompt: string, 
+  model: string, 
+  apiKey: string,
+  systemPrompt?: string
+): Promise<LlmResponse> {
   try {
     // Map our model names to OpenAI model names if needed
     const openAiModel = model === 'default' ? 'gpt-4o-mini' : model;
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
+    // Create messages array with optional system message
+    const messages = [];
+    
+    if (systemPrompt) {
+      messages.push({ role: 'system', content: systemPrompt });
+    }
+    
+    messages.push({ role: 'user', content: prompt });
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -120,7 +145,7 @@ async function queryOpenAi(prompt: string, model: string, apiKey: string): Promi
       },
       body: JSON.stringify({
         model: openAiModel,
-        messages: [{ role: 'user', content: prompt }],
+        messages: messages,
         temperature: 0.7,
         max_tokens: 2000
       }),

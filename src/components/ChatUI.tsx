@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -76,7 +77,7 @@ You can:
 2. Type natural language requests like "create a new document"
 3. Ask questions about any feature
 
-Need assistance? Just ask me anything!`
+Your data remains secure on your local system. Need assistance? Just ask me anything!`
     };
   };
   
@@ -257,18 +258,19 @@ How can I assist you today?`
         throw new Error('No LLM configuration found');
       }
       
-      // Create a prompt that includes the context
-      const prompt = `As ${assistantConfig?.name || 'Office Manager'} for ${assistantConfig?.companyName || 'the user'}, 
-        respond to: "${userPrompt}". 
-        Purpose: ${assistantConfig?.purpose || 'help with office tasks'}.
-        Be helpful, informative, and conversational.`;
+      // Create a system context
+      const systemContext = `You are ${assistantConfig?.name || 'Office Manager'}, an AI assistant for ${assistantConfig?.companyName || 'the user'}. 
+      Your purpose is to ${assistantConfig?.purpose || 'help with office tasks'}.
+      Be concise, helpful, and direct.
+      IMPORTANT: Always respond directly without prefacing your response with phrases like "I'll help you with..." or "How would you like to proceed?". 
+      Just answer the query directly as if continuing a conversation.`;
       
-      // Call the LLM API
-      const response = await queryLlm(prompt, config.endpoint, config.model);
+      // Call the LLM API with proper system context
+      const response = await queryLlm(userPrompt, config.endpoint, config.model, undefined, systemContext);
       return response.message;
     } catch (error) {
       console.error('Error calling LLM API:', error);
-      return `I'm having trouble connecting to my language model. Please check your API configuration in settings. In the meantime, how else can I assist you?`;
+      return `I'm having trouble connecting to my language model. Please check your API configuration in settings.`;
     }
   };
 
@@ -293,30 +295,22 @@ How can I assist you today?`
         let response = '';
         switch (action) {
           case 'create document':
-            response = "I'd be happy to help you create a new document. What type of document would you like to create?";
+            response = "To get started with document creation, please set up your AI model in settings first.";
             break;
           case 'create schedule':
-            response = "Let's organize a schedule for you. What type of schedule would you like to create?";
+            response = "To help you organize a schedule, please configure your AI model in settings first.";
             break;
           case 'create invoice':
-            response = "I can help you generate a professional invoice. Who will be the recipient of this invoice?";
+            response = "To generate an invoice, please set up your AI model in settings first.";
             break;
           case 'analyze receipt':
-            response = "I can assist with receipt analysis. Please upload or share the receipt details so I can process the information.";
+            response = "To analyze receipts, please configure your AI model in settings first.";
             break;
           case 'explain how to use':
-            response = `Here's how to make the most of ${assistantConfig?.name || 'Office Manager'}:
-
-1. Quick Actions: Use the buttons above for common tasks
-2. Natural Language: Type requests like "create a new document" or "set up a meeting schedule"
-3. Document Management: Create, organize, and manage various document types
-4. Receipt Processing: Upload receipts for information extraction and organization
-5. Schedule Management: Create and organize calendars and schedules
-
-Your data remains secure on your local system. How can I assist you today?`;
+            response = `To use ${assistantConfig?.name || 'Office Manager'} effectively, please set up your AI model in settings first. This will enable all assistant features.`;
             break;
           default:
-            response = "I'll help you with that request.";
+            response = "Please configure your AI model in settings to enable full assistant functionality.";
         }
         
         setTimeout(() => {
@@ -333,7 +327,7 @@ Your data remains secure on your local system. How can I assist you today?`;
         { 
           id: Date.now().toString(), 
           type: 'ai', 
-          content: "I'm sorry, I encountered an error processing your request. Please try again or check the settings."
+          content: "I encountered an error processing your request. Please check your API configuration in settings."
         }
       ]);
     } finally {
@@ -364,23 +358,23 @@ Your data remains secure on your local system. How can I assist you today?`;
           { id: Date.now().toString(), type: 'ai', content: responseText }
         ]);
       } else {
-        // Simple AI response simulation for immediate feedback
+        // Simple AI response telling user to configure API
         setTimeout(() => {
           setMessages(prev => [
             ...prev,
             {
               id: Date.now().toString(),
               type: 'ai',
-              content: `I'll help you with "${input}". To get more helpful responses, please configure an AI model in the settings.`
+              content: `To get a helpful response, please configure an AI model in the settings first. Click the gear icon in the top-right corner of this chat window.`
             }
           ]);
-        }, 800);
+        }, 500);
       }
     } catch (error) {
       console.error('Error handling message:', error);
       toast({
         title: 'Connection Error',
-        description: 'Unable to connect to the assistant. Please try again later.',
+        description: 'Unable to connect to the assistant. Please check your API configuration.',
         variant: 'destructive'
       });
       setMessages(prev => [
@@ -388,7 +382,7 @@ Your data remains secure on your local system. How can I assist you today?`;
         { 
           id: Date.now().toString(), 
           type: 'ai', 
-          content: "I'm sorry, I encountered an error processing your request. Please try again or check the settings."
+          content: "I encountered an error processing your request. Please check your API configuration in settings."
         }
       ]);
     } finally {
@@ -416,7 +410,7 @@ Your data remains secure on your local system. How can I assist you today?`;
   return (
     <div className="fixed right-4 bottom-4 w-[350px] bg-[#0D1117] rounded-xl shadow-xl border border-[#1E2430]/80 flex flex-col h-[550px] z-20 overflow-hidden">
       <ChatHeader 
-        assistantName={assistantConfig?.name || 'Office Manager'} 
+        assistantName={assistantConfig?.name || 'My Assistant'} 
         companyName={assistantConfig?.companyName}
         onSettingsClick={() => setShowSettings(!showSettings)}
         onCloseClick={() => handleToggleChat()}
