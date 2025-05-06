@@ -6,8 +6,6 @@ import { MessageBubble } from './MessageBubble';
 import { QuickActions } from './QuickActions';
 import ChatInput from './ChatInput';
 import { ArrowDown } from 'lucide-react';
-import { queryLlm, isLlmConfigured } from '@/utils/llm';
-import { toast } from '@/hooks/use-toast';
 
 interface ChatContainerProps {
   messages: Array<{
@@ -80,7 +78,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   };
 
   const handleSendMessage = async (message: string) => {
-    // Call the parent handler to add the user message to the state
+    // Pass the message to the parent component to process with LLM
     onSendMessage(message);
   };
 

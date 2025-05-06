@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import { ChatHeader } from './chat/ChatHeader';
 import { ChatContainer } from './chat/ChatContainer';
 import { SetupWizard } from './chat/SetupWizard';
 import { Message } from './chat/MessageBubble';
-import { queryLlm, isLlmConfigured, getLlmConfig, generateDocumentContent } from '@/utils/llm';
+import { queryLlm, isLlmConfigured, getLlmConfig, generateDocumentContent, loadLlamaModel } from '@/utils/llm';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileSettingsDrawer } from './settings/MobileSettingsDrawer';
 
@@ -37,6 +38,8 @@ const ChatUI = () => {
   const [connectionTested, setConnectionTested] = useState(false);
   const isMobile = useIsMobile();
   const [useN8nChat, setUseN8nChat] = useState(false);
+  const [currentLlmConfig, setCurrentLlmConfig] = useState<any>(null);
+  const [activeLlamaModel, setActiveLlamaModel] = useState<any>(null);
   const defaultModel = 'llama-3.2-3b';
 
   // Use effect to sync with aiAssistantOpen state from context
@@ -96,6 +99,49 @@ Your data remains secure on your local system. Need assistance? Just ask me anyt
       setMessages([generateWelcomeMessage()]);
     }
   }, [assistantConfig]);
+
+  // Load LLM config and initialize local model if needed
+  useEffect(() => {
+    const initializeChat = async () => {
+      try {
+        // Get current LLM configuration
+        const config = getLlmConfig();
+        setCurrentLlmConfig(config);
+        
+        // If local LLama is enabled, try to load the model
+        if (config?.localLlama?.enabled && config.localLlama.modelPath) {
+          console.log("Loading local LLama model:", config.localLlama.modelPath);
+          
+          const model = await loadLlamaModel(
+            config.localLlama.modelPath, 
+            {
+              threads: config.localLlama.threads || 4,
+              contextSize: config.localLlama.contextSize || 2048,
+              batchSize: config.localLlama.batchSize || 512
+            }
+          );
+          
+          setActiveLlamaModel(model);
+          console.log("Local model loaded successfully:", model);
+          
+          // Indicate that connection is ready
+          setConnectionTested(true);
+        } else if (config?.openAi?.enabled || config?.customModel?.isCustom) {
+          // If using API-based models, just mark as ready
+          setConnectionTested(true);
+        }
+      } catch (error) {
+        console.error("Error initializing chat:", error);
+        toast({
+          title: "Model Initialization Error",
+          description: "Could not initialize the language model. Please check settings.",
+          variant: "destructive"
+        });
+      }
+    };
+    
+    initializeChat();
+  }, []);
 
   // Check if API is configured on component mount
   useEffect(() => {
@@ -255,30 +301,6 @@ How can I assist you today?`
     }]);
   };
 
-  const callLlmApi = async (userPrompt: string): Promise<string> => {
-    try {
-      // Get stored configuration
-      const config = getLlmConfig();
-      if (!config) {
-        throw new Error('No LLM configuration found');
-      }
-      
-      // Create a system context
-      const systemContext = `You are ${assistantConfig?.name || 'Office Manager'}, an AI assistant for ${assistantConfig?.companyName || 'the user'}. 
-      Your purpose is to ${assistantConfig?.purpose || 'help with office tasks'}.
-      Be concise, helpful, and direct.
-      IMPORTANT: Always respond directly without prefacing your response with phrases like "I'll help you with..." or "How would you like to proceed?". 
-      Just answer the query directly as if continuing a conversation.`;
-      
-      // Call the LLM API with proper system context
-      const response = await queryLlm(userPrompt, config.endpoint, config.model, undefined, systemContext);
-      return response.message;
-    } catch (error) {
-      console.error('Error calling LLM API:', error);
-      return `I'm having trouble connecting to my language model. Please check your API configuration in settings.`;
-    }
-  };
-
   // New function to detect if the request is related to document content generation
   const isDocumentContentRequest = (message: string): boolean => {
     const lowerMsg = message.toLowerCase();
@@ -368,22 +390,31 @@ How can I assist you today?`
     try {
       // Check if LLM is configured
       if (isLlmConfigured()) {
+        // Get stored configuration
+        const config = getLlmConfig();
+        if (!config) {
+          throw new Error('No LLM configuration found');
+        }
+        
+        // Create a system context based on assistant configuration
+        const systemContext = `You are ${assistantConfig?.name || 'Office Manager'}, an AI assistant for ${assistantConfig?.companyName || 'the user'}. 
+        Your purpose is to ${assistantConfig?.purpose || 'help with office tasks'}.
+        Be concise, helpful, and direct.
+        IMPORTANT: Always respond directly without prefacing your response with phrases like "I'll help you with..." or "How would you like to proceed?". 
+        Just answer the query directly as if continuing a conversation.`;
+        
         // Check if the request is for document content generation
         if (isDocumentContentRequest(input)) {
           // Get the document type from the request
           const documentType = getDocumentTypeFromRequest(input);
           
-          // Get stored configuration
-          const config = getLlmConfig();
-          if (!config) {
-            throw new Error('No LLM configuration found');
-          }
-          
           // Generate AI response for chat
           const chatResponse = await queryLlm(
             input, 
             config.endpoint || '', 
-            config.openAi?.enabled ? 'gpt-4o-mini' : defaultModel
+            config.openAi?.enabled ? 'gpt-4o-mini' : config.localLlama?.enabled ? 'local' : defaultModel,
+            undefined,
+            systemContext
           );
           
           // Add the chat response to messages
@@ -398,17 +429,13 @@ How can I assist you today?`
           // Update or create document with generated content
           updateDocumentWithContent(documentContent);
         } else {
-          // Get stored configuration
-          const config = getLlmConfig();
-          if (!config) {
-            throw new Error('No LLM configuration found');
-          }
-          
           // Handle regular chat messages
           const responseText = await queryLlm(
             input,
             config.endpoint || '',
-            config.openAi?.enabled ? 'gpt-4o-mini' : defaultModel
+            config.openAi?.enabled ? 'gpt-4o-mini' : config.localLlama?.enabled ? 'local' : defaultModel,
+            undefined,
+            systemContext
           );
           
           setMessages(prev => [
@@ -467,13 +494,24 @@ How can I assist you today?`
           throw new Error('No LLM configuration found');
         }
         
+        // Determine model to use based on configuration
+        const modelToUse = config.openAi?.enabled ? 'gpt-4o-mini' : 
+                          config.localLlama?.enabled ? 'local' : defaultModel;
+        
+        // Create a system context
+        const systemContext = `You are ${assistantConfig?.name || 'Office Manager'}, an AI assistant for ${assistantConfig?.companyName || 'the user'}. 
+        Your purpose is to ${assistantConfig?.purpose || 'help with office tasks'}.
+        Be concise, helpful, and direct.`;
+        
         // Check if the quick action is for document creation
         if (action === 'create document') {
           // Generate AI response for chat
           const chatResponse = await queryLlm(
             action,
             config.endpoint || '',
-            config.openAi?.enabled ? 'gpt-4o-mini' : defaultModel
+            modelToUse,
+            undefined,
+            systemContext
           );
           
           // Add the chat response to messages
@@ -493,7 +531,9 @@ How can I assist you today?`
           const responseText = await queryLlm(
             action,
             config.endpoint || '',
-            config.openAi?.enabled ? 'gpt-4o-mini' : defaultModel
+            modelToUse,
+            undefined,
+            systemContext
           );
           
           setMessages(prev => [

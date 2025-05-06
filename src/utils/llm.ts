@@ -1,3 +1,4 @@
+
 import { LlmConfig } from '@/components/LlmSettings';
 import { toast } from '@/hooks/use-toast';
 
@@ -9,6 +10,7 @@ interface LlmResponse {
 
 // Mock for the llama.cpp WASM module
 let llamaCppModule: any = null;
+let activeLocalModel: any = null;
 
 /**
  * Query the language model with improved error handling and retry logic
@@ -30,7 +32,7 @@ export async function queryLlm(
   const config = storedConfig ? JSON.parse(storedConfig) : {};
   
   // Check if local LLaMa is enabled and should be used
-  if (config.localLlama?.enabled && config.localLlama?.modelPath) {
+  if (model === 'local' || (config.localLlama?.enabled && config.localLlama?.modelPath)) {
     return await queryLocalLlama(prompt, config.localLlama, systemPrompt);
   }
   
@@ -200,6 +202,15 @@ async function queryLocalLlama(
       await initLlamaCpp();
     }
     
+    // Make sure we've actually loaded a model
+    if (!activeLocalModel && llamaConfig?.modelPath) {
+      activeLocalModel = await loadLlamaModel(llamaConfig.modelPath, {
+        threads: llamaConfig.threads || 4,
+        contextSize: llamaConfig.contextSize || 2048, 
+        batchSize: llamaConfig.batchSize || 512
+      });
+    }
+    
     console.log('Local LLaMa inference:', {
       modelPath: llamaConfig.modelPath,
       threads: llamaConfig.threads,
@@ -224,6 +235,12 @@ async function queryLocalLlama(
       threadFactor, 
       5000 // Cap at 5 seconds max
     );
+    
+    // Prepare the complete prompt with system prompt if provided
+    let fullPrompt = prompt;
+    if (systemPrompt) {
+      fullPrompt = `${systemPrompt}\n\nUser: ${prompt}\nAssistant:`;
+    }
     
     // Create a more realistic streaming experience by returning chunks of the response
     let fullResponse = '';
@@ -447,7 +464,10 @@ export async function loadLlamaModel(modelPath: string, config: any) {
   // In a real implementation, this would load the model using llama.cpp WASM
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve({ modelId: `model-${Date.now()}` });
+      const modelId = `model-${Date.now()}`;
+      activeLocalModel = { modelId, path: modelPath, config };
+      console.log(`Model loaded successfully: ${modelId}`);
+      resolve({ modelId, path: modelPath });
     }, 1000);
   });
 }
