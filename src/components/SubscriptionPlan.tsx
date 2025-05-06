@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,7 @@ interface Subscription {
   currency: string;
   current_period_end: string | null;
   is_subscription: boolean;
-  subscription_type: 'web' | 'downloadable';
+  subscription_type: string;
 }
 
 const formatCurrency = (amount: number, currency: string = 'usd') => {
@@ -61,7 +60,7 @@ const SubscriptionPlan = () => {
       }
 
       if (data) {
-        // Ensure the data matches the Subscription interface
+        // Type assertion to enforce the Subscription interface shape
         const typedSubscription: Subscription = {
           id: data.id,
           status: data.status as 'active' | 'cancelled' | 'expired' | 'trial' | 'pending',
@@ -71,6 +70,7 @@ const SubscriptionPlan = () => {
           price_amount: data.price_amount,
           currency: data.currency || 'usd',
           current_period_end: data.current_period_end,
+          // Handle the new columns with default values if they don't exist in the database yet
           is_subscription: data.is_subscription === undefined ? true : data.is_subscription,
           subscription_type: data.subscription_type || 'web'
         };

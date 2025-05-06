@@ -60,11 +60,13 @@ export type Database = {
           current_period_end: string
           current_period_start: string
           id: string
+          is_subscription: boolean | null
           payment_id: string | null
           payment_provider: string
           price_amount: number
           status: string
           subscription_plan: string
+          subscription_type: string | null
           updated_at: string
           user_id: string | null
         }
@@ -74,11 +76,13 @@ export type Database = {
           current_period_end: string
           current_period_start?: string
           id?: string
+          is_subscription?: boolean | null
           payment_id?: string | null
           payment_provider?: string
           price_amount?: number
           status: string
           subscription_plan?: string
+          subscription_type?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -88,11 +92,13 @@ export type Database = {
           current_period_end?: string
           current_period_start?: string
           id?: string
+          is_subscription?: boolean | null
           payment_id?: string | null
           payment_provider?: string
           price_amount?: number
           status?: string
           subscription_plan?: string
+          subscription_type?: string | null
           updated_at?: string
           user_id?: string | null
         }
