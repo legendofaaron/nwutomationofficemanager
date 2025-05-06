@@ -1,0 +1,34 @@
+
+/* N8N Chat Styling Overrides */
+.n8n-chat {
+  --n8n-primary-color: #3b82f6 !important;
+  --n8n-secondary-color: #4f46e5 !important;
+  height: 100% !important;
+  position: relative !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.n8n-chat button.launcher {
+  display: none !important; /* Hide the launcher button since we have our own */
+}
+
+.n8n-chat-window {
+  height: 100% !important;
+  max-height: none !important;
+  position: relative !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+body.dark .n8n-chat,
+body.superdark .n8n-chat {
+  --n8n-chat-background-color: #0D1117 !important;
+  --n8n-chat-border-color: #1E2430 !important;
+  --n8n-chat-text-color: #E5EAF2 !important;
+}
+
+body.superdark .n8n-chat {
+  --n8n-chat-background-color: #000000 !important;
+  --n8n-chat-border-color: #181818 !important;
+}

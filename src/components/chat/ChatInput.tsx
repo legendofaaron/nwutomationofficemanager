@@ -11,13 +11,15 @@ interface ChatInputProps {
   disabled?: boolean;
   isLoading?: boolean;
   placeholder?: string;
+  useN8n?: boolean;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({ 
   onSendMessage, 
   disabled = false, 
   isLoading = false,
-  placeholder = "Message your assistant..."
+  placeholder = "Message your assistant...",
+  useN8n = false
 }) => {
   const [input, setInput] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -27,6 +29,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
   
   const isSuperDark = resolvedTheme === 'superdark';
   const isDark = resolvedTheme === 'dark' || isSuperDark;
+
+  // Initialize n8n chat if enabled
+  useEffect(() => {
+    if (useN8n && window.initN8nChat && typeof window.initN8nChat === 'function') {
+      window.initN8nChat();
+    }
+  }, [useN8n]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -57,6 +66,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
       handleSubmit(e);
     }
   };
+
+  // If using n8n chat, don't render our custom input
+  if (useN8n) {
+    return null; // n8n chat will render its own input UI
+  }
 
   const getBorderColor = () => {
     if (isFocused) {

@@ -13,6 +13,7 @@
     <meta name="format-detection" content="telephone=no" />
     <link rel="icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/favicon.ico" />
+    <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
     <script>
       // Immediate theme detection to prevent flash of incorrect theme
       (function() {
@@ -38,5 +39,15 @@
     <div id="root"></div>
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    <script type="module">
+      import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
+      
+      // We'll initialize this when needed through our React component
+      window.initN8nChat = () => {
+        createChat({
+          webhookUrl: 'https://northwesternautomation.app.n8n.cloud/webhook/d03c2ae9-4863-45ac-938e-68d3426d894b/chat'
+        });
+      };
+    </script>
   </body>
 </html>

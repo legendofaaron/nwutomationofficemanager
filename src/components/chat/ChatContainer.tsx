@@ -22,6 +22,7 @@ interface ChatContainerProps {
   assistantName?: string;
   assistantPurpose?: string;
   companyName?: string;
+  useN8n?: boolean;
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = ({
@@ -33,6 +34,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   assistantName = 'Assistant',
   assistantPurpose = 'help with tasks',
   companyName = '',
+  useN8n = false
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
@@ -82,6 +84,22 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     onSendMessage(message);
   };
 
+  // If using n8n chat, render a container for the n8n chat widget
+  if (useN8n) {
+    return (
+      <div className="flex flex-col h-full">
+        {!isSetupMode && (
+          <QuickActions 
+            onActionClick={onQuickAction} 
+            disabled={isLoading} 
+          />
+        )}
+        
+        <div id="n8n-chat-container" className="flex-1 p-3 overflow-y-auto relative"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       {!isSetupMode && (
@@ -120,6 +138,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         isLoading={isLoading} 
         disabled={isLoading} 
         placeholder={`Message ${assistantName}...`}
+        useN8n={useN8n}
       />
     </div>
   );

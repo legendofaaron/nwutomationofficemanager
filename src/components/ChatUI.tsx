@@ -35,6 +35,7 @@ const ChatUI = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [connectionTested, setConnectionTested] = useState(false);
   const isMobile = useIsMobile();
+  const [useN8nChat, setUseN8nChat] = useState(false);
 
   // Use effect to sync with aiAssistantOpen state from context
   useEffect(() => {
@@ -569,6 +570,8 @@ How can I assist you today?`
         companyName={assistantConfig?.companyName}
         onSettingsClick={() => setShowSettings(!showSettings)}
         onCloseClick={() => handleToggleChat()}
+        useN8n={useN8nChat}
+        onToggleN8n={() => setUseN8nChat(!useN8nChat)}
       />
       
       {showSettings ? (
@@ -589,6 +592,7 @@ How can I assist you today?`
           assistantName={assistantConfig?.name || 'Office Manager'}
           assistantPurpose={assistantConfig?.purpose || 'help with tasks'}
           companyName={assistantConfig?.companyName}
+          useN8n={useN8nChat}
         />
       )}
     </div>
