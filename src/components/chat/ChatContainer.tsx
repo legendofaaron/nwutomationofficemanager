@@ -4,7 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
 import { QuickActions } from './QuickActions';
-import { ChatInput } from './ChatInput';
+import ChatInput from './ChatInput';
 
 interface ChatContainerProps {
   messages: Array<{

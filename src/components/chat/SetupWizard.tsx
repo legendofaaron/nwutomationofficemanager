@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Message, MessageBubble } from './MessageBubble';
 import { Button } from '@/components/ui/button';
-import { ChatInput } from './ChatInput';
+import ChatInput from './ChatInput';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
