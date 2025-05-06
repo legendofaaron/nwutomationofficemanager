@@ -6,7 +6,7 @@ import { Plus, CalendarIcon, List, FileUp, Pencil, Users, User, MapPin, FileDown
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAppContext } from '@/context/AppContext';
-import { Task, TaskFormData, AssignmentType, LocationType } from './ScheduleTypes';
+import { Task, TaskFormData, AssignmentType, LocationType, ScheduleFilter, FilterType } from './ScheduleTypes';
 import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
 
 // Import components
@@ -15,6 +15,7 @@ import TaskListView from './TaskListView';
 import TeamEventDialog from './TeamEventDialog';
 import TaskEditDialog from './TaskEditDialog';
 import UploadAnalyzeSection from './UploadAnalyzeSection';
+import ScheduleFilterBar from './ScheduleFilterBar';
 
 const ScheduleView = () => {
   const { 
@@ -29,6 +30,11 @@ const ScheduleView = () => {
   } = useAppContext();
   
   const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
+  
+  // Initialize schedule filter state
+  const [currentFilter, setCurrentFilter] = useState<ScheduleFilter>({
+    type: 'all'
+  });
   
   // Synchronize tasks with todos from AppContext
   const [tasks, setTasks] = useState<Task[]>([
@@ -65,6 +71,32 @@ const ScheduleView = () => {
       clientLocationId: '1'
     },
   ]);
+  
+  // Get filtered tasks based on current filter
+  const getFilteredTasks = (): Task[] => {
+    if (currentFilter.type === 'all') {
+      return tasks;
+    }
+    
+    if (currentFilter.type === 'employee' && currentFilter.name) {
+      return tasks.filter(task => 
+        task.assignedTo === currentFilter.name || 
+        (task.crew && task.crew.includes(currentFilter.name || ''))
+      );
+    }
+    
+    if (currentFilter.type === 'crew' && currentFilter.id) {
+      return tasks.filter(task => task.crewId === currentFilter.id);
+    }
+    
+    if (currentFilter.type === 'client' && currentFilter.id) {
+      return tasks.filter(task => task.clientId === currentFilter.id);
+    }
+    
+    return tasks;
+  };
+  
+  const filteredTasks = getFilteredTasks();
   
   const [currentEditTask, setCurrentEditTask] = useState<Task | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -184,7 +216,7 @@ const ScheduleView = () => {
   // Handler for downloading schedule as TXT
   const handleDownloadTxt = () => {
     try {
-      downloadScheduleAsTxt(tasks);
+      downloadScheduleAsTxt(tasks, currentFilter);
       toast.success("Schedule downloaded as TXT file");
     } catch (error) {
       console.error("Error downloading TXT:", error);
@@ -195,7 +227,7 @@ const ScheduleView = () => {
   // Handler for downloading schedule as PDF
   const handleDownloadPdf = () => {
     try {
-      downloadScheduleAsPdf(tasks);
+      downloadScheduleAsPdf(tasks, currentFilter);
       toast.success("Schedule downloaded as PDF file");
     } catch (error) {
       console.error("Error downloading PDF:", error);
@@ -386,6 +418,11 @@ const ScheduleView = () => {
     }
   };
 
+  // Handle filter change
+  const handleFilterChange = (filter: ScheduleFilter) => {
+    setCurrentFilter(filter);
+  };
+
   return (
     <div 
       className="p-4 schedule-drop-zone transition-colors duration-300 rounded-lg" 
@@ -448,6 +485,28 @@ const ScheduleView = () => {
         </div>
       </div>
       
+      {/* Filter bar */}
+      <ScheduleFilterBar
+        employees={employees}
+        crews={crews}
+        clients={clients}
+        currentFilter={currentFilter}
+        onFilterChange={handleFilterChange}
+        onDownloadPdf={handleDownloadPdf}
+        onDownloadTxt={handleDownloadTxt}
+      />
+      
+      {/* Show a message when filtered schedule is empty */}
+      {filteredTasks.length === 0 && currentFilter.type !== 'all' && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+          <h3 className="text-blue-800 dark:text-blue-300 font-medium">No tasks found</h3>
+          <p className="text-blue-600 dark:text-blue-400 mt-1">
+            There are no tasks scheduled for the selected {currentFilter.type}
+            {currentFilter.name ? `: ${currentFilter.name}` : ''}
+          </p>
+        </div>
+      )}
+      
       <Tabs defaultValue="calendar" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="calendar" className="gap-2">
@@ -462,7 +521,7 @@ const ScheduleView = () => {
         
         <TabsContent value="calendar" className="mt-0">
           <TaskCalendarView
-            tasks={tasks}
+            tasks={filteredTasks}
             selectedDate={selectedDate}
             onSelectDate={(date) => date && setSelectedDate(date)}
             onToggleTaskCompletion={handleToggleTaskCompletion}
@@ -475,7 +534,7 @@ const ScheduleView = () => {
         
         <TabsContent value="list" className="mt-0">
           <TaskListView
-            tasks={tasks}
+            tasks={filteredTasks}
             onToggleTaskCompletion={handleToggleTaskCompletion}
             crews={crews}
             clients={clients}

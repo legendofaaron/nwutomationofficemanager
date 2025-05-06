@@ -1,6 +1,6 @@
 
 import jsPDF from 'jspdf';
-import { Task } from '@/components/schedule/ScheduleTypes';
+import { Task, ScheduleFilter } from '@/components/schedule/ScheduleTypes';
 import { format } from 'date-fns';
 
 // Helper to format a task for text display
@@ -16,9 +16,24 @@ const formatTaskForText = (task: Task): string => {
 };
 
 // Generate a text version of the schedule
-export const generateScheduleText = (tasks: Task[]): string => {
+export const generateScheduleText = (tasks: Task[], filter?: ScheduleFilter): string => {
+  // Filter tasks based on the current filter
+  let filteredTasks = [...tasks];
+  if (filter && filter.type !== 'all' && filter.id) {
+    if (filter.type === 'employee') {
+      filteredTasks = tasks.filter(task => 
+        task.assignedTo === filter.name || 
+        (task.crew && task.crew.includes(filter.name || ''))
+      );
+    } else if (filter.type === 'crew') {
+      filteredTasks = tasks.filter(task => task.crewId === filter.id);
+    } else if (filter.type === 'client') {
+      filteredTasks = tasks.filter(task => task.clientId === filter.id);
+    }
+  }
+
   // Sort tasks by date and time
-  const sortedTasks = [...tasks].sort((a, b) => {
+  const sortedTasks = filteredTasks.sort((a, b) => {
     // First sort by date
     const dateComparison = a.date.getTime() - b.date.getTime();
     if (dateComparison !== 0) return dateComparison;
@@ -31,6 +46,12 @@ export const generateScheduleText = (tasks: Task[]): string => {
   });
 
   let text = "SCHEDULE\n";
+  
+  // Add filter information
+  if (filter && filter.type !== 'all' && filter.name) {
+    text += `${filter.type.toUpperCase()}: ${filter.name}\n`;
+  }
+  
   text += "========================================\n\n";
   
   // Group tasks by date
@@ -64,17 +85,39 @@ export const generateScheduleText = (tasks: Task[]): string => {
 };
 
 // Generate a PDF version of the schedule
-export const generateSchedulePDF = (tasks: Task[]): jsPDF => {
+export const generateSchedulePDF = (tasks: Task[], filter?: ScheduleFilter): jsPDF => {
   const pdf = new jsPDF();
-  const sortedTasks = [...tasks].sort((a, b) => a.date.getTime() - b.date.getTime());
+  
+  // Filter tasks based on the current filter
+  let filteredTasks = [...tasks];
+  if (filter && filter.type !== 'all' && filter.id) {
+    if (filter.type === 'employee') {
+      filteredTasks = tasks.filter(task => 
+        task.assignedTo === filter.name || 
+        (task.crew && task.crew.includes(filter.name || ''))
+      );
+    } else if (filter.type === 'crew') {
+      filteredTasks = tasks.filter(task => task.crewId === filter.id);
+    } else if (filter.type === 'client') {
+      filteredTasks = tasks.filter(task => task.clientId === filter.id);
+    }
+  }
+  
+  const sortedTasks = filteredTasks.sort((a, b) => a.date.getTime() - b.date.getTime());
   
   // PDF styling
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(18);
   pdf.text("Schedule", 20, 20);
   
+  // Add filter information
+  if (filter && filter.type !== 'all' && filter.name) {
+    pdf.setFontSize(14);
+    pdf.text(`${filter.type.charAt(0).toUpperCase() + filter.type.slice(1)}: ${filter.name}`, 20, 30);
+  }
+  
   pdf.setLineWidth(0.5);
-  pdf.line(20, 25, 190, 25);
+  pdf.line(20, filter && filter.type !== 'all' ? 35 : 25, 190, filter && filter.type !== 'all' ? 35 : 25);
   
   // Group tasks by date
   const tasksByDate: Record<string, Task[]> = {};
@@ -87,7 +130,7 @@ export const generateSchedulePDF = (tasks: Task[]): jsPDF => {
     tasksByDate[dateKey].push(task);
   });
   
-  let yPosition = 35;
+  let yPosition = filter && filter.type !== 'all' ? 45 : 35;
   const pageHeight = pdf.internal.pageSize.height;
   
   // Generate PDF content for each date group
@@ -149,14 +192,18 @@ export const generateSchedulePDF = (tasks: Task[]): jsPDF => {
 };
 
 // Function to download text file
-export const downloadScheduleAsTxt = (tasks: Task[]): void => {
-  const text = generateScheduleText(tasks);
+export const downloadScheduleAsTxt = (tasks: Task[], filter?: ScheduleFilter): void => {
+  const text = generateScheduleText(tasks, filter);
   const blob = new Blob([text], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   
-  // Create filename with current date
-  const filename = `schedule_${format(new Date(), 'yyyy-MM-dd')}.txt`;
+  // Create filename with current date and filter info
+  let filename = `schedule_${format(new Date(), 'yyyy-MM-dd')}`;
+  if (filter && filter.type !== 'all' && filter.name) {
+    filename += `_${filter.type}_${filter.name.replace(/\s+/g, '_')}`;
+  }
+  filename += '.txt';
   
   link.href = url;
   link.download = filename;
@@ -167,11 +214,15 @@ export const downloadScheduleAsTxt = (tasks: Task[]): void => {
 };
 
 // Function to download PDF file
-export const downloadScheduleAsPdf = (tasks: Task[]): void => {
-  const pdf = generateSchedulePDF(tasks);
+export const downloadScheduleAsPdf = (tasks: Task[], filter?: ScheduleFilter): void => {
+  const pdf = generateSchedulePDF(tasks, filter);
   
-  // Create filename with current date
-  const filename = `schedule_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+  // Create filename with current date and filter info
+  let filename = `schedule_${format(new Date(), 'yyyy-MM-dd')}`;
+  if (filter && filter.type !== 'all' && filter.name) {
+    filename += `_${filter.type}_${filter.name.replace(/\s+/g, '_')}`;
+  }
+  filename += '.pdf';
   
   pdf.save(filename);
 };

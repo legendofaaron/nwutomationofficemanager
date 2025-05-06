@@ -54,6 +54,7 @@ export interface TaskFormData {
 
 export type LocationType = 'custom' | 'client';
 export type AssignmentType = 'individual' | 'crew';
+export type FilterType = 'all' | 'employee' | 'crew' | 'client';
 
 export interface ClientLocationInfo {
   clientName: string;
@@ -62,4 +63,10 @@ export interface ClientLocationInfo {
   city?: string;
   state?: string;
   zipCode?: string;
+}
+
+export interface ScheduleFilter {
+  type: FilterType;
+  id?: string;
+  name?: string;
 }
