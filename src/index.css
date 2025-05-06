@@ -76,6 +76,11 @@
   }
 }
 
+/* Professional typography */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
+}
+
 /* Prevent text selection during drag operations */
 *[draggable="true"] {
   user-select: none;
@@ -108,6 +113,12 @@ body.dragging {
 }
 
 /* Enhanced Calendar Styling */
+.calendar-grid {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
 .calendar-grid .rdp-cell {
   margin-bottom: 4px;
 }
@@ -115,7 +126,7 @@ body.dragging {
 .calendar-grid .rdp-button {
   width: 100%;
   height: 100%;
-  border-radius: 8px;
+  border-radius: 6px;
   transition: all 0.2s ease;
 }
 
@@ -129,6 +140,19 @@ body.dragging {
 
 .calendar-grid .rdp-nav_button {
   background-color: transparent;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.calendar-grid .rdp-nav_button:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.calendar-grid .rdp-months {
+  padding: 0.5rem;
+}
+
+.calendar-grid .rdp-caption {
+  margin-bottom: 0.5rem;
 }
 
 /* Drag and Drop Styling */
@@ -164,7 +188,8 @@ body.dragging {
 /* Empty day state styling */
 .empty-day-container {
   min-height: 200px;
-  border: 2px dashed hsl(var(--border));
+  border: 2px dashed #E6E8EB;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -173,9 +198,18 @@ body.dragging {
   transition: all 0.2s ease;
 }
 
+.dark .empty-day-container {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
 .empty-day-container:hover {
-  border-color: hsl(var(--primary));
-  background-color: hsl(var(--accent)/0.1);
+  border-color: rgba(59, 130, 246, 0.5);
+  background-color: rgba(59, 130, 246, 0.03);
+}
+
+.dark .empty-day-container:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  background-color: rgba(59, 130, 246, 0.05);
 }
 
 /* Animation for new content */
@@ -192,6 +226,24 @@ body.dragging {
 .task-item {
   transition: all 0.2s ease;
   cursor: grab;
+  border-left: 3px solid transparent;
+}
+
+.task-item:not(.completed) {
+  border-left-color: #3B82F6;
+}
+
+.task-item.completed {
+  border-left-color: #10B981;
+  opacity: 0.85;
+}
+
+.dark .task-item:not(.completed) {
+  border-left-color: #60A5FA;
+}
+
+.dark .task-item.completed {
+  border-left-color: #34D399;
 }
 
 .task-item:active {
@@ -204,3 +256,15 @@ body.dragging {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* Professional card styling */
+.card {
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.dark .card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}

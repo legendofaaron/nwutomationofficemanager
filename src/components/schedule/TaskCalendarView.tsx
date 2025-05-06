@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -95,22 +96,22 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <Card className="shadow-md border-t-4 border-t-blue-500 dark:border-t-blue-600 hover:shadow-lg transition-all">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/30">
+    <div className="grid gap-6 md:grid-cols-2">
+      <Card className="shadow-sm border overflow-hidden">
+        <CardHeader className="bg-gray-50 dark:bg-gray-900/50 border-b p-4 pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg font-medium">
+            <div className="flex items-center justify-center p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/30">
               <CalendarIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             Schedule Calendar
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3">
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={onSelectDate}
-            className={cn("rounded-md border pointer-events-auto", "calendar-grid")}
+            className={cn("rounded-md border shadow-sm", "calendar-grid")}
             components={{
               DayContent: (props: DayProps) => {
                 const dayDate = props.date;
@@ -218,11 +219,11 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
         </CardContent>
       </Card>
       
-      <Card className="shadow-md border-t-4 border-t-blue-500 dark:border-t-blue-600 hover:shadow-lg transition-all">
-        <CardHeader className="pb-3">
+      <Card className="shadow-sm border overflow-hidden">
+        <CardHeader className="bg-gray-50 dark:bg-gray-900/50 border-b p-4 pb-3">
           <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xl">
-              <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/30">
+            <div className="flex items-center gap-2 text-lg font-medium">
+              <div className="flex items-center justify-center p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/30">
                 <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
               {format(selectedDate, 'MMMM d, yyyy')}
@@ -230,14 +231,14 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
             <Button 
               size="sm" 
               onClick={onAddNewTask}
-              className="gap-1 h-8 text-xs"
+              className="gap-1 h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Plus className="h-3.5 w-3.5" />
               Add Task
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4">
           <div className="space-y-3">
             {tasksForSelectedDate.length === 0 ? (
               <div 
@@ -257,7 +258,8 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                     key={task.id}
                     className={cn(
                       "task-item flex items-start justify-between p-4 rounded-lg border transition-all duration-200",
-                      task.completed ? "bg-muted/30" : "bg-card hover:shadow-md hover:border-blue-500/30"
+                      task.completed ? "completed bg-green-50/50 dark:bg-green-900/10" : "bg-card hover:shadow-sm hover:border-blue-200",
+                      "dark:hover:border-blue-800/40"
                     )}
                     draggable
                     onDragStart={(e) => handleDragStart(e, task)}
@@ -269,7 +271,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                           id={`cal-task-${task.id}`}
                           checked={task.completed}
                           onCheckedChange={() => onToggleTaskCompletion(task.id)}
-                          className="h-5 w-5 data-[state=checked]:bg-blue-500 data-[state=checked]:text-white"
+                          className="h-5 w-5 data-[state=checked]:bg-green-500 data-[state=checked]:text-white"
                         />
                         <span className={cn(
                           "font-medium transition-all", 
@@ -282,7 +284,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-6 w-6 ml-auto"
+                            className="h-6 w-6 ml-auto rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                             onClick={(e) => {
                               e.stopPropagation();
                               onEditTask(task.id);
@@ -344,8 +346,8 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                     <Badge 
                       variant={task.completed ? "outline" : "secondary"}
                       className={cn(
-                        "ml-2 text-xs",
-                        task.completed ? "bg-muted/50" : "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-100"
+                        "ml-2 text-xs whitespace-nowrap",
+                        task.completed ? "bg-green-50 text-green-700 border-green-200 dark:border-green-900 dark:bg-green-900/20 dark:text-green-300" : "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
                       )}
                     >
                       {task.completed ? (
@@ -353,7 +355,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                       ) : (
                         <Clock className="h-3 w-3 mr-1" />
                       )}
-                      {task.completed ? 'Done' : 'Pending'}
+                      {task.completed ? 'Completed' : 'Pending'}
                     </Badge>
                   </div>
                 ))}
