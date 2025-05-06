@@ -18,13 +18,13 @@ export const SubscriptionSettingsTab = () => {
       <div>
         <h3 className="text-lg font-medium">Subscription Management</h3>
         <p className="text-sm text-muted-foreground">
-          Manage your subscription plan and billing information
+          Manage your subscription plan and payment information
         </p>
         
         {!hasActiveSubscription && (
           <div className="mt-4">
             <Button onClick={handleUpgrade}>
-              Upgrade to Professional
+              Upgrade Plan
             </Button>
           </div>
         )}

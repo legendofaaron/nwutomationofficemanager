@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, CreditCard, LoaderCircle, ChevronRight, Shield, AlertCircle } from 'lucide-react';
+import { CheckCircle, CreditCard, LoaderCircle, ChevronRight, Shield, AlertCircle, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +22,7 @@ const formatCurrency = (amount: number, currency: string = 'usd') => {
 const Payment = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe');
+  const [paymentType, setPaymentType] = useState<'subscription' | 'one-time'>('subscription');
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const { user, isDemoMode } = useAuth();
   const { toast } = useToast();
@@ -77,35 +78,44 @@ const Payment = () => {
     setPaymentError(null);
     
     try {
-      // First create a subscription record in our database
+      // First create a subscription or purchase record in our database
+      const isSubscription = paymentType === 'subscription';
+      const amount = isSubscription ? 500 : 2500; // $5 for subscription, $25 for one-time
+
       const { data: subData, error: subError } = await supabase
         .from('subscriptions')
         .insert({
           user_id: user.id,
           status: 'pending',
           payment_provider: paymentMethod,
-          price_amount: 500,
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          price_amount: amount,
+          subscription_type: isSubscription ? 'web' : 'downloadable',
+          is_subscription: isSubscription,
+          current_period_end: isSubscription 
+            ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            : null, // Only set end date for subscriptions
         })
         .select()
         .single();
 
       if (subError) {
-        throw new Error(`Failed to create subscription record: ${subError.message}`);
+        throw new Error(`Failed to create payment record: ${subError.message}`);
       }
 
       // Call the appropriate payment provider integration
       const functionName = paymentMethod === 'paypal' ? 'paypal-integration' : 'stripe-integration';
       const response = await supabase.functions.invoke(functionName, {
         body: {
-          action: 'create_subscription',
+          action: isSubscription ? 'create_subscription' : 'create_payment',
           userId: user.id,
           subscriptionId: subData.id,
+          amount: amount,
+          productName: isSubscription ? 'Web Version Subscription' : 'Downloadable Version (Lifetime)'
         },
       });
 
       if (!response.data.success) {
-        throw new Error(response.data.error || `Failed to create ${paymentMethod} subscription`);
+        throw new Error(response.data.error || `Failed to process ${paymentMethod} payment`);
       }
 
       // Redirect user to the payment provider's checkout URL
@@ -116,12 +126,12 @@ const Payment = () => {
       window.location.href = redirectUrl;
       
     } catch (error: any) {
-      console.error('Error creating subscription:', error);
-      setPaymentError(error.message || 'There was a problem setting up your subscription');
+      console.error('Error processing payment:', error);
+      setPaymentError(error.message || 'There was a problem processing your payment');
       
       toast({
-        title: 'Subscription Error',
-        description: error.message || 'There was a problem setting up your subscription',
+        title: 'Payment Error',
+        description: error.message || 'There was a problem processing your payment',
         variant: 'destructive',
       });
     } finally {
@@ -164,7 +174,7 @@ const Payment = () => {
               <ul className="space-y-2">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span>Local LLM support</span>
+                  <span>Limited LLM support</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-500" />
@@ -187,49 +197,86 @@ const Payment = () => {
             </CardFooter>
           </Card>
           
-          {/* Professional Plan */}
+          {/* Tabs for different payment plans */}
           <Card className="relative overflow-hidden border-blue-200 dark:border-blue-800 shadow-md">
             <div className="absolute top-0 right-0">
               <Badge variant="default" className="rounded-tl-none rounded-br-none rounded-tr-none">
                 Recommended
               </Badge>
             </div>
-            <CardHeader>
-              <CardTitle>Professional Plan</CardTitle>
-              <CardDescription>Full access to all premium features</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-3xl font-bold">$5<span className="text-sm font-normal">/month</span></div>
-              <ul className="space-y-2">
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span>All Free Plan features</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span>Advanced document workflows</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span>Priority support</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span>Unlimited team members</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span>Premium integrations</span>
-                </li>
-              </ul>
+            
+            <Tabs defaultValue="subscription" onValueChange={(value) => setPaymentType(value as 'subscription' | 'one-time')}>
+              <TabsList className="grid w-full grid-cols-2 mt-2">
+                <TabsTrigger value="subscription">Web Version</TabsTrigger>
+                <TabsTrigger value="one-time">Downloadable</TabsTrigger>
+              </TabsList>
               
-              <Tabs defaultValue="stripe" onValueChange={(value) => setPaymentMethod(value as 'stripe' | 'paypal')} className="mt-4">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="stripe">Pay with Card</TabsTrigger>
-                  <TabsTrigger value="paypal">Pay with PayPal</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </CardContent>
+              <TabsContent value="subscription">
+                <CardHeader>
+                  <CardTitle>Web Version</CardTitle>
+                  <CardDescription>Monthly subscription with all premium features</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-3xl font-bold">$5<span className="text-sm font-normal">/month</span></div>
+                  <ul className="space-y-2">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                      <span>Full access to all web features</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                      <span>Advanced document workflows</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                      <span>Priority support</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                      <span>Regular updates and new features</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </TabsContent>
+              
+              <TabsContent value="one-time">
+                <CardHeader>
+                  <CardTitle>Downloadable Version</CardTitle>
+                  <CardDescription>One-time purchase for offline use</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-3xl font-bold">$25<span className="text-sm font-normal"> one-time</span></div>
+                  <ul className="space-y-2">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                      <span>Full offline functionality</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                      <span>Use your own local LLMs</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                      <span>Lifetime access</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Download className="h-5 w-5 text-green-500" />
+                      <span>Downloadable desktop application</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </TabsContent>
+              
+              <div className="px-6 pb-4">
+                <Tabs defaultValue="stripe" onValueChange={(value) => setPaymentMethod(value as 'stripe' | 'paypal')} className="mt-4">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="stripe">Pay with Card</TabsTrigger>
+                    <TabsTrigger value="paypal">Pay with PayPal</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            </Tabs>
+            
             <CardFooter>
               <Button 
                 className="w-full" 
@@ -238,7 +285,7 @@ const Payment = () => {
               >
                 {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
                 <CreditCard className="mr-2 h-4 w-4" /> 
-                Subscribe Now
+                {paymentType === 'subscription' ? 'Subscribe Now' : 'Purchase Now'}
               </Button>
             </CardFooter>
           </Card>

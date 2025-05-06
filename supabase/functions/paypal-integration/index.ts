@@ -24,7 +24,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, userId, subscriptionId } = await req.json();
+    const { action, userId, subscriptionId, amount = 500, productName = 'Professional Plan' } = await req.json();
 
     if (!PAYPAL_CLIENT_ID || !PAYPAL_SECRET_KEY) {
       throw new Error('PayPal credentials not configured');
@@ -88,6 +88,7 @@ serve(async (req) => {
             payment_id: result.id,
             status: 'active',
             current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+            is_subscription: true
           })
           .eq('id', subscriptionId)
           .select();
@@ -104,8 +105,9 @@ serve(async (req) => {
             user_id: userId,
             subscription_id: subscriptionId,
             payment_id: result.id,
-            amount: 500, // $5.00
+            amount: amount, // $5.00
             status: 'completed',
+            is_subscription: true
           });
 
         if (txError) {
@@ -116,6 +118,82 @@ serve(async (req) => {
           success: true,
           data: result,
           approvalUrl: result.links.find(link => link.rel === 'approve').href
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+        
+      case 'create_payment':
+        // Create a one-time PayPal payment
+        const orderResponse = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            intent: 'CAPTURE',
+            purchase_units: [
+              {
+                amount: {
+                  currency_code: 'USD',
+                  value: (amount / 100).toFixed(2), // Convert cents to dollars
+                },
+                description: productName || 'Downloadable Version (Lifetime)',
+              },
+            ],
+            application_context: {
+              return_url: `${req.headers.get('origin')}/dashboard?success=true`,
+              cancel_url: `${req.headers.get('origin')}/dashboard?success=false`,
+            },
+          }),
+        });
+
+        const orderResult = await orderResponse.json();
+        
+        if (!orderResponse.ok) {
+          console.error('PayPal order creation error:', orderResult);
+          throw new Error(`Failed to create order: ${JSON.stringify(orderResult)}`);
+        }
+
+        // Store payment info in our database
+        const { data: payData, error: payError } = await supabase
+          .from('subscriptions')
+          .update({
+            payment_id: orderResult.id,
+            status: 'pending',
+            is_subscription: false
+          })
+          .eq('id', subscriptionId)
+          .select();
+
+        if (payError) {
+          console.error('Database update error:', payError);
+          throw new Error(`Failed to update payment in database: ${payError.message}`);
+        }
+
+        // Record the transaction
+        const { error: payTxError } = await supabase
+          .from('payment_transactions')
+          .insert({
+            user_id: userId,
+            subscription_id: subscriptionId,
+            payment_id: orderResult.id,
+            amount: amount,
+            status: 'pending',
+            is_subscription: false
+          });
+
+        if (payTxError) {
+          console.error('Transaction record error:', payTxError);
+        }
+
+        // Find the approval URL and return it
+        const approvalUrl = orderResult.links.find(link => link.rel === 'approve').href;
+
+        return new Response(JSON.stringify({
+          success: true,
+          data: orderResult,
+          approvalUrl: approvalUrl
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -160,20 +238,44 @@ serve(async (req) => {
         });
 
       case 'check_subscription':
-        // Check a specific subscription
-        const checkResponse = await fetch(`${PAYPAL_BASE_URL}/v1/billing/subscriptions/${subscriptionId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        });
+        // Get the subscription details from our database
+        const { data: checkData, error: checkError } = await supabase
+          .from('subscriptions')
+          .select('payment_id, is_subscription')
+          .eq('id', subscriptionId)
+          .single();
+          
+        if (checkError) {
+          throw new Error(`Error fetching subscription: ${checkError.message}`);
+        }
+        
+        let checkResponse;
+        
+        if (checkData.is_subscription) {
+          // Check a subscription status
+          checkResponse = await fetch(`${PAYPAL_BASE_URL}/v1/billing/subscriptions/${checkData.payment_id}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`,
+            },
+          });
+        } else {
+          // Check a payment status
+          checkResponse = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders/${checkData.payment_id}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`,
+            },
+          });
+        }
 
         result = await checkResponse.json();
         
         if (!checkResponse.ok) {
-          console.error('PayPal subscription check error:', result);
-          throw new Error(`Failed to check subscription: ${JSON.stringify(result)}`);
+          console.error('PayPal status check error:', result);
+          throw new Error(`Failed to check status: ${JSON.stringify(result)}`);
         }
 
         return new Response(JSON.stringify({

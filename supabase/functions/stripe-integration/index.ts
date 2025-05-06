@@ -26,7 +26,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, userId, subscriptionId } = await req.json();
+    const { action, userId, subscriptionId, amount = 500, productName = 'Professional Plan' } = await req.json();
 
     if (!STRIPE_SECRET_KEY) {
       throw new Error('Stripe secret key not configured');
@@ -45,9 +45,9 @@ serve(async (req) => {
               price_data: {
                 currency: 'usd',
                 product_data: {
-                  name: 'Professional Plan',
+                  name: productName || 'Web Version Subscription',
                 },
-                unit_amount: 500, // $5.00
+                unit_amount: amount, // $5.00
                 recurring: {
                   interval: 'month',
                 },
@@ -71,6 +71,7 @@ serve(async (req) => {
             payment_provider: 'stripe',
             status: 'pending',
             current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+            is_subscription: true
           })
           .eq('id', subscriptionId);
 
@@ -82,11 +83,56 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
 
+      case 'create_payment':
+        // Create a Stripe checkout session for one-time payment
+        const paymentSession = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          mode: 'payment', // Important - this makes it a one-time payment
+          line_items: [
+            {
+              price_data: {
+                currency: 'usd',
+                product_data: {
+                  name: productName || 'Downloadable Version (Lifetime)',
+                },
+                unit_amount: amount, // $25.00
+              },
+              quantity: 1,
+            },
+          ],
+          metadata: {
+            user_id: userId,
+            subscription_id: subscriptionId,
+            is_subscription: false
+          },
+          success_url: `${req.headers.get('origin')}/dashboard?success=true`,
+          cancel_url: `${req.headers.get('origin')}/dashboard?success=false`,
+        });
+
+        // Store payment info in our database
+        await supabase
+          .from('subscriptions')
+          .update({
+            payment_id: paymentSession.id,
+            payment_provider: 'stripe',
+            status: 'pending',
+            is_subscription: false
+          })
+          .eq('id', subscriptionId);
+
+        return new Response(JSON.stringify({
+          success: true,
+          data: paymentSession,
+          checkoutUrl: paymentSession.url
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+
       case 'cancel_subscription':
         // Retrieve the subscription ID from our database
         const { data: subData } = await supabase
           .from('subscriptions')
-          .select('payment_id')
+          .select('payment_id, is_subscription')
           .eq('id', subscriptionId)
           .single();
 
@@ -94,8 +140,11 @@ serve(async (req) => {
           throw new Error('Subscription not found or no payment ID available');
         }
 
-        // Cancel the subscription in Stripe
-        const subscription = await stripe.subscriptions.cancel(subData.payment_id);
+        // Only attempt to cancel if it's a subscription
+        if (subData.is_subscription) {
+          // Cancel the subscription in Stripe
+          const subscription = await stripe.subscriptions.cancel(subData.payment_id);
+        }
 
         // Update our database
         await supabase
@@ -116,7 +165,7 @@ serve(async (req) => {
         // Retrieve the subscription from Stripe
         const { data: checkSubData } = await supabase
           .from('subscriptions')
-          .select('payment_id')
+          .select('payment_id, is_subscription')
           .eq('id', subscriptionId)
           .single();
 
@@ -124,11 +173,18 @@ serve(async (req) => {
           throw new Error('Subscription not found or no payment ID available');
         }
 
-        const stripeSubscription = await stripe.subscriptions.retrieve(checkSubData.payment_id);
+        let checkResult;
+        if (checkSubData.is_subscription) {
+          // For subscriptions, check subscription status
+          checkResult = await stripe.subscriptions.retrieve(checkSubData.payment_id);
+        } else {
+          // For one-time payments, check payment status
+          checkResult = await stripe.checkout.sessions.retrieve(checkSubData.payment_id);
+        }
         
         return new Response(JSON.stringify({
           success: true,
-          data: stripeSubscription
+          data: checkResult
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
