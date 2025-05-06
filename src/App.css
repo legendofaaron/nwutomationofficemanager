@@ -14,6 +14,39 @@
   transition: none;
 }
 
+/* Light mode professional enhancements */
+.light {
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --hover-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --subtle-bg: #f9fafb;
+  --header-bg: #ffffff;
+  --border-color: #e5e7eb;
+}
+
+/* Light mode card improvements */
+.light .card {
+  box-shadow: var(--card-shadow);
+}
+
+.light .card:hover {
+  box-shadow: var(--hover-shadow);
+}
+
+/* Light mode form controls */
+.light input:not([type="checkbox"]):not([type="radio"]),
+.light textarea, 
+.light select {
+  border-color: #e2e8f0;
+  background-color: #ffffff;
+}
+
+.light input:focus, 
+.light textarea:focus, 
+.light select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
 /* Improved scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
@@ -36,6 +69,14 @@
 
 .dark ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
+}
+
+.light ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 /* Professional text styling */
