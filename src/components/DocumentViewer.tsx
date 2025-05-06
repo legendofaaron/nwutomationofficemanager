@@ -9,6 +9,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/context/ThemeContext';
 import { usePremiumFeature } from '@/hooks/usePremiumFeature';
+import FloatingMenuBar from './document/FloatingMenuBar';
 
 const DocumentViewer = () => {
   const { currentFile, files, setFiles, setCurrentFile, setViewMode } = useAppContext();
@@ -299,6 +300,12 @@ const DocumentViewer = () => {
 
   return (
     <div className={`relative h-full ${bgColor}`}>
+      {/* Add Floating Menu Bar */}
+      <FloatingMenuBar 
+        onSave={handleSave}
+        onFormatText={handleFormatText} 
+      />
+      
       {/* Add the Premium Feature Gate component */}
       <PremiumFeatureGate />
       
