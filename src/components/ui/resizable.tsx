@@ -32,7 +32,7 @@ const ResizableHandle = ({
   const [isResizing, setIsResizing] = useState(false);
 
   // Handle mouse events to track resizing state
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseDown = () => {
     setIsResizing(true);
     // Add a class to the body to indicate resizing is happening
     document.body.classList.add('resizing');
