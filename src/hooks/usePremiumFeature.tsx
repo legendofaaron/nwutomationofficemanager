@@ -12,7 +12,15 @@ export type PremiumFeature =
   | 'N8N Integration'
   | 'AI Settings'
   | 'Local Model Upload'
-  | 'Knowledge Base';
+  | 'Knowledge Base'
+  | 'Spreadsheet Conversion'
+  | 'AI Suggestions'
+  | 'OpenAI Integration'
+  | 'Local Models'
+  | 'Model Downloads'
+  | 'Custom Model Upload'
+  | 'Custom Models'
+  | 'AI Assistant Setup';
 
 export function usePremiumFeature() {
   const { user, hasActiveSubscription, checkSubscription } = useAuth();
