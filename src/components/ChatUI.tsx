@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,8 @@ import { queryLlm, isLlmConfigured, getLlmConfig, generateDocumentContent } from
 type SetupStep = 'welcome' | 'name' | 'company' | 'purpose' | 'complete' | null;
 
 const ChatUI = () => {
-  const { aiAssistantOpen, setAiAssistantOpen, assistantConfig, setAssistantConfig } = useAppContext();
+  const { aiAssistantOpen, setAiAssistantOpen, assistantConfig, setAssistantConfig, 
+         files, setFiles, currentFile, setCurrentFile, setViewMode } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isSetupMode, setIsSetupMode] = useState(false);
@@ -298,8 +300,6 @@ How can I assist you today?`
   
   // Function to create or update document with generated content
   const updateDocumentWithContent = (content: string, documentName?: string) => {
-    const { files, setFiles, currentFile, setCurrentFile, setViewMode } = useAppContext;
-    
     // If there's a current document open, update it
     if (currentFile && currentFile.type === 'document') {
       const updatedFile = { ...currentFile, content };
@@ -369,8 +369,18 @@ How can I assist you today?`
           // Get the document type from the request
           const documentType = getDocumentTypeFromRequest(input);
           
+          // Get stored configuration
+          const config = getLlmConfig();
+          if (!config) {
+            throw new Error('No LLM configuration found');
+          }
+          
           // Generate AI response for chat
-          const chatResponse = await queryLlm(input);
+          const chatResponse = await queryLlm(
+            input, 
+            config.endpoint || '', 
+            config.openAi?.enabled ? 'gpt-4o-mini' : 'default'
+          );
           
           // Add the chat response to messages
           setMessages(prev => [
@@ -384,8 +394,19 @@ How can I assist you today?`
           // Update or create document with generated content
           updateDocumentWithContent(documentContent);
         } else {
+          // Get stored configuration
+          const config = getLlmConfig();
+          if (!config) {
+            throw new Error('No LLM configuration found');
+          }
+          
           // Handle regular chat messages
-          const responseText = await queryLlm(input);
+          const responseText = await queryLlm(
+            input,
+            config.endpoint || '',
+            config.openAi?.enabled ? 'gpt-4o-mini' : 'default'
+          );
+          
           setMessages(prev => [
             ...prev, 
             { id: Date.now().toString(), type: 'ai', content: responseText.message }
@@ -436,10 +457,20 @@ How can I assist you today?`
     try {
       // Check if LLM is configured
       if (isLlmConfigured()) {
+        // Get stored configuration
+        const config = getLlmConfig();
+        if (!config) {
+          throw new Error('No LLM configuration found');
+        }
+        
         // Check if the quick action is for document creation
         if (action === 'create document') {
           // Generate AI response for chat
-          const chatResponse = await queryLlm(action);
+          const chatResponse = await queryLlm(
+            action,
+            config.endpoint || '',
+            config.openAi?.enabled ? 'gpt-4o-mini' : 'default'
+          );
           
           // Add the chat response to messages
           setMessages(prev => [
@@ -455,7 +486,12 @@ How can I assist you today?`
           updateDocumentWithContent(documentContent, "New Business Document");
         } else {
           // Handle other quick actions normally
-          const responseText = await queryLlm(action);
+          const responseText = await queryLlm(
+            action,
+            config.endpoint || '',
+            config.openAi?.enabled ? 'gpt-4o-mini' : 'default'
+          );
+          
           setMessages(prev => [
             ...prev, 
             { id: Date.now().toString(), type: 'ai', content: responseText.message }
