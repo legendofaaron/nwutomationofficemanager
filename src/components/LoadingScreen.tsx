@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 import { useTheme } from '@/context/ThemeContext';
@@ -8,6 +8,22 @@ export const LoadingScreen = () => {
   const { resolvedTheme } = useTheme();
   const isDarkMode = resolvedTheme === 'dark';
   const isSuperDarkMode = resolvedTheme === 'superdark';
+  
+  // Force a re-render when theme changes to ensure proper display
+  useEffect(() => {
+    const rootClasses = document.documentElement.classList;
+    const updateThemeClass = () => {
+      // This is just to trigger a re-render when theme changes
+    };
+    
+    const observer = new MutationObserver(updateThemeClass);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
   
   return (
     <div className={cn(

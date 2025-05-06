@@ -11,13 +11,48 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+// Add script to immediately set the correct theme class to prevent flash of wrong theme
+const addThemeInitScript = () => {
+  if (typeof document !== 'undefined') {
+    const script = document.createElement('script');
+    script.innerHTML = `
+      (function() {
+        try {
+          const savedTheme = localStorage.getItem('theme');
+          if (savedTheme === 'dark' || savedTheme === 'superdark') {
+            document.documentElement.classList.add(savedTheme);
+          } else if (savedTheme === 'system') {
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+              document.documentElement.classList.add('dark');
+            } else {
+              document.documentElement.classList.add('light');
+            }
+          } else {
+            document.documentElement.classList.add('light');
+          }
+        } catch (e) {
+          console.error('Theme initialization error:', e);
+          document.documentElement.classList.add('light');
+        }
+      })();
+    `;
+    script.async = false;
+    document.head.appendChild(script);
+  }
+};
+
+// Execute immediately
+addThemeInitScript();
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem('theme') as Theme) || 'light'
+    () => (typeof localStorage !== 'undefined' ? (localStorage.getItem('theme') as Theme) : 'light') || 'light'
   );
   
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark' | 'superdark'>(
     () => {
+      if (typeof window === 'undefined') return 'light';
+      
       const savedTheme = localStorage.getItem('theme') as Theme;
       if (savedTheme === 'dark') return 'dark';
       if (savedTheme === 'light') return 'light';
