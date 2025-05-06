@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -65,7 +66,6 @@ const ChatUI = () => {
             console.log("Local model loaded successfully:", model);
           } catch (err) {
             console.error("Error loading local model:", err);
-            // Still allow chat if there's another valid configuration
           }
         }
         
@@ -139,7 +139,7 @@ const ChatUI = () => {
     }
   };
 
-  // Handle message sending with local LLM as default
+  // Handle message sending with local LLM
   const handleSendMessage = async (input: string) => {
     if (isLoading || !isModelConfigured) return;
     
@@ -156,10 +156,8 @@ const ChatUI = () => {
       };
       
       // Create a system context based on assistant configuration
-      const systemContext = `You are ${assistantConfig?.name || 'Office Manager'}, an AI assistant${assistantConfig?.companyName ? ` for ${assistantConfig.companyName}` : ''}. 
-      ${assistantConfig?.purpose ? `Your purpose is to ${assistantConfig.purpose}.` : 'You help with office tasks.'}
-      Be concise, helpful, and direct.
-      Always respond directly without prefacing your response.`;
+      const systemContext = `You are a local language model assistant${assistantConfig?.companyName ? ` for ${assistantConfig.companyName}` : ''}. 
+      Be concise, helpful, and direct in your responses.`;
       
       // Check if the request is for document content generation
       if (isDocumentContentRequest(input)) {
@@ -169,21 +167,25 @@ const ChatUI = () => {
         // Update or create document with generated content
         updateDocumentWithContent(documentContent);
         
-        // Add a response to the chat about the document creation
+        // Add a response to the chat from the LLM about the document creation
+        const responseText = await queryLlm(
+          "I've just created a document based on the user's request. Tell them it's ready.",
+          config.endpoint || '',
+          'local',
+          undefined,
+          systemContext
+        );
+        
         setMessages(prev => [
           ...prev, 
-          { 
-            id: Date.now().toString(), 
-            type: 'ai', 
-            content: `I've created a document based on your request. You can find it in your document list.` 
-          }
+          { id: Date.now().toString(), type: 'ai', content: responseText.message }
         ]);
       } else {
-        // Handle regular chat messages - default to local model
+        // Handle regular chat messages with local model
         const responseText = await queryLlm(
           input,
           config.endpoint || '',
-          config.localLlama?.enabled ? 'local' : config.openAi?.enabled ? 'gpt-4o-mini' : 'local',
+          'local',
           undefined,
           systemContext
         );
@@ -196,13 +198,12 @@ const ChatUI = () => {
     } catch (error) {
       console.error('Error handling message:', error);
       
-      // Provide a graceful fallback response
       setMessages(prev => [
         ...prev, 
         { 
           id: Date.now().toString(), 
           type: 'ai', 
-          content: "I'm having trouble processing your request right now. Please check your AI model settings."
+          content: "I'm unable to process your request. Please check your local LLM configuration."
         }
       ]);
     } finally {
@@ -210,7 +211,7 @@ const ChatUI = () => {
     }
   };
 
-  // Handle quick actions with local LLM as default
+  // Handle quick actions
   const handleQuickAction = async (action: string) => {
     if (isLoading || !isModelConfigured) return;
     
@@ -220,26 +221,21 @@ const ChatUI = () => {
     setIsLoading(true);
     
     try {
-      // Get stored configuration - prefer local model
+      // Get stored configuration - use local model
       const config = getLlmConfig() || {
         model: 'local',
         localLlama: { enabled: true }
       };
       
-      // Determine model to use based on configuration - default to local
-      const modelToUse = config.localLlama?.enabled ? 'local' : 
-                        config.openAi?.enabled ? 'gpt-4o-mini' : 'local';
-      
       // Create a system context
-      const systemContext = `You are ${assistantConfig?.name || 'Office Manager'}, an AI assistant${assistantConfig?.companyName ? ` for ${assistantConfig.companyName}` : ''}. 
-      ${assistantConfig?.purpose ? `Your purpose is to ${assistantConfig.purpose}.` : 'You help with office tasks.'}
+      const systemContext = `You are a local language model assistant${assistantConfig?.companyName ? ` for ${assistantConfig.companyName}` : ''}. 
       Be concise, helpful, and direct.`;
       
-      // Query the LLM directly for all actions to ensure consistent LLM responses
+      // Query the LLM directly for all actions
       const responseText = await queryLlm(
         action,
         config.endpoint || '',
-        modelToUse,
+        'local',
         undefined,
         systemContext
       );
@@ -261,13 +257,12 @@ const ChatUI = () => {
 
     } catch (error) {
       console.error('Error handling quick action:', error);
-      // Provide a graceful fallback response
       setMessages(prev => [
         ...prev, 
         { 
           id: Date.now().toString(), 
           type: 'ai', 
-          content: "I'm having trouble processing that action right now. Please try again later."
+          content: "I'm unable to process that action. Please check your local LLM configuration."
         }
       ]);
     } finally {
@@ -297,7 +292,7 @@ const ChatUI = () => {
       bg-[#0D1117] rounded-xl shadow-xl border border-[#1E2430]/80 flex flex-col 
       ${isMobile ? 'h-[90vh] z-50 rounded-b-none' : 'h-[550px] z-20'} overflow-hidden`}>
       <ChatHeader 
-        assistantName={assistantConfig?.name || 'Office Manager'} 
+        assistantName={assistantConfig?.name || 'Local LLM Assistant'} 
         companyName={assistantConfig?.companyName}
         onSettingsClick={() => setShowSettings(!showSettings)}
         onCloseClick={() => handleToggleChat()}
@@ -314,7 +309,12 @@ const ChatUI = () => {
             onToggleN8n={() => setUseN8nChat(!useN8nChat)}
           />
         ) : (
-          <LlmSettings onConfigured={() => setIsModelConfigured(true)} />
+          <LlmSettings 
+            onConfigured={() => {
+              setIsModelConfigured(true);
+              setShowSettings(false);
+            }} 
+          />
         )
       ) : (
         <ChatContainer 
@@ -322,11 +322,12 @@ const ChatUI = () => {
           onSendMessage={handleSendMessage}
           onQuickAction={handleQuickAction}
           isLoading={isLoading}
-          assistantName={assistantConfig?.name || 'Office Manager'}
-          assistantPurpose={assistantConfig?.purpose || 'help with tasks'}
+          assistantName={assistantConfig?.name || 'Local LLM Assistant'}
+          assistantPurpose="provide assistance using local language processing"
           companyName={assistantConfig?.companyName}
           useN8n={useN8nChat}
           isModelConfigured={isModelConfigured}
+          onOpenModelSettings={() => setShowSettings(true)}
         />
       )}
     </div>
