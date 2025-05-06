@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Plus, CalendarIcon, List, FileUp, Pencil } from 'lucide-react';
+import { Plus, CalendarIcon, List, FileUp, Pencil, Users, User, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAppContext } from '@/context/AppContext';
@@ -105,6 +104,9 @@ const ScheduleView = () => {
   const [assignmentType, setAssignmentType] = useState<AssignmentType>('individual');
   const [locationType, setLocationType] = useState<LocationType>('custom');
   
+  // Add state for crew assignment mode
+  const [showCrewPanel, setShowCrewPanel] = useState(false);
+  
   const [formData, setFormData] = useState<TaskFormData>({
     title: '',
     assignedTo: '',
@@ -200,7 +202,7 @@ const ScheduleView = () => {
   };
 
   // Handle opening task dialog with pre-filled date
-  const handleOpenAddTaskDialog = () => {
+  const handleOpenAddTaskDialog = (type: 'individual' | 'crew' = 'individual') => {
     // Reset form data
     resetFormData();
     
@@ -211,7 +213,26 @@ const ScheduleView = () => {
       endTime: '10:00'
     });
     
+    // Set assignment type based on button clicked
+    setAssignmentType(type);
+    
     // Open the dialog
+    setIsTaskDialogOpen(true);
+  };
+
+  // Helper to open crew visit task dialog
+  const handleOpenCrewVisitDialog = () => {
+    resetFormData();
+    
+    setFormData({
+      ...formData,
+      title: 'Client Site Visit',
+      startTime: '09:00',
+      endTime: '16:00'
+    });
+    
+    setAssignmentType('crew');
+    setLocationType('client');
     setIsTaskDialogOpen(true);
   };
 
@@ -352,35 +373,35 @@ const ScheduleView = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Schedule Management</h1>
         
-        <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-2 h-9 font-medium">
-              <Plus className="h-4 w-4" />
-              Add Task
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add New Task</DialogTitle>
-            </DialogHeader>
-            <TeamEventDialog 
-              open={isTaskDialogOpen}
-              onOpenChange={setIsTaskDialogOpen}
-              onCreateEvent={handleAddTask}
-              formData={formData}
-              setFormData={setFormData}
-              assignmentType={assignmentType}
-              setAssignmentType={setAssignmentType}
-              locationType={locationType}
-              setLocationType={setLocationType}
-              selectedDate={selectedDate}
-              crews={crews}
-              employees={employees}
-              clients={clients}
-              clientLocations={clientLocations}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex space-x-2">
+          <Button 
+            size="sm" 
+            className="gap-2 h-9 font-medium"
+            onClick={() => handleOpenAddTaskDialog('individual')}
+          >
+            <User className="h-4 w-4" />
+            Employee Task
+          </Button>
+          
+          <Button 
+            size="sm" 
+            className="gap-2 h-9 font-medium"
+            onClick={() => handleOpenAddTaskDialog('crew')}
+          >
+            <Users className="h-4 w-4" />
+            Crew Task
+          </Button>
+          
+          <Button 
+            size="sm" 
+            variant="secondary" 
+            className="gap-2 h-9 font-medium"
+            onClick={handleOpenCrewVisitDialog}
+          >
+            <MapPin className="h-4 w-4" />
+            Client Visit
+          </Button>
+        </div>
       </div>
       
       <Tabs defaultValue="calendar" className="w-full">
@@ -435,6 +456,25 @@ const ScheduleView = () => {
         />
       </div>
 
+      {/* Guide Panel */}
+      <div className="mt-6 border border-blue-200 dark:border-blue-800 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
+        <h3 className="font-medium text-lg mb-2 text-blue-700 dark:text-blue-400">Scheduling Guide</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="flex flex-col gap-2">
+            <div className="font-medium text-blue-800 dark:text-blue-300">Individual Tasks</div>
+            <p className="text-blue-700 dark:text-blue-400">Assign tasks to specific employees with the "Employee Task" button.</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="font-medium text-blue-800 dark:text-blue-300">Crew Tasks</div>
+            <p className="text-blue-700 dark:text-blue-400">Schedule tasks for entire crews with the "Crew Task" button.</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="font-medium text-blue-800 dark:text-blue-300">Client Visits</div>
+            <p className="text-blue-700 dark:text-blue-400">Use "Client Visit" to send a crew to a client's location.</p>
+          </div>
+        </div>
+      </div>
+
       {/* Team Event Dialog for dropped crews */}
       <TeamEventDialog 
         open={teamEventDialogOpen}
@@ -452,6 +492,37 @@ const ScheduleView = () => {
         clients={clients}
         clientLocations={clientLocations}
       />
+
+      {/* Task Dialog */}
+      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {assignmentType === 'individual' 
+                ? 'Schedule Employee Task' 
+                : locationType === 'client' 
+                  ? 'Schedule Crew Client Visit' 
+                  : 'Schedule Crew Task'}
+            </DialogTitle>
+          </DialogHeader>
+          <TeamEventDialog 
+            open={isTaskDialogOpen}
+            onOpenChange={setIsTaskDialogOpen}
+            onCreateEvent={handleAddTask}
+            formData={formData}
+            setFormData={setFormData}
+            assignmentType={assignmentType}
+            setAssignmentType={setAssignmentType}
+            locationType={locationType}
+            setLocationType={setLocationType}
+            selectedDate={selectedDate}
+            crews={crews}
+            employees={employees}
+            clients={clients}
+            clientLocations={clientLocations}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Task Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
