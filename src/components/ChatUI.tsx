@@ -292,8 +292,9 @@ const ChatUI = () => {
   };
 
   const handleToggleChat = () => {
-    setIsOpen(!isOpen);
-    setAiAssistantOpen(!isOpen);
+    const newState = !isOpen;
+    setIsOpen(newState);
+    setAiAssistantOpen(newState);
   };
 
   const handleOpenSettings = () => {
@@ -302,6 +303,7 @@ const ChatUI = () => {
     }
   };
 
+  // Fixed visibility logic to correctly render chat or button
   if (!isOpen) {
     return (
       <Button
@@ -322,7 +324,7 @@ const ChatUI = () => {
         assistantName={assistantConfig?.name || 'Local LLM Assistant'} 
         companyName={assistantConfig?.companyName}
         onSettingsClick={handleOpenSettings}
-        onCloseClick={() => handleToggleChat()}
+        onCloseClick={handleToggleChat}
         useN8n={useN8nChat}
         onToggleN8n={() => {
           if (checkAccess('N8N Integration')) {
