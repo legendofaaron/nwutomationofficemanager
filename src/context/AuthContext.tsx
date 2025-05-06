@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { localAuth, LocalSession, LocalUser } from '@/services/localAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,10 +34,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   // Function to check if user has an active subscription
-  const checkSubscription = async (): Promise<boolean> => {
+  const checkSubscription = useCallback(async (): Promise<boolean> => {
     if (!user) return false;
     
     try {
+      // First check local database
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
@@ -45,17 +46,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('status', 'active')
         .maybeSingle();
       
+      if (error) {
+        console.error('Error checking subscription in database:', error);
+        return false;
+      }
+      
+      // If there's no active subscription in the database, check with the payment provider
+      if (!data) {
+        try {
+          // Call the verification function to check with payment provider
+          const verifyResponse = await supabase.functions.invoke('stripe-integration', {
+            body: {
+              action: 'check_subscription',
+              userId: user.id,
+            },
+          });
+          
+          if (!verifyResponse.data.success) {
+            console.error('Payment provider verification failed:', verifyResponse.data.error);
+            setHasActiveSubscription(false);
+            return false;
+          }
+          
+          // Update from verification response
+          const isActive = verifyResponse.data.data?.status === 'active';
+          setHasActiveSubscription(isActive);
+          return isActive;
+          
+        } catch (verifyError) {
+          console.error('Error verifying with payment provider:', verifyError);
+          setHasActiveSubscription(false);
+          return false;
+        }
+      }
+      
+      // Use the database result
       const isActive = !!data;
       setHasActiveSubscription(isActive);
       return isActive;
     } catch (error) {
       console.error('Error checking subscription status:', error);
+      setHasActiveSubscription(false);
       return false;
     }
-  };
+  }, [user]);
 
   // Function to refresh user data
-  const refreshUser = () => {
+  const refreshUser = useCallback(() => {
     const { data: { session: currentSession } } = localAuth.getSession();
     if (currentSession) {
       setSession(currentSession);
@@ -64,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check subscription status when user is refreshed
       checkSubscription();
     }
-  };
+  }, [checkSubscription]);
 
   useEffect(() => {
     // Set up the auth state listener first for better security
@@ -118,7 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       unsubscribe();
     };
-  }, [toast, isDemoMode]);
+  }, [toast, isDemoMode, checkSubscription]);
 
   const signOut = async () => {
     try {
