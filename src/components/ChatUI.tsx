@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import { ChatHeader } from './chat/ChatHeader';
 import { ChatContainer } from './chat/ChatContainer';
 import { SetupWizard } from './chat/SetupWizard';
 import { Message } from './chat/MessageBubble';
-import { queryLlm, isLlmConfigured, getLlmConfig } from '@/utils/llm';
+import { queryLlm, isLlmConfigured, getLlmConfig, generateDocumentContent } from '@/utils/llm';
 
 type SetupStep = 'welcome' | 'name' | 'company' | 'purpose' | 'complete' | null;
 
@@ -274,6 +273,158 @@ How can I assist you today?`
     }
   };
 
+  // New function to detect if the request is related to document content generation
+  const isDocumentContentRequest = (message: string): boolean => {
+    const lowerMsg = message.toLowerCase();
+    return (
+      (lowerMsg.includes('write') || lowerMsg.includes('create') || lowerMsg.includes('generate')) &&
+      (lowerMsg.includes('document') || lowerMsg.includes('content') || lowerMsg.includes('report') || 
+       lowerMsg.includes('story') || lowerMsg.includes('article') || lowerMsg.includes('essay'))
+    );
+  };
+  
+  // New function to determine document type from request
+  const getDocumentTypeFromRequest = (message: string): string => {
+    const lowerMsg = message.toLowerCase();
+    if (lowerMsg.includes('report')) return 'report';
+    if (lowerMsg.includes('story')) return 'story';
+    if (lowerMsg.includes('article')) return 'article';
+    if (lowerMsg.includes('essay')) return 'essay';
+    if (lowerMsg.includes('letter')) return 'letter';
+    if (lowerMsg.includes('email')) return 'email';
+    if (lowerMsg.includes('proposal')) return 'proposal';
+    return 'general';
+  };
+  
+  // Function to create or update document with generated content
+  const updateDocumentWithContent = (content: string, documentName?: string) => {
+    const { files, setFiles, currentFile, setCurrentFile, setViewMode } = useAppContext;
+    
+    // If there's a current document open, update it
+    if (currentFile && currentFile.type === 'document') {
+      const updatedFile = { ...currentFile, content };
+      setCurrentFile(updatedFile);
+      
+      // Update in files tree
+      const updateFiles = (filesArray: any[]): any[] => {
+        return filesArray.map(file => {
+          if (file.id === currentFile.id) {
+            return updatedFile;
+          }
+          if (file.children) {
+            return { ...file, children: updateFiles(file.children) };
+          }
+          return file;
+        });
+      };
+      
+      setFiles(updateFiles(files));
+      toast({
+        title: "Document updated",
+        description: "Content has been added to your current document",
+        duration: 2000,
+      });
+    } else {
+      // Create a new document with the generated content
+      const newDocName = documentName || "Generated Document";
+      const newDoc = {
+        id: `doc-${Date.now()}`,
+        name: newDocName,
+        type: "document" as const,
+        content
+      };
+      
+      setFiles([...files, newDoc]);
+      setCurrentFile(newDoc);
+      setViewMode('document');
+      
+      toast({
+        title: "New document created",
+        description: `"${newDocName}" has been created with the generated content`,
+        duration: 2000,
+      });
+    }
+  };
+
+  // Modified function to handle document content generation
+  const handleSendMessage = async (input: string) => {
+    // If in setup mode, process as setup response
+    if (isSetupMode) {
+      handleSetupResponse(input);
+      return;
+    }
+    
+    if (isLoading) return;
+    
+    const userMessageId = Date.now().toString();
+    setMessages([...messages, { id: userMessageId, type: 'user', content: input }]);
+    
+    setIsLoading(true);
+    
+    try {
+      // Check if LLM is configured
+      if (isLlmConfigured()) {
+        // Check if the request is for document content generation
+        if (isDocumentContentRequest(input)) {
+          // Get the document type from the request
+          const documentType = getDocumentTypeFromRequest(input);
+          
+          // Generate AI response for chat
+          const chatResponse = await queryLlm(input);
+          
+          // Add the chat response to messages
+          setMessages(prev => [
+            ...prev, 
+            { id: Date.now().toString(), type: 'ai', content: chatResponse.message }
+          ]);
+          
+          // Generate document content
+          const documentContent = await generateDocumentContent(input, documentType);
+          
+          // Update or create document with generated content
+          updateDocumentWithContent(documentContent);
+        } else {
+          // Handle regular chat messages
+          const responseText = await queryLlm(input);
+          setMessages(prev => [
+            ...prev, 
+            { id: Date.now().toString(), type: 'ai', content: responseText.message }
+          ]);
+        }
+      } else {
+        // Simple AI response telling user to configure API
+        setTimeout(() => {
+          setMessages(prev => [
+            ...prev,
+            {
+              id: Date.now().toString(),
+              type: 'ai',
+              content: `To get a helpful response, please configure an AI model in the settings first. Click the gear icon in the top-right corner of this chat window.`
+            }
+          ]);
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error handling message:', error);
+      toast({
+        title: 'Connection Error',
+        description: 'Unable to connect to the assistant. Please check your API configuration.',
+        variant: 'destructive'
+      });
+      setMessages(prev => [
+        ...prev, 
+        { 
+          id: Date.now().toString(), 
+          type: 'ai', 
+          content: "I encountered an error processing your request. Please check your API configuration in settings."
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Add similar document content handling to quick actions
   const handleQuickAction = async (action: string) => {
     if (isSetupMode || isLoading) return;
     
@@ -285,11 +436,31 @@ How can I assist you today?`
     try {
       // Check if LLM is configured
       if (isLlmConfigured()) {
-        const responseText = await callLlmApi(action);
-        setMessages(prev => [
-          ...prev, 
-          { id: Date.now().toString(), type: 'ai', content: responseText }
-        ]);
+        // Check if the quick action is for document creation
+        if (action === 'create document') {
+          // Generate AI response for chat
+          const chatResponse = await queryLlm(action);
+          
+          // Add the chat response to messages
+          setMessages(prev => [
+            ...prev, 
+            { id: Date.now().toString(), type: 'ai', content: chatResponse.message }
+          ]);
+          
+          // Generate a sample document
+          const documentPrompt = "Create a professional business document template with sections for executive summary, introduction, background, analysis, recommendations, and conclusion.";
+          const documentContent = await generateDocumentContent(documentPrompt, "business");
+          
+          // Create new document with generated content
+          updateDocumentWithContent(documentContent, "New Business Document");
+        } else {
+          // Handle other quick actions normally
+          const responseText = await queryLlm(action);
+          setMessages(prev => [
+            ...prev, 
+            { id: Date.now().toString(), type: 'ai', content: responseText.message }
+          ]);
+        }
       } else {
         // Fall back to default responses if LLM is not configured
         let response = '';
@@ -322,61 +493,6 @@ How can I assist you today?`
       }
     } catch (error) {
       console.error('Error handling quick action:', error);
-      setMessages(prev => [
-        ...prev, 
-        { 
-          id: Date.now().toString(), 
-          type: 'ai', 
-          content: "I encountered an error processing your request. Please check your API configuration in settings."
-        }
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSendMessage = async (input: string) => {
-    // If in setup mode, process as setup response
-    if (isSetupMode) {
-      handleSetupResponse(input);
-      return;
-    }
-    
-    if (isLoading) return;
-    
-    const userMessageId = Date.now().toString();
-    setMessages([...messages, { id: userMessageId, type: 'user', content: input }]);
-    
-    setIsLoading(true);
-    
-    try {
-      // Check if LLM is configured
-      if (isLlmConfigured()) {
-        const responseText = await callLlmApi(input);
-        setMessages(prev => [
-          ...prev, 
-          { id: Date.now().toString(), type: 'ai', content: responseText }
-        ]);
-      } else {
-        // Simple AI response telling user to configure API
-        setTimeout(() => {
-          setMessages(prev => [
-            ...prev,
-            {
-              id: Date.now().toString(),
-              type: 'ai',
-              content: `To get a helpful response, please configure an AI model in the settings first. Click the gear icon in the top-right corner of this chat window.`
-            }
-          ]);
-        }, 500);
-      }
-    } catch (error) {
-      console.error('Error handling message:', error);
-      toast({
-        title: 'Connection Error',
-        description: 'Unable to connect to the assistant. Please check your API configuration.',
-        variant: 'destructive'
-      });
       setMessages(prev => [
         ...prev, 
         { 

@@ -1,4 +1,3 @@
-
 import { LlmConfig } from '@/components/LlmSettings';
 import { toast } from '@/hooks/use-toast';
 
@@ -210,6 +209,41 @@ export async function sendWebhookNotification(message: string, webhookUrl: strin
   } catch (error) {
     console.error('Error sending webhook notification:', error);
     return false;
+  }
+}
+
+/**
+ * Generate document content based on user request
+ */
+export async function generateDocumentContent(
+  prompt: string,
+  documentType: string = 'general'
+): Promise<string> {
+  try {
+    // Get stored configuration from localStorage
+    const storedConfig = localStorage.getItem('llmConfig');
+    const config = storedConfig ? JSON.parse(storedConfig) : {};
+    
+    // Create a system prompt specific to document generation
+    const systemPrompt = `You are a professional document writer. 
+    Generate a well-structured ${documentType} document based on the user's request.
+    Format the output using Markdown syntax with appropriate headings, bullet points, and sections.
+    Be concise, clear, and comprehensive. Do not include any explanations or meta-information about the document.
+    Just generate the document content directly.`;
+    
+    // Use the existing queryLlm function with document-specific system prompt
+    const response = await queryLlm(
+      prompt, 
+      config.endpoint || '', 
+      config.openAi?.enabled ? 'gpt-4o-mini' : 'default',
+      undefined,
+      systemPrompt
+    );
+    
+    return response.message;
+  } catch (error) {
+    console.error('Error generating document content:', error);
+    throw new Error('Failed to generate document content');
   }
 }
 
