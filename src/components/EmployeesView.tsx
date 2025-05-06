@@ -215,27 +215,43 @@ const EmployeesView = () => {
     }));
   };
 
+  // Add new state for managing multiple crew assignments
+  const [crewsToAssign, setCrewsToAssign] = useState<string[]>([]);
+  
   const handleEmployeeCrewAssignment = () => {
-    if (!selectedEmployee || !selectedCrew) {
-      toast.error("Please select both an employee and a crew");
+    if (!selectedEmployee) {
+      toast.error("Please select an employee");
+      return;
+    }
+
+    if (crewsToAssign.length === 0) {
+      toast.error("Please select at least one crew");
       return;
     }
 
     // Update employee's crews
     const updatedEmployees = employees.map(emp => {
       if (emp.id === selectedEmployee) {
-        // Add crew to employee if not already assigned
-        if (!emp.crews?.includes(selectedCrew)) {
-          const updatedCrews = emp.crews ? [...emp.crews, selectedCrew] : [selectedCrew];
-          return { ...emp, crews: updatedCrews };
-        }
+        // Get current crews or initialize empty array
+        const currentCrews = emp.crews || [];
+        
+        // Add new crews that aren't already assigned
+        const updatedCrews = [...currentCrews];
+        
+        crewsToAssign.forEach(crewId => {
+          if (!updatedCrews.includes(crewId)) {
+            updatedCrews.push(crewId);
+          }
+        });
+        
+        return { ...emp, crews: updatedCrews };
       }
       return emp;
     });
 
-    // Update crew's members
+    // Update crews' members
     const updatedCrews = crews.map(crew => {
-      if (crew.id === selectedCrew) {
+      if (crewsToAssign.includes(crew.id)) {
         // Add employee to crew if not already a member
         if (!crew.members.includes(selectedEmployee)) {
           return { ...crew, members: [...crew.members, selectedEmployee] };
@@ -248,8 +264,8 @@ const EmployeesView = () => {
     setCrews(updatedCrews);
     setIsCrewAssignOpen(false);
     setSelectedEmployee(null);
-    setSelectedCrew(null);
-    toast.success("Employee assigned to crew successfully");
+    setCrewsToAssign([]);
+    toast.success("Employee assigned to crews successfully");
   };
 
   const handleEmployeeImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1066,9 +1082,9 @@ const EmployeesView = () => {
       <Dialog open={isCrewAssignOpen} onOpenChange={setIsCrewAssignOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Assign to Crew</DialogTitle>
+            <DialogTitle>Assign to Crews</DialogTitle>
             <DialogDescription>
-              Select an employee and a crew to assign them to.
+              Select an employee and one or more crews to assign them to.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -1076,7 +1092,11 @@ const EmployeesView = () => {
               <Label htmlFor="employee">Employee</Label>
               <Select 
                 value={selectedEmployee || ""}
-                onValueChange={setSelectedEmployee}
+                onValueChange={(value) => {
+                  setSelectedEmployee(value);
+                  // Reset crews to assign when employee changes
+                  setCrewsToAssign([]);
+                }}
               >
                 <SelectTrigger id="employee">
                   <SelectValue placeholder="Select employee" />
@@ -1090,23 +1110,45 @@ const EmployeesView = () => {
                 </SelectContent>
               </Select>
             </div>
+            
             <div className="grid gap-2">
-              <Label htmlFor="crew">Crew</Label>
-              <Select 
-                value={selectedCrew || ""}
-                onValueChange={setSelectedCrew}
-              >
-                <SelectTrigger id="crew">
-                  <SelectValue placeholder="Select crew" />
-                </SelectTrigger>
-                <SelectContent>
-                  {crews.map(crew => (
-                    <SelectItem key={crew.id} value={crew.id}>
-                      {crew.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Assign to Crews</Label>
+              <div className="border rounded-md p-2 max-h-40 overflow-y-auto">
+                {crews.length > 0 ? (
+                  crews.map(crew => {
+                    const isSelected = crewsToAssign.includes(crew.id);
+                    
+                    // Check if employee is already in this crew
+                    const isAlreadyInCrew = selectedEmployee && 
+                      employees.find(e => e.id === selectedEmployee)?.crews?.includes(crew.id);
+                    
+                    return (
+                      <div 
+                        key={crew.id}
+                        className={`flex items-center justify-between p-2 rounded-md mb-1 cursor-pointer hover:bg-accent/50 ${
+                          isSelected ? 'bg-accent' : isAlreadyInCrew ? 'bg-muted' : ''
+                        }`}
+                        onClick={() => handleCrewSelection(crew.id)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          <span>{crew.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isAlreadyInCrew && !isSelected && (
+                            <Badge variant="outline" className="text-xs">Already member</Badge>
+                          )}
+                          {isSelected && (
+                            <Check className="h-4 w-4 text-primary" />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-2 text-muted-foreground">No crews available</div>
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter className="sm:justify-between">
@@ -1116,10 +1158,10 @@ const EmployeesView = () => {
             <Button 
               type="button" 
               onClick={handleEmployeeCrewAssignment}
-              disabled={!selectedEmployee || !selectedCrew}
+              disabled={!selectedEmployee || crewsToAssign.length === 0}
             >
               <Check className="mr-2 h-4 w-4" />
-              Assign
+              Assign to Crews
             </Button>
           </DialogFooter>
         </DialogContent>
