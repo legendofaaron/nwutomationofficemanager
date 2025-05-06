@@ -26,6 +26,14 @@ import { Hexagon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { queryLlm } from '@/utils/llm';
+import { FolderBrowserDialog } from '@/components/sharing/FolderBrowserDialog';
+import { 
+  saveSharingSettings, 
+  getSharingSettings, 
+  createSharedFolder, 
+  SharingSettings, 
+  DEFAULT_SHARING_SETTINGS 
+} from '@/utils/sharingUtils';
 
 const SetupAssistant = () => {
   const { setAiAssistantOpen, setAssistantConfig, branding, setBranding } = useAppContext();
@@ -36,14 +44,18 @@ const SetupAssistant = () => {
   const [setupComplete, setSetupComplete] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showFolderBrowser, setShowFolderBrowser] = useState(false);
+  
+  // Load sharing settings from storage
+  const storedSharingSettings = getSharingSettings();
   
   // Form state
   const [config, setConfig] = useState({
     name: 'My Assistant',
     memory: 'postgres',
     llmModel: 'gpt-4o-mini',
-    enableSharedFolder: true,
-    folderPath: '/shared',
+    enableSharedFolder: storedSharingSettings.enableSharedFolder,
+    folderPath: storedSharingSettings.folderPath,
     endpoint: 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk',
     companyName: branding.companyName || '',
     companyDescription: '',
@@ -63,6 +75,16 @@ const SetupAssistant = () => {
     aiResponseStyle: 'balanced',
     openAiApiKey: '',
     useOpenAiKey: false,
+    permissions: {
+      read: storedSharingSettings.permissions.read,
+      write: storedSharingSettings.permissions.write,
+      modify: storedSharingSettings.permissions.modify,
+    },
+    privacy: {
+      localProcessing: storedSharingSettings.privacy.localProcessing,
+      encryption: storedSharingSettings.privacy.encryption,
+      auditLogs: storedSharingSettings.privacy.auditLogs,
+    }
   });
   
   useEffect(() => {
@@ -81,7 +103,7 @@ const SetupAssistant = () => {
   // Calculate setup progress based on filled fields
   const calculateSetupProgress = () => {
     let completedSteps = 0;
-    let totalSteps = 5; // Main sections: General, Branding, Company, Memory, LLM
+    let totalSteps = 6; // Main sections: General, Branding, Company, Memory, LLM, Sharing
     
     // Check general section
     if (config.name && config.assistantPurpose) completedSteps++;
@@ -97,6 +119,9 @@ const SetupAssistant = () => {
     
     // Check LLM section
     if (config.llmModel || (config.useCustomModel && config.customModelName && config.customModelApiKey)) completedSteps++;
+    
+    // Check sharing section
+    if (!config.enableSharedFolder || config.folderPath) completedSteps++;
     
     const progress = Math.floor((completedSteps / totalSteps) * 100);
     setSetupProgress(progress);
@@ -118,7 +143,7 @@ const SetupAssistant = () => {
       
       // Test OpenAI connection if using OpenAI API key
       if (config.useOpenAiKey && config.openAiApiKey) {
-        const success = await testOpenAiKey(true);
+        const success = await testOpenAiKey();
         if (!success) {
           setIsSaving(false);
           return;
@@ -139,6 +164,29 @@ const SetupAssistant = () => {
         logoType: config.logoType as 'default' | 'text' | 'image',
         logoUrl: config.logoUrl
       });
+      
+      // Save sharing settings
+      const sharingSettings: SharingSettings = {
+        enableSharedFolder: config.enableSharedFolder,
+        folderPath: config.folderPath,
+        permissions: {
+          read: config.permissions.read,
+          write: config.permissions.write,
+          modify: config.permissions.modify
+        },
+        privacy: {
+          localProcessing: config.privacy.localProcessing,
+          encryption: config.privacy.encryption,
+          auditLogs: config.privacy.auditLogs
+        }
+      };
+      
+      saveSharingSettings(sharingSettings);
+      
+      // Create shared folder if enabled
+      if (config.enableSharedFolder) {
+        await createSharedFolder(config.folderPath);
+      }
       
       // Save LLM configuration to local storage, now including OpenAI API key
       const llmConfig = {
@@ -294,7 +342,7 @@ const SetupAssistant = () => {
   };
 
   // Function to test OpenAI API key
-  const testOpenAiKey = async (event?: React.MouseEvent<HTMLButtonElement>) => {
+  const testOpenAiKey = async (event?: React.MouseEvent<HTMLButtonElement>): Promise<boolean> => {
     // If event exists, it means this was triggered by a button click
     // In this case, we want silent to be false
     const silent = event ? false : true;
@@ -346,6 +394,12 @@ const SetupAssistant = () => {
     } finally {
       setTestingConnection(false);
     }
+  };
+
+  // Handle folder selection
+  const handleFolderSelect = (path: string) => {
+    setConfig({...config, folderPath: path});
+    setShowFolderBrowser(false);
   };
 
   return (
@@ -888,7 +942,11 @@ const SetupAssistant = () => {
                         onChange={(e) => setConfig({...config, folderPath: e.target.value})}
                         placeholder="/shared"
                       />
-                      <Button variant="outline" className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        className="flex items-center gap-2"
+                        onClick={() => setShowFolderBrowser(true)}
+                      >
                         <FolderPlus className="h-4 w-4" />
                         Browse
                       </Button>
@@ -920,15 +978,42 @@ const SetupAssistant = () => {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="read-permission" className="text-sm">Read Files</Label>
-                        <Switch id="read-permission" checked={true} disabled />
+                        <Switch 
+                          id="read-permission" 
+                          checked={config.permissions.read} 
+                          onCheckedChange={(checked) => 
+                            setConfig(prev => ({
+                              ...prev, 
+                              permissions: {...prev.permissions, read: checked}
+                            }))
+                          }
+                        />
                       </div>
                       <div className="flex items-center justify-between">
                         <Label htmlFor="write-permission" className="text-sm">Create Files</Label>
-                        <Switch id="write-permission" checked={true} disabled />
+                        <Switch 
+                          id="write-permission" 
+                          checked={config.permissions.write}
+                          onCheckedChange={(checked) => 
+                            setConfig(prev => ({
+                              ...prev, 
+                              permissions: {...prev.permissions, write: checked}
+                            }))
+                          }
+                        />
                       </div>
                       <div className="flex items-center justify-between">
                         <Label htmlFor="modify-permission" className="text-sm">Modify Files</Label>
-                        <Switch id="modify-permission" checked={true} disabled />
+                        <Switch 
+                          id="modify-permission" 
+                          checked={config.permissions.modify}
+                          onCheckedChange={(checked) => 
+                            setConfig(prev => ({
+                              ...prev, 
+                              permissions: {...prev.permissions, modify: checked}
+                            }))
+                          }
+                        />
                       </div>
                     </div>
                   </div>
@@ -938,15 +1023,42 @@ const SetupAssistant = () => {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="local-processing" className="text-sm">Process Data Locally</Label>
-                        <Switch id="local-processing" checked={true} disabled />
+                        <Switch 
+                          id="local-processing" 
+                          checked={config.privacy.localProcessing}
+                          onCheckedChange={(checked) => 
+                            setConfig(prev => ({
+                              ...prev, 
+                              privacy: {...prev.privacy, localProcessing: checked}
+                            }))
+                          }
+                        />
                       </div>
                       <div className="flex items-center justify-between">
                         <Label htmlFor="encryption" className="text-sm">Enable Encryption</Label>
-                        <Switch id="encryption" checked={true} disabled />
+                        <Switch 
+                          id="encryption" 
+                          checked={config.privacy.encryption}
+                          onCheckedChange={(checked) => 
+                            setConfig(prev => ({
+                              ...prev, 
+                              privacy: {...prev.privacy, encryption: checked}
+                            }))
+                          }
+                        />
                       </div>
                       <div className="flex items-center justify-between">
                         <Label htmlFor="audit-logs" className="text-sm">Maintain Audit Logs</Label>
-                        <Switch id="audit-logs" checked={true} />
+                        <Switch 
+                          id="audit-logs" 
+                          checked={config.privacy.auditLogs}
+                          onCheckedChange={(checked) => 
+                            setConfig(prev => ({
+                              ...prev, 
+                              privacy: {...prev.privacy, auditLogs: checked}
+                            }))
+                          }
+                        />
                       </div>
                     </div>
                   </div>
@@ -1044,6 +1156,14 @@ const SetupAssistant = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Folder Browser Dialog */}
+      <FolderBrowserDialog
+        isOpen={showFolderBrowser}
+        onClose={() => setShowFolderBrowser(false)}
+        onSelect={handleFolderSelect}
+        initialPath={config.folderPath}
+      />
     </div>
   );
 };

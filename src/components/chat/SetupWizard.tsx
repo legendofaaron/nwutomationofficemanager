@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Message, MessageBubble } from './MessageBubble';
@@ -507,8 +506,8 @@ export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupW
             </Button>
           </div>
           <ChatInput 
-            onSendMessage={onSendResponse}
-            placeholder="Type response..." 
+            onSendMessage={handleSendMessage} 
+            disabled={false}
           />
         </div>
       ) : (
