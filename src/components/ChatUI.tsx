@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { ChatContainer } from './chat/ChatContainer';
 import { SetupWizard } from './chat/SetupWizard';
 import { Message } from './chat/MessageBubble';
 import { queryLlm, isLlmConfigured, getLlmConfig, generateDocumentContent } from '@/utils/llm';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type SetupStep = 'welcome' | 'name' | 'company' | 'purpose' | 'complete' | null;
 
@@ -34,6 +34,7 @@ const ChatUI = () => {
   const isDark = resolvedTheme === 'dark' || resolvedTheme === 'superdark';
   const [isLoading, setIsLoading] = useState(false);
   const [connectionTested, setConnectionTested] = useState(false);
+  const isMobile = useIsMobile();
 
   // Use effect to sync with aiAssistantOpen state from context
   useEffect(() => {
@@ -551,7 +552,7 @@ How can I assist you today?`
     return (
       <Button
         onClick={handleToggleChat}
-        className="fixed bottom-4 right-4 h-12 w-12 rounded-full p-0 shadow-lg hover:shadow-xl transition-all bg-blue-600 hover:bg-blue-700 text-white border-none"
+        className="fixed bottom-4 right-4 h-12 w-12 rounded-full p-0 shadow-lg hover:shadow-xl transition-all bg-blue-600 hover:bg-blue-700 text-white border-none z-50"
         aria-label="Open chat assistant"
       >
         <Bot className="h-5 w-5" />
@@ -560,7 +561,9 @@ How can I assist you today?`
   }
 
   return (
-    <div className="fixed right-4 bottom-4 w-[350px] bg-[#0D1117] rounded-xl shadow-xl border border-[#1E2430]/80 flex flex-col h-[550px] z-20 overflow-hidden">
+    <div className={`fixed right-0 bottom-0 ${isMobile ? 'w-full left-0' : 'right-4 bottom-4 w-[350px]'} 
+      bg-[#0D1117] rounded-xl shadow-xl border border-[#1E2430]/80 flex flex-col 
+      ${isMobile ? 'h-[90vh] z-50 rounded-b-none' : 'h-[550px] z-20'} overflow-hidden`}>
       <ChatHeader 
         assistantName={assistantConfig?.name || 'My Assistant'} 
         companyName={assistantConfig?.companyName}

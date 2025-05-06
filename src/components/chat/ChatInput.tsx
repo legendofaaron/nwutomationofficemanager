@@ -1,7 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { SendHorizontal, Paperclip, Mic, StopCircle } from 'lucide-react';
+import { SendHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -19,6 +20,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const [input, setInput] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const isMobile = useIsMobile();
 
   // Auto-resize textarea
   useEffect(() => {
@@ -70,13 +72,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
         />
         <Button
           type="submit"
-          className={`mr-1 mb-1 h-10 px-5 rounded-md ${disabled || isLoading || !input.trim() ? 'bg-[#1E2430] text-[#5D6B82] hover:bg-[#1E2430] cursor-not-allowed' : 'bg-[#4661F1] hover:bg-[#3A51D6] text-white'} transition-colors font-medium`}
+          className={`mr-1 mb-1 h-10 ${isMobile ? 'px-3' : 'px-5'} rounded-md ${disabled || isLoading || !input.trim() ? 'bg-[#1E2430] text-[#5D6B82] hover:bg-[#1E2430] cursor-not-allowed' : 'bg-[#4661F1] hover:bg-[#3A51D6] text-white'} transition-colors font-medium`}
           disabled={disabled || isLoading || !input.trim()}
         >
           {isLoading ? (
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
           ) : (
-            "Send"
+            isMobile ? <SendHorizontal className="h-5 w-5" /> : "Send"
           )}
         </Button>
       </div>

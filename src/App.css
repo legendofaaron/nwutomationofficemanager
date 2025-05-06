@@ -59,3 +59,60 @@ select:focus {
 button, a, input, select, textarea {
   transition: all 0.15s ease-in-out;
 }
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  /* Reduce padding and margins for mobile */
+  .container, .p-4, .p-6, .p-8 {
+    padding: 0.75rem !important;
+  }
+  
+  .m-4, .m-6, .m-8 {
+    margin: 0.75rem !important;
+  }
+  
+  /* Make buttons more touch-friendly */
+  button, 
+  .btn, 
+  [role="button"], 
+  input[type="submit"], 
+  input[type="reset"], 
+  input[type="button"] {
+    min-height: 44px;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  /* Improve form input touch targets */
+  input, 
+  select, 
+  textarea {
+    font-size: 16px !important; /* Prevent zoom on focus in iOS */
+    min-height: 44px;
+  }
+  
+  /* Reduce font sizes for better readability */
+  h1 {
+    font-size: 1.5rem !important;
+  }
+  
+  h2 {
+    font-size: 1.25rem !important;
+  }
+  
+  h3 {
+    font-size: 1.125rem !important;
+  }
+  
+  /* Adjust card and list layouts */
+  .card, 
+  .list-item {
+    margin-bottom: 0.75rem !important;
+  }
+  
+  /* Improve readability by increasing spacing between touch targets */
+  .space-y-2 {
+    margin-top: 0.625rem !important;
+    margin-bottom: 0.625rem !important;
+  }
+}

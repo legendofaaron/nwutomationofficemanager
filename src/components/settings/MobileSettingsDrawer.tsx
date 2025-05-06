@@ -19,6 +19,7 @@ import { LlmSettings } from '@/components/LlmSettings';
 import { DatabaseSettingsTab } from './DatabaseSettingsTab';
 import { StorageSettingsTab } from './StorageSettingsTab';
 import { useTheme } from '@/context/ThemeContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MobileSettingsDrawerProps {
   open: boolean;
@@ -30,10 +31,11 @@ export const MobileSettingsDrawer = ({ open, onClose }: MobileSettingsDrawerProp
   const [activeTab, setActiveTab] = useState("general");
   const { resolvedTheme } = useTheme();
   const isSuperDark = resolvedTheme === 'superdark';
+  const isMobile = useIsMobile();
   
   return (
     <Drawer open={open} onClose={onClose}>
-      <DrawerContent className={`h-[85vh] ${isSuperDark ? 'bg-black border-t border-[#151515]' : ''}`}>
+      <DrawerContent className={`${isMobile ? 'h-[90vh]' : 'h-[85vh]'} ${isSuperDark ? 'bg-black border-t border-[#151515]' : ''}`}>
         <DrawerHeader className={`border-b ${isSuperDark ? 'border-[#151515]' : ''}`}>
           <div className="flex items-center justify-between">
             <div>
@@ -52,12 +54,13 @@ export const MobileSettingsDrawer = ({ open, onClose }: MobileSettingsDrawerProp
         
         <div className="p-4 overflow-auto flex-1">
           <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-1' : 'grid-cols-3'} mb-4`}>
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="appearance">Appearance</TabsTrigger>
-              <TabsTrigger value="database">Database</TabsTrigger>
+              {!isMobile && <TabsTrigger value="database">Database</TabsTrigger>}
             </TabsList>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-1' : 'grid-cols-2'} mb-6`}>
+              {isMobile && <TabsTrigger value="database">Database</TabsTrigger>}
               <TabsTrigger value="integrations">Integrations</TabsTrigger>
               <TabsTrigger value="storage">Storage</TabsTrigger>
             </TabsList>
