@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Task, Crew } from './ScheduleTypes';
@@ -37,6 +36,20 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
 
+  // Effect to add/remove dragging class on body
+  useEffect(() => {
+    if (draggedTaskId) {
+      document.body.classList.add('dragging');
+    } else {
+      document.body.classList.remove('dragging');
+    }
+    
+    // Cleanup function to ensure class is removed
+    return () => {
+      document.body.classList.remove('dragging');
+    };
+  }, [draggedTaskId]);
+
   // Filter tasks for the selected date
   const tasksForSelectedDate = tasks.filter(
     task => task.date.toDateString() === selectedDate.toDateString()
@@ -50,6 +63,20 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
       id: task.id,
       title: task.title
     }));
+    
+    // Prevent ghost image from being too large
+    const dragIcon = document.createElement('div');
+    dragIcon.classList.add('drag-icon');
+    dragIcon.textContent = task.title || '';
+    dragIcon.style.position = 'absolute';
+    dragIcon.style.top = '-1000px';
+    document.body.appendChild(dragIcon);
+    e.dataTransfer.setDragImage(dragIcon, 0, 0);
+    
+    // Add a small timeout to remove the element
+    setTimeout(() => {
+      document.body.removeChild(dragIcon);
+    }, 0);
     
     // Store dragged task id in state
     setDraggedTaskId(task.id);

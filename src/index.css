@@ -76,6 +76,22 @@
   }
 }
 
+/* Prevent text selection during drag operations */
+*[draggable="true"] {
+  user-select: none;
+  -webkit-user-drag: element;
+}
+
+/* Prevent highlighting during drag operations */
+.dragging, .dragging * {
+  cursor: grabbing !important;
+}
+
+/* Global drag and drop styling */
+body.dragging {
+  cursor: grabbing !important;
+}
+
 /* Fix for calendar numbers */
 .rdp-button:not(.rdp-day_selected) {
   color: currentColor !important;
