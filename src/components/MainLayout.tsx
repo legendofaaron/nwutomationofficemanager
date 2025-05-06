@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
@@ -24,6 +23,7 @@ import { ProLayout } from './ProLayout';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { Button } from './ui/button';
+import type { ViewMode } from '@/context/AppContext';
 
 const MainLayout = () => {
   const {
