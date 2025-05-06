@@ -79,6 +79,30 @@ export default {
 						DEFAULT: '#E9ECEF',
 						dark: '#DEE2E6',
 						darker: '#CED4DA'
+					},
+					// Professional superdark specific colors
+					superdark: {
+						bg: '#050505',
+						card: '#0A0A0A',
+						border: '#1E1E1E',
+						muted: '#181818',
+						blue: {
+							light: '#4284fd',
+							DEFAULT: '#1E64D0', 
+							dark: '#0F3A7C',
+						},
+						gray: {
+							lightest: '#444444',
+							light: '#333333',
+							DEFAULT: '#222222',
+							dark: '#111111',
+							darker: '#0A0A0A'
+						},
+						text: {
+							primary: '#E0E0E0',
+							secondary: '#999999',
+							muted: '#666666'
+						}
 					}
 				}
 			},
@@ -152,6 +176,16 @@ export default {
 				'slide-in': 'slide-in 0.4s ease-out',
 				'pulse-slow': 'pulse 3s infinite',
 				shimmer: 'shimmer 2s infinite',
+			},
+			// Professional shadows for superdark mode
+			boxShadow: {
+				'superdark-sm': '0 1px 2px rgba(0, 0, 0, 0.4)',
+				'superdark': '0 4px 6px rgba(0, 0, 0, 0.5)',
+				'superdark-md': '0 6px 10px rgba(0, 0, 0, 0.6)',
+				'superdark-lg': '0 10px 15px rgba(0, 0, 0, 0.7)',
+				'superdark-xl': '0 15px 25px rgba(0, 0, 0, 0.8)',
+				'superdark-2xl': '0 25px 50px rgba(0, 0, 0, 0.9)',
+				'superdark-inner': 'inset 0 2px 4px rgba(0, 0, 0, 0.5)',
 			}
 		}
 	},

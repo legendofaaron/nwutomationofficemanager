@@ -6,6 +6,7 @@ import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { useTheme } from "@/context/ThemeContext";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -31,20 +32,24 @@ interface CustomCaptionProps {
 
 // Custom caption component to show month and year with better styling
 const CustomCaption = ({ displayMonth, onPreviousClick, onNextClick }: CustomCaptionProps) => {
+  const { resolvedTheme } = useTheme();
+  const isSuperDarkMode = resolvedTheme === 'superdark';
+  
   return (
     <div className="flex items-center justify-between px-2 py-1">
       <button
         onClick={onPreviousClick}
         className={cn(
           buttonVariants({ variant: "outline", size: "icon" }),
-          "h-7 w-7 bg-background hover:bg-muted dark:bg-gray-800 p-0 opacity-90 hover:opacity-100"
+          "h-7 w-7 bg-background hover:bg-muted p-0 opacity-90 hover:opacity-100",
+          isSuperDarkMode && "bg-[#0A0A0A] border-[#181818] text-gray-300 hover:bg-[#111111]"
         )}
         aria-label="Previous month"
       >
-        <ChevronLeft className="h-4 w-4 text-primary dark:text-gray-300" />
+        <ChevronLeft className={cn("h-4 w-4 text-primary", isSuperDarkMode && "text-gray-300")} />
       </button>
       
-      <div className="text-sm font-medium text-center">
+      <div className={cn("text-sm font-medium text-center", isSuperDarkMode && "text-gray-200")}>
         {format(displayMonth, 'MMMM yyyy')}
       </div>
       
@@ -52,11 +57,12 @@ const CustomCaption = ({ displayMonth, onPreviousClick, onNextClick }: CustomCap
         onClick={onNextClick}
         className={cn(
           buttonVariants({ variant: "outline", size: "icon" }),
-          "h-7 w-7 bg-background hover:bg-muted dark:bg-gray-800 p-0 opacity-90 hover:opacity-100"
+          "h-7 w-7 bg-background hover:bg-muted p-0 opacity-90 hover:opacity-100",
+          isSuperDarkMode && "bg-[#0A0A0A] border-[#181818] text-gray-300 hover:bg-[#111111]"
         )}
         aria-label="Next month"
       >
-        <ChevronRight className="h-4 w-4 text-primary dark:text-gray-300" />
+        <ChevronRight className={cn("h-4 w-4 text-primary", isSuperDarkMode && "text-gray-300")} />
       </button>
     </div>
   );
@@ -68,6 +74,9 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
+  const { resolvedTheme } = useTheme();
+  const isSuperDarkMode = resolvedTheme === 'superdark';
+  
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -84,19 +93,32 @@ function Calendar({
         table: "w-full border-collapse space-y-1",
         head_row: "flex",
         head_cell:
-          "text-muted-foreground rounded-md w-8 font-normal text-[0.7rem] flex-shrink-0",
+          cn(
+            "text-muted-foreground rounded-md w-8 font-normal text-[0.7rem] flex-shrink-0",
+            isSuperDarkMode && "text-gray-500"
+          ),
         row: "flex w-full mt-2",
         cell: "h-8 w-8 text-center text-sm p-0 relative flex-shrink-0 focus-within:relative focus-within:z-20",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-8 w-8 p-0 font-normal aria-selected:opacity-100 text-xs"
+          "h-8 w-8 p-0 font-normal aria-selected:opacity-100 text-xs",
+          isSuperDarkMode && "hover:bg-[#111111] text-gray-300"
         ),
         day_range_end: "day-range-end",
         day_selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-accent text-accent-foreground",
+          cn(
+            "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+            isSuperDarkMode && "bg-blue-600 text-white hover:bg-blue-700 focus:bg-blue-700"
+          ),
+        day_today: cn(
+          "bg-accent text-accent-foreground",
+          isSuperDarkMode && "bg-[#181818] text-blue-400 font-medium"
+        ),
         day_outside:
-          "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+          cn(
+            "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+            isSuperDarkMode && "text-gray-700"
+          ),
         day_disabled: "text-muted-foreground opacity-50",
         day_range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
