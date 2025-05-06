@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, CaptionProps as DayPickerCaptionProps } from "react-day-picker";
 import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
@@ -104,19 +104,23 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        // Fixed: Use inline function with explicit type declaration of props
-        Caption: ({ displayMonth, goToMonth }) => {
+        // Fixed: TypeScript now correctly recognizes the props passed to the Caption component
+        Caption: ({ displayMonth, goToMonth, ...captionProps }: DayPickerCaptionProps) => {
           // Create handlers for previous/next month that use the goToMonth function
           const handlePrevious = () => {
-            const prevMonth = new Date(displayMonth);
-            prevMonth.setMonth(prevMonth.getMonth() - 1);
-            goToMonth(prevMonth);
+            if (goToMonth) {
+              const prevMonth = new Date(displayMonth);
+              prevMonth.setMonth(prevMonth.getMonth() - 1);
+              goToMonth(prevMonth);
+            }
           };
           
           const handleNext = () => {
-            const nextMonth = new Date(displayMonth);
-            nextMonth.setMonth(nextMonth.getMonth() + 1);
-            goToMonth(nextMonth);
+            if (goToMonth) {
+              const nextMonth = new Date(displayMonth);
+              nextMonth.setMonth(nextMonth.getMonth() + 1);
+              goToMonth(nextMonth);
+            }
           };
           
           return (
