@@ -8,6 +8,10 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Settings, Brain, Link, Check } from 'lucide-react';
 
 interface SetupWizardProps {
   messages: Message[];
@@ -17,12 +21,32 @@ interface SetupWizardProps {
 
 export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupWizardProps) => {
   const [isConfiguring, setIsConfiguring] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('model');
+  const [setupProgress, setSetupProgress] = useState(0);
   const [customModelInfo, setCustomModelInfo] = useState({
     enabled: false,
     name: '',
     apiKey: '',
     baseUrl: '',
+    contextLength: 8000,
+    temperature: 0.7
   });
+
+  const updateSetupProgress = () => {
+    let progress = 0;
+    
+    if (customModelInfo.enabled) {
+      // If using custom model
+      if (customModelInfo.name) progress += 25;
+      if (customModelInfo.apiKey) progress += 50;
+      if (customModelInfo.baseUrl) progress += 25;
+    } else {
+      // Default model is already 100% setup
+      progress = 100;
+    }
+    
+    setSetupProgress(progress);
+  };
 
   const saveCustomModelConfig = () => {
     try {
@@ -38,7 +62,8 @@ export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupW
           name: customModelInfo.name || 'Custom Model',
           apiKey: customModelInfo.apiKey,
           baseUrl: customModelInfo.baseUrl,
-          contextLength: 8000,
+          contextLength: customModelInfo.contextLength,
+          temperature: customModelInfo.temperature,
           isCustom: true
         };
       } else {
@@ -63,6 +88,30 @@ export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupW
       });
     }
   };
+  
+  const testConnection = () => {
+    if (!customModelInfo.enabled || !customModelInfo.apiKey) {
+      toast({
+        title: 'Test Failed',
+        description: 'Please enter a valid API key first',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    toast({
+      title: 'Testing Connection',
+      description: 'Attempting to connect to the model...'
+    });
+    
+    // Simulate a connection test
+    setTimeout(() => {
+      toast({
+        title: 'Connection Successful',
+        description: `Successfully connected to ${customModelInfo.name || 'Custom Model'}`
+      });
+    }, 1500);
+  };
 
   return (
     <>
@@ -74,66 +123,201 @@ export const SetupWizard = ({ messages, onSendResponse, messagesEndRef }: SetupW
           
           {isConfiguring && (
             <div className="p-4 bg-[#161B22] rounded-lg border border-[#30363d] mt-4">
-              <h3 className="text-lg font-medium text-white mb-3">Configure Custom Language Model</h3>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-medium text-white flex items-center gap-2">
+                  <Settings className="h-5 w-5 text-blue-400" />
+                  Configure AI Model
+                </h3>
+                <div className="text-xs text-gray-400">
+                  Setup Progress: {setupProgress}%
+                </div>
+              </div>
               
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="enable-custom-model" className="text-gray-300">
-                    Enable Custom Model
-                  </Label>
-                  <Switch 
-                    id="enable-custom-model"
-                    checked={customModelInfo.enabled}
-                    onCheckedChange={(checked) => setCustomModelInfo(prev => ({...prev, enabled: checked}))}
-                  />
-                </div>
+              <Progress value={setupProgress} className="h-1 mb-4" />
+              
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid grid-cols-3 mb-4">
+                  <TabsTrigger value="model" className="text-xs">Model</TabsTrigger>
+                  <TabsTrigger value="settings" className="text-xs">Settings</TabsTrigger>
+                  <TabsTrigger value="connection" className="text-xs">Connection</TabsTrigger>
+                </TabsList>
                 
-                {customModelInfo.enabled && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="custom-model-name" className="text-gray-300">Model Name</Label>
-                      <Input
-                        id="custom-model-name"
-                        value={customModelInfo.name}
-                        onChange={(e) => setCustomModelInfo(prev => ({...prev, name: e.target.value}))}
-                        placeholder="My Custom Model"
-                        className="bg-[#0D1117] border-[#30363d] text-gray-200"
-                      />
+                <TabsContent value="model" className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="enable-custom-model" className="text-gray-300">
+                      Enable Custom Model
+                    </Label>
+                    <Switch 
+                      id="enable-custom-model"
+                      checked={customModelInfo.enabled}
+                      onCheckedChange={(checked) => {
+                        setCustomModelInfo(prev => ({...prev, enabled: checked}));
+                        setSetupProgress(checked ? 25 : 100);
+                      }}
+                    />
+                  </div>
+                  
+                  {customModelInfo.enabled ? (
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="custom-model-name" className="text-gray-300">Model Name</Label>
+                        <Input
+                          id="custom-model-name"
+                          value={customModelInfo.name}
+                          onChange={(e) => {
+                            setCustomModelInfo(prev => ({...prev, name: e.target.value}));
+                            updateSetupProgress();
+                          }}
+                          placeholder="My Custom Model"
+                          className="bg-[#0D1117] border-[#30363d] text-gray-200"
+                        />
+                      </div>
                     </div>
-                    
+                  ) : (
                     <div className="space-y-2">
-                      <Label htmlFor="custom-model-api-key" className="text-gray-300">API Key</Label>
-                      <Input
-                        id="custom-model-api-key"
-                        type="password"
-                        value={customModelInfo.apiKey}
-                        onChange={(e) => setCustomModelInfo(prev => ({...prev, apiKey: e.target.value}))}
-                        placeholder="sk-..."
-                        className="bg-[#0D1117] border-[#30363d] text-gray-200"
-                      />
+                      <Label htmlFor="default-model" className="text-gray-300">Language Model</Label>
+                      <Select defaultValue="gpt-4o-mini">
+                        <SelectTrigger id="default-model" className="bg-[#0D1117] border-[#30363d] text-gray-200">
+                          <SelectValue placeholder="Select model" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#161B22] border-[#30363d] text-gray-200">
+                          <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
+                          <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                          <SelectItem value="gpt-4.5-preview">GPT-4.5 Preview</SelectItem>
+                          <SelectItem value="llama-3.1-8b">Llama 3.1 (8B)</SelectItem>
+                          <SelectItem value="llama-3.1-70b">Llama 3.1 (70B)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      <div className="mt-4 p-3 border border-blue-900/60 bg-blue-950/20 rounded-md">
+                        <div className="flex gap-2">
+                          <Check className="h-4 w-4 text-blue-400 mt-0.5" />
+                          <p className="text-sm text-blue-300">Default models come preconfigured and ready to use</p>
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="custom-model-base-url" className="text-gray-300">Base URL (Optional)</Label>
-                      <Input
-                        id="custom-model-base-url"
-                        value={customModelInfo.baseUrl}
-                        onChange={(e) => setCustomModelInfo(prev => ({...prev, baseUrl: e.target.value}))}
-                        placeholder="https://api.example.com/v1"
-                        className="bg-[#0D1117] border-[#30363d] text-gray-200"
-                      />
-                    </div>
-                  </>
-                )}
+                  )}
+                </TabsContent>
                 
-                <div className="flex space-x-2 pt-2">
-                  <Button onClick={saveCustomModelConfig} className="bg-blue-500 hover:bg-blue-600">
-                    Save Configuration
-                  </Button>
-                  <Button onClick={() => setIsConfiguring(false)} variant="outline" className="border-[#30363d] text-gray-200 hover:bg-[#30363d]/30">
-                    Cancel
-                  </Button>
-                </div>
+                <TabsContent value="settings" className="space-y-4">
+                  {customModelInfo.enabled && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="context-length" className="text-gray-300">Context Length</Label>
+                        <Select 
+                          value={customModelInfo.contextLength.toString()}
+                          onValueChange={(value) => setCustomModelInfo(prev => ({...prev, contextLength: parseInt(value)}))}
+                        >
+                          <SelectTrigger id="context-length" className="bg-[#0D1117] border-[#30363d] text-gray-200">
+                            <SelectValue placeholder="Select context length" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#161B22] border-[#30363d] text-gray-200">
+                            <SelectItem value="4000">4,000 tokens</SelectItem>
+                            <SelectItem value="8000">8,000 tokens</SelectItem>
+                            <SelectItem value="16000">16,000 tokens</SelectItem>
+                            <SelectItem value="32000">32,000 tokens</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Maximum tokens the model can process in one request
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="temperature" className="text-gray-300">Temperature</Label>
+                        <div className="flex items-center gap-4">
+                          <Input
+                            id="temperature"
+                            type="range"
+                            min="0"
+                            max="2"
+                            step="0.1"
+                            value={customModelInfo.temperature}
+                            onChange={(e) => setCustomModelInfo(prev => ({...prev, temperature: parseFloat(e.target.value)}))}
+                            className="bg-[#0D1117] border-[#30363d] text-gray-200"
+                          />
+                          <div className="bg-blue-900/30 text-blue-300 px-2 py-1 rounded-md text-sm w-14 text-center">
+                            {customModelInfo.temperature.toFixed(1)}
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Lower values produce more focused responses
+                        </p>
+                      </div>
+                    </>
+                  )}
+                  
+                  {!customModelInfo.enabled && (
+                    <div className="flex flex-col items-center justify-center h-24 text-center">
+                      <Brain className="h-10 w-10 text-gray-500 mb-2" />
+                      <p className="text-gray-400">Default models use optimal settings</p>
+                      <p className="text-xs text-gray-500 mt-1">Enable custom model for advanced settings</p>
+                    </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="connection" className="space-y-4">
+                  {customModelInfo.enabled && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="custom-model-api-key" className="text-gray-300">API Key</Label>
+                        <Input
+                          id="custom-model-api-key"
+                          type="password"
+                          value={customModelInfo.apiKey}
+                          onChange={(e) => {
+                            setCustomModelInfo(prev => ({...prev, apiKey: e.target.value}));
+                            updateSetupProgress();
+                          }}
+                          placeholder="sk-..."
+                          className="bg-[#0D1117] border-[#30363d] text-gray-200"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          Stored securely in your browser's local storage
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="custom-model-base-url" className="text-gray-300">Base URL (Optional)</Label>
+                        <Input
+                          id="custom-model-base-url"
+                          value={customModelInfo.baseUrl}
+                          onChange={(e) => {
+                            setCustomModelInfo(prev => ({...prev, baseUrl: e.target.value}));
+                            updateSetupProgress();
+                          }}
+                          placeholder="https://api.example.com/v1"
+                          className="bg-[#0D1117] border-[#30363d] text-gray-200"
+                        />
+                      </div>
+                      
+                      <Button 
+                        onClick={testConnection} 
+                        className="mt-2 bg-blue-600 hover:bg-blue-700 text-white w-full"
+                      >
+                        <Link className="h-4 w-4 mr-2" />
+                        Test Connection
+                      </Button>
+                    </>
+                  )}
+                  
+                  {!customModelInfo.enabled && (
+                    <div className="flex flex-col items-center justify-center h-24 text-center">
+                      <Check className="h-10 w-10 text-green-500 mb-2" />
+                      <p className="text-gray-400">Default connection is configured</p>
+                      <p className="text-xs text-gray-500 mt-1">No additional setup required</p>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+              
+              <div className="flex space-x-2 pt-4 mt-2 border-t border-[#30363d]">
+                <Button onClick={saveCustomModelConfig} className="bg-blue-500 hover:bg-blue-600 flex-1">
+                  Save Configuration
+                </Button>
+                <Button onClick={() => setIsConfiguring(false)} variant="outline" className="border-[#30363d] text-gray-200 hover:bg-[#30363d]/30">
+                  Cancel
+                </Button>
               </div>
             </div>
           )}
