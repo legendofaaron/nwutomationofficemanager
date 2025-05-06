@@ -48,10 +48,9 @@ const ForgotPassword = () => {
       // Always show success, even if email doesn't exist (for security reasons)
       setEmailSent(true);
       
-      // For demo purposes, add a note about checking the console
       toast({
         title: "Reset email sent",
-        description: "For this demo, please check the browser console for the reset token.",
+        description: "Please check your email for the password reset link.",
       });
     } catch (error) {
       // Handle errors
@@ -142,9 +141,6 @@ const ForgotPassword = () => {
                     <h4 className="font-medium">Recovery email sent!</h4>
                     <p className="text-sm opacity-80">
                       Check your inbox for instructions to reset your password.
-                    </p>
-                    <p className="text-xs opacity-70 mt-2">
-                      For this demo, check the browser console for the reset token.
                     </p>
                   </div>
                 </Alert>

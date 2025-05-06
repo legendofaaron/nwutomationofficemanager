@@ -154,6 +154,18 @@ const dispatchAuthEvent = (event: string, session: LocalSession | null) => {
   document.dispatchEvent(customEvent);
 };
 
+// Send email helper - In a real app, this would connect to an email service
+const sendEmail = async (to: string, subject: string, body: string): Promise<boolean> => {
+  // For production: Connect to your email service here
+  // This is a simulated email send that logs to console
+  console.log(`Sending email to ${to}`);
+  console.log(`Subject: ${subject}`);
+  console.log(`Body: ${body}`);
+  
+  // Simulate successful email sending
+  return true;
+};
+
 export const localAuth = {
   // Get current session
   getSession: (): { data: { session: LocalSession | null } } => {
@@ -398,7 +410,7 @@ export const localAuth = {
   },
 
   // Request password reset
-  requestPasswordReset: ({ email }: { email: string }): { data: { success: boolean }; error: Error | null } => {
+  requestPasswordReset: async ({ email }: { email: string }): Promise<{ data: { success: boolean }; error: Error | null }> => {
     try {
       const users = getUsers();
       const userIndex = users.findIndex(user => user.email === email);
@@ -421,9 +433,24 @@ export const localAuth = {
       
       saveUsers(users);
       
-      // In a real app, we would send an email here with a link to the reset page
-      // For this demo, we'll just log the token to the console
+      // In a production app, send an actual email here
+      const appUrl = window.location.origin;
+      const resetUrl = `${appUrl}/reset-password?token=${resetToken}`;
+      
+      // Send email with reset link
+      const emailSent = await sendEmail(
+        email,
+        "Password Reset Request",
+        `You requested a password reset. Click the link below to reset your password:\n\n${resetUrl}\n\nIf you didn't request this, please ignore this email.`
+      );
+      
+      if (!emailSent) {
+        throw new Error('Failed to send password reset email');
+      }
+      
+      // Log the token for development purposes only
       console.log(`Password Reset Token for ${email}: ${resetToken}`);
+      console.log(`Reset URL: ${resetUrl}`);
       
       return {
         data: { success: true },
