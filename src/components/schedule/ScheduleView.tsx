@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Plus, CalendarIcon, List, FileUp, Pencil, Users, User, MapPin } from 'lucide-react';
+import { Plus, CalendarIcon, List, FileUp, Pencil, Users, User, MapPin, FileDown, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAppContext } from '@/context/AppContext';
 import { Task, TaskFormData, AssignmentType, LocationType } from './ScheduleTypes';
+import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
 
 // Import components
 import TaskCalendarView from './TaskCalendarView';
@@ -178,6 +179,28 @@ const ScheduleView = () => {
       clientId: '',
       clientLocationId: ''
     });
+  };
+
+  // Handler for downloading schedule as TXT
+  const handleDownloadTxt = () => {
+    try {
+      downloadScheduleAsTxt(tasks);
+      toast.success("Schedule downloaded as TXT file");
+    } catch (error) {
+      console.error("Error downloading TXT:", error);
+      toast.error("Failed to download schedule as TXT");
+    }
+  };
+
+  // Handler for downloading schedule as PDF
+  const handleDownloadPdf = () => {
+    try {
+      downloadScheduleAsPdf(tasks);
+      toast.success("Schedule downloaded as PDF file");
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      toast.error("Failed to download schedule as PDF");
+    }
   };
 
   // Handle creating team event from dropped crew
@@ -374,6 +397,27 @@ const ScheduleView = () => {
         <h1 className="text-2xl font-bold">Schedule Management</h1>
         
         <div className="flex space-x-2">
+          {/* Download buttons */}
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="gap-2 h-9 font-medium"
+            onClick={handleDownloadPdf}
+          >
+            <FileDown className="h-4 w-4" />
+            PDF
+          </Button>
+          
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="gap-2 h-9 font-medium"
+            onClick={handleDownloadTxt}
+          >
+            <FileText className="h-4 w-4" />
+            TXT
+          </Button>
+          
           <Button 
             size="sm" 
             className="gap-2 h-9 font-medium"

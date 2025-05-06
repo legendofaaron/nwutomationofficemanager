@@ -104,12 +104,26 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        Caption: ({ displayMonth, onNextClick: onNext, onPreviousClick: onPrev }) => {
+        // Fixed: Use inline function with explicit type declaration of props
+        Caption: ({ displayMonth, goToMonth }) => {
+          // Create handlers for previous/next month that use the goToMonth function
+          const handlePrevious = () => {
+            const prevMonth = new Date(displayMonth);
+            prevMonth.setMonth(prevMonth.getMonth() - 1);
+            goToMonth(prevMonth);
+          };
+          
+          const handleNext = () => {
+            const nextMonth = new Date(displayMonth);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            goToMonth(nextMonth);
+          };
+          
           return (
             <CustomCaption 
               displayMonth={displayMonth} 
-              onPreviousClick={() => onPrev?.()}
-              onNextClick={() => onNext?.()} 
+              onPreviousClick={handlePrevious}
+              onNextClick={handleNext} 
             />
           );
         },
