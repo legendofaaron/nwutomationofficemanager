@@ -18,6 +18,9 @@ export interface Employee {
   id: string;
   name: string;
   position?: string;
+  email?: string;
+  phone?: string;
+  crews?: string[];
 }
 
 export interface Crew {
@@ -29,6 +32,12 @@ export interface Crew {
 export interface Client {
   id: string;
   name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  contactPerson?: string;
+  notes?: string;
+  active?: boolean;
 }
 
 export interface ClientLocation {
