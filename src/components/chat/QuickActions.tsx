@@ -39,7 +39,7 @@ export const QuickActions = ({ onActionClick, disabled = false }: QuickActionPro
         onClick={quickActions[4].action}
         disabled={disabled}
       >
-        <quickActions[4].icon className="h-4 w-4 text-gray-400 mr-2" />
+        <Info className="h-4 w-4 text-gray-400 mr-2" />
         {quickActions[4].label}
       </Button>
     </div>
