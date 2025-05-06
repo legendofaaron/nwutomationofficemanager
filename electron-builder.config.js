@@ -12,8 +12,7 @@ module.exports = {
   },
   files: [
     "dist/**/*",
-    "electron/**/*",
-    "models/**/*" // Include local LLM models directory
+    "electron/**/*"
   ],
   extraMetadata: {
     main: "electron/main.js"
@@ -77,5 +76,25 @@ module.exports = {
     url: "https://northwesternautomation.app/updates/",
     channel: "latest"
   },
-  afterSign: "scripts/notarize.js"
+  afterSign: "scripts/notarize.js",
+  // Additional llama.cpp configurations
+  extraFiles: [
+    {
+      from: "node_modules/llama-cpp-wasm/dist",
+      to: "resources/llama-cpp",
+      filter: ["*.wasm", "*.js"]
+    }
+  ],
+  beforeBuild: async (context) => {
+    const fs = require('fs');
+    const path = require('path');
+    
+    // Create models directory if it doesn't exist
+    const modelsDir = path.join(context.appDir, 'models');
+    if (!fs.existsSync(modelsDir)) {
+      fs.mkdirSync(modelsDir, { recursive: true });
+    }
+    
+    console.log('Preparing llama.cpp resources...');
+  }
 };

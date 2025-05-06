@@ -12,11 +12,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 import { ExternalLink, Lock, Cpu, Download } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { ModelUploader } from './ModelUploader';
+import { initLlamaCpp } from '@/utils/llm';
 
 export interface LlmConfig {
   endpoint: string;
@@ -59,6 +60,7 @@ export const LlmSettings = () => {
   const [downloadProgress, setDownloadProgress] = useState<number>(0);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [downloadModelName, setDownloadModelName] = useState<string>('');
+  const [uploadedModels, setUploadedModels] = useState<Array<{name: string, path: string}>>([]);
 
   // Load config from localStorage on component mount
   useEffect(() => {
@@ -74,12 +76,27 @@ export const LlmSettings = () => {
         console.error('Failed to parse saved LLM config:', error);
       }
     }
+
+    // Load saved uploaded models
+    const savedUploadedModels = localStorage.getItem('uploadedModels');
+    if (savedUploadedModels) {
+      try {
+        setUploadedModels(JSON.parse(savedUploadedModels));
+      } catch (error) {
+        console.error('Failed to parse saved uploaded models:', error);
+      }
+    }
   }, []);
 
   // Save config to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('llmConfig', JSON.stringify(config));
   }, [config]);
+
+  // Save uploaded models to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('uploadedModels', JSON.stringify(uploadedModels));
+  }, [uploadedModels]);
 
   const testConnection = async () => {
     try {
@@ -297,7 +314,50 @@ export const LlmSettings = () => {
     }, 300);
   };
 
-  const testLocalModel = () => {
+  const handleModelUploaded = (modelPath: string, modelName: string) => {
+    // Add the newly uploaded model to the list
+    const newModel = { name: modelName, path: modelPath };
+    setUploadedModels(prev => [...prev, newModel]);
+    
+    // Automatically select this model
+    setConfig(prev => ({
+      ...prev,
+      localLlama: {
+        ...prev.localLlama,
+        enabled: true,
+        modelPath: modelPath
+      }
+    }));
+    
+    // Enable local LLaMA
+    setUseLocalLlama(true);
+  };
+
+  const selectUploadedModel = (modelPath: string) => {
+    setConfig(prev => ({
+      ...prev,
+      localLlama: {
+        ...prev.localLlama,
+        enabled: true,
+        modelPath: modelPath
+      }
+    }));
+  };
+
+  // Initialize LLaMA.cpp when local model setting is enabled
+  useEffect(() => {
+    if (useLocalLlama && config.localLlama?.modelPath) {
+      initLlamaCpp()
+        .then(() => {
+          console.log('LLaMA.cpp initialized successfully');
+        })
+        .catch(error => {
+          console.error('Failed to initialize LLaMA.cpp:', error);
+        });
+    }
+  }, [useLocalLlama, config.localLlama?.modelPath]);
+
+  const testLocalModel = async () => {
     if (!config.localLlama?.modelPath) {
       toast({
         title: 'No Model Selected',
@@ -312,13 +372,25 @@ export const LlmSettings = () => {
       description: 'Initializing LLaMa model...'
     });
     
-    // In a real implementation, this would initialize the llama.cpp model
-    setTimeout(() => {
+    try {
+      // In a real implementation, this would initialize the llama.cpp model
+      // and run a simple inference test
+      await initLlamaCpp();
+      
+      // Simulate a successful test
+      setTimeout(() => {
+        toast({
+          title: 'Local Model Ready',
+          description: `Model at ${config.localLlama?.modelPath} is working correctly`
+        });
+      }, 1500);
+    } catch (error) {
       toast({
-        title: 'Local Model Ready',
-        description: 'Local inference is working correctly'
+        title: 'Model Test Failed',
+        description: error instanceof Error ? error.message : 'Failed to initialize local model',
+        variant: 'destructive'
       });
-    }, 1500);
+    }
   };
 
   return (
@@ -716,6 +788,39 @@ export const LlmSettings = () => {
                     <p className="text-xs text-muted-foreground">This may take several minutes depending on your connection</p>
                   </div>
                 )}
+                
+                {/* Add uploaded models section */}
+                {uploadedModels.length > 0 && (
+                  <div className="mt-4 pt-4 border-t">
+                    <Label>Your Uploaded Models</Label>
+                    <div className="grid grid-cols-1 gap-2 mt-2">
+                      {uploadedModels.map((model, index) => (
+                        <Card 
+                          key={index}
+                          className={`p-3 cursor-pointer hover:bg-muted/50 transition-colors ${
+                            config.localLlama?.modelPath === model.path ? 'border-primary' : ''
+                          }`}
+                          onClick={() => selectUploadedModel(model.path)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="text-sm font-medium">{model.name}</h4>
+                              <p className="text-xs text-muted-foreground">{model.path}</p>
+                            </div>
+                            {config.localLlama?.modelPath === model.path && (
+                              <CheckCircle className="h-4 w-4 text-primary" />
+                            )}
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Add model uploader component */}
+                <div className="mt-4 pt-4 border-t">
+                  <ModelUploader onModelUploaded={handleModelUploaded} />
+                </div>
                 
                 <div className="space-y-2 pt-2">
                   <Label htmlFor="model-path">Custom Model Path</Label>

@@ -56,7 +56,24 @@ const config: CapacitorConfig = {
     },
     LlamaCpp: {
       modelsDirectory: "models",
-      defaultThreads: 4
+      defaultThreads: 4,
+      defaultContextSize: 2048,
+      defaultBatchSize: 512,
+      allowModelUpload: true, // Enable model uploading in the app
+      modelDownloadUrls: [
+        {
+          name: "llama-3.2-3b",
+          url: "https://huggingface.co/meta-llama/Meta-Llama-3.2-3B-Instruct/resolve/main/Meta-Llama-3.2-3B-Instruct-q4_0.gguf",
+          size: 4.7,
+          unit: "GB"
+        },
+        {
+          name: "llama-3.2-1b",
+          url: "https://huggingface.co/meta-llama/Meta-Llama-3.2-1B-Instruct/resolve/main/Meta-Llama-3.2-1B-Instruct-q4_0.gguf",
+          size: 1.8,
+          unit: "GB"
+        }
+      ]
     }
   },
   ios: {

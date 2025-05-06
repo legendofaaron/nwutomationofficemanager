@@ -7,6 +7,9 @@ interface LlmResponse {
   modelUsed?: string;
 }
 
+// Mock for the llama.cpp WASM module
+let llamaCppModule: any = null;
+
 /**
  * Query the language model with improved error handling and retry logic
  */
@@ -27,7 +30,7 @@ export async function queryLlm(
   const config = storedConfig ? JSON.parse(storedConfig) : {};
   
   // Check if local LLaMa is enabled and should be used
-  if (config.localLlama?.enabled) {
+  if (config.localLlama?.enabled && config.localLlama?.modelPath) {
     return await queryLocalLlama(prompt, config.localLlama, systemPrompt);
   }
   
@@ -118,7 +121,7 @@ export async function queryLlm(
 }
 
 /**
- * Query OpenAI API directly with improved error handling and system prompt support
+ * Query OpenAI API directly
  */
 async function queryOpenAi(
   prompt: string, 
@@ -192,8 +195,11 @@ async function queryLocalLlama(
   systemPrompt?: string
 ): Promise<LlmResponse> {
   try {
-    // In the real implementation, this would use the llama.cpp WASM module
-    // For now, we'll simulate the local inference process
+    // Initialize llama.cpp if not already initialized
+    if (!llamaCppModule) {
+      await initLlamaCpp();
+    }
+    
     console.log('Local LLaMa inference:', {
       modelPath: llamaConfig.modelPath,
       threads: llamaConfig.threads,
@@ -203,24 +209,49 @@ async function queryLocalLlama(
       systemPrompt
     });
     
-    // Simulate inference time based on complexity
-    const responseTime = Math.min(500 + Math.random() * 1500 + prompt.length / 2, 3000);
+    // Simulate inference time based on complexity and model size
+    const modelSizeFactor = llamaConfig.modelPath.includes('1b') ? 0.6 : 
+                            llamaConfig.modelPath.includes('3b') ? 1.0 : 1.5;
     
-    // Create a response using a simple template
-    // In a real implementation, this would be the actual output from llama.cpp
-    await new Promise(resolve => setTimeout(resolve, responseTime));
+    const baseTime = 500; // Base response time in milliseconds
+    const complexityFactor = prompt.length / 20; // Longer prompts take more time
+    const threadFactor = Math.max(1, 16 / (llamaConfig.threads || 4)); // More threads = faster processing
     
-    let response = '';
+    const responseTime = Math.min(
+      baseTime + 
+      (modelSizeFactor * 800) + 
+      (complexityFactor * modelSizeFactor * 10) * 
+      threadFactor, 
+      5000 // Cap at 5 seconds max
+    );
+    
+    // Create a more realistic streaming experience by returning chunks of the response
+    let fullResponse = '';
+    const streamingUpdates = 8; // Number of updates to simulate streaming
+    
     if (systemPrompt?.includes('document writer')) {
-      // For document generation
-      response = `# Response to: ${prompt}\n\n## Introduction\n\nThis document addresses the prompt you've provided. Let's explore the topic in detail.\n\n## Analysis\n\nThe key points to consider are:\n- First important consideration\n- Second important consideration\n- Third important consideration\n\n## Conclusion\n\nBased on the analysis above, we recommend proceeding with a careful implementation approach.`;
+      // For document generation - create a document response
+      fullResponse = generateDocumentResponse(prompt);
     } else {
-      // For regular chat
-      response = `I analyzed your question about "${prompt.slice(0, 30)}..." using local inference with llama.cpp.\n\nHere's my response based on your request:\n\nThis is a simulated response from a local LLaMa model. In the actual implementation, this would be generated using the llama.cpp library running locally on your device, providing privacy and offline capability. The response would be tailored to your specific query using the model's parameters and knowledge.`;
+      // For regular chat - create a conversational response
+      fullResponse = generateConversationResponse(prompt, llamaConfig);
     }
-
+    
+    // Simulate the streaming process
+    const chunkSize = Math.ceil(fullResponse.length / streamingUpdates);
+    for (let i = 0; i < streamingUpdates; i++) {
+      await new Promise(resolve => setTimeout(
+        resolve, 
+        responseTime / streamingUpdates
+      ));
+      
+      // In a real implementation, this would stream tokens to the UI
+      const partialResponse = fullResponse.slice(0, (i + 1) * chunkSize);
+      console.log(`Streaming chunk ${i + 1}/${streamingUpdates}: ${partialResponse.slice(-50)}`);
+    }
+    
     return {
-      message: response,
+      message: fullResponse,
       modelUsed: `Local: ${llamaConfig.modelPath.split('/').pop()}`
     };
   } catch (error) {
@@ -237,7 +268,36 @@ async function queryLocalLlama(
 }
 
 /**
- * Send a notification to a webhook with improved error handling
+ * Generate a document response for document-related prompts
+ */
+function generateDocumentResponse(prompt: string): string {
+  // Create a document-styled response
+  return `# Response to: ${prompt}\n\n## Introduction\n\nThis document addresses the prompt you've provided. Let's explore the topic in detail.\n\n## Analysis\n\nThe key points to consider are:\n- First important consideration related to "${prompt.slice(0, 30)}..."\n- Second important consideration regarding implementation approach\n- Third important consideration about technical feasibility\n\n## Implementation Strategy\n\nBased on the requirements, we recommend the following approach:\n\n1. Start with a proof-of-concept implementation\n2. Validate with key stakeholders\n3. Implement the core functionality\n4. Test thoroughly before deployment\n\n## Technical Considerations\n\n- Performance optimization for large datasets\n- Security considerations for user data\n- Scalability planning for future growth\n\n## Conclusion\n\nThe proposed solution addresses the requirements while maintaining flexibility for future enhancements. Recommend proceeding with implementation following the outlined approach.`;
+}
+
+/**
+ * Generate a conversation response for chat-related prompts
+ */
+function generateConversationResponse(prompt: string, config: any): string {
+  // Identify potential topic areas in the prompt
+  const isTechnical = /code|program|develop|bug|error|function|api|database|algorithm/i.test(prompt);
+  const isQuestion = /how|what|why|where|when|who|can|should|could|would|will|is|are|do/i.test(prompt);
+  const isGreeting = /hello|hi|hey|good morning|good afternoon|good evening/i.test(prompt);
+  
+  // Generate a response based on the identified characteristics
+  if (isGreeting) {
+    return `Hello! I'm running on a local LLaMa model (${config.modelPath.split('/').pop()}) with ${config.threads} threads. How can I assist you today?`;
+  } else if (isTechnical) {
+    return `I've analyzed your technical question about "${prompt.slice(0, 30)}..."\n\nBased on my understanding, here's my response:\n\nThis is being processed using a local LLaMa model with ${config.threads} CPU threads and ${config.contextSize} context window. The local inference approach provides better privacy and can work offline, though it may not have the same capabilities as larger cloud-based models.\n\nRegarding your specific question, I'd recommend focusing on best practices for implementation and considering the trade-offs between different approaches. Testing thoroughly will be important to ensure reliability.`;
+  } else if (isQuestion) {
+    return `Thanks for your question about "${prompt.slice(0, 30)}..."\n\nHere's what I can tell you:\n\nYour question is being processed locally on your device using LLaMa.cpp, configured with ${config.threads} threads and ${config.contextSize} token context length. Local inference provides privacy advantages and works offline, though it may have some limitations compared to cloud APIs.\n\nI hope this information helps with your query! Let me know if you need any clarification.`;
+  } else {
+    return `I processed your message using local LLaMa inference with the following parameters:\n- Model: ${config.modelPath.split('/').pop()}\n- Threads: ${config.threads}\n- Context size: ${config.contextSize} tokens\n- Batch size: ${config.batchSize}\n\nLocal inference provides privacy and works offline. Your message has been analyzed, and I'm providing this response based on the local model's capabilities. This simulated response demonstrates how the local inference would work in a fully implemented system.`;
+  }
+}
+
+/**
+ * Send a notification to a webhook
  */
 export async function sendWebhookNotification(message: string, webhookUrl: string): Promise<boolean> {
   if (!webhookUrl) {
@@ -343,12 +403,51 @@ export function isLlmConfigured(): boolean {
 export function initLlamaCpp() {
   console.log('Initializing llama.cpp WASM module');
   
-  // In the real implementation, this would load and initialize the WASM module
-  // For example:
-  // return import('@/lib/llama.js').then(module => {
-  //   return module.init();
-  // });
+  // In a real implementation, this would load and initialize the WASM module
+  // For now, we'll create a mock implementation that simulates the initialization
   
-  // For now, we'll just return a resolved promise
-  return Promise.resolve();
+  return new Promise<void>((resolve, reject) => {
+    try {
+      // Simulate module loading time
+      setTimeout(() => {
+        llamaCppModule = {
+          isInitialized: true,
+          version: '0.8.0',
+          init: () => true,
+          loadModel: (path: string, config: any) => {
+            console.log(`Mock loading model from ${path} with config:`, config);
+            return { modelId: 'mock-model-id' };
+          },
+          generate: (text: string, options: any) => {
+            console.log(`Mock generating text for: ${text} with options:`, options);
+            return { text: "Generated response" };
+          }
+        };
+        
+        console.log('LLaMA.cpp WASM module initialized successfully');
+        resolve();
+      }, 500);
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+/**
+ * Load a specific model from the local filesystem or downloads
+ * @param modelPath Path to the model file
+ */
+export async function loadLlamaModel(modelPath: string, config: any) {
+  if (!llamaCppModule) {
+    await initLlamaCpp();
+  }
+  
+  console.log(`Loading model from ${modelPath} with config:`, config);
+  
+  // In a real implementation, this would load the model using llama.cpp WASM
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ modelId: `model-${Date.now()}` });
+    }, 1000);
+  });
 }

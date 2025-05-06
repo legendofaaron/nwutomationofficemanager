@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => ({
           react: ['react', 'react-dom'],
           shadcn: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
           llm: ['@tanstack/react-query'],
-          llama: ['wasm-llm'] // this is a placeholder chunk for llama.cpp WASM files
+          // Removed the wasm-llm placeholder chunk that was causing the build error
         }
       }
     },
