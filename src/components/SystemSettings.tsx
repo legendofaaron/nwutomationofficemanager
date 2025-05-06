@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LlmSettings } from './LlmSettings';
@@ -6,6 +7,7 @@ import { AppearanceSettingsTab } from './settings/AppearanceSettingsTab';
 import { BrandingSettingsTab } from './settings/BrandingSettingsTab';
 import { DatabaseSettingsTab } from './settings/DatabaseSettingsTab';
 import { ProfileSettings } from './settings/ProfileSettings';
+import { SubscriptionSettingsTab } from './settings/SubscriptionSettingsTab';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 const SystemSettings = () => {
@@ -20,13 +22,14 @@ const SystemSettings = () => {
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="branding">Branding</TabsTrigger>
             <TabsTrigger value="database">Database</TabsTrigger>
             <TabsTrigger value="integrations">Integrations</TabsTrigger>
             <TabsTrigger value="appearance">Appearance</TabsTrigger>
+            <TabsTrigger value="subscription">Subscription</TabsTrigger>
           </TabsList>
           
           <TabsContent value="profile" className="space-y-4 py-4">
@@ -51,6 +54,10 @@ const SystemSettings = () => {
           
           <TabsContent value="appearance" className="space-y-4 py-4">
             <AppearanceSettingsTab />
+          </TabsContent>
+          
+          <TabsContent value="subscription" className="space-y-4 py-4">
+            <SubscriptionSettingsTab />
           </TabsContent>
         </Tabs>
       </div>
