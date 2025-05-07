@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Calendar as CalendarIcon, Users, User, Building2 } from 'lucide-react';
@@ -10,6 +10,7 @@ import TaskEditDialog from './taskEdit/TaskEditDialog';
 import { generateMockTasks, generateMockEmployees, generateMockCrews, generateMockClients, generateMockClientLocations } from './MockScheduleData';
 import ScheduleFilterBar from './ScheduleFilterBar';
 import { useAppContext } from '@/context/AppContext';
+import { toast } from 'sonner';
 
 const ScheduleView: React.FC = () => {
   // State for tasks and related data
@@ -20,7 +21,7 @@ const ScheduleView: React.FC = () => {
   const [clientLocations, setClientLocations] = useState<ClientLocation[]>([]);
   
   // Get global calendar date from AppContext
-  const { calendarDate, setCalendarDate } = useAppContext();
+  const { calendarDate, setCalendarDate, todos, setTodos } = useAppContext();
   
   // UI state
   const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
@@ -31,30 +32,59 @@ const ScheduleView: React.FC = () => {
 
   // Sync with global calendar date
   useEffect(() => {
-    if (calendarDate) {
+    if (calendarDate && calendarDate.toDateString() !== selectedDate.toDateString()) {
       setSelectedDate(calendarDate);
     }
-  }, [calendarDate]);
+  }, [calendarDate, selectedDate]);
   
   // Update global state when local date changes
   useEffect(() => {
-    setCalendarDate(selectedDate);
+    if (selectedDate) {
+      setCalendarDate(selectedDate);
+    }
   }, [selectedDate, setCalendarDate]);
   
-  // Load mock data
+  // Load mock data and synchronize with global todos
   useEffect(() => {
     const mockEmployees = generateMockEmployees();
     const mockCrews = generateMockCrews(mockEmployees);
     const mockClients = generateMockClients();
     const mockClientLocations = generateMockClientLocations(mockClients);
+    
+    // Convert global todos to tasks
+    const todoTasks: Task[] = todos.map(todo => ({
+      id: todo.id,
+      title: todo.text,
+      description: '',
+      date: todo.date,
+      completed: todo.completed,
+      assignedTo: todo.assignedTo,
+      crew: todo.crewMembers,
+      crewId: todo.crewId,
+      crewName: todo.crewName,
+      startTime: todo.startTime,
+      endTime: todo.endTime,
+      location: todo.location
+    }));
+    
+    // Generate some additional mock tasks
     const mockTasks = generateMockTasks(mockEmployees, mockCrews, mockClients, mockClientLocations);
+    
+    // Combine todo tasks and mock tasks, avoiding duplicates
+    const combinedTasks = [...todoTasks];
+    mockTasks.forEach(mockTask => {
+      const exists = combinedTasks.some(task => task.id === mockTask.id);
+      if (!exists) {
+        combinedTasks.push(mockTask);
+      }
+    });
     
     setEmployees(mockEmployees);
     setCrews(mockCrews);
     setClients(mockClients);
     setClientLocations(mockClientLocations);
-    setTasks(mockTasks);
-  }, []);
+    setTasks(combinedTasks);
+  }, [todos]);
 
   // Filter tasks based on active filter
   const filteredTasks = tasks.filter(task => {
@@ -72,7 +102,8 @@ const ScheduleView: React.FC = () => {
   });
 
   // Task actions
-  const handleToggleTaskCompletion = (taskId: string) => {
+  const handleToggleTaskCompletion = useCallback((taskId: string) => {
+    // Update local tasks
     setTasks(prevTasks => 
       prevTasks.map(task => 
         task.id === taskId 
@@ -80,9 +111,22 @@ const ScheduleView: React.FC = () => {
           : task
       )
     );
-  };
+    
+    // Update global todos if the task exists there
+    const todoExists = todos.some(todo => todo.id === taskId);
+    if (todoExists) {
+      setTodos(prevTodos => 
+        prevTodos.map(todo => 
+          todo.id === taskId 
+            ? { ...todo, completed: !todo.completed } 
+            : todo
+        )
+      );
+    }
+  }, [todos, setTodos]);
 
-  const handleMoveTask = (taskId: string, newDate: Date) => {
+  const handleMoveTask = useCallback((taskId: string, newDate: Date) => {
+    // Update local tasks
     setTasks(prevTasks => 
       prevTasks.map(task => 
         task.id === taskId 
@@ -90,17 +134,36 @@ const ScheduleView: React.FC = () => {
           : task
       )
     );
-  };
+    
+    // Update global todos if the task exists there
+    const todoExists = todos.some(todo => todo.id === taskId);
+    if (todoExists) {
+      setTodos(prevTodos => 
+        prevTodos.map(todo => 
+          todo.id === taskId 
+            ? { ...todo, date: newDate } 
+            : todo
+        )
+      );
+      
+      toast.success("Task updated in all calendars");
+    }
+    
+    // Update the selected date to match the task's new date
+    setSelectedDate(newDate);
+    setCalendarDate(newDate);
+  }, [todos, setTodos, setCalendarDate]);
 
-  const handleEditTask = (taskId: string) => {
+  const handleEditTask = useCallback((taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
     if (task) {
       setEditingTask(task);
       setIsEditDialogOpen(true);
     }
-  };
+  }, [tasks]);
 
-  const handleSaveTaskChanges = (taskId: string, updatedData: Partial<Task>) => {
+  const handleSaveTaskChanges = useCallback((taskId: string, updatedData: Partial<Task>) => {
+    // Update local tasks
     setTasks(prevTasks => 
       prevTasks.map(task => 
         task.id === taskId 
@@ -108,9 +171,40 @@ const ScheduleView: React.FC = () => {
           : task
       )
     );
-  };
+    
+    // Update global todos if the task exists there
+    const todoExists = todos.some(todo => todo.id === taskId);
+    if (todoExists) {
+      setTodos(prevTodos => 
+        prevTodos.map(todo => 
+          todo.id === taskId 
+            ? { 
+                ...todo, 
+                text: updatedData.title || todo.text,
+                completed: updatedData.completed ?? todo.completed,
+                date: updatedData.date || todo.date,
+                assignedTo: updatedData.assignedTo,
+                startTime: updatedData.startTime,
+                endTime: updatedData.endTime,
+                location: updatedData.location,
+                crewId: updatedData.crewId,
+                crewName: updatedData.crewName
+              } 
+            : todo
+        )
+      );
+      
+      toast.success("Task updated in all calendars");
+    }
+    
+    // If the date was changed, update the selected date
+    if (updatedData.date) {
+      setSelectedDate(updatedData.date);
+      setCalendarDate(updatedData.date);
+    }
+  }, [todos, setTodos, setCalendarDate]);
 
-  const handleAddNewTask = () => {
+  const handleAddNewTask = useCallback(() => {
     // Create a new task template
     const newTask: Task = {
       id: `task-${Date.now()}`,
@@ -125,15 +219,25 @@ const ScheduleView: React.FC = () => {
     setTasks(prevTasks => [...prevTasks, newTask]);
     setEditingTask(newTask);
     setIsEditDialogOpen(true);
-  };
+    
+    // Also add to global todos
+    setTodos(prevTodos => [...prevTodos, {
+      id: newTask.id,
+      text: newTask.title,
+      completed: newTask.completed,
+      date: newTask.date,
+      startTime: newTask.startTime,
+      endTime: newTask.endTime
+    }]);
+  }, [selectedDate, setTodos]);
 
   // Handle date change (sync with global date)
-  const handleDateChange = (date: Date | undefined) => {
+  const handleDateChange = useCallback((date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
       setCalendarDate(date);
     }
-  };
+  }, [setCalendarDate]);
 
   return (
     <div className="space-y-6">

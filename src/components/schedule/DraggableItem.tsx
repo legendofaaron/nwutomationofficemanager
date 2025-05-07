@@ -31,9 +31,10 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
   children,
   containerId
 }) => {
-  const { startDrag, endDrag, isDragging, draggedItem } = useDragDrop();
+  const { startDrag, endDrag, isDragging, draggedItem, lastDragOperation } = useDragDrop();
   const [isDraggingThis, setIsDraggingThis] = useState(false);
   const itemRef = useRef<HTMLDivElement>(null);
+  const dragStartTimeRef = useRef<number>(0);
   
   // Check if this item is being dragged
   useEffect(() => {
@@ -47,6 +48,15 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       e.preventDefault();
       return;
     }
+    
+    // Prevent duplicate drag events within a short timeframe
+    const now = Date.now();
+    if (now - dragStartTimeRef.current < 500) {
+      e.preventDefault();
+      return;
+    }
+    
+    dragStartTimeRef.current = now;
     
     e.stopPropagation();
     
@@ -160,6 +170,9 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     if (onDragEnd) {
       onDragEnd(dropped);
     }
+    
+    // Reset drag start time
+    dragStartTimeRef.current = 0;
   };
   
   return (

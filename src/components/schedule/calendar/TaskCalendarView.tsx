@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Task, Crew, DragItem } from '../ScheduleTypes';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -33,15 +33,17 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   
   // Sync local state with global state on mount and when global state changes
   useEffect(() => {
-    if (calendarDate) {
+    if (calendarDate && calendarDate.toDateString() !== selectedDate.toDateString()) {
       onSelectDate(calendarDate);
     }
-  }, [calendarDate, onSelectDate]);
+  }, [calendarDate, onSelectDate, selectedDate]);
   
   // Update global state when local state changes
   useEffect(() => {
-    setCalendarDate(selectedDate);
-  }, [selectedDate, setCalendarDate]);
+    if (selectedDate && (!calendarDate || selectedDate.toDateString() !== calendarDate.toDateString())) {
+      setCalendarDate(selectedDate);
+    }
+  }, [selectedDate, setCalendarDate, calendarDate]);
   
   // Listen for global drag events to make interaction more reliable
   useEffect(() => {
@@ -57,7 +59,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   }, []);
   
   // Handle moving a task to a new date with toast notification
-  const handleMoveTask = (taskId: string, date: Date) => {
+  const handleMoveTask = useCallback((taskId: string, date: Date) => {
     if (onMoveTask) {
       // Find the task to get its title
       const task = tasks.find(t => t.id === taskId);
@@ -66,15 +68,22 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
       // Move the task
       onMoveTask(taskId, date);
       
+      // Also update the global calendar date to match the new task date
+      setCalendarDate(date);
+      
       // Show success message
       toast.success(`Task rescheduled to ${format(date, 'MMMM d')}`, {
         description: taskTitle
       });
     }
-  };
+  }, [onMoveTask, tasks, setCalendarDate]);
 
   // Handle dropping other item types (employee, crew, client)
-  const handleItemDrop = (item: DragItem, date: Date) => {
+  const handleItemDrop = useCallback((item: DragItem, date: Date) => {
+    // Always update the selected date when an item is dropped
+    onSelectDate(date);
+    setCalendarDate(date);
+    
     if (item.type === 'employee') {
       // Get employee name from data
       const employeeName = item.data?.name || 'Employee';
@@ -147,15 +156,25 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
       toast.info(`Client dropped on ${format(date, 'MMMM d')}`, {
         description: `${item.data.name || 'Client'} - Create a new task for this client?`
       });
+    } else if (item.type === 'task') {
+      // If we're dropping a task, use the move task handler
+      if (onMoveTask && item.id) {
+        handleMoveTask(item.id, date);
+      }
     }
-  };
+  }, [onSelectDate, setCalendarDate, onMoveTask, handleMoveTask]);
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <CalendarCard 
         tasks={tasks}
         selectedDate={selectedDate}
-        onSelectDate={onSelectDate}
+        onSelectDate={(date) => {
+          onSelectDate(date);
+          if (date) {
+            setCalendarDate(date);
+          }
+        }}
         onMoveTask={handleMoveTask}
         onItemDrop={handleItemDrop}
       />

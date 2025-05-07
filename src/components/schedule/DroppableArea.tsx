@@ -35,9 +35,10 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
 }) => {
   const [isOver, setIsOver] = useState(false);
   const [canAcceptCurrent, setCanAcceptCurrent] = useState(false);
-  const { isDragging, draggedItem, registerDropTarget, unregisterDropTarget, setDragOverTarget } = useDragDrop();
+  const { isDragging, draggedItem, registerDropTarget, unregisterDropTarget, setDragOverTarget, lastDragOperation } = useDragDrop();
   const dragEnterCount = useRef(0);
   const elementRef = useRef<HTMLDivElement>(null);
+  const lastDropTime = useRef<number>(0);
   
   // Register this drop area with the context
   useEffect(() => {
@@ -136,7 +137,7 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
     }, 50);
   };
   
-  // Handle drop with improved parsing
+  // Handle drop with improved parsing and deduplication
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -145,6 +146,15 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
     dragEnterCount.current = 0;
     setIsOver(false);
     setDragOverTarget(null);
+    
+    // Check for duplicate drops (prevent the same item from being dropped multiple times)
+    const now = Date.now();
+    if (now - lastDropTime.current < 300) {
+      console.debug('Preventing duplicate drop');
+      return;
+    }
+    
+    lastDropTime.current = now;
     
     // Remove visual feedback
     if (elementRef.current) {
@@ -182,6 +192,15 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
             console.warn('Failed to parse text/plain data:', error);
           }
         }
+      }
+      
+      // Check for duplicate operation (same item dropped on same target within timeframe)
+      if (lastDragOperation && itemData && 
+          lastDragOperation.sourceId === itemData.id && 
+          lastDragOperation.targetId === id &&
+          now - lastDragOperation.timestamp < 500) {
+        console.debug('Preventing duplicate drag operation');
+        return;
       }
       
       // Process the drop if we have valid data
