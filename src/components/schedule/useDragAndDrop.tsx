@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useDragDrop } from './DragDropContext';
 import { DraggableItemType, DragItem } from './ScheduleTypes';
@@ -250,21 +251,3 @@ export function useDroppable({
     }
   };
 }
-
-// Add the exported hook for the drag and drop functionality that ScheduleView is trying to import
-export const useDragAndDrop = ({ tasks, setTasks }) => {
-  const handleDragEnd = (result) => {
-    if (!result.destination) return;
-    
-    // Handle task drag and drop logic here
-    console.log('Task dragged from', result.source, 'to', result.destination);
-    
-    // Example implementation:
-    // const reorderedTasks = Array.from(tasks);
-    // const [removed] = reorderedTasks.splice(result.source.index, 1);
-    // reorderedTasks.splice(result.destination.index, 0, removed);
-    // setTasks(reorderedTasks);
-  };
-  
-  return { handleDragEnd };
-};

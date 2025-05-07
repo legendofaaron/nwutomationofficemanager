@@ -1,3 +1,4 @@
+
 export interface Task {
   id: string;
   title: string;
@@ -7,15 +8,13 @@ export interface Task {
   assignedTo?: string;
   crew?: string[];
   crewId?: string;
-  crewName?: string;
+  crewName?: string; // Adding this missing property
   startTime?: string;
   endTime?: string;
   location?: string;
   clientId?: string;
   locationId?: string;
   clientLocationId?: string;
-  notes?: string;
-  status?: string;
 }
 
 export interface Employee {
@@ -31,7 +30,7 @@ export interface Crew {
   id: string;
   name: string;
   members: string[];
-  lead?: string;
+  lead?: string; // Adding this field to match usage in MockScheduleData
 }
 
 export interface Client {
@@ -54,7 +53,7 @@ export interface ClientLocation {
   state?: string;
   zipCode?: string;
   isPrimary?: boolean;
-  notes?: string;
+  notes?: string; // Adding this field to match usage in MockScheduleData
 }
 
 export interface TaskFormData {

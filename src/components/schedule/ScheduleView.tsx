@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useDragAndDrop } from './useDragAndDrop';
-import DragDropProvider from './DragDropContext';
+import { DragDropContext } from './DragDropContext';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -97,12 +97,10 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
         crewName: taskData.crewName || undefined,
         clientId: taskData.clientId || undefined,
         location: taskData.location || undefined,
-        completed: false
+        notes: taskData.notes || undefined,
+        completed: false,
+        status: taskData.status || 'scheduled'
       };
-      
-      // Add optional properties if they exist
-      if (taskData.notes) newTask.notes = taskData.notes;
-      if (taskData.status) newTask.status = taskData.status;
       
       setTasks(prevTasks => [...prevTasks, newTask]);
     } else if (editingTask) {
@@ -130,7 +128,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
   };
 
   return (
-    <DragDropProvider>
+    <DragDropContext onDragEnd={handleDragEnd}>
       <div className="container mx-auto space-y-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Schedule</h1>
@@ -185,14 +183,13 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
             employees={employees}
             crews={crews}
             clients={clients}
-            clientLocations={mockData.clientLocations}
             onSave={handleSaveTaskChanges}
             onDelete={handleDeleteTask}
             onCancel={handleDialogClose}
           />
         </DialogContent>
       </Dialog>
-    </DragDropProvider>
+    </DragDropContext>
   );
 };
 
