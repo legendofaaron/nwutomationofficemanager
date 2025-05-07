@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -5,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { DemoModeRedirect } from './DemoModeRedirect';
-import { Shield, CheckCircle, Github, Download, Code } from 'lucide-react';
+import { Shield, CheckCircle, Mail, Heart } from 'lucide-react';
 
 const PaymentPage = () => {
   const { user, isDemoMode } = useAuth();
@@ -15,18 +16,18 @@ const PaymentPage = () => {
   const handleContinue = () => {
     toast({
       title: "All features unlocked",
-      description: "You have access to all features for free. This is open source software.",
+      description: "You have access to all features.",
       variant: "default",
     });
     navigate('/dashboard');
   };
 
-  const handleViewSource = () => {
-    window.open('https://github.com/lovable-labs/office-manager', '_blank');
+  const handleEmailDeveloper = () => {
+    window.location.href = 'mailto:northwesternautomation@gmail.com?subject=Office%20Manager%20Source%20Code%20Request&body=I%20would%20like%20to%20request%20the%20source%20code%20for%20Office%20Manager.';
   };
-
-  const handleDownloadSource = () => {
-    window.open('https://github.com/lovable-labs/office-manager/archive/refs/heads/main.zip', '_blank');
+  
+  const handleTipMe = () => {
+    window.open('https://paypal.me/aaronthelegend', '_blank');
   };
 
   return (
@@ -38,16 +39,16 @@ const PaymentPage = () => {
         <div className="w-full max-w-3xl">
           <div className="mb-8 text-center">
             <Logo />
-            <h1 className="mt-6 text-2xl font-bold">Office Manager - Free & Open Source</h1>
+            <h1 className="mt-6 text-2xl font-bold">Office Manager</h1>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Enjoy full access to all features - completely free and open source under MIT license
+              Enjoy full access to all features
             </p>
           </div>
           
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-8">
             <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <Code className="mr-2 h-5 w-5 text-green-500" />
-              Open Source Software - All Features Included
+              <Mail className="mr-2 h-5 w-5 text-blue-500" />
+              All Features Included
             </h2>
             
             <div className="grid md:grid-cols-2 gap-6">
@@ -99,16 +100,16 @@ const PaymentPage = () => {
               <Button 
                 variant="outline"
                 className="flex items-center gap-1" 
-                onClick={handleViewSource}
+                onClick={handleEmailDeveloper}
               >
-                <Github className="h-4 w-4" /> View Source
+                <Mail className="h-4 w-4" /> Email for Source
               </Button>
               
               <Button 
-                className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-1"
-                onClick={handleDownloadSource}
+                className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1"
+                onClick={handleTipMe}
               >
-                <Download className="h-4 w-4" /> Download Source
+                <Heart className="h-4 w-4" fill="currentColor" /> Tip Developer
               </Button>
             </div>
           </div>
@@ -116,7 +117,7 @@ const PaymentPage = () => {
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center">
               <Shield className="inline h-3 w-3 mr-1" /> 
-              Free and open source software under MIT license
+              Secure and private
             </p>
           </div>
         </div>

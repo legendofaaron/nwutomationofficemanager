@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, MessageSquare, BookOpenText, Building2, Heart, Coffee, Sparkles, Github, Download, Code, Mail } from 'lucide-react';
+import { ArrowRight, MessageSquare, BookOpenText, Building2, Heart, Coffee, Sparkles, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
@@ -57,14 +58,6 @@ const WelcomeDashboard = () => {
     window.location.href = 'mailto:northwesternautomation@gmail.com?subject=Office%20Manager%20Source%20Code%20Request&body=I%20would%20like%20to%20request%20the%20source%20code%20for%20Office%20Manager.';
   };
 
-  const handleOpenGithub = () => {
-    window.open('https://github.com/lovable-labs/office-manager', '_blank');
-  };
-
-  const handleDownloadSource = () => {
-    window.open('https://github.com/lovable-labs/office-manager/archive/refs/heads/main.zip', '_blank');
-  };
-
   return (
     <ScrollArea className="h-full">
       <div className={`mx-auto px-4 pt-6 pb-8 max-w-5xl ${bgClass} min-h-full`}>
@@ -77,45 +70,10 @@ const WelcomeDashboard = () => {
             Welcome to Office Manager
           </h1>
           <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            A secure, lightweight, 100% free and open-source solution by {branding.companyName} for document management, 
+            A secure, lightweight solution by {branding.companyName} for document management, 
             schedule organization, and enhanced workplace productivity.
           </p>
         </div>
-
-        {/* Open Source Banner */}
-        <Card className={`mb-6 transition-all ${cardBgClass} animate-fade-in border-green-500`} style={{animationDelay: '150ms', borderLeftWidth: '4px'}}>
-          <CardContent className="py-4 px-4 md:px-6">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center">
-                <Code className="h-5 w-5 md:h-6 md:w-6 text-green-500 mr-3" />
-                <div>
-                  <h3 className="text-base font-medium">100% Free & Open Source</h3>
-                  <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300">
-                    Free for commercial and personal use under MIT license
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                <Button
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleOpenGithub}
-                  className="flex items-center gap-1"
-                >
-                  <Github className="h-4 w-4" /> View Source
-                </Button>
-                <Button
-                  variant="default" 
-                  size="sm"
-                  onClick={handleDownloadSource}
-                  className="flex items-center gap-1 bg-green-600 hover:bg-green-700"
-                >
-                  <Download className="h-4 w-4" /> Download Source
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Intelligent Assistant Card */}
         <Card className={`mb-10 transition-all ${cardBgClass} animate-fade-in border-l-blue-600`} style={{animationDelay: '200ms', borderLeftWidth: '4px'}}>
@@ -232,38 +190,8 @@ const WelcomeDashboard = () => {
           Select a feature from the sidebar or use the Intelligent Assistant to get started
         </p>
         
-        {/* Free and Open Source Information */}
-        <div className="mt-12 text-center animate-fade-in" style={{animationDelay: '650ms'}}>
-          <Card className={`max-w-xl mx-auto ${cardBgClass} border-t-4 border-t-green-500 mb-6`}>
-            <CardContent className="pt-6 pb-4">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Code className="h-5 w-5 text-green-500" />
-                <h3 className="text-lg font-medium">Free & Open Source</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 max-w-lg mx-auto">
-                Office Manager is freely available for both commercial and personal use under the MIT License. 
-                You can modify, distribute, and use it in your projects without restrictions.
-              </p>
-              <div className="flex flex-wrap gap-3 justify-center">
-                <Button 
-                  onClick={handleOpenGithub}
-                  className="bg-gray-900 hover:bg-black text-white gap-2"
-                >
-                  <Github className="h-4 w-4" /> View Source on GitHub
-                </Button>
-                <Button 
-                  onClick={handleDownloadSource}
-                  className="bg-green-600 hover:bg-green-700 text-white gap-2"
-                >
-                  <Download className="h-4 w-4" /> Download Source
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Combined Email for Source Code and Tip Developer Section */}
-        <div className="mt-6 text-center animate-fade-in" style={{animationDelay: '700ms'}}>
+        {/* Contact for Source Code and Tip Developer Section */}
+        <div className="mt-12 text-center animate-fade-in" style={{animationDelay: '700ms'}}>
           <Card className={`max-w-xl mx-auto ${cardBgClass} border-t-4 border-t-amber-500`}>
             <CardContent className="pt-6 pb-4">
               <div className="flex items-center justify-center gap-2 mb-3">
