@@ -1,17 +1,11 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { useAppContext } from '@/context/AppContext';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Search, UserPlus, Plus, Users, Calendar } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-
-// Import components
+import { Search, Plus, RefreshCw } from 'lucide-react';
 import EmployeeList from './EmployeeList';
 import CrewList from './CrewList';
 import AddEmployeeDialog from './AddEmployeeDialog';
@@ -19,568 +13,507 @@ import AddCrewDialog from './AddCrewDialog';
 import CrewAssignDialog from './CrewAssignDialog';
 import TaskDialog from './TaskDialog';
 import DownloadCardsSection from './DownloadCardsSection';
-import EmployeeDeleteDialog from './EmployeeDeleteDialog';
-import EmployeeScheduleDownload from '../schedule/EmployeeScheduleDownload';
-import CrewScheduleDownload from '../schedule/CrewScheduleDownload';
-
-// Import types
 import { Employee, Crew, TaskForEmployeeView } from './types';
+import EmployeeDeleteDialog from './EmployeeDeleteDialog';
+import CrewDeleteDialog from './CrewDeleteDialog';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import CrewScheduleDownload from '../schedule/CrewScheduleDownload';
+import EmployeeScheduleDownload from '../schedule/EmployeeScheduleDownload';
 
-const EmployeesView = () => {
-  const { 
-    employees, 
-    setEmployees, 
-    crews, 
-    setCrews, 
-    todos, 
-    setTodos,
-    calendarDate,
-    setCalendarDate
-  } = useAppContext();
-  
-  // State for UI elements
-  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
-  const [isAddCrewOpen, setIsAddCrewOpen] = useState(false);
-  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
-  const [isCrewAssignOpen, setIsCrewAssignOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(calendarDate);
-  const [selectedTab, setSelectedTab] = useState<'employees' | 'crews'>('employees');
-  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
-  const [selectedCrew, setSelectedCrew] = useState<string | null>(null);
-  
-  // Add state for delete employee confirmation
+const EmployeesView: React.FC = () => {
+  // State variables
+  const { employees, setEmployees, crews, setCrews, todos, setTodos } = useAppContext();
+  const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
+  const [crewSearchTerm, setCrewSearchTerm] = useState('');
+  const [isAddEmployeeDialogOpen, setIsAddEmployeeDialogOpen] = useState(false);
+  const [isAddCrewDialogOpen, setIsAddCrewDialogOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [isDeleteEmployeeDialogOpen, setIsDeleteEmployeeDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<{ id: string; name: string } | null>(null);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  
-  // For task assignment
-  const [taskAssignee, setTaskAssignee] = useState<string>('');
-  const [taskAssigneeCrew, setTaskAssigneeCrew] = useState<string[]>([]);
+  const [isCrewAssignDialogOpen, setIsCrewAssignDialogOpen] = useState(false);
+  const [selectedCrew, setSelectedCrew] = useState<Crew | null>(null);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [taskAssignee, setTaskAssignee] = useState<string | null>(null);
 
-  // Download dialogs
-  const [isEmployeeScheduleDownloadOpen, setIsEmployeeScheduleDownloadOpen] = useState(false);
-  const [isCrewScheduleDownloadOpen, setIsCrewScheduleDownloadOpen] = useState(false);
-  const [selectedEmployeeForDownload, setSelectedEmployeeForDownload] = useState<{id: string, name: string} | null>(null);
+  // Add new state variables for crew deletion
+  const [isDeleteCrewDialogOpen, setIsDeleteCrewDialogOpen] = useState(false);
+  const [crewToDelete, setCrewToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isCrewScheduleDialogOpen, setIsCrewScheduleDialogOpen] = useState(false);
+  const [isEmployeeScheduleDialogOpen, setIsEmployeeScheduleDialogOpen] = useState(false);
+  const [selectedCrewForSchedule, setSelectedCrewForSchedule] = useState<string | null>(null);
+  const [selectedEmployeeForSchedule, setSelectedEmployeeForSchedule] = useState<string | null>(null);
 
-  // Employee operations
-  const handleAddEmployee = (newEmployeeData: Omit<Employee, 'id'>) => {
-    if (!newEmployeeData.name || !newEmployeeData.position) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    const employeeId = `e-${Date.now()}`;
-    
-    const addedEmployee: Employee = {
-      id: employeeId,
-      ...newEmployeeData
-    };
-
-    setEmployees([...employees, addedEmployee]);
-    toast.success("New employee has been added");
-    setIsAddEmployeeOpen(false);
+  // Handlers and utility functions
+  const handleAddEmployee = () => {
+    setEditingEmployee(null);
+    setIsAddEmployeeDialogOpen(true);
   };
 
-  // Delete employee handler
-  const handleDeleteEmployee = () => {
+  const handleAddCrew = () => {
+    setIsAddCrewDialogOpen(true);
+  };
+
+  const handleEditEmployee = (employee: Employee) => {
+    setEditingEmployee(employee);
+    setIsAddEmployeeDialogOpen(true);
+  };
+
+  const handleDeleteEmployee = (employeeId: string, employeeName: string) => {
+    setEmployeeToDelete({ id: employeeId, name: employeeName });
+    setIsDeleteEmployeeDialogOpen(true);
+  };
+
+  const confirmDeleteEmployee = () => {
     if (!employeeToDelete) return;
-    
-    // Filter out the employee to delete
-    const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete.id);
-    
-    // Update crews to remove employee from any crews they belong to
-    const updatedCrews = crews.map(crew => ({
-      ...crew,
-      members: crew.members.filter(memberId => memberId !== employeeToDelete.id)
-    }));
-    
-    // Update todos to remove assignment to deleted employee
-    const updatedTodos = todos.map(todo => {
-      if (todo.assignedTo === employeeToDelete.name) {
-        return {
-          ...todo,
-          assignedTo: undefined
-        };
-      }
-      return todo;
-    });
-    
-    // Update state
-    setEmployees(updatedEmployees);
-    setCrews(updatedCrews);
-    setTodos(updatedTodos);
-    
-    // Close dialog and show success message
-    setIsDeleteConfirmOpen(false);
-    setEmployeeToDelete(null);
-    toast.success(`${employeeToDelete.name} has been removed`);
-  };
 
-  // Crew operations
-  const handleAddCrew = (newCrewData: Omit<Crew, 'id'>) => {
-    if (!newCrewData.name) {
-      toast.error("Please provide a crew name");
-      return;
-    }
+    try {
+      // Remove employee from the list
+      const updatedEmployees = employees.filter(employee => employee.id !== employeeToDelete.id);
+      setEmployees(updatedEmployees);
 
-    const crewId = `c-${Date.now()}`;
-    
-    const addedCrew: Crew = {
-      id: crewId,
-      ...newCrewData
-    };
+      // Remove employee from crew assignments
+      const updatedCrews = crews.map(crew => ({
+        ...crew,
+        members: crew.members.filter(memberId => memberId !== employeeToDelete.id)
+      }));
+      setCrews(updatedCrews);
 
-    setCrews([...crews, addedCrew]);
-    toast.success("New crew has been created");
-    setIsAddCrewOpen(false);
-  };
-
-  // Task operations
-  const handleCreateTask = (taskData: Omit<TaskForEmployeeView, 'id' | 'completed'>) => {
-    if (!taskData.text) {
-      toast.error("Please provide a task title");
-      return;
-    }
-
-    const taskId = `t-${Date.now()}`;
-    
-    const newTodo = {
-      id: taskId,
-      text: taskData.text,
-      completed: false,
-      date: taskData.date,
-      assignedTo: taskData.assignedTo,
-      assignedToAvatars: taskData.assignedToAvatars,
-      crew: taskData.crew,
-      location: taskData.location,
-      startTime: taskData.startTime,
-      endTime: taskData.endTime
-    };
-
-    setTodos([...todos, newTodo]);
-    setIsTaskDialogOpen(false);
-    
-    // Reset task assignee
-    setTaskAssignee('');
-    setTaskAssigneeCrew([]);
-    
-    toast.success("Task created successfully");
-  };
-
-  const handleEmployeeCrewAssignment = () => {
-    if (!selectedEmployee || !selectedCrew) {
-      toast.error("Please select both an employee and a crew");
-      return;
-    }
-
-    // Update employee's crews
-    const updatedEmployees = employees.map(emp => {
-      if (emp.id === selectedEmployee) {
-        // Add crew to employee if not already assigned
-        if (!emp.crews?.includes(selectedCrew)) {
-          const updatedCrews = emp.crews ? [...emp.crews, selectedCrew] : [selectedCrew];
-          return { ...emp, crews: updatedCrews };
+      // Remove employee assignments from tasks
+      const updatedTodos = todos.map(todo => {
+        if (todo.assignedTo === employeeToDelete.name) {
+          return { ...todo, assignedTo: undefined, assignedToAvatars: undefined };
         }
-      }
-      return emp;
-    });
+        return todo;
+      });
+      setTodos(updatedTodos);
 
-    // Update crew's members
-    const updatedCrews = crews.map(crew => {
-      if (crew.id === selectedCrew) {
-        // Add employee to crew if not already a member
-        if (!crew.members.includes(selectedEmployee)) {
-          return { ...crew, members: [...crew.members, selectedEmployee] };
-        }
-      }
-      return crew;
-    });
-
-    setEmployees(updatedEmployees);
-    setCrews(updatedCrews);
-    setIsCrewAssignOpen(false);
-    setSelectedEmployee(null);
-    setSelectedCrew(null);
-    toast.success("Employee assigned to crew successfully");
+      toast.success(`Employee "${employeeToDelete.name}" was deleted successfully`);
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      toast.error("Failed to delete employee");
+    } finally {
+      setIsDeleteEmployeeDialogOpen(false);
+      setEmployeeToDelete(null);
+    }
   };
 
-  // Helpers
-  const openTaskAssignmentForEmployee = (employeeId: string, employeeName: string) => {
-    setTaskAssignee(employeeName);
-    setTaskAssigneeCrew([]);
-    setIsTaskDialogOpen(true);
+  const handleSelectEmployee = (employee: Employee) => {
+    setSelectedEmployee(employee);
   };
 
-  const openTaskAssignmentForCrew = (crewId: string, crewName: string) => {
-    // Get all employee names in this crew
-    const crewMembers = crews.find(c => c.id === crewId)?.members || [];
-    const memberNames = crewMembers.map(memberId => {
-      const employee = employees.find(e => e.id === memberId);
-      return employee ? employee.name : "";
-    }).filter(Boolean);
-
-    setTaskAssignee(memberNames.join(", "));
-    setTaskAssigneeCrew([crewId]);
-    setIsTaskDialogOpen(true);
+  const handleManageCrew = (crewId: string) => {
+    const crew = crews.find(crew => crew.id === crewId);
+    setSelectedCrew(crew);
+    setIsCrewAssignDialogOpen(true);
   };
 
-  // Helper functions
-  const getCrewTasks = (crewId: string) => {
-    return todos.filter(todo => 
-      todo.crew && todo.crew.includes(crewId)
+  const handleSaveCrewAssignments = (crewId: string, memberIds: string[]) => {
+    const updatedCrews = crews.map(crew =>
+      crew.id === crewId ? { ...crew, members: memberIds } : crew
     );
+    setCrews(updatedCrews);
+    setIsCrewAssignDialogOpen(false);
+    toast.success('Crew assignments saved successfully');
   };
 
-  const getCrewNameById = (crewId: string) => {
-    const crew = crews.find(c => c.id === crewId);
-    return crew ? crew.name : "";
+  const handleOpenAssignTaskDialog = (employeeName: string) => {
+    setTaskAssignee(employeeName);
+    setIsTaskDialogOpen(true);
   };
 
-  const getEmployeeNameById = (employeeId: string) => {
-    const employee = employees.find(e => e.id === employeeId);
-    return employee ? employee.name : "";
+  const handleOpenAssignTaskToCrew = (crewId: string, crewName: string) => {
+    setTaskAssignee(crewName);
+    setIsTaskDialogOpen(true);
   };
 
-  const getCrewMembersCount = (crewId: string) => {
-    const crew = crews.find(c => c.id === crewId);
-    return crew ? crew.members.length : 0;
-  };
-
-  // Drag and drop handlers
-  const handleEmployeeDragStart = (e: React.DragEvent, employee: Employee) => {
-    // Set dragged employee data
-    const dragData = {
-      type: 'employee',
-      id: employee.id,
-      text: `Employee - ${employee.name}`,
-      originalData: {
-        id: employee.id,
-        name: employee.name,
-        position: employee.position,
-        email: employee.email,
-        avatarUrl: employee.avatarUrl
-      }
+  const handleSaveTask = (taskText: string) => {
+    const newTask = {
+      id: uuidv4(),
+      text: taskText,
+      completed: false,
+      date: new Date(),
+      assignedTo: taskAssignee,
     };
-    
-    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
-    e.dataTransfer.effectAllowed = 'copy';
-    
-    // Create and set a custom drag image
-    const dragPreview = document.createElement('div');
-    dragPreview.classList.add('drag-preview');
-    dragPreview.innerHTML = `
-      <div class="bg-primary text-white px-2 py-1 rounded text-xs flex items-center gap-1">
-        <span>${employee.name}</span>
-      </div>
-    `;
-    document.body.appendChild(dragPreview);
-    e.dataTransfer.setDragImage(dragPreview, 0, 0);
-    
-    // Clean up after drag starts
-    setTimeout(() => {
-      document.body.removeChild(dragPreview);
-    }, 0);
+    setTodos([...todos, newTask]);
+    setIsTaskDialogOpen(false);
+    toast.success('Task assigned successfully');
+  };
+
+  const handleEmployeeDragStart = (e: React.DragEvent, employee: Employee) => {
+    e.dataTransfer.setData('employeeId', employee.id);
+  };
+
+  const handleCrewDragStart = (e: React.DragEvent, crew: Crew) => {
+    e.dataTransfer.setData('crewId', crew.id);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const employeeId = e.dataTransfer.getData('employeeId');
+    const crewId = e.dataTransfer.getData('crewId');
+
+    if (employeeId && selectedCrew) {
+      if (!selectedCrew.members.includes(employeeId)) {
+        const updatedCrews = crews.map(crew =>
+          crew.id === selectedCrew.id ? { ...crew, members: [...crew.members, employeeId] } : crew
+        );
+        setCrews(updatedCrews);
+        toast.success('Employee added to crew successfully');
+      } else {
+        toast.warning('Employee is already in this crew');
+      }
+    } else if (crewId && selectedEmployee) {
+      const crew = crews.find(crew => crew.id === crewId);
+      if (crew && !crew.members.includes(selectedEmployee.id)) {
+        const updatedCrews = crews.map(c =>
+          c.id === crewId ? { ...c, members: [...c.members, selectedEmployee.id] } : c
+        );
+        setCrews(updatedCrews);
+        toast.success('Crew member added successfully');
+      } else {
+        toast.warning('Crew member is already assigned');
+      }
+    }
+  };
+
+  const confirmAddEmployee = (employee: Employee) => {
+    if (employee.id) {
+      // Update existing employee
+      const updatedEmployees = employees.map(e => (e.id === employee.id ? employee : e));
+      setEmployees(updatedEmployees);
+      toast.success('Employee updated successfully');
+    } else {
+      // Add new employee
+      const newEmployee = { ...employee, id: uuidv4() };
+      setEmployees([...employees, newEmployee]);
+      toast.success('Employee added successfully');
+    }
+    setIsAddEmployeeDialogOpen(false);
+  };
+
+  const confirmAddCrew = (crewName: string, selectedEmployeeIds: string[]) => {
+    const newCrew = {
+      id: uuidv4(),
+      name: crewName,
+      members: selectedEmployeeIds,
+    };
+    setCrews([...crews, newCrew]);
+    setIsAddCrewDialogOpen(false);
+    toast.success('Crew added successfully');
+  };
+
+  const getCrewNamesByEmployeeId = (employeeId: string): string[] => {
+    const employeeCrews = crews.filter(crew => crew.members.includes(employeeId));
+    return employeeCrews.map(crew => crew.name);
+  };
+
+  const getTodosByEmployeeId = (employeeId: string): TaskForEmployeeView[] => {
+    return todos.filter(todo => todo.assignedTo === employeeId).map(todo => ({
+      id: todo.id,
+      text: todo.text,
+      completed: todo.completed,
+      date: todo.date,
+    }));
+  };
+
+  const getTodosByCrewId = (crewId: string): TaskForEmployeeView[] => {
+    return todos.filter(todo => todo.crewId === crewId).map(todo => ({
+      id: todo.id,
+      text: todo.text,
+      completed: todo.completed,
+      date: todo.date,
+    }));
+  };
+
+  const getEmployeeNameById = (employeeId: string): string => {
+    const employee = employees.find(employee => employee.id === employeeId);
+    return employee ? employee.name : 'Unknown';
+  };
+
+  const generateRandomData = () => {
+    // Generate a random number of employees
+    const numEmployees = Math.floor(Math.random() * 5) + 2; // Random number between 2 and 6
+
+    // Generate random employees
+    const newEmployees = Array.from({ length: numEmployees }, () => ({
+      id: uuidv4(),
+      name: `Employee ${Math.floor(Math.random() * 100)}`,
+      position: 'Developer',
+      email: `employee${Math.floor(Math.random() * 100)}@example.com`,
+    }));
+
+    // Update the employees state
+    setEmployees(newEmployees);
+
+    // Generate a random number of crews
+    const numCrews = Math.floor(Math.random() * 3) + 1; // Random number between 1 and 3
+
+    // Generate random crews
+    const newCrews = Array.from({ length: numCrews }, () => ({
+      id: uuidv4(),
+      name: `Crew ${Math.floor(Math.random() * 100)}`,
+      members: newEmployees.map(employee => employee.id),
+    }));
+
+    // Update the crews state
+    setCrews(newCrews);
+
+    toast.success('Random data generated successfully');
+  };
+
+  // Add a handler for crew deletion
+  const handleDeleteCrew = (crewId: string, crewName: string) => {
+    setCrewToDelete({ id: crewId, name: crewName });
+    setIsDeleteCrewDialogOpen(true);
+  };
+
+  const confirmDeleteCrew = () => {
+    if (!crewToDelete) return;
+
+    try {
+      // Remove crew from the list
+      const updatedCrews = crews.filter(crew => crew.id !== crewToDelete.id);
+      setCrews(updatedCrews);
+      
+      // Remove crew from employee associations
+      const updatedEmployees = employees.map(employee => {
+        if (employee.crews && employee.crews.includes(crewToDelete.id)) {
+          return {
+            ...employee,
+            crews: employee.crews.filter(id => id !== crewToDelete.id)
+          };
+        }
+        return employee;
+      });
+      setEmployees(updatedEmployees);
+      
+      // Remove crew assignments from tasks
+      const updatedTodos = todos.map(todo => {
+        if (todo.crewId === crewToDelete.id) {
+          const { crewId, crew, ...rest } = todo;
+          return rest;
+        }
+        return todo;
+      });
+      setTodos(updatedTodos);
+      
+      toast.success(`Crew "${crewToDelete.name}" was deleted successfully`);
+    } catch (error) {
+      console.error("Error deleting crew:", error);
+      toast.error("Failed to delete crew");
+    } finally {
+      setIsDeleteCrewDialogOpen(false);
+      setCrewToDelete(null);
+    }
+  };
+
+  // Add handlers for schedule downloads
+  const handleOpenCrewSchedule = (crewId: string) => {
+    setSelectedCrewForSchedule(crewId);
+    setIsCrewScheduleDialogOpen(true);
+  };
+
+  const handleOpenEmployeeSchedule = (employeeId: string) => {
+    setSelectedEmployeeForSchedule(employeeId);
+    setIsEmployeeScheduleDialogOpen(true);
+  };
+
+  // Update handlers for download buttons
+  const handleDownloadEmployeeSchedule = () => {
+    setIsEmployeeScheduleDialogOpen(true);
   };
   
-  const handleCrewDragStart = (e: React.DragEvent, crew: Crew) => {
-    // Get crew members
-    const members = crew.members.map((memberId: string) => {
-      const employee = employees.find(e => e.id === memberId);
-      return employee ? employee.name : '';
-    }).filter(Boolean);
-    
-    // Set dragged crew data
-    const dragData = {
-      type: 'crew',
-      id: crew.id,
-      text: `Crew - ${crew.name}`,
-      originalData: {
-        id: crew.id,
-        name: crew.name,
-        members: members,
-        memberCount: members.length
-      }
-    };
-    
-    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
-    e.dataTransfer.effectAllowed = 'copy';
-    
-    // Create and set a custom drag image
-    const dragPreview = document.createElement('div');
-    dragPreview.classList.add('drag-preview');
-    dragPreview.innerHTML = `
-      <div class="bg-secondary text-secondary-foreground px-2 py-1 rounded text-xs flex items-center gap-1">
-        <span>${crew.name} (${members.length})</span>
-      </div>
-    `;
-    document.body.appendChild(dragPreview);
-    e.dataTransfer.setDragImage(dragPreview, 0, 0);
-    
-    // Clean up after drag starts
-    setTimeout(() => {
-      document.body.removeChild(dragPreview);
-    }, 0);
+  const handleDownloadCrewSchedule = () => {
+    setIsCrewScheduleDialogOpen(true);
   };
+
+  // Convert todos to the format expected by schedule components
+  const convertTodosToTasks = (): any[] => {
+    return todos.map(todo => ({
+      id: todo.id,
+      title: todo.text,
+      date: todo.date,
+      completed: todo.completed,
+      assignedTo: todo.assignedTo,
+      crew: todo.crew,
+      crewId: todo.crewId,
+      startTime: todo.startTime,
+      endTime: todo.endTime,
+      location: todo.location,
+      clientId: (todo as any).clientId,
+      clientLocationId: (todo as any).clientLocationId
+    }));
+  };
+
+  useEffect(() => {
+    // You can add any side effects here, like fetching data from an API
+  }, []);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
-        <h2 className="text-2xl font-semibold text-primary">Workforce Management</h2>
-        <div className="flex flex-wrap gap-3">
-          <Button 
-            variant="outline" 
-            className="gap-2"
-            onClick={() => setIsCrewAssignOpen(true)}
+    <div className="container py-6 space-y-6 max-w-6xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-3xl font-bold tracking-tight">Employees & Crews</h1>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={generateRandomData}
+            className="gap-1"
           >
-            <Users className="h-4 w-4" />
-            Assign to Crew
-          </Button>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Calendar className="h-4 w-4" />
-                Schedule
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0 w-auto" align="end">
-              <Card className="border-0 shadow-none">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm">Calendar</CardTitle>
-                  <CardDescription className="text-xs">Select a date to schedule tasks</CardDescription>
-                </CardHeader>
-                <CardContent className="p-2">
-                  <CalendarComponent
-                    mode="single"
-                    selected={selectedCalendarDate}
-                    onSelect={(date) => date && setSelectedCalendarDate(date)}
-                    className="rounded-md border"
-                  />
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="w-full mt-2 h-8 text-xs"
-                    onClick={() => setIsTaskDialogOpen(true)}
-                  >
-                    <Plus className="h-3 w-3 mr-1" /> 
-                    Add Task
-                  </Button>
-                </CardContent>
-              </Card>
-            </PopoverContent>
-          </Popover>
-          <Button 
-            onClick={() => {
-              setSelectedTab('employees');
-              setIsAddEmployeeOpen(true);
-            }}
-            className="gap-2"
-          >
-            <UserPlus className="h-4 w-4" />
-            Add Employee
-          </Button>
-          <Button 
-            onClick={() => {
-              setSelectedTab('crews');
-              setIsAddCrewOpen(true);
-            }}
-            variant="secondary"
-            className="gap-2"
-          >
-            <Users className="h-4 w-4" />
-            Add Crew
+            <RefreshCw className="h-4 w-4" /> Generate Data
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 pb-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input 
-            placeholder="Search employees or crews..." 
-            className="pl-10" 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <Tabs defaultValue="employees" value={selectedTab} onValueChange={(value) => setSelectedTab(value as 'employees' | 'crews')} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
-          <TabsTrigger value="employees" className="gap-2">
-            <UserPlus className="h-4 w-4" />
-            Employees
-          </TabsTrigger>
-          <TabsTrigger value="crews" className="gap-2">
-            <Users className="h-4 w-4" />
-            Crews
-          </TabsTrigger>
+      <Tabs defaultValue="employees" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="employees">Employees</TabsTrigger>
+          <TabsTrigger value="crews">Crews</TabsTrigger>
         </TabsList>
 
         <TabsContent value="employees" className="space-y-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle>Employee Directory</CardTitle>
-              <CardDescription>Manage your workforce and assign tasks or crews</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <EmployeeList 
-                employees={employees}
-                crews={crews}
-                searchTerm={searchTerm}
-                onHandleEmployeeDragStart={handleEmployeeDragStart}
-                onSelectEmployee={setSelectedEmployee}
-                onAssignToCrew={(employeeId) => {
-                  setSelectedEmployee(employeeId);
-                  setIsCrewAssignOpen(true);
-                }}
-                onScheduleTask={openTaskAssignmentForEmployee}
-                onDownloadSchedule={(employee) => {
-                  setSelectedEmployeeForDownload(employee);
-                  setIsEmployeeScheduleDownloadOpen(true);
-                }}
-                onDeleteEmployee={(employee) => {
-                  setEmployeeToDelete(employee);
-                  setIsDeleteConfirmOpen(true);
-                }}
-                getCrewNameById={getCrewNameById}
+          <div className="flex flex-col sm:flex-row justify-between gap-2">
+            <div className="relative w-full sm:w-96">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search employees..."
+                className="w-full pl-8"
+                value={employeeSearchTerm}
+                onChange={(e) => setEmployeeSearchTerm(e.target.value)}
               />
-            </CardContent>
-          </Card>
+            </div>
+            <Button onClick={handleAddEmployee} className="gap-1">
+              <Plus className="h-4 w-4" /> Add Employee
+            </Button>
+          </div>
+
+          <EmployeeList
+            employees={employees}
+            searchTerm={employeeSearchTerm}
+            onHandleEmployeeDragStart={handleEmployeeDragStart}
+            onSelectEmployee={handleSelectEmployee}
+            onEditEmployee={handleEditEmployee}
+            onDeleteEmployee={handleDeleteEmployee}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            onAssignTask={handleOpenAssignTaskDialog}
+            onDownloadSchedule={handleOpenEmployeeSchedule}
+            getEmployeeCrews={(employeeId: string) =>
+              getCrewNamesByEmployeeId(employeeId)
+            }
+            getEmployeeTasks={(employeeId: string) =>
+              getTodosByEmployeeId(employeeId)
+            }
+          />
         </TabsContent>
 
         <TabsContent value="crews" className="space-y-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle>Crew Management</CardTitle>
-              <CardDescription>Organize your employees into crews for easier task assignment</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CrewList 
-                crews={crews}
-                searchTerm={searchTerm}
-                onHandleCrewDragStart={handleCrewDragStart}
-                onSelectCrew={setSelectedCrew}
-                onManageCrew={(crewId) => {
-                  setSelectedCrew(crewId);
-                  setIsCrewAssignOpen(true);
-                }}
-                onAssignTask={openTaskAssignmentForCrew}
-                onDownloadSchedule={(crewId) => {
-                  setSelectedCrew(crewId);
-                  setIsCrewScheduleDownloadOpen(true);
-                }}
-                getCrewTasks={getCrewTasks}
-                getEmployeeNameById={getEmployeeNameById}
+          <div className="flex flex-col sm:flex-row justify-between gap-2">
+            <div className="relative w-full sm:w-96">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search crews..."
+                className="w-full pl-8"
+                value={crewSearchTerm}
+                onChange={(e) => setCrewSearchTerm(e.target.value)}
               />
-            </CardContent>
-          </Card>
+            </div>
+            <Button onClick={handleAddCrew} className="gap-1">
+              <Plus className="h-4 w-4" /> Add Crew
+            </Button>
+          </div>
+
+          <CrewList
+            crews={crews}
+            searchTerm={crewSearchTerm}
+            onHandleCrewDragStart={handleCrewDragStart}
+            onSelectCrew={handleSelectCrew}
+            onManageCrew={handleManageCrew}
+            onAssignTask={handleOpenAssignTaskToCrew}
+            onDownloadSchedule={handleOpenCrewSchedule}
+            onDeleteCrew={handleDeleteCrew}
+            getCrewTasks={(crewId: string) => getTodosByCrewId(crewId)}
+            getEmployeeNameById={(employeeId: string) =>
+              getEmployeeNameById(employeeId)
+            }
+          />
         </TabsContent>
       </Tabs>
 
       <DownloadCardsSection 
-        employees={employees}
-        onDownloadEmployeeSchedule={() => {
-          if (employees.length > 0) {
-            setSelectedEmployeeForDownload({
-              id: employees[0].id,
-              name: employees[0].name
-            });
-            setIsEmployeeScheduleDownloadOpen(true);
-          } else {
-            toast.error("No employees available");
-          }
-        }}
-        onDownloadCrewSchedule={() => setIsCrewScheduleDownloadOpen(true)}
+        employees={employees} 
+        onDownloadEmployeeSchedule={handleDownloadEmployeeSchedule}
+        onDownloadCrewSchedule={handleDownloadCrewSchedule}
       />
 
-      {/* Dialogs */}
-      <AddEmployeeDialog 
-        isOpen={isAddEmployeeOpen}
-        onClose={() => setIsAddEmployeeOpen(false)}
-        onAddEmployee={handleAddEmployee}
+      {/* Keep existing dialogs */}
+      <AddEmployeeDialog
+        isOpen={isAddEmployeeDialogOpen}
+        onClose={() => setIsAddEmployeeDialogOpen(false)}
+        existingEmployee={editingEmployee}
+        onAddEmployee={confirmAddEmployee}
         crews={crews}
-        getCrewNameById={getCrewNameById}
       />
 
-      <AddCrewDialog 
-        isOpen={isAddCrewOpen}
-        onClose={() => setIsAddCrewOpen(false)}
-        onAddCrew={handleAddCrew}
+      <AddCrewDialog
+        isOpen={isAddCrewDialogOpen}
+        onClose={() => setIsAddCrewDialogOpen(false)}
+        onAddCrew={confirmAddCrew}
         employees={employees}
       />
 
-      <CrewAssignDialog 
-        isOpen={isCrewAssignOpen}
-        onClose={() => setIsCrewAssignOpen(false)}
-        onAssignEmployeeToCrew={handleEmployeeCrewAssignment}
+      <CrewAssignDialog
+        isOpen={isCrewAssignDialogOpen}
+        onClose={() => setIsCrewAssignDialogOpen(false)}
+        crew={selectedCrew}
         employees={employees}
-        crews={crews}
-        selectedEmployee={selectedEmployee}
-        selectedCrew={selectedCrew}
-        setSelectedEmployee={setSelectedEmployee}
-        setSelectedCrew={setSelectedCrew}
+        onSave={handleSaveCrewAssignments}
       />
 
-      <TaskDialog 
+      <TaskDialog
         isOpen={isTaskDialogOpen}
         onClose={() => setIsTaskDialogOpen(false)}
-        onCreateTask={handleCreateTask}
-        employees={employees}
-        crews={crews}
-        selectedDate={selectedCalendarDate}
-        initialAssignee={taskAssignee}
-        initialCrew={taskAssigneeCrew}
-        getCrewMembersCount={getCrewMembersCount}
+        assignedTo={taskAssignee}
+        onSave={handleSaveTask}
       />
 
-      {/* Employee Delete Confirmation */}
       <EmployeeDeleteDialog 
-        isOpen={isDeleteConfirmOpen}
-        onClose={() => setIsDeleteConfirmOpen(false)}
-        onDelete={handleDeleteEmployee}
+        isOpen={isDeleteEmployeeDialogOpen}
+        onClose={() => setIsDeleteEmployeeDialogOpen(false)}
+        onDelete={confirmDeleteEmployee}
         employeeName={employeeToDelete?.name || null}
       />
 
-      {/* Employee Schedule Download Dialog */}
-      <Dialog open={isEmployeeScheduleDownloadOpen} onOpenChange={setIsEmployeeScheduleDownloadOpen}>
-        <DialogContent className="sm:max-w-md">
-          {selectedEmployeeForDownload && (
-            <EmployeeScheduleDownload
-              employeeId={selectedEmployeeForDownload.id}
-              employeeName={selectedEmployeeForDownload.name}
-              tasks={todos.map(todo => ({
-                id: todo.id,
-                title: todo.text,
-                date: todo.date,
-                completed: todo.completed,
-                assignedTo: todo.assignedTo,
-                crew: todo.crew,
-                startTime: todo.startTime,
-                endTime: todo.endTime,
-                location: todo.location
-              }))}
-            />
-          )}
+      {/* Add the CrewDeleteDialog */}
+      <CrewDeleteDialog
+        isOpen={isDeleteCrewDialogOpen}
+        onClose={() => setIsDeleteCrewDialogOpen(false)}
+        onDelete={confirmDeleteCrew}
+        crewName={crewToDelete?.name || null}
+      />
+
+      {/* Add schedule download dialogs */}
+      <Dialog open={isCrewScheduleDialogOpen} onOpenChange={setIsCrewScheduleDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <CrewScheduleDownload
+            crews={selectedCrewForSchedule ? crews.filter(c => c.id === selectedCrewForSchedule) : crews}
+            tasks={convertTodosToTasks()}
+          />
         </DialogContent>
       </Dialog>
 
-      {/* Crew Schedule Download Dialog */}
-      <Dialog open={isCrewScheduleDownloadOpen} onOpenChange={setIsCrewScheduleDownloadOpen}>
-        <DialogContent className="sm:max-w-md">
-          <CrewScheduleDownload
-            crews={crews}
-            tasks={todos.map(todo => ({
-              id: todo.id,
-              title: todo.text,
-              date: todo.date,
-              completed: todo.completed,
-              assignedTo: todo.assignedTo,
-              crew: todo.crew,
-              crewId: todo.crew?.[0], // In the app context, crew is stored as an array with crewId
-              startTime: todo.startTime,
-              endTime: todo.endTime,
-              location: todo.location
-            }))}
+      <Dialog open={isEmployeeScheduleDialogOpen} onOpenChange={setIsEmployeeScheduleDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <EmployeeScheduleDownload
+            employees={selectedEmployeeForSchedule ? employees.filter(e => e.id === selectedEmployeeForSchedule) : employees}
+            tasks={convertTodosToTasks()}
           />
         </DialogContent>
       </Dialog>

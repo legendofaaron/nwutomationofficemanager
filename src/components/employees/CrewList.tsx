@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { GripHorizontal, Users, Cog, ListCheck, Download } from 'lucide-react';
+import { GripHorizontal, Users, Cog, ListCheck, Download, Trash } from 'lucide-react';
 import { Employee, Crew } from './types';
 
 interface CrewListProps {
@@ -22,6 +22,7 @@ interface CrewListProps {
   onManageCrew: (crewId: string) => void;
   onAssignTask: (crewId: string, crewName: string) => void;
   onDownloadSchedule: (crewId: string) => void;
+  onDeleteCrew: (crewId: string, crewName: string) => void;
   getCrewTasks: (crewId: string) => any[];
   getEmployeeNameById: (employeeId: string) => string;
 }
@@ -34,6 +35,7 @@ const CrewList: React.FC<CrewListProps> = ({
   onManageCrew,
   onAssignTask,
   onDownloadSchedule,
+  onDeleteCrew,
   getCrewTasks,
   getEmployeeNameById
 }) => {
@@ -132,6 +134,15 @@ const CrewList: React.FC<CrewListProps> = ({
                       onClick={() => onDownloadSchedule(crew.id)}
                     >
                       <Download className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      title="Delete crew"
+                      onClick={() => onDeleteCrew(crew.id, crew.name)}
+                    >
+                      <Trash className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>
