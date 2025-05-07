@@ -1,4 +1,6 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 export type ViewMode = 'welcome' | 'files' | 'database' | 'document' | 'knowledge' | 'office' | 'spreadsheet' | 'settings';
 type FileType = 'folder' | 'document' | 'image' | 'spreadsheet';
@@ -372,20 +374,43 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     companyName: 'Northwestern Automation',
     logoType: 'default',
     primaryColor: '#1E90FF',
-    accentColor: '#0066CC' // Added default accentColor
+    accentColor: '#0066CC'
   });
   
-  // Add missing state variables
-  const [calendarDate, setCalendarDate] = useState<Date>(new Date());
-  const [todos, setTodos] = useState<Todo[]>(defaultTodos);
+  // Replace useState with useLocalStorage for data that needs to persist
+  const [calendarDate, setCalendarDate] = useLocalStorage<Date>('calendarDate', new Date());
+  const [todos, setTodos] = useLocalStorage<Todo[]>('todos', defaultTodos);
   
-  // Employee and crew management
-  const [employees, setEmployees] = useState<Employee[]>(defaultEmployees);
-  const [crews, setCrews] = useState<Crew[]>(defaultCrews);
-  
-  // Client management
-  const [clients, setClients] = useState<Client[]>(defaultClients);
-  const [clientLocations, setClientLocations] = useState<ClientLocation[]>(defaultClientLocations);
+  // Use localStorage for employee, crew, client, and location data
+  const [employees, setEmployees] = useLocalStorage<Employee[]>('employees', defaultEmployees);
+  const [crews, setCrews] = useLocalStorage<Crew[]>('crews', defaultCrews);
+  const [clients, setClients] = useLocalStorage<Client[]>('clients', defaultClients);
+  const [clientLocations, setClientLocations] = useLocalStorage<ClientLocation[]>('clientLocations', defaultClientLocations);
+
+  // Convert date strings back to Date objects for todos when loaded from localStorage
+  React.useEffect(() => {
+    const processedTodos = todos.map(todo => {
+      if (typeof todo.date === 'string') {
+        return {
+          ...todo,
+          date: new Date(todo.date)
+        };
+      }
+      return todo;
+    });
+    
+    // Only update if there are changes to prevent infinite loop
+    if (JSON.stringify(processedTodos) !== JSON.stringify(todos)) {
+      setTodos(processedTodos);
+    }
+  }, [todos, setTodos]);
+
+  // Similarly handle calendarDate if it's stored as string
+  React.useEffect(() => {
+    if (typeof calendarDate === 'string') {
+      setCalendarDate(new Date(calendarDate));
+    }
+  }, [calendarDate, setCalendarDate]);
 
   return (
     <AppContext.Provider

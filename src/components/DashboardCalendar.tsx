@@ -20,6 +20,7 @@ import { useAppContext } from '@/context/AppContext';
 interface Todo {
   id: string;
   text: string;
+  title: string; // Add title for compatibility
   completed: boolean;
   date: Date;
   assignedTo?: string;
@@ -50,24 +51,42 @@ interface DroppedItem {
 }
 
 const DashboardCalendar = () => {
-  // Add the useAppContext hook to access crews
-  const { crews } = useAppContext();
+  // Use the useAppContext hook to access todos and other data
+  const { 
+    crews, 
+    todos: contextTodos, 
+    setTodos: setContextTodos,
+    calendarDate: contextDate,
+    setCalendarDate: setContextDate
+  } = useAppContext();
   
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(contextDate || new Date());
   const [newTodoText, setNewTodoText] = useState('');
   const [draggedTodo, setDraggedTodo] = useState<Todo | null>(null);
-  const [todos, setTodos] = useState<Todo[]>([
-    { id: '1', text: 'Team meeting', completed: false, date: new Date() },
-    { id: '2', text: 'Review project proposal', completed: true, date: new Date() },
-    { id: '3', text: 'Call with client', completed: false, date: new Date() },
-  ]);
+  
+  // Use the todos from context instead of local state
   const [isDragging, setIsDragging] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [employeeTaskDialogOpen, setEmployeeTaskDialogOpen] = useState(false);
   const [crewTaskDialogOpen, setCrewTaskDialogOpen] = useState(false);
   const [droppedItem, setDroppedItem] = useState<DroppedItem | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date>(contextDate || new Date());
+
+  // Update local selected date when context date changes
+  useEffect(() => {
+    if (contextDate) {
+      setSelectedDate(new Date(contextDate));
+      setCurrentMonth(new Date(contextDate));
+    }
+  }, [contextDate]);
+
+  // Update context date when local selected date changes
+  useEffect(() => {
+    if (selectedDate && (!contextDate || selectedDate.getTime() !== new Date(contextDate).getTime())) {
+      setContextDate(selectedDate);
+    }
+  }, [selectedDate, contextDate, setContextDate]);
 
   const form = useForm<TaskFormValues>({
     defaultValues: {
@@ -113,13 +132,13 @@ const DashboardCalendar = () => {
     };
   }, []);
 
-  const todaysTodos = todos.filter(
-    todo => todo.date.toDateString() === selectedDate.toDateString()
+  const todaysTodos = contextTodos.filter(
+    todo => new Date(todo.date).toDateString() === selectedDate.toDateString()
   );
 
   // Count tasks for each day
   const getTaskCountForDay = (date: Date): number => {
-    return todos.filter(todo => todo.date.toDateString() === date.toDateString()).length;
+    return contextTodos.filter(todo => new Date(todo.date).toDateString() === date.toDateString()).length;
   };
 
   const addTodo = () => {
@@ -128,11 +147,12 @@ const DashboardCalendar = () => {
     const newTodo: Todo = {
       id: Date.now().toString(),
       text: newTodoText,
+      title: newTodoText, // Add title for compatibility
       completed: false,
       date: selectedDate
     };
     
-    setTodos([...todos, newTodo]);
+    setContextTodos([...contextTodos, newTodo]);
     setNewTodoText('');
     toast.success("Task created successfully");
   };
@@ -141,6 +161,7 @@ const DashboardCalendar = () => {
     const newTodo: Todo = {
       id: Date.now().toString(),
       text: values.text,
+      title: values.text, // Add title for compatibility
       completed: false,
       date: values.date || selectedDate,
       location: values.location,
@@ -149,7 +170,7 @@ const DashboardCalendar = () => {
       assignedTo: values.assignedTo
     };
     
-    setTodos([...todos, newTodo]);
+    setContextTodos([...contextTodos, newTodo]);
     setIsDialogOpen(false);
     form.reset();
     toast.success("Task created successfully");
@@ -161,6 +182,7 @@ const DashboardCalendar = () => {
     const newTodo: Todo = {
       id: Date.now().toString(),
       text: values.text,
+      title: values.text, // Add title for compatibility
       completed: false,
       date: values.date || selectedDate,
       location: values.location,
@@ -170,7 +192,7 @@ const DashboardCalendar = () => {
       assignedToAvatar: droppedItem.originalData?.avatarUrl
     };
     
-    setTodos([...todos, newTodo]);
+    setContextTodos([...contextTodos, newTodo]);
     setEmployeeTaskDialogOpen(false);
     employeeTaskForm.reset();
     setDroppedItem(null);
@@ -184,6 +206,7 @@ const DashboardCalendar = () => {
     const newTodo: Todo = {
       id: Date.now().toString(),
       text: values.text,
+      title: values.text, // Add title for compatibility
       completed: false,
       date: values.date || selectedDate,
       location: values.location,
@@ -194,7 +217,7 @@ const DashboardCalendar = () => {
       crewMembers: droppedItem.originalData?.members || []
     };
     
-    setTodos([...todos, newTodo]);
+    setContextTodos([...contextTodos, newTodo]);
     setCrewTaskDialogOpen(false);
     crewTaskForm.reset();
     setDroppedItem(null);
@@ -202,15 +225,15 @@ const DashboardCalendar = () => {
   };
 
   const toggleTodoCompletion = (id: string) => {
-    setTodos(
-      todos.map(todo =>
+    setContextTodos(
+      contextTodos.map(todo =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo
       )
     );
   };
 
   const deleteTodo = (id: string) => {
-    setTodos(todos.filter(todo => todo.id !== id));
+    setContextTodos(contextTodos.filter(todo => todo.id !== id));
     toast.info("Task removed");
   };
 
@@ -253,15 +276,16 @@ const DashboardCalendar = () => {
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
+      setContextDate(date);
       
       // If there's a todo being dragged, update its date
       if (draggedTodo) {
-        const updatedTodos = todos.map(todo => 
+        const updatedTodos = contextTodos.map(todo => 
           todo.id === draggedTodo.id 
             ? { ...todo, date } 
             : todo
         );
-        setTodos(updatedTodos);
+        setContextTodos(updatedTodos);
         setDraggedTodo(null);
         toast.success("Task moved to " + format(date, 'MMM d, yyyy'));
       }
@@ -289,11 +313,12 @@ const DashboardCalendar = () => {
     const newTodo: Todo = {
       id: `${droppedItem.type}-${droppedItem.id}-${Date.now()}`,
       text: getTextByItemType(droppedItem),
+      title: getTextByItemType(droppedItem), // Add title for compatibility
       completed: false,
       date: date
     };
 
-    setTodos([...todos, newTodo]);
+    setContextTodos([...contextTodos, newTodo]);
     toast.success(`${capitalizeFirstLetter(droppedItem.type)} added to calendar on ${format(date, 'MMM d, yyyy')}`);
   };
 
@@ -334,9 +359,11 @@ const DashboardCalendar = () => {
         )}
         onClick={() => {
           setSelectedDate(date);
+          setContextDate(date);
         }}
         onDoubleClick={() => {
           setSelectedDate(date);
+          setContextDate(date);
           form.setValue('date', date);
           setIsDialogOpen(true);
         }}
@@ -356,15 +383,16 @@ const DashboardCalendar = () => {
 
           // Handle todo drops
           if (draggedTodo) {
-            const updatedTodos = todos.map(todo => 
+            const updatedTodos = contextTodos.map(todo => 
               todo.id === draggedTodo.id 
                 ? { ...todo, date } 
                 : todo
             );
-            setTodos(updatedTodos);
+            setContextTodos(updatedTodos);
             setDraggedTodo(null);
             setIsDragging(false);
             setSelectedDate(date);
+            setContextDate(date);
             toast.success("Task moved to " + format(date, 'MMM d, yyyy'));
           } else {
             // Handle external drops (employees, crews, invoices, bookings)
@@ -375,6 +403,7 @@ const DashboardCalendar = () => {
                 handleExternalItemDrop(droppedItem, date);
                 // Update selected date to where the item was dropped
                 setSelectedDate(date);
+                setContextDate(date);
               }
             } catch (error) {
               console.error("Error processing dropped item:", error);
