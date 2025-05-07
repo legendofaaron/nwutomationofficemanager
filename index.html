@@ -17,26 +17,20 @@
     <script>
       // Immediate theme detection to prevent flash of incorrect theme
       (function() {
-        try {
-          const savedTheme = localStorage.getItem('theme');
-          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          const systemTheme = prefersDark ? 'dark' : 'light';
-          
-          const theme = savedTheme || systemTheme;
-          document.documentElement.classList.toggle('dark', theme === 'dark' || theme === 'superdark');
-          document.documentElement.classList.toggle('superdark', theme === 'superdark');
-          
-          if (theme === 'superdark') {
-            document.documentElement.style.backgroundColor = '#000';
-          } else if (theme === 'dark') {
-            document.documentElement.style.backgroundColor = '#0a0c10';
-          } else {
-            document.documentElement.style.backgroundColor = '#ffffff';
-          }
-        } catch (e) {
-          console.error('Theme initialization error:', e);
-          document.documentElement.classList.add('light');
-          document.body.classList.add('light');
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const systemTheme = prefersDark ? 'dark' : 'light';
+        
+        const theme = savedTheme || systemTheme;
+        document.documentElement.classList.toggle('dark', theme === 'dark' || theme === 'superdark');
+        document.documentElement.classList.toggle('superdark', theme === 'superdark');
+        
+        if (theme === 'superdark') {
+          document.documentElement.style.backgroundColor = '#000';
+        } else if (theme === 'dark') {
+          document.documentElement.style.backgroundColor = '#0a0c10';
+        } else {
+          document.documentElement.style.backgroundColor = '#ffffff';
         }
       })();
     </script>

@@ -70,7 +70,7 @@ const TodoCalendarBubble = () => {
   // Update local selected date when global date changes
   useEffect(() => {
     if (calendarDate) {
-      setSelectedDate(new Date(calendarDate));
+      setSelectedDate(calendarDate);
     }
   }, [calendarDate]);
 
@@ -235,13 +235,11 @@ const TodoCalendarBubble = () => {
     setDraggedTodo(null);
   };
 
-  // Fixed: Ensure the handleDateChange function properly updates selectedDate and global state
+  // Fixed: Ensure the handleDateChange function properly updates selectedDate
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
-      // Set selected date, create a new Date object to ensure it's a different reference
-      const newDate = new Date(date);
-      setSelectedDate(newDate);
-      setCalendarDate(newDate);
+      // Set selected date and force a re-render of tasks
+      setSelectedDate(new Date(date));
     }
   };
 
@@ -627,21 +625,6 @@ const TodoCalendarBubble = () => {
           </Card>
         </PopoverContent>
       </Popover>
-
-      <style>
-        {`
-          .calendar-component .react-day-picker {
-            font-size: 0.875rem;
-          }
-          .drop-highlight {
-            animation: highlight-pulse 0.5s ease-in-out;
-          }
-          @keyframes highlight-pulse {
-            0%, 100% { background-color: transparent; }
-            50% { background-color: rgba(var(--primary), 0.2); }
-          }
-        `}
-      </style>
 
       {/* Task Creation Dialog */}
       <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>

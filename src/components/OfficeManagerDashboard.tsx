@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Building2, Calendar, Receipt, Settings, Users, BookOpen, Briefcase, Heart, Coffee, Mail } from 'lucide-react';
+import { Building2, Calendar, Receipt, Settings, Users, BookOpen, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import EmployeesView from './EmployeesView';
 import ScheduleView from './ScheduleView';
@@ -23,14 +22,6 @@ const OfficeManagerDashboard = () => {
   const bgColor = isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-white';
   const headerBgColor = isSuperDark ? 'bg-black' : isDark ? 'bg-[#0f1419]' : 'bg-[#F8F9FA]';
 
-  const handleTipMe = () => {
-    window.open('https://paypal.me/aaronthelegend', '_blank');
-  };
-
-  const handleEmailDeveloper = () => {
-    window.location.href = 'mailto:northwesternautomation@gmail.com?subject=Office%20Manager%20Source%20Code%20Request&body=I%20would%20like%20to%20request%20the%20source%20code%20for%20Office%20Manager.';
-  };
-
   return (
     <>
       <PaymentVerifier />
@@ -39,26 +30,6 @@ const OfficeManagerDashboard = () => {
           <div className="flex items-center gap-3">
             <Logo small />
             <div className="font-medium text-xl">Office Manager</div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleEmailDeveloper}
-              className="gap-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100/10 dark:hover:bg-gray-800/20"
-            >
-              <Mail className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Contact</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleTipMe}
-              className="gap-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100/10 dark:hover:bg-gray-800/20"
-            >
-              <Heart className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Support</span>
-            </Button>
           </div>
         </div>
 

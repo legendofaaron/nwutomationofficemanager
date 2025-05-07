@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, MessageSquare, BookOpenText, Building2, Heart, Coffee, Sparkles, Mail } from 'lucide-react';
+import { ArrowRight, MessageSquare, BookOpenText, Building2, LayoutDashboard, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
@@ -49,14 +49,6 @@ const WelcomeDashboard = () => {
     : isDark
       ? 'border-blue-900/50 bg-[#111827] hover:bg-[#1e293b] text-white'
       : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700';
-      
-  const handleTipMe = () => {
-    window.open('https://paypal.me/aaronthelegend', '_blank');
-  };
-
-  const handleEmailDeveloper = () => {
-    window.location.href = 'mailto:northwesternautomation@gmail.com?subject=Office%20Manager%20Source%20Code%20Request&body=I%20would%20like%20to%20request%20the%20source%20code%20for%20Office%20Manager.';
-  };
 
   return (
     <ScrollArea className="h-full">
@@ -189,39 +181,6 @@ const WelcomeDashboard = () => {
         <p className="text-center text-xs md:text-sm text-gray-500 dark:text-gray-400 animate-fade-in mt-8" style={{animationDelay: '600ms'}}>
           Select a feature from the sidebar or use the Intelligent Assistant to get started
         </p>
-        
-        {/* Contact for Source Code and Tip Developer Section - Made More Subtle */}
-        <div className="mt-12 text-center animate-fade-in" style={{animationDelay: '700ms'}}>
-          <Card className={`max-w-xl mx-auto ${cardBgClass} border-t border-t-gray-200 dark:border-t-gray-700`}>
-            <CardContent className="pt-6 pb-4">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                <h3 className="text-base font-medium text-gray-700 dark:text-gray-300">Contact Information</h3>
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 max-w-lg mx-auto">
-                Have questions about Office Manager? Need additional resources?
-              </p>
-              <div className="flex flex-wrap gap-3 justify-center">
-                <Button 
-                  onClick={handleEmailDeveloper} 
-                  variant="outline"
-                  size="sm"
-                  className="text-xs border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300"
-                >
-                  <Mail className="h-3.5 w-3.5 mr-1.5 text-gray-500" /> Contact for Resources
-                </Button>
-                <Button 
-                  onClick={handleTipMe}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300"
-                >
-                  <Heart className="h-3.5 w-3.5 mr-1.5 text-gray-500" /> Support Development
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </ScrollArea>
   );

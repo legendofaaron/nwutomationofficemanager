@@ -8,14 +8,14 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { User, ArrowRight, AlertCircle, Shield, ArrowLeft } from 'lucide-react';
+import { Mail, ArrowRight, AlertCircle, Shield, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/Logo';
 import { localAuth } from '@/services/localAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
-  username: z.string().min(3, { message: 'Please enter a valid username' }),
+  email: z.string().email({ message: 'Please enter a valid email address' }),
 });
 
 const ForgotPassword = () => {
@@ -23,12 +23,12 @@ const ForgotPassword = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
-  const [resetRequested, setResetRequested] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: '',
+      email: '',
     },
   });
 
@@ -38,19 +38,19 @@ const ForgotPassword = () => {
     
     try {
       const { data, error } = await localAuth.requestPasswordReset({
-        username: values.username,
+        email: values.email,
       });
       
       if (error) {
         throw error;
       }
       
-      // Always show success, even if username doesn't exist (for security reasons)
-      setResetRequested(true);
+      // Always show success, even if email doesn't exist (for security reasons)
+      setEmailSent(true);
       
       toast({
-        title: "Reset request sent",
-        description: "Check the console for reset instructions (in a real app, this would be sent to your contact method).",
+        title: "Reset email sent",
+        description: "Please check your email for the password reset link.",
       });
     } catch (error) {
       // Handle errors
@@ -74,7 +74,7 @@ const ForgotPassword = () => {
           <Logo />
           <h1 className="text-2xl font-bold text-center mt-6">Password Recovery</h1>
           <p className="mt-2 text-sm text-center text-gray-600 dark:text-gray-400">
-            Enter your username to receive password reset instructions
+            Enter your email to receive a password reset link
           </p>
         </div>
         
@@ -85,9 +85,9 @@ const ForgotPassword = () => {
               <CardTitle>Reset Password</CardTitle>
             </div>
             <CardDescription className="text-center">
-              {!resetRequested 
-                ? "Enter your username to receive recovery instructions" 
-                : "Check for reset instructions"}
+              {!emailSent 
+                ? "Enter your email address to receive recovery instructions" 
+                : "Check your email for reset instructions"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -98,22 +98,22 @@ const ForgotPassword = () => {
               </Alert>
             )}
             
-            {!resetRequested ? (
+            {!emailSent ? (
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="username"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Username</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                            <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                             <Input 
-                              placeholder="Enter your username" 
+                              placeholder="Enter your email address" 
                               className="pl-10" 
-                              autoComplete="username"
+                              autoComplete="email"
                               disabled={isLoading}
                               {...field} 
                             />
@@ -138,11 +138,9 @@ const ForgotPassword = () => {
               <div className="space-y-4">
                 <Alert className="bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800">
                   <div className="flex flex-col space-y-2">
-                    <h4 className="font-medium">Recovery information sent!</h4>
+                    <h4 className="font-medium">Recovery email sent!</h4>
                     <p className="text-sm opacity-80">
-                      Check your console for instructions to reset your password.
-                      <br />
-                      <small className="text-xs">(In a real app, this would be sent to your contact method)</small>
+                      Check your inbox for instructions to reset your password.
                     </p>
                   </div>
                 </Alert>
@@ -161,7 +159,7 @@ const ForgotPassword = () => {
           </CardContent>
           <CardFooter className="flex justify-center border-t p-4">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {!resetRequested ? (
+              {!emailSent ? (
                 <>
                   Remember your password?{" "}
                   <Link to="/login" className="text-primary hover:underline font-medium">
@@ -170,9 +168,9 @@ const ForgotPassword = () => {
                 </>
               ) : (
                 <>
-                  Didn't receive instructions?{" "}
+                  Didn't receive the email?{" "}
                   <button 
-                    onClick={() => setResetRequested(false)}
+                    onClick={() => setEmailSent(false)}
                     className="text-primary hover:underline font-medium bg-transparent border-none p-0 cursor-pointer"
                   >
                     Try again

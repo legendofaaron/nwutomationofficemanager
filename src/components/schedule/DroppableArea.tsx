@@ -1,119 +1,113 @@
-import React, { useRef, useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useDragDrop } from './DragDropContext';
-import { DragItem, DraggableItemType } from './ScheduleTypes';
 
 interface DroppableAreaProps {
   id: string;
-  acceptTypes: DraggableItemType[];
-  onDrop?: (item: DragItem, event: React.DragEvent<HTMLDivElement>) => void;
-  onDragEnter?: (event: React.DragEvent<HTMLDivElement>) => void;
-  onDragLeave?: (event: React.DragEvent<HTMLDivElement>) => void;
-  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
+  acceptTypes: string[];
+  onDrop: (data: any, event: React.DragEvent) => void;
   className?: string;
   activeClassName?: string;
-  children?: React.ReactNode;
+  children: React.ReactNode;
+  disabled?: boolean;
 }
 
-const DroppableArea: React.FC<DroppableAreaProps> = ({
+export const DroppableArea: React.FC<DroppableAreaProps> = ({
   id,
   acceptTypes,
   onDrop,
-  onDragEnter,
-  onDragLeave,
-  onClick,
   className,
-  activeClassName,
-  children
+  activeClassName = 'bg-blue-100 dark:bg-blue-900/20 border-dashed border-blue-400',
+  children,
+  disabled = false
 }) => {
-  const { isDragging, draggedItem, registerDropTarget, unregisterDropTarget } = useDragDrop();
-  const [isActive, setIsActive] = useState(false);
-  const dropAreaRef = useRef<HTMLDivElement>(null);
+  const [isOver, setIsOver] = useState(false);
+  const { isDragging, draggedItemType } = useDragDrop();
   
-  useEffect(() => {
-    registerDropTarget(id, acceptTypes);
-    return () => {
-      unregisterDropTarget(id);
-    };
-  }, [id, acceptTypes, registerDropTarget, unregisterDropTarget]);
-  
-  const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
+  const handleDragOver = (e: React.DragEvent) => {
+    if (disabled) return;
     
-    if (isDragging && draggedItem && acceptTypes.includes(draggedItem.type)) {
-      setIsActive(true);
-      if (onDragEnter) {
-        onDragEnter(event);
-      }
-    }
-  };
-  
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-  };
-  
-  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsActive(false);
-    if (onDragLeave) {
-      onDragLeave(event);
-    }
-  };
-  
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsActive(false);
+    e.preventDefault();
+    e.stopPropagation();
     
     try {
-      const itemData = event.dataTransfer.getData('application/json');
-      if (itemData) {
-        const item: DragItem = JSON.parse(itemData);
-        if (acceptTypes.includes(item.type) && onDrop) {
-          onDrop(item, event);
+      // Try to read data type from the dataTransfer
+      if (e.dataTransfer.types.includes('application/json')) {
+        // Check if the dragged item type is acceptable
+        const rawData = e.dataTransfer.getData('application/json');
+        if (rawData) {
+          try {
+            const data = JSON.parse(rawData);
+            if (acceptTypes.includes(data.type)) {
+              setIsOver(true);
+              e.dataTransfer.dropEffect = 'move';
+            }
+          } catch (error) {
+            // If we can't parse the data, just check if we're in a general drag operation
+            if (isDragging && acceptTypes.includes(draggedItemType || '')) {
+              setIsOver(true);
+              e.dataTransfer.dropEffect = 'move';
+            }
+          }
+        } else if (isDragging && acceptTypes.includes(draggedItemType || '')) {
+          // If no data is available but we know we're dragging an acceptable type
+          setIsOver(true);
+          e.dataTransfer.dropEffect = 'move';
         }
       }
     } catch (error) {
-      console.error("Error processing dropped item:", error);
+      // Browser security might prevent reading data during dragover
+      // Just check if we're in a drag operation with an acceptable type
+      if (isDragging && acceptTypes.includes(draggedItemType || '')) {
+        setIsOver(true);
+        e.dataTransfer.dropEffect = 'move';
+      }
     }
   };
-
-  // Fix the style tag
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (disabled) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOver(false);
+  };
+  
+  const handleDrop = (e: React.DragEvent) => {
+    if (disabled) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOver(false);
+    
+    try {
+      const data = e.dataTransfer.getData('application/json');
+      if (data) {
+        const parsedData = JSON.parse(data);
+        if (acceptTypes.includes(parsedData.type)) {
+          onDrop(parsedData, e);
+        }
+      }
+    } catch (error) {
+      console.error('Error handling drop:', error);
+    }
+  };
+  
   return (
     <div
-      ref={dropAreaRef}
       id={`droppable-${id}`}
-      className={cn(
-        'drop-area',
-        className,
-        isActive && activeClassName
-      )}
-      onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      onClick={onClick}
+      className={cn(
+        'transition-colors duration-200',
+        className,
+        isOver && !disabled && activeClassName,
+        isDragging && acceptTypes.includes(draggedItemType || '') && !disabled && 'valid-drop-target'
+      )}
       data-droppable-id={id}
-      data-accept-types={acceptTypes.join(',')}
     >
-      <style>
-        {`
-        .drop-area-active {
-          outline: 2px dashed hsl(var(--primary));
-          background-color: rgba(var(--primary), 0.1);
-        }
-        .drop-target-highlight {
-          animation: highlight-pulse 0.8s ease;
-        }
-        @keyframes highlight-pulse {
-          0%, 100% { background-color: transparent; }
-          50% { background-color: rgba(var(--primary), 0.2); }
-        }
-        `}
-      </style>
       {children}
     </div>
   );

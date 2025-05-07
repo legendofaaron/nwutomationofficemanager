@@ -1,12 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MessageSquare, Save, Plus, Download, Upload } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { FileItem } from '@/components/schedule/ScheduleTypes';
 
 const SpreadsheetViewer = () => {
   const { currentFile, setCurrentFile, files, setFiles, aiAssistantOpen, setAiAssistantOpen } = useAppContext();
@@ -20,7 +19,7 @@ const SpreadsheetViewer = () => {
     );
   }
 
-  const [spreadsheetData, setSpreadsheetData] = useState<{ headers: string[]; rows: Record<string, any>[] }>(
+  const [spreadsheetData, setSpreadsheetData] = useState(
     currentFile.spreadsheetData || { headers: [], rows: [] }
   );
   
@@ -118,9 +117,9 @@ const SpreadsheetViewer = () => {
   };
   
   // Helper function to update the file in the files array
-  const updateFileInFilesArray = (updatedFile: FileItem) => {
+  const updateFileInFilesArray = (updatedFile: any) => {
     // Create a deep copy of files
-    const updateFiles = (filesArray: FileItem[]): FileItem[] => {
+    const updateFiles = (filesArray: any[]): any[] => {
       return filesArray.map(file => {
         if (file.id === updatedFile.id) {
           return updatedFile;
@@ -136,15 +135,6 @@ const SpreadsheetViewer = () => {
   
   // Export as CSV
   const exportAsCsv = () => {
-    if (!spreadsheetData || !spreadsheetData.headers || !spreadsheetData.rows) {
-      toast({
-        title: "Export Failed",
-        description: "No spreadsheet data to export",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     const headers = spreadsheetData.headers.join(',');
     const rows = spreadsheetData.rows.map(row => {
       return spreadsheetData.headers.map(header => row[header]).join(',');
@@ -164,27 +154,6 @@ const SpreadsheetViewer = () => {
       description: "Your spreadsheet has been exported as CSV"
     });
   };
-
-  // Initialize with default data if spreadsheetData is missing
-  useEffect(() => {
-    if (!currentFile.spreadsheetData) {
-      const defaultData = {
-        headers: ['Column 1', 'Column 2', 'Column 3'],
-        rows: [{ 'Column 1': '', 'Column 2': '', 'Column 3': '' }]
-      };
-      
-      setSpreadsheetData(defaultData);
-      
-      // Update the current file with default data
-      const updatedFile = {
-        ...currentFile,
-        spreadsheetData: defaultData
-      };
-      
-      setCurrentFile(updatedFile);
-      updateFileInFilesArray(updatedFile);
-    }
-  }, [currentFile]);
   
   return (
     <div className="relative h-full">

@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileDown, FileText } from 'lucide-react';
+import { FileDown, FileText, Filter } from 'lucide-react';
 import { Employee, Crew, Client, FilterType, ScheduleFilter } from './ScheduleTypes';
 
 interface ScheduleFilterBarProps {
@@ -12,8 +12,8 @@ interface ScheduleFilterBarProps {
   clients: Client[];
   currentFilter: ScheduleFilter;
   onFilterChange: (filter: ScheduleFilter) => void;
-  onDownloadPdf?: () => void;
-  onDownloadTxt?: () => void;
+  onDownloadPdf: () => void;
+  onDownloadTxt: () => void;
 }
 
 const ScheduleFilterBar: React.FC<ScheduleFilterBarProps> = ({
@@ -64,16 +64,19 @@ const ScheduleFilterBar: React.FC<ScheduleFilterBarProps> = ({
           onValueChange={(value) => handleFilterTypeChange(value as FilterType)}
           className="mr-2"
         >
-          <TabsList className="bg-slate-900 dark:bg-slate-800">
-            <TabsTrigger value="all" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">All Schedules</TabsTrigger>
-            <TabsTrigger value="employee" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">By Employee</TabsTrigger>
-            <TabsTrigger value="crew" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">By Crew</TabsTrigger>
-            <TabsTrigger value="client" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">By Client</TabsTrigger>
+          <TabsList>
+            <TabsTrigger value="all">All Schedules</TabsTrigger>
+            <TabsTrigger value="employee">By Employee</TabsTrigger>
+            <TabsTrigger value="crew">By Crew</TabsTrigger>
+            <TabsTrigger value="client">By Client</TabsTrigger>
           </TabsList>
         </Tabs>
 
         {currentFilter.type !== 'all' && (
           <div className="flex items-center gap-2">
+            <div className="flex-shrink-0">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+            </div>
             <Select
               value={currentFilter.id || ''}
               onValueChange={handleEntityChange}
@@ -107,7 +110,7 @@ const ScheduleFilterBar: React.FC<ScheduleFilterBarProps> = ({
         <Button
           size="sm"
           variant="outline"
-          className="gap-2 h-10 font-medium bg-gray-800 text-white border-gray-700 hover:bg-gray-700"
+          className="gap-2 h-9 font-medium"
           onClick={onDownloadPdf}
         >
           <FileDown className="h-4 w-4" />
@@ -116,7 +119,7 @@ const ScheduleFilterBar: React.FC<ScheduleFilterBarProps> = ({
         <Button
           size="sm"
           variant="outline"
-          className="gap-2 h-10 font-medium bg-white text-black border-gray-300 hover:bg-gray-100"
+          className="gap-2 h-9 font-medium"
           onClick={onDownloadTxt}
         >
           <FileText className="h-4 w-4" />

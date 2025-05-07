@@ -15,11 +15,10 @@ import { toast } from 'sonner';
 interface EmployeeScheduleDownloadProps {
   employeeId: string;
   employeeName: string;
-  tasks?: Task[];
-  onClose?: () => void;
+  tasks: Task[];
 }
 
-const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClose }: EmployeeScheduleDownloadProps) => {
+const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks }: EmployeeScheduleDownloadProps) => {
   const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(),
     to: undefined,
@@ -60,7 +59,6 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
         name: employeeName
       });
       toast.success(`Schedule for ${employeeName} downloaded as PDF`);
-      if (onClose) onClose();
     } catch (error) {
       console.error("Error downloading PDF:", error);
       toast.error("Failed to download schedule as PDF");
@@ -82,7 +80,6 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
         name: employeeName
       });
       toast.success(`Schedule for ${employeeName} downloaded as TXT`);
-      if (onClose) onClose();
     } catch (error) {
       console.error("Error downloading TXT:", error);
       toast.error("Failed to download schedule as TXT");

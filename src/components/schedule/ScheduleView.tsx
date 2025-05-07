@@ -1,405 +1,648 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Calendar as CalendarIcon, Users, User, Building2 } from 'lucide-react';
-import { Task, Crew, Employee, Client, ClientLocation, ScheduleFilter } from './ScheduleTypes';
-import TaskCalendarView from './calendar/TaskCalendarView';
-import TaskListView from './TaskListView';
-import TaskEditDialog from './taskEdit/TaskEditDialog';
-import { generateMockTasks, generateMockEmployees, generateMockCrews, generateMockClients, generateMockClientLocations } from './MockScheduleData';
-import ScheduleFilterBar from './ScheduleFilterBar';
-import { useAppContext } from '@/context/AppContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Plus, CalendarIcon, List, FileUp, Pencil, Users, User, MapPin, FileDown, FileText } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useAppContext } from '@/context/AppContext';
+import { Task, TaskFormData, AssignmentType, LocationType, ScheduleFilter, FilterType } from './ScheduleTypes';
 import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
 
-const ScheduleView: React.FC = () => {
-  // State for tasks and related data
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [crews, setCrews] = useState<Crew[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [clientLocations, setClientLocations] = useState<ClientLocation[]>([]);
-  
-  // Get global calendar date from AppContext
-  const { calendarDate, setCalendarDate, todos, setTodos } = useAppContext();
-  
-  // UI state
-  const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<ScheduleFilter>({ type: 'all' });
+// Import components
+import TaskCalendarView from './TaskCalendarView';
+import TaskListView from './TaskListView';
+import TeamEventDialog from './TeamEventDialog';
+import TaskEditDialog from './TaskEditDialog';
+import UploadAnalyzeSection from './UploadAnalyzeSection';
+import ScheduleFilterBar from './ScheduleFilterBar';
 
-  // Sync with global calendar date
+const ScheduleView = () => {
+  const { 
+    employees, 
+    crews, 
+    clients, 
+    clientLocations, 
+    calendarDate, 
+    setCalendarDate,
+    todos,
+    setTodos 
+  } = useAppContext();
+  
+  const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
+  
+  // Initialize schedule filter state
+  const [currentFilter, setCurrentFilter] = useState<ScheduleFilter>({
+    type: 'all'
+  });
+  
+  // Synchronize tasks with todos from AppContext
+  const [tasks, setTasks] = useState<Task[]>([
+    {
+      id: '1',
+      title: 'Team Meeting',
+      date: new Date(),
+      completed: false,
+      assignedTo: 'John Smith',
+      startTime: '09:00',
+      endTime: '10:00',
+      location: 'Conference Room'
+    },
+    {
+      id: '2',
+      title: 'Project Review',
+      date: new Date(),
+      completed: true,
+      assignedTo: 'Sarah Johnson',
+      startTime: '14:00',
+      endTime: '15:00',
+      location: 'Office'
+    },
+    {
+      id: '3',
+      title: 'Site Inspection',
+      date: new Date(),
+      completed: false,
+      crew: ['John Smith', 'Michael Brown'],
+      startTime: '13:00',
+      endTime: '16:00',
+      location: 'Client Site',
+      clientId: '1',
+      clientLocationId: '1'
+    },
+  ]);
+  
+  // Get filtered tasks based on current filter
+  const getFilteredTasks = (): Task[] => {
+    if (currentFilter.type === 'all') {
+      return tasks;
+    }
+    
+    if (currentFilter.type === 'employee' && currentFilter.name) {
+      return tasks.filter(task => 
+        task.assignedTo === currentFilter.name || 
+        (task.crew && task.crew.includes(currentFilter.name || ''))
+      );
+    }
+    
+    if (currentFilter.type === 'crew' && currentFilter.id) {
+      return tasks.filter(task => task.crewId === currentFilter.id);
+    }
+    
+    if (currentFilter.type === 'client' && currentFilter.id) {
+      return tasks.filter(task => task.clientId === currentFilter.id);
+    }
+    
+    return tasks;
+  };
+  
+  const filteredTasks = getFilteredTasks();
+  
+  const [currentEditTask, setCurrentEditTask] = useState<Task | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // Effect to synchronize selected date with App context
   useEffect(() => {
-    if (calendarDate && calendarDate.toDateString() !== selectedDate.toDateString()) {
+    if (calendarDate && calendarDate.getTime() !== selectedDate.getTime()) {
       setSelectedDate(calendarDate);
     }
-  }, [calendarDate, selectedDate]);
-  
-  // Update global state when local date changes
+  }, [calendarDate]);
+
+  // Effect to update global state when local selected date changes
   useEffect(() => {
-    if (selectedDate) {
-      setCalendarDate(selectedDate);
-    }
+    setCalendarDate(selectedDate);
   }, [selectedDate, setCalendarDate]);
-  
-  // Load mock data and synchronize with global todos
+
+  // Effect to keep todos and tasks synchronized
   useEffect(() => {
-    const mockEmployees = generateMockEmployees();
-    const mockCrews = generateMockCrews(mockEmployees);
-    const mockClients = generateMockClients();
-    const mockClientLocations = generateMockClientLocations(mockClients);
-    
-    // Convert global todos to tasks
-    const todoTasks: Task[] = todos.map(todo => ({
-      id: todo.id,
-      title: todo.text,
-      description: '',
-      date: todo.date,
-      completed: todo.completed,
-      assignedTo: todo.assignedTo,
-      crew: todo.crewMembers,
-      crewId: todo.crewId,
-      crewName: todo.crewName,
-      startTime: todo.startTime,
-      endTime: todo.endTime,
-      location: todo.location
+    // Convert tasks to todos format for global state
+    const updatedTodos = tasks.map(task => ({
+      id: task.id,
+      text: task.title,
+      completed: task.completed,
+      date: task.date,
+      assignedTo: task.assignedTo,
+      crew: task.crew,
+      location: task.location,
+      startTime: task.startTime,
+      endTime: task.endTime
     }));
     
-    // Generate some additional mock tasks
-    const mockTasks = generateMockTasks(mockEmployees, mockCrews, mockClients, mockClientLocations);
-    
-    // Combine todo tasks and mock tasks, avoiding duplicates
-    const combinedTasks = [...todoTasks];
-    mockTasks.forEach(mockTask => {
-      const exists = combinedTasks.some(task => task.id === mockTask.id);
-      if (!exists) {
-        combinedTasks.push(mockTask);
-      }
-    });
-    
-    setEmployees(mockEmployees);
-    setCrews(mockCrews);
-    setClients(mockClients);
-    setClientLocations(mockClientLocations);
-    setTasks(combinedTasks);
-  }, [todos]);
+    setTodos(updatedTodos);
+  }, [tasks, setTodos]);
 
-  // Filter tasks based on active filter
-  const filteredTasks = tasks.filter(task => {
-    if (activeFilter.type === 'all') return true;
-    if (activeFilter.type === 'employee' && activeFilter.name) {
-      return task.assignedTo === activeFilter.name || 
-             (task.crew && task.crew.includes(activeFilter.name));
-    }
-    if (activeFilter.type === 'crew' && activeFilter.id) {
-      return task.crewId === activeFilter.id;
-    }
-    if (activeFilter.type === 'client' && activeFilter.id) {
-      return task.clientId === activeFilter.id;
-    }
-    return true;
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [teamEventDialogOpen, setTeamEventDialogOpen] = useState(false);
+  const [droppedCrewId, setDroppedCrewId] = useState<string | null>(null);
+  const [assignmentType, setAssignmentType] = useState<AssignmentType>('individual');
+  const [locationType, setLocationType] = useState<LocationType>('custom');
+  
+  // Add state for crew assignment mode
+  const [showCrewPanel, setShowCrewPanel] = useState(false);
+  
+  const [formData, setFormData] = useState<TaskFormData>({
+    title: '',
+    assignedTo: '',
+    assignedCrew: '',
+    startTime: '',
+    endTime: '',
+    location: '',
+    clientId: '',
+    clientLocationId: ''
   });
 
-  // Task actions
-  const handleToggleTaskCompletion = useCallback((taskId: string) => {
-    // Update local tasks
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === taskId 
-          ? { ...task, completed: !task.completed } 
-          : task
-      )
-    );
-    
-    // Update global todos if the task exists there
-    const todoExists = todos.some(todo => todo.id === taskId);
-    if (todoExists) {
-      setTodos(prevTodos => 
-        prevTodos.map(todo => 
-          todo.id === taskId 
-            ? { ...todo, completed: !todo.completed } 
-            : todo
-        )
-      );
-    }
-  }, [todos, setTodos]);
-
-  const handleMoveTask = useCallback((taskId: string, newDate: Date) => {
-    // Update local tasks
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === taskId 
-          ? { ...task, date: newDate } 
-          : task
-      )
-    );
-    
-    // Update global todos if the task exists there
-    const todoExists = todos.some(todo => todo.id === taskId);
-    if (todoExists) {
-      setTodos(prevTodos => 
-        prevTodos.map(todo => 
-          todo.id === taskId 
-            ? { ...todo, date: newDate } 
-            : todo
-        )
-      );
-      
-      toast.success("Task updated in all calendars");
-    }
-    
-    // Update the selected date to match the task's new date
-    setSelectedDate(newDate);
-    setCalendarDate(newDate);
-  }, [todos, setTodos, setCalendarDate]);
-
-  const handleEditTask = useCallback((taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (task) {
-      setEditingTask(task);
-      setIsEditDialogOpen(true);
-    }
-  }, [tasks]);
-
-  const handleSaveTask = useCallback((taskData: Partial<Task>, isNew: boolean) => {
-    if (!taskData.id) return;
-    
-    if (isNew) {
-      // Add new task
-      const newTask: Task = {
-        id: taskData.id,
-        title: taskData.title || 'Untitled Task',
-        description: taskData.description || '',
-        date: taskData.date || new Date(),
-        completed: taskData.completed || false,
-        assignedTo: taskData.assignedTo,
-        crew: taskData.crew,
-        crewId: taskData.crewId,
-        crewName: taskData.crewName,
-        clientId: taskData.clientId,
-        clientName: taskData.clientName,
-        startTime: taskData.startTime,
-        endTime: taskData.endTime,
-        location: taskData.location,
+  const handleAddTask = () => {
+    if (formData.title && formData.startTime && formData.endTime) {
+      const task: Task = {
+        id: Date.now().toString(),
+        title: formData.title,
+        date: selectedDate,
+        completed: false,
+        startTime: formData.startTime,
+        endTime: formData.endTime
       };
       
-      setTasks(prev => [...prev, newTask]);
-      
-      // Add to todos as well
-      setTodos(prev => [...prev, {
-        id: newTask.id,
-        text: newTask.title,
-        completed: newTask.completed,
-        date: newTask.date,
-        assignedTo: newTask.assignedTo,
-        crewMembers: newTask.crew,
-        crewId: newTask.crewId,
-        crewName: newTask.crewName,
-        startTime: newTask.startTime,
-        endTime: newTask.endTime,
-        location: newTask.location
-      }]);
-      
-      toast.success("Task created successfully");
-    } else {
-      // Update existing task
-      setTasks(prev => 
-        prev.map(task => 
-          task.id === taskData.id ? { ...task, ...taskData } : task
-        )
-      );
-      
-      // Update in todos if it exists there
-      const todoExists = todos.some(todo => todo.id === taskData.id);
-      if (todoExists) {
-        setTodos(prevTodos => 
-          prevTodos.map(todo => 
-            todo.id === taskData.id
-              ? { 
-                  ...todo, 
-                  text: taskData.title || todo.text,
-                  completed: taskData.completed ?? todo.completed,
-                  date: taskData.date || todo.date,
-                  assignedTo: taskData.assignedTo,
-                  crewMembers: taskData.crew,
-                  crewId: taskData.crewId,
-                  crewName: taskData.crewName,
-                  startTime: taskData.startTime,
-                  endTime: taskData.endTime,
-                  location: taskData.location
-                } 
-              : todo
-          )
-        );
-        
-        toast.success("Task updated in all calendars");
-      } else {
-        toast.success("Task updated successfully");
+      // Handle assignment based on selected type
+      if (assignmentType === 'individual' && formData.assignedTo) {
+        task.assignedTo = formData.assignedTo;
+      } else if (assignmentType === 'crew' && formData.assignedCrew) {
+        // Get crew members' names
+        const selectedCrew = crews.find(crew => crew.id === formData.assignedCrew);
+        if (selectedCrew) {
+          task.crew = selectedCrew.members.map(memberId => {
+            const employee = employees.find(emp => emp.id === memberId);
+            return employee ? employee.name : '';
+          }).filter(name => name !== '');
+          task.crewId = formData.assignedCrew;
+        }
       }
-    }
-    
-    // Close dialog and reset editing task
-    setIsEditDialogOpen(false);
-    setEditingTask(null);
-    
-    // If the date was changed, update the selected date
-    if (taskData.date) {
-      setSelectedDate(taskData.date);
-      setCalendarDate(taskData.date);
-    }
-  }, [todos, setTodos, setCalendarDate]);
-
-  const handleDeleteTask = useCallback((taskId: string) => {
-    // Remove from tasks
-    setTasks(prev => prev.filter(task => task.id !== taskId));
-    
-    // Remove from todos if it exists there
-    const todoExists = todos.some(todo => todo.id === taskId);
-    if (todoExists) {
-      setTodos(prev => prev.filter(todo => todo.id !== taskId));
-      toast.success("Task removed from all calendars");
+      
+      // Handle location based on selected type
+      if (locationType === 'custom' && formData.location) {
+        task.location = formData.location;
+      } else if (locationType === 'client' && formData.clientId && formData.clientLocationId) {
+        const client = clients.find(c => c.id === formData.clientId);
+        const location = clientLocations.find(l => l.id === formData.clientLocationId);
+        
+        if (client && location) {
+          task.location = `${client.name} - ${location.name}`;
+          task.clientId = formData.clientId;
+          task.clientLocationId = formData.clientLocationId;
+        }
+      }
+      
+      setTasks([...tasks, task]);
+      resetFormData();
+      setIsTaskDialogOpen(false);
+      toast.success("Task scheduled successfully");
     } else {
-      toast.success("Task deleted successfully");
+      toast.error("Please fill in all required fields");
     }
-    
-    // Close dialog and reset editing task
-    setIsEditDialogOpen(false);
-    setEditingTask(null);
-  }, [todos, setTodos]);
+  };
 
-  const handleAddNewTask = useCallback(() => {
-    // Create a new task template
-    const newTask: Task = {
-      id: `task-${Date.now()}`,
-      title: 'New Task',
-      date: selectedDate,
-      completed: false,
-      startTime: '09:00',
-      endTime: '10:00'
-    };
-    
-    // Set for editing
-    setEditingTask(newTask);
-    setIsEditDialogOpen(true);
-  }, [selectedDate]);
+  const resetFormData = () => {
+    setFormData({ 
+      title: '', 
+      assignedTo: '', 
+      assignedCrew: '', 
+      startTime: '', 
+      endTime: '', 
+      location: '',
+      clientId: '',
+      clientLocationId: ''
+    });
+  };
 
-  // Handle date change (sync with global date)
-  const handleDateChange = useCallback((date: Date | undefined) => {
-    if (date) {
-      setSelectedDate(date);
-      setCalendarDate(date);
-    }
-  }, [setCalendarDate]);
-
-  // Handle schedule downloads
-  const handleDownloadPdf = useCallback(() => {
+  // Handler for downloading schedule as TXT
+  const handleDownloadTxt = () => {
     try {
-      downloadScheduleAsPdf(filteredTasks, activeFilter);
-      toast.success("Schedule downloaded as PDF");
-    } catch (error) {
-      console.error("Error downloading PDF:", error);
-      toast.error("Failed to download schedule");
-    }
-  }, [filteredTasks, activeFilter]);
-
-  const handleDownloadTxt = useCallback(() => {
-    try {
-      downloadScheduleAsTxt(filteredTasks, activeFilter);
-      toast.success("Schedule downloaded as TXT");
+      downloadScheduleAsTxt(tasks, currentFilter);
+      toast.success("Schedule downloaded as TXT file");
     } catch (error) {
       console.error("Error downloading TXT:", error);
-      toast.error("Failed to download schedule");
+      toast.error("Failed to download schedule as TXT");
     }
-  }, [filteredTasks, activeFilter]);
+  };
+
+  // Handler for downloading schedule as PDF
+  const handleDownloadPdf = () => {
+    try {
+      downloadScheduleAsPdf(tasks, currentFilter);
+      toast.success("Schedule downloaded as PDF file");
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      toast.error("Failed to download schedule as PDF");
+    }
+  };
+
+  // Handle creating team event from dropped crew
+  const handleCreateTeamEvent = () => {
+    handleAddTask();
+    setTeamEventDialogOpen(false);
+    setDroppedCrewId(null);
+  };
+
+  const handleToggleTaskCompletion = (taskId: string) => {
+    setTasks(tasks.map(t =>
+      t.id === taskId ? { ...t, completed: !t.completed } : t
+    ));
+    
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      toast.success(
+        task.completed ? "Task marked as incomplete" : "Task marked as complete",
+        { description: task.title }
+      );
+    }
+  };
+
+  // Handle opening task dialog with pre-filled date
+  const handleOpenAddTaskDialog = (type: 'individual' | 'crew' = 'individual') => {
+    // Reset form data
+    resetFormData();
+    
+    // Pre-fill with default times
+    setFormData({
+      ...formData,
+      startTime: '09:00',
+      endTime: '10:00'
+    });
+    
+    // Set assignment type based on button clicked
+    setAssignmentType(type);
+    
+    // Open the dialog
+    setIsTaskDialogOpen(true);
+  };
+
+  // Helper to open crew visit task dialog
+  const handleOpenCrewVisitDialog = () => {
+    resetFormData();
+    
+    setFormData({
+      ...formData,
+      title: 'Client Site Visit',
+      startTime: '09:00',
+      endTime: '16:00'
+    });
+    
+    setAssignmentType('crew');
+    setLocationType('client');
+    setIsTaskDialogOpen(true);
+  };
+
+  // Handle editing a task
+  const handleEditTask = (taskId: string) => {
+    const taskToEdit = tasks.find(t => t.id === taskId);
+    if (taskToEdit) {
+      setCurrentEditTask(taskToEdit);
+      setIsEditDialogOpen(true);
+    }
+  };
+
+  // Handle saving task edit changes
+  const handleSaveTaskChanges = (taskId: string, updatedData: Partial<Task>) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, ...updatedData } : task
+    ));
+
+    toast.success("Task updated successfully", { 
+      description: updatedData.title || "Changes have been saved" 
+    });
+  };
+
+  // Handle applying analyzed schedule data
+  const handleApplyScheduleData = (newTaskFromFile: Task) => {
+    setTasks([...tasks, newTaskFromFile]);
+    toast.success("New task added from analyzed file");
+  };
+
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Add classes for drop zone visual feedback
+    if (e.currentTarget.classList.contains('schedule-drop-zone')) {
+      e.currentTarget.classList.add('drag-over');
+    }
+  };
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Remove visual feedback classes
+    if (e.currentTarget.classList.contains('schedule-drop-zone')) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Remove visual feedback
+    if (e.currentTarget.classList.contains('schedule-drop-zone')) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+    
+    try {
+      const data = e.dataTransfer.getData('application/json');
+      if (data) {
+        const dragData = JSON.parse(data);
+        
+        // Handle crew drop
+        if (dragData.type === 'crew') {
+          setDroppedCrewId(dragData.id);
+          
+          // Pre-fill the form with crew data
+          setFormData({
+            ...formData,
+            title: `${dragData.name} Team Meeting`,
+            assignedCrew: dragData.id,
+            assignedTo: '',
+            startTime: '09:00',
+            endTime: '10:00'
+          });
+          
+          // Set assignment type to crew
+          setAssignmentType('crew');
+          setTeamEventDialogOpen(true);
+          
+          toast.success(`Creating event for ${dragData.name} crew`, {
+            description: "Fill in the details to schedule this team event"
+          });
+        }
+        
+        // Handle task drop for reordering or moving to a different day
+        else if (dragData.type === 'task') {
+          const taskId = dragData.id;
+          const task = tasks.find(t => t.id === taskId);
+          
+          if (task && task.date.toDateString() !== selectedDate.toDateString()) {
+            // Update the task date
+            setTasks(tasks.map(t => 
+              t.id === taskId 
+                ? { ...t, date: selectedDate } 
+                : t
+            ));
+            
+            toast.success(`Task moved to ${selectedDate.toLocaleDateString()}`, {
+              description: task.title
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error handling drop:', error);
+      toast.error("Error processing the dragged item");
+    }
+  };
+
+  // Handle moving a task to a different date
+  const handleMoveTask = (taskId: string, newDate: Date) => {
+    const task = tasks.find(t => t.id === taskId);
+    
+    if (task && task.date.toDateString() !== newDate.toDateString()) {
+      // Create task copy with updated date
+      setTasks(tasks.map(t => 
+        t.id === taskId 
+          ? { ...t, date: newDate } 
+          : t
+      ));
+      
+      toast.success(`Task "${task.title}" moved to ${newDate.toLocaleDateString()}`, {
+        description: `${task.startTime} - ${task.endTime}`
+      });
+    }
+  };
+
+  // Handle filter change
+  const handleFilterChange = (filter: ScheduleFilter) => {
+    setCurrentFilter(filter);
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">Schedule</h1>
+    <div 
+      className="p-4 schedule-drop-zone transition-colors duration-300 rounded-lg" 
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Schedule Management</h1>
         
-        <div className="flex items-center gap-4">
-          <ScheduleFilterBar 
-            employees={employees}
-            crews={crews}
-            clients={clients}
-            currentFilter={activeFilter}
-            onFilterChange={setActiveFilter}
-            onDownloadPdf={handleDownloadPdf}
-            onDownloadTxt={handleDownloadTxt}
-          />
+        <div className="flex space-x-2">
+          {/* Download buttons */}
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="gap-2 h-9 font-medium"
+            onClick={handleDownloadPdf}
+          >
+            <FileDown className="h-4 w-4" />
+            PDF
+          </Button>
+          
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="gap-2 h-9 font-medium"
+            onClick={handleDownloadTxt}
+          >
+            <FileText className="h-4 w-4" />
+            TXT
+          </Button>
+          
+          <Button 
+            size="sm" 
+            className="gap-2 h-9 font-medium"
+            onClick={() => handleOpenAddTaskDialog('individual')}
+          >
+            <User className="h-4 w-4" />
+            Employee Task
+          </Button>
+          
+          <Button 
+            size="sm" 
+            className="gap-2 h-9 font-medium"
+            onClick={() => handleOpenAddTaskDialog('crew')}
+          >
+            <Users className="h-4 w-4" />
+            Crew Task
+          </Button>
+          
+          <Button 
+            size="sm" 
+            variant="secondary" 
+            className="gap-2 h-9 font-medium"
+            onClick={handleOpenCrewVisitDialog}
+          >
+            <MapPin className="h-4 w-4" />
+            Client Visit
+          </Button>
         </div>
       </div>
       
-      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'calendar' | 'list')} className="space-y-4">
-        <div className="flex justify-between items-center">
-          <TabsList>
-            <TabsTrigger value="calendar" className="flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4" />
-              Calendar View
-            </TabsTrigger>
-            <TabsTrigger value="list" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              List View
-            </TabsTrigger>
-          </TabsList>
-          
-          <div className="text-sm text-muted-foreground">
-            {activeFilter.type !== 'all' && (
-              <span className="flex items-center gap-1.5">
-                {activeFilter.type === 'employee' && <User className="h-3.5 w-3.5" />}
-                {activeFilter.type === 'crew' && <Users className="h-3.5 w-3.5" />}
-                {activeFilter.type === 'client' && <Building2 className="h-3.5 w-3.5" />}
-                Filtered by {activeFilter.type}: {activeFilter.name}
-              </span>
-            )}
-          </div>
+      {/* Filter bar */}
+      <ScheduleFilterBar
+        employees={employees}
+        crews={crews}
+        clients={clients}
+        currentFilter={currentFilter}
+        onFilterChange={handleFilterChange}
+        onDownloadPdf={handleDownloadPdf}
+        onDownloadTxt={handleDownloadTxt}
+      />
+      
+      {/* Show a message when filtered schedule is empty */}
+      {filteredTasks.length === 0 && currentFilter.type !== 'all' && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+          <h3 className="text-blue-800 dark:text-blue-300 font-medium">No tasks found</h3>
+          <p className="text-blue-600 dark:text-blue-400 mt-1">
+            There are no tasks scheduled for the selected {currentFilter.type}
+            {currentFilter.name ? `: ${currentFilter.name}` : ''}
+          </p>
         </div>
+      )}
+      
+      <Tabs defaultValue="calendar" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="calendar" className="gap-2">
+            <CalendarIcon className="h-4 w-4" />
+            Calendar View
+          </TabsTrigger>
+          <TabsTrigger value="list" className="gap-2">
+            <List className="h-4 w-4" />
+            List View
+          </TabsTrigger>
+        </TabsList>
         
-        <TabsContent value="calendar" className="m-0">
-          <TaskCalendarView 
+        <TabsContent value="calendar" className="mt-0">
+          <TaskCalendarView
             tasks={filteredTasks}
             selectedDate={selectedDate}
-            onSelectDate={handleDateChange}
+            onSelectDate={(date) => date && setSelectedDate(date)}
             onToggleTaskCompletion={handleToggleTaskCompletion}
             crews={crews}
-            onAddNewTask={handleAddNewTask}
+            onAddNewTask={handleOpenAddTaskDialog}
             onMoveTask={handleMoveTask}
             onEditTask={handleEditTask}
           />
         </TabsContent>
         
-        <TabsContent value="list" className="m-0">
-          <TaskListView 
+        <TabsContent value="list" className="mt-0">
+          <TaskListView
             tasks={filteredTasks}
             onToggleTaskCompletion={handleToggleTaskCompletion}
-            onEditTask={handleEditTask}
             crews={crews}
             clients={clients}
             clientLocations={clientLocations}
+            onEditTask={handleEditTask}
           />
         </TabsContent>
       </Tabs>
-      
+
+      {/* Upload and Analyze Section */}
+      <div className="mt-8 border border-border rounded-lg p-6 bg-card">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/30">
+            <FileUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <h2 className="text-xl font-semibold">Upload & Analyze Schedule</h2>
+        </div>
+        
+        <UploadAnalyzeSection 
+          onApplyScheduleData={handleApplyScheduleData}
+          selectedDate={selectedDate}
+        />
+      </div>
+
+      {/* Guide Panel */}
+      <div className="mt-6 border border-blue-200 dark:border-blue-800 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
+        <h3 className="font-medium text-lg mb-2 text-blue-700 dark:text-blue-400">Scheduling Guide</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="flex flex-col gap-2">
+            <div className="font-medium text-blue-800 dark:text-blue-300">Individual Tasks</div>
+            <p className="text-blue-700 dark:text-blue-400">Assign tasks to specific employees with the "Employee Task" button.</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="font-medium text-blue-800 dark:text-blue-300">Crew Tasks</div>
+            <p className="text-blue-700 dark:text-blue-400">Schedule tasks for entire crews with the "Crew Task" button.</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="font-medium text-blue-800 dark:text-blue-300">Client Visits</div>
+            <p className="text-blue-700 dark:text-blue-400">Use "Client Visit" to send a crew to a client's location.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Team Event Dialog for dropped crews */}
+      <TeamEventDialog 
+        open={teamEventDialogOpen}
+        onOpenChange={setTeamEventDialogOpen}
+        onCreateEvent={handleCreateTeamEvent}
+        formData={formData}
+        setFormData={setFormData}
+        assignmentType={assignmentType}
+        setAssignmentType={setAssignmentType}
+        locationType={locationType}
+        setLocationType={setLocationType}
+        selectedDate={selectedDate}
+        crews={crews}
+        employees={employees}
+        clients={clients}
+        clientLocations={clientLocations}
+      />
+
+      {/* Task Dialog */}
+      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {assignmentType === 'individual' 
+                ? 'Schedule Employee Task' 
+                : locationType === 'client' 
+                  ? 'Schedule Crew Client Visit' 
+                  : 'Schedule Crew Task'}
+            </DialogTitle>
+          </DialogHeader>
+          <TeamEventDialog 
+            open={isTaskDialogOpen}
+            onOpenChange={setIsTaskDialogOpen}
+            onCreateEvent={handleAddTask}
+            formData={formData}
+            setFormData={setFormData}
+            assignmentType={assignmentType}
+            setAssignmentType={setAssignmentType}
+            locationType={locationType}
+            setLocationType={setLocationType}
+            selectedDate={selectedDate}
+            crews={crews}
+            employees={employees}
+            clients={clients}
+            clientLocations={clientLocations}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Task Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          {editingTask && (
-            <TaskEditDialog
-              task={editingTask}
-              employees={employees}
-              crews={crews}
-              clients={clients}
-              clientLocations={clientLocations}
-              onSaveChanges={handleSaveTask}
-              onDelete={handleDeleteTask}
-              onCancel={() => {
-                setIsEditDialogOpen(false);
-                setEditingTask(null);
-              }}
-            />
-          )}
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+          </DialogHeader>
+          <TaskEditDialog
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            onSaveChanges={handleSaveTaskChanges}
+            task={currentEditTask}
+            crews={crews}
+            employees={employees}
+            clients={clients}
+            clientLocations={clientLocations}
+          />
         </DialogContent>
       </Dialog>
     </div>

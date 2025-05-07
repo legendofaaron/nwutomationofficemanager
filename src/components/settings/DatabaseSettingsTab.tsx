@@ -23,7 +23,6 @@ import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { DatabaseTable } from '@/components/schedule/ScheduleTypes';
 
 interface DatabaseConnection {
   type: 'supabase' | 'postgres' | 'pgvector';
@@ -361,7 +360,7 @@ export const DatabaseSettingsTab = () => {
             </p>
             
             <ScrollArea className="h-[300px] rounded-md border">
-              {databaseTables.map((table: DatabaseTable) => (
+              {databaseTables.map((table) => (
                 <div key={table.id} className="flex flex-row items-center justify-between p-4 hover:bg-accent/50 border-b last:border-b-0">
                   <div className="space-y-0.5">
                     <h4 className="text-base font-medium flex items-center">
@@ -369,7 +368,7 @@ export const DatabaseSettingsTab = () => {
                       {table.name}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      {table.rows?.length || 0} rows, {table.columns?.length || 0} columns
+                      {table.rows.length} rows, {table.columns.length} columns
                     </p>
                   </div>
                   <div className="flex gap-2">

@@ -20,7 +20,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 // Protected route component with enhanced security
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, isLoading, isDemoMode } = useAuth();
-  const location = useLocation();
   
   if (isLoading) {
     return <LoadingScreen />;
@@ -48,6 +47,12 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppRoutes = () => {
+  const { isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <ErrorBoundary>
       <Routes>

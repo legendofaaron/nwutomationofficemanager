@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Lock, User, ArrowRight, AlertCircle, Shield, AtSign } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, AlertCircle, Shield, AtSign } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/Logo';
 import { useAppContext } from '@/context/AppContext';
@@ -21,6 +20,7 @@ const formSchema = z.object({
     .min(3, { message: 'Username must be at least 3 characters' })
     .max(20, { message: 'Username must be less than 20 characters' })
     .regex(/^[a-z0-9_]+$/, { message: 'Username can only contain lowercase letters, numbers, and underscores' }),
+  email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
   confirmPassword: z.string().min(6, { message: 'Confirm password must be at least 6 characters' }),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -52,6 +52,7 @@ const Signup = () => {
     defaultValues: {
       name: '',
       username: '',
+      email: '',
       password: '',
       confirmPassword: '',
     },
@@ -62,13 +63,15 @@ const Signup = () => {
     setSignupError(null);
     
     try {
-      // Sign up the user with local auth - using username-only approach
+      // Sign up the user with local auth - updated to match the correct parameter structure
       const { data, error } = await localAuth.signUp({
-        username: values.username,
+        email: values.email,
         password: values.password,
+        username: values.username, // Add username as a top-level parameter
         options: {
           data: {
             full_name: values.name,
+            // Note: username is now passed as a top-level parameter, not in options.data
           }
         }
       });
@@ -80,11 +83,11 @@ const Signup = () => {
       // Successful signup
       toast({
         title: "Account created",
-        description: "Your account has been created successfully.",
+        description: "You're now signed up for Office Manager",
       });
       
-      // User is signed up and logged in - now redirect to dashboard
-      navigate('/dashboard');
+      // User is signed up and logged in - now redirect to payment page instead of dashboard
+      navigate('/payment');
       
     } catch (error) {
       // Handle signup errors
@@ -160,6 +163,27 @@ const Signup = () => {
                           <AtSign className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                           <Input 
                             placeholder="Choose a username" 
+                            className="pl-10" 
+                            {...field} 
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                          <Input 
+                            placeholder="Enter your email" 
                             className="pl-10" 
                             {...field} 
                           />

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { localAuth, LocalSession, LocalUser } from '@/services/localAuth';
@@ -55,9 +56,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // If there's no active subscription in the database, check with the payment provider
       if (!data) {
-        // For simplicity in the fix, we'll assume no subscription without API check
-        setHasActiveSubscription(false);
-        return false;
+        try {
+          // Try Stripe first
+          const stripeResponse = await supabase.functions.invoke('stripe-integration', {
+            body: {
+              action: 'verify_payment_status',
+              userId: user.id,
+            },
+          });
+          
+          if (!stripeResponse.data?.success) {
+            // Try PayPal if Stripe check failed
+            const paypalResponse = await supabase.functions.invoke('paypal-integration', {
+              body: {
+                action: 'verify_payment_status',
+                userId: user.id,
+              },
+            });
+            
+            if (!paypalResponse.data?.success) {
+              console.error('Payment provider verification failed');
+              setHasActiveSubscription(false);
+              return false;
+            }
+            
+            // Update from PayPal verification response
+            const isActive = paypalResponse.data.status === 'active';
+            setHasActiveSubscription(isActive);
+            return isActive;
+          }
+          
+          // Update from Stripe verification response
+          const isActive = stripeResponse.data.status === 'active';
+          setHasActiveSubscription(isActive);
+          return isActive;
+          
+        } catch (verifyError) {
+          console.error('Error verifying with payment provider:', verifyError);
+          setHasActiveSubscription(false);
+          return false;
+        }
       }
       
       // Use the database result
@@ -71,21 +109,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
-  // Function to verify payment status - simplified for fix
+  // Function to verify payment status
   const verifyPayment = useCallback(async (): Promise<void> => {
     if (!user || isVerifyingPayment) return;
     
     setIsVerifyingPayment(true);
     try {
-      // Simplified check without external API calls
-      const { data } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .maybeSingle();
+      // Try Stripe verification
+      const stripeResponse = await supabase.functions.invoke('stripe-integration', {
+        body: {
+          action: 'verify_payment_status',
+          userId: user.id,
+        },
+      });
       
-      setHasActiveSubscription(!!data);
+      if (stripeResponse.data?.status === 'active') {
+        setHasActiveSubscription(true);
+        return;
+      }
+      
+      // Try PayPal verification
+      const paypalResponse = await supabase.functions.invoke('paypal-integration', {
+        body: {
+          action: 'verify_payment_status',
+          userId: user.id,
+        },
+      });
+      
+      if (paypalResponse.data?.status === 'active') {
+        setHasActiveSubscription(true);
+      }
     } catch (error) {
       console.error('Error verifying payment status:', error);
     } finally {

@@ -8,7 +8,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { User, Lock, ArrowRight, AlertCircle, Shield, Presentation, Sparkles } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, AlertCircle, Shield, Presentation } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/Logo';
 import { useAppContext } from '@/context/AppContext';
@@ -35,13 +35,9 @@ const Login = () => {
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
-      try {
-        const { data } = await localAuth.getSession();
-        if (data.session) {
-          navigate('/dashboard');
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
+      const { data } = await localAuth.getSession();
+      if (data.session) {
+        navigate('/dashboard');
       }
     };
     
@@ -236,14 +232,11 @@ const Login = () => {
               <Button 
                 type="button" 
                 variant="outline" 
-                className="w-full relative overflow-hidden group transition-all duration-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 dark:from-[#1A1F2C] dark:to-[#221F26] dark:hover:from-[#262B38] dark:hover:to-[#2E2B33] border-gray-300 dark:border-gray-700"
+                className="w-full" 
                 onClick={handleDemoLogin}
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-transparent via-white/10 to-transparent shine-effect"></div>
-                <div className="flex items-center justify-center gap-2">
-                  <Sparkles className="h-4 w-4 text-[#33C3F0] dark:text-[#4284fd]" />
-                  <span className="text-gray-800 dark:text-gray-200">Try Demo Preview</span>
-                </div>
+                <Presentation className="mr-2 h-4 w-4" />
+                Try Demo Preview
               </Button>
             </div>
           </CardContent>

@@ -33,7 +33,7 @@ const ResetPassword = () => {
   const [resetSuccess, setResetSuccess] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
-  const [tokenUsername, setTokenUsername] = useState<string | undefined>();
+  const [tokenEmail, setTokenEmail] = useState<string | undefined>();
   
   const token = searchParams.get('token');
 
@@ -54,7 +54,7 @@ const ResetPassword = () => {
         }
         
         setTokenValid(true);
-        setTokenUsername(data.username);
+        setTokenEmail(data.email);
       } catch (error) {
         const validationError = error as Error;
         setTokenValid(false);
@@ -150,9 +150,9 @@ const ResetPassword = () => {
               <Shield className="h-5 w-5 text-primary" />
               <CardTitle>{resetSuccess ? 'Password Changed' : 'Create New Password'}</CardTitle>
             </div>
-            {tokenValid && tokenUsername && (
+            {tokenValid && tokenEmail && (
               <CardDescription className="text-center">
-                {resetSuccess ? 'Your password has been reset successfully' : `For username: ${tokenUsername}`}
+                {resetSuccess ? 'Your password has been reset successfully' : `For account ${tokenEmail}`}
               </CardDescription>
             )}
           </CardHeader>
