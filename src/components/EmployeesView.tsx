@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,8 @@ import {
   ListCheck,
   GripHorizontal,
   Download,
-  FileDown
+  FileDown,
+  Trash2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -30,6 +32,16 @@ import {
   DialogClose,
   DialogTrigger
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from 'date-fns';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -68,6 +80,10 @@ const EmployeesView = () => {
   const [selectedTab, setSelectedTab] = useState<'employees' | 'crews'>('employees');
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [selectedCrew, setSelectedCrew] = useState<string | null>(null);
+  
+  // Add state for delete employee confirmation
+  const [employeeToDelete, setEmployeeToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   
   // Form state
   const [newEmployee, setNewEmployee] = useState({
@@ -130,6 +146,41 @@ const EmployeesView = () => {
     });
     setEmployeeImagePreview('');
     setIsAddEmployeeOpen(false);
+  };
+
+  // Add delete employee handler
+  const handleDeleteEmployee = () => {
+    if (!employeeToDelete) return;
+    
+    // Filter out the employee to delete
+    const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete.id);
+    
+    // Update crews to remove employee from any crews they belong to
+    const updatedCrews = crews.map(crew => ({
+      ...crew,
+      members: crew.members.filter(memberId => memberId !== employeeToDelete.id)
+    }));
+    
+    // Update todos to remove assignment to deleted employee
+    const updatedTodos = todos.map(todo => {
+      if (todo.assignedTo === employeeToDelete.name) {
+        return {
+          ...todo,
+          assignedTo: undefined
+        };
+      }
+      return todo;
+    });
+    
+    // Update state
+    setEmployees(updatedEmployees);
+    setCrews(updatedCrews);
+    setTodos(updatedTodos);
+    
+    // Close dialog and show success message
+    setIsDeleteConfirmOpen(false);
+    setEmployeeToDelete(null);
+    toast.success(`${employeeToDelete.name} has been removed`);
   };
 
   // Crew operations
@@ -632,6 +683,21 @@ const EmployeesView = () => {
                                 }}
                               >
                                 <Download className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                                title="Delete employee"
+                                onClick={() => {
+                                  setEmployeeToDelete({
+                                    id: employee.id,
+                                    name: employee.name
+                                  });
+                                  setIsDeleteConfirmOpen(true);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>
@@ -1310,6 +1376,34 @@ const EmployeesView = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Delete Employee Confirmation */}
+      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {employeeToDelete ? (
+                <>
+                  You are about to delete <span className="font-semibold">{employeeToDelete.name}</span>. 
+                  This action cannot be undone. The employee will be removed from all crews and tasks.
+                </>
+              ) : (
+                'You are about to delete this employee. This action cannot be undone.'
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteEmployee}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
