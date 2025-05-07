@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Todo, DroppedItem } from '../CalendarTypes';
 import { normalizeDate, ensureDate, isSameDay } from '../CalendarUtils';
@@ -18,9 +18,11 @@ export const useCalendarState = () => {
   } = useAppContext();
   
   // Normalize the initial date from context to avoid time component issues
-  const initialDate = contextDate ? 
-    normalizeDate(typeof contextDate === 'string' ? new Date(contextDate) : contextDate) : 
-    normalizeDate(new Date());
+  const initialDate = useMemo(() => {
+    return contextDate ? 
+      normalizeDate(typeof contextDate === 'string' ? new Date(contextDate) : contextDate) : 
+      normalizeDate(new Date());
+  }, [contextDate]);
   
   const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
   const [draggedTodo, setDraggedTodo] = useState<Todo | null>(null);
@@ -64,7 +66,7 @@ export const useCalendarState = () => {
     },
   });
   
-  // Date synchronization between context and local state
+  // Date synchronization between context and local state - with optimizations to prevent loops
   useEffect(() => {
     if (contextDate) {
       // Ensure we're working with a normalized Date object
@@ -76,39 +78,64 @@ export const useCalendarState = () => {
       // Only update if dates are actually different by comparing timestamps
       if (normalizedSelectedDate.getTime() !== normalizedContextDate.getTime()) {
         setSelectedDate(normalizedContextDate);
-        setCurrentMonth(new Date(normalizedContextDate)); // Also update month view
+        // Also update month view for consistency
+        setCurrentMonth(new Date(
+          normalizedContextDate.getFullYear(),
+          normalizedContextDate.getMonth(),
+          1
+        ));
       }
     }
   }, [contextDate, selectedDate]);
 
-  // Update context date when local selected date changes
+  // Update context date when local selected date changes - with optimizations to prevent loops
   useEffect(() => {
     const normalizedSelectedDate = normalizeDate(selectedDate);
     
     // Check if we need to update the context
-    if (!contextDate || 
-        (typeof contextDate === 'string' && normalizeDate(new Date(contextDate)).getTime() !== normalizedSelectedDate.getTime()) ||
-        (contextDate instanceof Date && normalizeDate(contextDate).getTime() !== normalizedSelectedDate.getTime())) {
+    if (!contextDate) {
+      setContextDate(normalizedSelectedDate);
+      return;
+    }
+    
+    // Convert string dates to Date objects for comparison
+    const contextDateObj = typeof contextDate === 'string' ? new Date(contextDate) : contextDate;
+    const normalizedContextDate = normalizeDate(contextDateObj);
+    
+    // Only update if the dates are truly different
+    if (normalizedContextDate.getTime() !== normalizedSelectedDate.getTime()) {
       setContextDate(normalizedSelectedDate);
     }
   }, [selectedDate, contextDate, setContextDate]);
 
-  // Process todos to ensure dates are Date objects and titles are defined
-  const processedTodos = contextTodos.map(todo => ({
-    ...todo,
-    date: ensureDate(todo.date),
-    title: todo.title || todo.text // Ensure title is set if missing
-  }));
+  // Process todos to ensure dates are Date objects and titles are defined - memoized to prevent unnecessary processing
+  const processedTodos = useMemo(() => {
+    return contextTodos.map(todo => ({
+      ...todo,
+      date: ensureDate(todo.date),
+      title: todo.title || todo.text // Ensure title is set if missing
+    }));
+  }, [contextTodos]);
 
-  // Filter todos for the selected date using isSameDay for reliable comparison
-  const todaysTodos = processedTodos.filter(
-    todo => isSameDay(todo.date, selectedDate)
-  );
+  // Filter todos for the selected date using isSameDay for reliable comparison - memoized to prevent recalculation
+  const todaysTodos = useMemo(() => {
+    return processedTodos.filter(
+      todo => isSameDay(todo.date, selectedDate)
+    );
+  }, [processedTodos, selectedDate]);
 
-  // Count tasks for each day
-  const getTaskCountForDay = (date: Date): number => {
-    return processedTodos.filter(todo => isSameDay(todo.date, date)).length;
-  };
+  // Count tasks for each day - memoized function to improve performance
+  const getTaskCountForDay = useMemo(() => {
+    const countMap = processedTodos.reduce((acc, todo) => {
+      const dateKey = todo.date.toDateString();
+      acc[dateKey] = (acc[dateKey] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return (date: Date): number => {
+      return countMap[date.toDateString()] || 0;
+    };
+  }, [processedTodos]);
 
   // Listen for dragover events at the document level
   useEffect(() => {

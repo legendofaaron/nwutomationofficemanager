@@ -1,10 +1,8 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Todo } from './CalendarTypes';
-import { format } from 'date-fns';
-import { toast } from 'sonner';
 
 interface CalendarDayCellProps {
   date: Date;
@@ -17,7 +15,8 @@ interface CalendarDayCellProps {
   draggedTodo: Todo | null;
 }
 
-const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
+// Memo to prevent unnecessary re-renders
+const CalendarDayCell: React.FC<CalendarDayCellProps> = memo(({
   date,
   selectedDate,
   taskCount,
@@ -30,6 +29,24 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
   const dateValue = date.getDate();
   
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Add visual feedback
+    e.currentTarget.classList.add("bg-accent/30", "border-primary");
+  };
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Remove visual feedback
+    e.currentTarget.classList.remove("bg-accent/30", "border-primary");
+  };
+  
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove("bg-accent/30", "border-primary");
+    onDrop(date, e);
+  };
+  
   return (
     <div 
       className={cn(
@@ -39,21 +56,9 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       )}
       onClick={() => onDateClick(date)}
       onDoubleClick={() => onDateDoubleClick(date)}
-      onDragOver={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        // Add visual feedback
-        e.currentTarget.classList.add("bg-accent/30", "border-primary");
-      }}
-      onDragLeave={(e) => {
-        // Remove visual feedback
-        e.currentTarget.classList.remove("bg-accent/30", "border-primary");
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        e.currentTarget.classList.remove("bg-accent/30", "border-primary");
-        onDrop(date, e);
-      }}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       <div className={cn(
         "flex flex-col items-center justify-center",
@@ -73,6 +78,8 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       </div>
     </div>
   );
-};
+});
+
+CalendarDayCell.displayName = 'CalendarDayCell';
 
 export default CalendarDayCell;

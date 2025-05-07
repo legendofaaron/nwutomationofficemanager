@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -155,6 +155,30 @@ const DashboardCalendar = () => {
     }
   };
 
+  // Memoize the TaskList component to prevent unnecessary re-renders
+  const TaskList = memo(() => (
+    <div className="flex-grow overflow-auto mt-2 min-h-0">
+      <TaskListHeader 
+        selectedDate={selectedDate}
+        onAddTaskClick={() => setIsDialogOpen(true)}
+      />
+      
+      <TaskInput onAddTodo={addTodo} />
+      
+      <div className="space-y-0.5 max-h-[100px] bg-card rounded-md p-1.5 overflow-y-auto">
+        <CalendarDayView 
+          todos={todaysTodos} 
+          selectedDate={selectedDate}
+          toggleTodoCompletion={toggleTodoCompletion}
+          deleteTodo={deleteTodo}
+          getCrewDisplayCode={(crewId) => getCrewDisplayCode(crewId, crews)}
+        />
+      </div>
+    </div>
+  ));
+  
+  TaskList.displayName = 'TaskList';
+
   return (
     <div className="h-full flex flex-col">
       {/* Calendar Container */}
@@ -173,24 +197,7 @@ const DashboardCalendar = () => {
       />
       
       {/* Task List */}
-      <div className="flex-grow overflow-auto mt-2 min-h-0">
-        <TaskListHeader 
-          selectedDate={selectedDate}
-          onAddTaskClick={() => setIsDialogOpen(true)}
-        />
-        
-        <TaskInput onAddTodo={addTodo} />
-        
-        <div className="space-y-0.5 max-h-[100px] bg-card rounded-md p-1.5 overflow-y-auto">
-          <CalendarDayView 
-            todos={todaysTodos} 
-            selectedDate={selectedDate}
-            toggleTodoCompletion={toggleTodoCompletion}
-            deleteTodo={deleteTodo}
-            getCrewDisplayCode={(crewId) => getCrewDisplayCode(crewId, crews)}
-          />
-        </div>
-      </div>
+      <TaskList />
 
       {/* Task Dialogs */}
       <TaskFormDialog 
