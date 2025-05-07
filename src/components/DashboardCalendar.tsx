@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -58,7 +59,8 @@ const DashboardCalendar = () => {
   // Process todos to ensure dates are Date objects
   const processedTodos = contextTodos.map(todo => ({
     ...todo,
-    date: ensureDate(todo.date)
+    date: ensureDate(todo.date),
+    title: todo.title || todo.text // Ensure title is set if missing
   }));
 
   const form = useForm<TaskFormValues>({
@@ -283,7 +285,7 @@ const DashboardCalendar = () => {
     }
     
     // For other types, create a new todo directly
-    const newTodo: Todo = {
+    const newTodo = {
       id: `${droppedItem.type}-${droppedItem.id}-${Date.now()}`,
       text: getTextByItemType(droppedItem),
       title: getTextByItemType(droppedItem), // Add title for compatibility

@@ -16,7 +16,7 @@ export interface TodoBase {
   clientLocationId?: string;
   description?: string;
   crewId?: string;
-  title?: string; // Optional to match AppContext.tsx
+  title?: string; // Make title optional to match AppContext.tsx Todo type
 }
 
 export interface Todo extends TodoBase {
