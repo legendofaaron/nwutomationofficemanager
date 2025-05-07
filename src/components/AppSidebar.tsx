@@ -3,7 +3,7 @@ import { useAppContext } from '@/context/AppContext';
 import NewDocumentDialog from './NewDocumentDialog';
 import NewFolderDialog from './NewFolderDialog';
 import RenameItemDialog from './RenameItemDialog';
-import { FilePen, Brain, Building2, Database, File, Trash2, Folder, FolderOpen, Menu, Table, X, ChevronRight, ChevronDown, LayoutDashboard, Settings, Calendar } from 'lucide-react';
+import { FilePen, Brain, Building2, Database, File, Trash2, Folder, FolderOpen, Menu, Table, X, ChevronRight, ChevronDown, LayoutDashboard, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Logo } from './Logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { MobileSettingsDrawer } from './settings/MobileSettingsDrawer';
 import { Dialog, DialogContent } from './ui/dialog';
 import DashboardCalendar from './DashboardCalendar';
+
 const AppSidebar = () => {
   const {
     viewMode,
@@ -60,13 +61,8 @@ const AppSidebar = () => {
     icon: Brain,
     onClick: () => setViewMode('knowledge'),
     isActive: viewMode === 'knowledge'
-  }, {
-    id: 'calendar',
-    title: "Calendar",
-    icon: Calendar,
-    onClick: () => setIsCalendarOpen(true),
-    isActive: false
   }]);
+
   const handleFileClick = (file: any) => {
     if (file.type === 'folder') return;
     setCurrentFile(file);
@@ -293,8 +289,6 @@ const AppSidebar = () => {
       </SidebarMenuItem>);
   };
   return <>
-      
-
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Create New</SidebarGroupLabel>
@@ -378,6 +372,7 @@ const AppSidebar = () => {
       </Dialog>
     </>;
 };
+
 export const SidebarToggle = () => {
   const {
     setSidebarOpen
@@ -386,4 +381,5 @@ export const SidebarToggle = () => {
       <Menu className="h-4 w-4" />
     </Button>;
 };
+
 export default AppSidebar;
