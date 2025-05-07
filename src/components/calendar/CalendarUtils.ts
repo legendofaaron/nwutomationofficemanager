@@ -59,3 +59,19 @@ export const parseYYYYMMDDToDate = (dateStr: string): Date => {
   const [year, month, day] = dateStr.split('-').map(Number);
   return new Date(year, month - 1, day);
 };
+
+// Helper function to ensure a date is a proper Date object
+export const ensureDate = (date: Date | string): Date => {
+  if (date instanceof Date) {
+    return date;
+  }
+  return new Date(date);
+};
+
+// Helper to sync date between calendar components by normalizing the date
+// This removes time components to make date comparison consistent
+export const normalizeDate = (date: Date | string): Date => {
+  const d = ensureDate(date);
+  // Create a new date with just year, month, day (no time)
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+};
