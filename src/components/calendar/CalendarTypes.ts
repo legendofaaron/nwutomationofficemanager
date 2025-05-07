@@ -17,7 +17,7 @@ export interface TodoBase {
   description?: string;
   crewId?: string;
   title?: string; // Make title optional to match AppContext.tsx Todo type
-  crewName?: string; // Adding crewName property
+  crewName?: string; // Adding crewName property to fix the type issue
 }
 
 export interface Todo extends TodoBase {
