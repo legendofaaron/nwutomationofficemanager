@@ -1,43 +1,50 @@
 
+// Types for calendar components
 import { Crew } from '@/components/schedule/ScheduleTypes';
 
+// Base Todo type with required fields
 export interface TodoBase {
   id: string;
   text: string;
+  title?: string;
   completed: boolean;
-  date: Date | string; // Allow for string dates that will be converted to Date objects
-  assignedTo?: string;
-  assignedToAvatars?: string[];
-  crew?: string[];
+  date: Date | string;
+}
+
+// Extended Todo with optional fields
+export interface Todo extends TodoBase {
   location?: string;
   startTime?: string;
   endTime?: string;
+  assignedTo?: string;
+  assignedToAvatar?: string;
   clientId?: string;
   clientLocationId?: string;
   description?: string;
   crewId?: string;
-  title?: string; // Make title optional to match AppContext.tsx Todo type
-  crewName?: string; // Added crewName property to fix the type issue
-}
-
-export interface Todo extends TodoBase {
+  crewName?: string;
   crewMembers?: string[];
-  assignedToAvatar?: string;
 }
 
-// Define types for the different items that can be dropped
-export interface DroppedItem {
-  id: string;
-  text: string;
-  type: 'employee' | 'crew' | 'invoice' | 'booking' | 'todo';
-  originalData?: any;
-}
-
+// Form values for task creation
 export interface TaskFormValues {
   text: string;
   date: Date;
-  location?: string;
-  startTime?: string;
-  endTime?: string;
+  location: string;
+  startTime: string;
+  endTime: string;
   assignedTo?: string;
+}
+
+// Dropped item from external components
+export interface DroppedItem {
+  id: string;
+  type: string; // 'employee', 'crew', 'invoice', 'booking', etc.
+  text: string;
+  originalData?: any;
+}
+
+// Props for DragDrop context
+export interface DragDropContextProps {
+  children: React.ReactNode;
 }
