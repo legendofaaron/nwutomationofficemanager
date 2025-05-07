@@ -1,6 +1,7 @@
 
 # Office Manager - Free & Open Source
-![unnamed-2](https://github.com/user-attachments/assets/9ec82dd2-fedb-42cf-bfab-171c4e94300e)
+<img width="1005" alt="light and dark mode " src="https://github.com/user-attachments/assets/3920a9bc-b4f9-43c5-8ece-803d06aeb412" />
+
 
 ## Overview
 
