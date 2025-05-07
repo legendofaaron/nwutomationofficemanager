@@ -34,9 +34,7 @@ const TasksCard: React.FC<TasksCardProps> = ({
   const { isDragging } = useDragDrop();
   
   // Filter tasks for the selected date
-  const tasksForSelectedDate = tasks.filter(task => 
-    task.date && selectedDate && task.date.toDateString() === selectedDate.toDateString()
-  );
+  const tasksForSelectedDate = tasks.filter(task => task.date.toDateString() === selectedDate.toDateString());
 
   // Count tasks by status
   const completedTasks = tasksForSelectedDate.filter(task => task.completed).length;
@@ -50,7 +48,7 @@ const TasksCard: React.FC<TasksCardProps> = ({
             <div className="flex items-center justify-center p-1.5 rounded-md bg-primary/10 dark:bg-primary/20">
               <CalendarCheck className="h-5 w-5 text-primary" />
             </div>
-            {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'No date selected'}
+            {format(selectedDate, 'MMMM d, yyyy')}
           </CardTitle>
           
           <TooltipProvider>

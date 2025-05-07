@@ -76,12 +76,9 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
   };
 
   // Open task for editing
-  const handleEditTask = (taskId: string) => {
-    const taskToEdit = tasks.find(task => task.id === taskId);
-    if (taskToEdit) {
-      setEditingTask(taskToEdit);
-      setIsCreateDialogOpen(true);
-    }
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setIsCreateDialogOpen(true);
   };
 
   // Handle task changes (create/update)
@@ -100,10 +97,12 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
         crewName: taskData.crewName || undefined,
         clientId: taskData.clientId || undefined,
         location: taskData.location || undefined,
-        completed: false,
-        notes: taskData.notes,
-        status: taskData.status
+        completed: false
       };
+      
+      // Add optional properties if they exist
+      if (taskData.notes) newTask.notes = taskData.notes;
+      if (taskData.status) newTask.status = taskData.status;
       
       setTasks(prevTasks => [...prevTasks, newTask]);
     } else if (editingTask) {
@@ -128,20 +127,6 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
   const handleDialogClose = () => {
     setIsCreateDialogOpen(false);
     setEditingTask(null);
-  };
-
-  // Find a task by its ID (helper function)
-  const getTaskById = (taskId: string) => {
-    return tasks.find(task => task.id === taskId);
-  };
-
-  // Toggle task completion status
-  const handleToggleTaskCompletion = (taskId: string) => {
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
-    );
   };
 
   return (
@@ -181,16 +166,14 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
           <TaskCalendarView 
             tasks={filteredTasks} 
             onEditTask={handleEditTask}
-            onToggleTaskCompletion={handleToggleTaskCompletion}
           />
         ) : (
           <TaskListView 
             tasks={filteredTasks}
             onEditTask={handleEditTask}
-            onToggleTaskCompletion={handleToggleTaskCompletion}
+            employees={employees}
             crews={crews}
             clients={clients}
-            clientLocations={mockData.clientLocations}
           />
         )}
       </div>
@@ -206,8 +189,6 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
             onSave={handleSaveTaskChanges}
             onDelete={handleDeleteTask}
             onCancel={handleDialogClose}
-            open={isCreateDialogOpen}
-            onOpenChange={setIsCreateDialogOpen}
           />
         </DialogContent>
       </Dialog>
