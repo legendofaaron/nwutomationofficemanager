@@ -26,15 +26,25 @@ module.exports = {
     }
   ],
   mac: {
-    target: ["dmg", "zip"],
+    target: [
+      {
+        target: "dmg",
+        arch: ["arm64", "x64"]
+      },
+      {
+        target: "zip",
+        arch: ["arm64", "x64"]
+      }
+    ],
     category: "public.app-category.productivity",
     icon: "public/favicon.ico",
     hardenedRuntime: true,
     gatekeeperAssess: false,
     darkModeSupport: true,
-    notarize: false, // Set to true if you have Apple Developer ID
+    notarize: false,
     entitlements: "build/entitlements.mac.plist",
-    entitlementsInherit: "build/entitlements.mac.plist"
+    entitlementsInherit: "build/entitlements.mac.plist",
+    artifactName: "${productName}-${version}-${arch}.${ext}"
   },
   win: {
     target: ["nsis", "portable"],
@@ -70,7 +80,12 @@ module.exports = {
         type: "link",
         path: "/Applications"
       }
-    ]
+    ],
+    sign: false,
+    window: {
+      width: 540,
+      height: 380
+    }
   },
   publish: {
     provider: "generic",
@@ -97,5 +112,10 @@ module.exports = {
     }
     
     console.log('Preparing llama.cpp resources...');
-  }
-};
+  },
+  // Ensure Electron uses the right architecture for Apple Silicon
+  electronDownload: {
+    arch: process.platform === 'darwin' ? 'arm64' : undefined
+  },
+  electronVersion: "^28.0.0", // Use Electron version that supports arm64
+}

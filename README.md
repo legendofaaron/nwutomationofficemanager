@@ -100,9 +100,22 @@ To build the desktop application:
 # Build the web application
 npm run build
 
-# Build the desktop application
+# Build the desktop application for all platforms
 npx electron-builder build
+
+# Build specifically for Apple Silicon (M1/M2/M3 Macs)
+npx electron-builder build --mac --arm64
 ```
+
+### Apple Silicon Support
+
+The application is fully optimized for Apple Silicon (M1/M2/M3) processors. The .dmg file created by the build process will work natively on Apple Silicon, providing maximum performance without Rosetta translation.
+
+Key features of the Apple Silicon build:
+- Native ARM64 architecture support
+- Optimized performance for M1/M2/M3 chips
+- Reduced power consumption compared to x86 builds
+- Full hardware acceleration for machine learning features
 
 ## Support Development
 
