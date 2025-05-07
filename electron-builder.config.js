@@ -15,7 +15,8 @@ module.exports = {
     "electron/**/*"
   ],
   extraMetadata: {
-    main: "electron/main.js"
+    main: "electron/main.js",
+    license: "MIT"
   },
   extraResources: [
     {
