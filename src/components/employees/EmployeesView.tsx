@@ -35,8 +35,6 @@ const EmployeesView: React.FC = () => {
   const [selectedCrew, setSelectedCrew] = useState<Crew | null>(null);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [taskAssignee, setTaskAssignee] = useState<string | null>(null);
-
-  // Add new state variables for crew deletion
   const [isDeleteCrewDialogOpen, setIsDeleteCrewDialogOpen] = useState(false);
   const [crewToDelete, setCrewToDelete] = useState<{ id: string; name: string } | null>(null);
   const [isCrewScheduleDialogOpen, setIsCrewScheduleDialogOpen] = useState(false);
@@ -326,11 +324,13 @@ const EmployeesView: React.FC = () => {
 
   // Add handlers for schedule downloads
   const handleOpenCrewSchedule = (crewId: string) => {
+    console.log("Opening crew schedule for:", crewId);
     setSelectedCrewForSchedule(crewId);
     setIsCrewScheduleDialogOpen(true);
   };
 
   const handleOpenEmployeeSchedule = (employeeId: string) => {
+    console.log("Opening employee schedule for:", employeeId);
     setSelectedEmployeeForSchedule(employeeId);
     setIsEmployeeScheduleDialogOpen(true);
   };
@@ -346,18 +346,19 @@ const EmployeesView: React.FC = () => {
 
   // Convert todos to the format expected by schedule components
   const convertTodosToTasks = (): any[] => {
+    console.log("Converting todos to tasks, count:", todos.length);
     return todos.map(todo => ({
       id: todo.id,
-      title: todo.text || "Untitled Task",
-      text: todo.text,
+      title: todo.text || todo.title || "Untitled Task",
+      text: todo.text || todo.title,
       date: todo.date instanceof Date ? todo.date : new Date(todo.date || new Date()),
       completed: !!todo.completed,
       assignedTo: todo.assignedTo,
       crew: todo.crew || [],
       crewId: todo.crewId || (todo.crew && todo.crew[0]), // Use crewId or first item in crew array
-      startTime: todo.startTime,
-      endTime: todo.endTime,
-      location: todo.location,
+      startTime: todo.startTime || "09:00",
+      endTime: todo.endTime || "17:00",
+      location: todo.location || "Office",
       clientId: todo.clientId || undefined,
       clientLocationId: todo.clientLocationId || undefined,
       description: todo.description || ""

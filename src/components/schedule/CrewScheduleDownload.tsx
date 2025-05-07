@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Task } from '@/components/schedule/ScheduleTypes';
-import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
+import { downloadScheduleAsPdf, downloadScheduleAsTxt, filterTasksByDateRange } from '@/utils/downloadUtils';
 import { toast } from 'sonner';
 
 interface Crew {
@@ -37,13 +37,15 @@ const CrewScheduleDownload = ({ crews, tasks }: CrewScheduleDownloadProps) => {
   // Filter tasks for the selected crew and within selected date range
   const getFilteredTasks = (): Task[] => {
     if (!selectedCrewId || !date?.from) return [];
+    console.log("Filtering tasks for crew:", selectedCrewId);
     
     return tasks.filter(task => {
       // Check if task is assigned to this crew
-      const isAssignedToCrew = task.crewId === selectedCrewId;
+      const isAssignedToCrew = task.crewId === selectedCrewId ||
+                               (task.crew && task.crew.includes(selectedCrewId));
       
       // Check if task date is within the selected range
-      const taskDate = new Date(task.date);
+      const taskDate = task.date instanceof Date ? task.date : new Date(task.date);
       const isInDateRange = date.from && taskDate >= date.from && 
                             (!date.to || taskDate <= date.to);
       
@@ -58,6 +60,7 @@ const CrewScheduleDownload = ({ crews, tasks }: CrewScheduleDownloadProps) => {
     }
     
     const filteredTasks = getFilteredTasks();
+    console.log("Crew Schedule Download - PDF tasks:", filteredTasks.length);
     
     if (filteredTasks.length === 0) {
       toast.error("No scheduled tasks for this crew in the selected date range");
@@ -84,6 +87,7 @@ const CrewScheduleDownload = ({ crews, tasks }: CrewScheduleDownloadProps) => {
     }
     
     const filteredTasks = getFilteredTasks();
+    console.log("Crew Schedule Download - TXT tasks:", filteredTasks.length);
     
     if (filteredTasks.length === 0) {
       toast.error("No scheduled tasks for this crew in the selected date range");

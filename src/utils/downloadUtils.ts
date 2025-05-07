@@ -228,6 +228,9 @@ export const generateSchedulePDF = (tasks: Task[], filter?: ScheduleFilter): jsP
 
 // Function to download text file
 export const downloadScheduleAsTxt = (tasks: Task[], filter?: ScheduleFilter): void => {
+  // Add debug logs to see what's happening
+  console.log("downloadScheduleAsTxt called with", tasks.length, "tasks");
+  
   // Make sure we have tasks
   if (!tasks || tasks.length === 0) {
     console.error("No tasks provided to downloadScheduleAsTxt");
@@ -235,6 +238,8 @@ export const downloadScheduleAsTxt = (tasks: Task[], filter?: ScheduleFilter): v
   }
   
   const text = generateScheduleText(tasks, filter);
+  console.log("Generated text content:", text.substring(0, 100) + "...");
+  
   const blob = new Blob([text], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -248,14 +253,21 @@ export const downloadScheduleAsTxt = (tasks: Task[], filter?: ScheduleFilter): v
   
   link.href = url;
   link.download = filename;
+  console.log("Downloading with filename:", filename);
+  
+  // Append to body, click and remove
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+  console.log("Download link clicked");
 };
 
 // Function to download PDF file
 export const downloadScheduleAsPdf = (tasks: Task[], filter?: ScheduleFilter): void => {
+  // Add debug logs to see what's happening
+  console.log("downloadScheduleAsPdf called with", tasks.length, "tasks");
+  
   // Make sure we have tasks
   if (!tasks || tasks.length === 0) {
     console.error("No tasks provided to downloadScheduleAsPdf");
@@ -271,11 +283,14 @@ export const downloadScheduleAsPdf = (tasks: Task[], filter?: ScheduleFilter): v
   }
   filename += '.pdf';
   
+  console.log("Saving PDF with filename:", filename);
   pdf.save(filename);
+  console.log("PDF saved");
 };
 
 // Now update the function in EmployeesView to convert todos to tasks properly
 export const convertTodosToTasks = (todos: any[]): Task[] => {
+  console.log("Converting todos to tasks:", todos.length);
   return todos.map(todo => ({
     id: todo.id,
     title: todo.text || todo.title || "Untitled Task", // Support both text and title properties
@@ -285,9 +300,9 @@ export const convertTodosToTasks = (todos: any[]): Task[] => {
     assignedTo: todo.assignedTo,
     crewId: todo.crewId || (todo.crew && todo.crew[0]), // Use crewId or first item in crew array
     crew: todo.crew || [],
-    startTime: todo.startTime,
-    endTime: todo.endTime,
-    location: todo.location,
+    startTime: todo.startTime || "09:00", // Provide default values
+    endTime: todo.endTime || "17:00", // Provide default values
+    location: todo.location || "Office", // Provide default values
     clientId: todo.clientId || undefined,
     clientLocationId: todo.clientLocationId || undefined,
     description: todo.description || ""

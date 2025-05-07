@@ -1,7 +1,7 @@
 export interface Task {
   id: string;
   title: string;
-  text?: string; // Add text property for compatibility
+  text?: string; // Added text property for compatibility
   date: Date;
   completed: boolean;
   assignedTo?: string;
@@ -12,7 +12,7 @@ export interface Task {
   location?: string;
   clientId?: string;
   clientLocationId?: string;
-  description?: string; // Add description property
+  description?: string; // Added description property
 }
 
 export interface Employee {

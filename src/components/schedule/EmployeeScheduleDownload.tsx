@@ -9,7 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { Task } from '@/components/schedule/ScheduleTypes';
-import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
+import { downloadScheduleAsPdf, downloadScheduleAsTxt, filterTasksByDateRange } from '@/utils/downloadUtils';
 import { toast } from 'sonner';
 
 interface EmployeeScheduleDownloadProps {
@@ -43,6 +43,7 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks }: EmployeeS
 
   const handleDownloadPdf = () => {
     const filteredTasks = getFilteredTasks();
+    console.log("Employee Schedule Download - PDF tasks:", filteredTasks.length);
     
     if (filteredTasks.length === 0) {
       toast.error("No scheduled tasks for this employee in the selected date range");
@@ -64,6 +65,7 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks }: EmployeeS
 
   const handleDownloadTxt = () => {
     const filteredTasks = getFilteredTasks();
+    console.log("Employee Schedule Download - TXT tasks:", filteredTasks.length);
     
     if (filteredTasks.length === 0) {
       toast.error("No scheduled tasks for this employee in the selected date range");
