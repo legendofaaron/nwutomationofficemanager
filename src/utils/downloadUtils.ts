@@ -1,3 +1,4 @@
+
 import jsPDF from 'jspdf';
 import { Task, ScheduleFilter } from '@/components/schedule/ScheduleTypes';
 import { format } from 'date-fns';
@@ -183,6 +184,10 @@ export const generateSchedulePDF = (tasks: Task[], filter?: ScheduleFilter): jsP
         pdf.addPage();
         yPosition = 20;
       }
+      
+      // Define the variables needed for task information
+      const time = task.startTime && task.endTime ? `${task.startTime} - ${task.endTime}` : 'All day';
+      const status = task.completed ? "✓ " : "□ ";
       
       // Make sure to use both title and text properties for backwards compatibility
       const title = task.title || task.text || "Untitled Task";
