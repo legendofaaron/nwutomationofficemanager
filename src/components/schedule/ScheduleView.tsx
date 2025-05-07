@@ -11,6 +11,7 @@ import { generateMockTasks, generateMockEmployees, generateMockCrews, generateMo
 import ScheduleFilterBar from './ScheduleFilterBar';
 import { useAppContext } from '@/context/AppContext';
 import { toast } from 'sonner';
+import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
 
 const ScheduleView: React.FC = () => {
   // State for tasks and related data
@@ -89,8 +90,9 @@ const ScheduleView: React.FC = () => {
   // Filter tasks based on active filter
   const filteredTasks = tasks.filter(task => {
     if (activeFilter.type === 'all') return true;
-    if (activeFilter.type === 'employee' && activeFilter.id) {
-      return task.assignedTo === activeFilter.id;
+    if (activeFilter.type === 'employee' && activeFilter.name) {
+      return task.assignedTo === activeFilter.name || 
+             (task.crew && task.crew.includes(activeFilter.name));
     }
     if (activeFilter.type === 'crew' && activeFilter.id) {
       return task.crewId === activeFilter.id;
@@ -162,47 +164,111 @@ const ScheduleView: React.FC = () => {
     }
   }, [tasks]);
 
-  const handleSaveTaskChanges = useCallback((taskId: string, updatedData: Partial<Task>) => {
-    // Update local tasks
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === taskId 
-          ? { ...task, ...updatedData } 
-          : task
-      )
-    );
+  const handleSaveTask = useCallback((taskData: Partial<Task>, isNew: boolean) => {
+    if (!taskData.id) return;
     
-    // Update global todos if the task exists there
-    const todoExists = todos.some(todo => todo.id === taskId);
-    if (todoExists) {
-      setTodos(prevTodos => 
-        prevTodos.map(todo => 
-          todo.id === taskId 
-            ? { 
-                ...todo, 
-                text: updatedData.title || todo.text,
-                completed: updatedData.completed ?? todo.completed,
-                date: updatedData.date || todo.date,
-                assignedTo: updatedData.assignedTo,
-                startTime: updatedData.startTime,
-                endTime: updatedData.endTime,
-                location: updatedData.location,
-                crewId: updatedData.crewId,
-                crewName: updatedData.crewName
-              } 
-            : todo
+    if (isNew) {
+      // Add new task
+      const newTask: Task = {
+        id: taskData.id,
+        title: taskData.title || 'Untitled Task',
+        description: taskData.description || '',
+        date: taskData.date || new Date(),
+        completed: taskData.completed || false,
+        assignedTo: taskData.assignedTo,
+        crew: taskData.crew,
+        crewId: taskData.crewId,
+        crewName: taskData.crewName,
+        clientId: taskData.clientId,
+        clientName: taskData.clientName,
+        startTime: taskData.startTime,
+        endTime: taskData.endTime,
+        location: taskData.location,
+      };
+      
+      setTasks(prev => [...prev, newTask]);
+      
+      // Add to todos as well
+      setTodos(prev => [...prev, {
+        id: newTask.id,
+        text: newTask.title,
+        completed: newTask.completed,
+        date: newTask.date,
+        assignedTo: newTask.assignedTo,
+        crewMembers: newTask.crew,
+        crewId: newTask.crewId,
+        crewName: newTask.crewName,
+        startTime: newTask.startTime,
+        endTime: newTask.endTime,
+        location: newTask.location
+      }]);
+      
+      toast.success("Task created successfully");
+    } else {
+      // Update existing task
+      setTasks(prev => 
+        prev.map(task => 
+          task.id === taskData.id ? { ...task, ...taskData } : task
         )
       );
       
-      toast.success("Task updated in all calendars");
+      // Update in todos if it exists there
+      const todoExists = todos.some(todo => todo.id === taskData.id);
+      if (todoExists) {
+        setTodos(prevTodos => 
+          prevTodos.map(todo => 
+            todo.id === taskData.id
+              ? { 
+                  ...todo, 
+                  text: taskData.title || todo.text,
+                  completed: taskData.completed ?? todo.completed,
+                  date: taskData.date || todo.date,
+                  assignedTo: taskData.assignedTo,
+                  crewMembers: taskData.crew,
+                  crewId: taskData.crewId,
+                  crewName: taskData.crewName,
+                  startTime: taskData.startTime,
+                  endTime: taskData.endTime,
+                  location: taskData.location
+                } 
+              : todo
+          )
+        );
+        
+        toast.success("Task updated in all calendars");
+      } else {
+        toast.success("Task updated successfully");
+      }
     }
     
+    // Close dialog and reset editing task
+    setIsEditDialogOpen(false);
+    setEditingTask(null);
+    
     // If the date was changed, update the selected date
-    if (updatedData.date) {
-      setSelectedDate(updatedData.date);
-      setCalendarDate(updatedData.date);
+    if (taskData.date) {
+      setSelectedDate(taskData.date);
+      setCalendarDate(taskData.date);
     }
   }, [todos, setTodos, setCalendarDate]);
+
+  const handleDeleteTask = useCallback((taskId: string) => {
+    // Remove from tasks
+    setTasks(prev => prev.filter(task => task.id !== taskId));
+    
+    // Remove from todos if it exists there
+    const todoExists = todos.some(todo => todo.id === taskId);
+    if (todoExists) {
+      setTodos(prev => prev.filter(todo => todo.id !== taskId));
+      toast.success("Task removed from all calendars");
+    } else {
+      toast.success("Task deleted successfully");
+    }
+    
+    // Close dialog and reset editing task
+    setIsEditDialogOpen(false);
+    setEditingTask(null);
+  }, [todos, setTodos]);
 
   const handleAddNewTask = useCallback(() => {
     // Create a new task template
@@ -215,21 +281,10 @@ const ScheduleView: React.FC = () => {
       endTime: '10:00'
     };
     
-    // Add to tasks and open editor
-    setTasks(prevTasks => [...prevTasks, newTask]);
+    // Set for editing
     setEditingTask(newTask);
     setIsEditDialogOpen(true);
-    
-    // Also add to global todos
-    setTodos(prevTodos => [...prevTodos, {
-      id: newTask.id,
-      text: newTask.title,
-      completed: newTask.completed,
-      date: newTask.date,
-      startTime: newTask.startTime,
-      endTime: newTask.endTime
-    }]);
-  }, [selectedDate, setTodos]);
+  }, [selectedDate]);
 
   // Handle date change (sync with global date)
   const handleDateChange = useCallback((date: Date | undefined) => {
@@ -239,18 +294,43 @@ const ScheduleView: React.FC = () => {
     }
   }, [setCalendarDate]);
 
+  // Handle schedule downloads
+  const handleDownloadPdf = useCallback(() => {
+    try {
+      downloadScheduleAsPdf(filteredTasks, activeFilter);
+      toast.success("Schedule downloaded as PDF");
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      toast.error("Failed to download schedule");
+    }
+  }, [filteredTasks, activeFilter]);
+
+  const handleDownloadTxt = useCallback(() => {
+    try {
+      downloadScheduleAsTxt(filteredTasks, activeFilter);
+      toast.success("Schedule downloaded as TXT");
+    } catch (error) {
+      console.error("Error downloading TXT:", error);
+      toast.error("Failed to download schedule");
+    }
+  }, [filteredTasks, activeFilter]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold tracking-tight">Schedule</h1>
         
-        <ScheduleFilterBar 
-          employees={employees}
-          crews={crews}
-          clients={clients}
-          currentFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-        />
+        <div className="flex items-center gap-4">
+          <ScheduleFilterBar 
+            employees={employees}
+            crews={crews}
+            clients={clients}
+            currentFilter={activeFilter}
+            onFilterChange={setActiveFilter}
+            onDownloadPdf={handleDownloadPdf}
+            onDownloadTxt={handleDownloadTxt}
+          />
+        </div>
       </div>
       
       <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'calendar' | 'list')} className="space-y-4">
@@ -305,16 +385,21 @@ const ScheduleView: React.FC = () => {
       
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
-          <TaskEditDialog
-            open={isEditDialogOpen}
-            onOpenChange={setIsEditDialogOpen}
-            onSaveChanges={handleSaveTaskChanges}
-            task={editingTask}
-            crews={crews}
-            employees={employees}
-            clients={clients}
-            clientLocations={clientLocations}
-          />
+          {editingTask && (
+            <TaskEditDialog
+              task={editingTask}
+              employees={employees}
+              crews={crews}
+              clients={clients}
+              clientLocations={clientLocations}
+              onSaveChanges={handleSaveTask}
+              onDelete={handleDeleteTask}
+              onCancel={() => {
+                setIsEditDialogOpen(false);
+                setEditingTask(null);
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

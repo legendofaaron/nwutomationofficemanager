@@ -1,150 +1,158 @@
 
-import React, { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { X, Save, Pencil } from 'lucide-react';
-import { Task, TaskFormData, AssignmentType, LocationType, Crew, Employee, Client, ClientLocation } from '../ScheduleTypes';
+import { Button } from '@/components/ui/button';
+import { DialogHeader, DialogFooter, DialogTitle } from '@/components/ui/dialog';
+import { Task, Employee, Crew, Client, ClientLocation, TaskEditDialogProps } from '../ScheduleTypes';
 import BasicInfoTab from './BasicInfoTab';
 import AssignmentTab from './AssignmentTab';
-import { initializeFormData, getInitialAssignmentType, getInitialLocationType } from './TaskEditFormData';
-
-interface TaskEditDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSaveChanges: (taskId: string, updatedData: Partial<Task>) => void;
-  task: Task | null;
-  crews: Crew[];
-  employees: Employee[];
-  clients: Client[];
-  clientLocations: ClientLocation[];
-}
 
 const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
-  open,
-  onOpenChange,
-  onSaveChanges,
   task,
-  crews,
   employees,
+  crews,
   clients,
-  clientLocations
+  clientLocations = [],
+  onSaveChanges,
+  onDelete,
+  onCancel
 }) => {
-  const [formData, setFormData] = useState<TaskFormData>(initializeFormData(task));
-  const [assignmentType, setAssignmentType] = useState<AssignmentType>(getInitialAssignmentType(task));
-  const [locationType, setLocationType] = useState<LocationType>(getInitialLocationType(task));
+  // Local state for task data (to avoid mutating props)
+  const [taskData, setTaskData] = useState<Partial<Task>>({
+    ...task
+  });
+  
+  // Track if this is a new task
+  const isNewTask = !task.title || task.title === 'New Task';
 
-  // Initialize form data when task changes
-  useEffect(() => {
-    if (task) {
-      setFormData(initializeFormData(task));
-      setAssignmentType(getInitialAssignmentType(task));
-      setLocationType(getInitialLocationType(task));
+  // Update state when form fields change
+  const handleChange = (field: keyof Task, value: any) => {
+    setTaskData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Handle crew selection and update crew members
+  const handleCrewChange = (crewId: string | undefined) => {
+    if (!crewId) {
+      setTaskData(prev => ({
+        ...prev,
+        crewId: undefined,
+        crewName: undefined,
+        crew: undefined
+      }));
+      return;
     }
-  }, [task]);
 
+    const selectedCrew = crews.find(c => c.id === crewId);
+    if (selectedCrew) {
+      setTaskData(prev => ({
+        ...prev,
+        crewId,
+        crewName: selectedCrew.name,
+        crew: selectedCrew.members.map(member => member.name)
+      }));
+    }
+  };
+
+  // Handle client selection
+  const handleClientChange = (clientId: string | undefined) => {
+    if (!clientId) {
+      setTaskData(prev => ({
+        ...prev,
+        clientId: undefined,
+        clientName: undefined,
+        location: undefined
+      }));
+      return;
+    }
+
+    const selectedClient = clients.find(c => c.id === clientId);
+    if (selectedClient) {
+      setTaskData(prev => ({
+        ...prev,
+        clientId,
+        clientName: selectedClient.name
+      }));
+    }
+  };
+
+  // Handle form submission
   const handleSave = () => {
-    if (!task) return;
-
-    const updatedTask: Partial<Task> = {
-      title: formData.title,
-      startTime: formData.startTime,
-      endTime: formData.endTime,
-    };
-
-    // Handle assignment based on selected type
-    if (assignmentType === 'individual') {
-      updatedTask.assignedTo = formData.assignedTo;
-      updatedTask.crew = undefined;
-      updatedTask.crewId = undefined;
-    } else if (assignmentType === 'crew') {
-      updatedTask.assignedTo = undefined;
-      
-      // Get crew members' names
-      const selectedCrew = crews.find(crew => crew.id === formData.assignedCrew);
-      if (selectedCrew) {
-        updatedTask.crew = selectedCrew.members.map(memberId => {
-          const employee = employees.find(emp => emp.id === memberId);
-          return employee ? employee.name : '';
-        }).filter(name => name !== '');
-        updatedTask.crewId = formData.assignedCrew;
-      }
+    if (onSaveChanges) {
+      onSaveChanges(taskData, isNewTask);
     }
+  };
 
-    // Handle location based on selected type
-    if (locationType === 'custom') {
-      updatedTask.location = formData.location;
-      updatedTask.clientId = undefined;
-      updatedTask.clientLocationId = undefined;
-    } else if (locationType === 'client') {
-      const client = clients.find(c => c.id === formData.clientId);
-      const location = clientLocations.find(l => l.id === formData.clientLocationId);
-      
-      if (client && location) {
-        updatedTask.location = `${client.name} - ${location.name}`;
-        updatedTask.clientId = formData.clientId;
-        updatedTask.clientLocationId = formData.clientLocationId;
-      }
+  // Handle task deletion
+  const handleDelete = () => {
+    if (onDelete && task.id) {
+      onDelete(task.id);
     }
-
-    onSaveChanges(task.id, updatedTask);
-    onOpenChange(false);
   };
 
   return (
-    <div className="space-y-6 py-2">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <Pencil className="h-4 w-4 text-blue-500" />
-          <h3 className="text-lg font-medium">Edit Task</h3>
-        </div>
-      </div>
+    <>
+      <DialogHeader>
+        <DialogTitle>{isNewTask ? 'Add New Task' : 'Edit Task'}</DialogTitle>
+      </DialogHeader>
 
-      <Tabs defaultValue="basicInfo" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="basicInfo" className="text-base">Basic Info</TabsTrigger>
-          <TabsTrigger value="assignment" className="text-base">Assignment</TabsTrigger>
+      <Tabs defaultValue="basic" className="mt-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="basic">Basic Info</TabsTrigger>
+          <TabsTrigger value="assignment">Assignment</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="basicInfo" className="space-y-6 mt-0">
-          <BasicInfoTab
-            task={task}
-            formData={formData}
-            setFormData={setFormData}
-            locationType={locationType}
-            setLocationType={setLocationType}
-            clients={clients}
-            clientLocations={clientLocations}
+        <TabsContent value="basic" className="py-4">
+          <BasicInfoTab 
+            task={taskData} 
+            onTaskChange={handleChange} 
           />
         </TabsContent>
         
-        <TabsContent value="assignment" className="space-y-6 mt-0">
-          <AssignmentTab 
-            formData={formData}
-            setFormData={setFormData}
-            assignmentType={assignmentType}
-            setAssignmentType={setAssignmentType}
-            crews={crews}
+        <TabsContent value="assignment" className="py-4">
+          <AssignmentTab
+            task={taskData}
             employees={employees}
+            crews={crews}
+            clients={clients}
+            clientLocations={clientLocations}
+            onTaskChange={handleChange}
+            onCrewChange={handleCrewChange}
+            onClientChange={handleClientChange}
           />
         </TabsContent>
       </Tabs>
-      
-      <div className="flex justify-end gap-2 mt-6">
-        <Button 
-          variant="outline" 
-          onClick={() => onOpenChange(false)}
-          className="gap-1"
-        >
-          <X className="h-4 w-4" /> Cancel
-        </Button>
-        <Button 
-          onClick={handleSave} 
-          className="gap-1"
-        >
-          <Save className="h-4 w-4" /> Save Changes
-        </Button>
-      </div>
-    </div>
+
+      <DialogFooter className="gap-2 sm:gap-0">
+        {!isNewTask && (
+          <Button 
+            type="button" 
+            variant="destructive" 
+            onClick={handleDelete}
+            className="flex-1 sm:flex-none"
+          >
+            Delete
+          </Button>
+        )}
+        <div className="flex gap-2 flex-1 sm:justify-end">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="button" 
+            onClick={handleSave}
+          >
+            {isNewTask ? 'Create' : 'Save'}
+          </Button>
+        </div>
+      </DialogFooter>
+    </>
   );
 };
 

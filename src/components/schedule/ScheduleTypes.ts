@@ -1,4 +1,3 @@
-
 export interface Task {
   id: string;
   title: string;
@@ -142,4 +141,15 @@ export interface Branding {
   logoUrl?: string;
   primaryColor?: string;
   accentColor?: string;
+}
+
+export interface TaskEditDialogProps {
+  task: Task;
+  employees: Employee[];
+  crews: Crew[];
+  clients: Client[];
+  clientLocations?: ClientLocation[];
+  onSaveChanges: (taskData: Partial<Task>, isNew: boolean) => void;
+  onDelete: (taskId: string) => void;
+  onCancel: () => void;
 }
