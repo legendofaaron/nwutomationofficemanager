@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -9,28 +8,32 @@ import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { useAppContext } from '@/context/AppContext';
 
-// Import the new components and types
+// Import the types from CalendarTypes
 import { 
   Todo, 
   DroppedItem, 
-  TaskFormValues, 
-  ensureDate, 
-  normalizeDate 
+  TaskFormValues 
 } from './calendar/CalendarTypes';
-import CalendarDayView from './calendar/CalendarDayView';
-import CalendarDayCell from './calendar/CalendarDayCell';
-import TaskFormDialog from './calendar/TaskFormDialog';
-import EmployeeTaskDialog from './calendar/EmployeeTaskDialog';
-import CrewTaskDialog from './calendar/CrewTaskDialog';
-import TaskInput from './calendar/TaskInput';
+
+// Import utilities from CalendarUtils
 import { 
   getCrewDisplayCode, 
   getTextByItemType, 
   capitalizeFirstLetter, 
   safeToDateString, 
   isSameDay,
-  formatDateToYYYYMMDD
+  formatDateToYYYYMMDD,
+  ensureDate, 
+  normalizeDate 
 } from './calendar/CalendarUtils';
+
+// Import the new components
+import CalendarDayView from './calendar/CalendarDayView';
+import CalendarDayCell from './calendar/CalendarDayCell';
+import TaskFormDialog from './calendar/TaskFormDialog';
+import EmployeeTaskDialog from './calendar/EmployeeTaskDialog';
+import CrewTaskDialog from './calendar/CrewTaskDialog';
+import TaskInput from './calendar/TaskInput';
 
 const DashboardCalendar = () => {
   // Use the useAppContext hook to access todos and other data
