@@ -3,20 +3,59 @@ import { useAppContext } from '@/context/AppContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, UserPlus, Plus, Check, Users, Calendar, Cog, ListCheck, GripHorizontal, Download, FileDown } from 'lucide-react';
+import { 
+  Search, 
+  UserPlus, 
+  Plus, 
+  Check, 
+  Users, 
+  Calendar,
+  Cog,
+  ListCheck,
+  GripHorizontal,
+  Download,
+  FileDown,
+  Trash2
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+  DialogTrigger
+} from "@/components/ui/dialog";
 import { format } from 'date-fns';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import EmployeeScheduleDownload from './schedule/EmployeeScheduleDownload';
 import CrewScheduleDownload from './schedule/CrewScheduleDownload';
+
 const EmployeesView = () => {
   const {
     employees,
@@ -401,6 +440,50 @@ const EmployeesView = () => {
     id: string;
     name: string;
   } | null>(null);
+
+  // Add new state for delete confirmation dialog
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<string | null>(null);
+
+  // Add new function to handle employee deletion
+  const handleDeleteEmployee = () => {
+    if (!employeeToDelete) return;
+    
+    // First remove employee from any crews they're part of
+    const updatedCrews = crews.map(crew => {
+      if (crew.members.includes(employeeToDelete)) {
+        return {
+          ...crew,
+          members: crew.members.filter(id => id !== employeeToDelete)
+        };
+      }
+      return crew;
+    });
+    
+    // Then remove the employee from the list
+    const updatedEmployees = employees.filter(employee => employee.id !== employeeToDelete);
+    
+    setCrews(updatedCrews);
+    setEmployees(updatedEmployees);
+    
+    // Also remove any tasks specifically assigned to this employee
+    const employeeName = employees.find(e => e.id === employeeToDelete)?.name;
+    if (employeeName) {
+      const updatedTodos = todos.filter(todo => todo.assignedTo !== employeeName);
+      setTodos(updatedTodos);
+    }
+    
+    setDeleteConfirmOpen(false);
+    setEmployeeToDelete(null);
+    toast.success("Employee has been removed");
+  };
+
+  // Function to open the delete confirmation dialog
+  const confirmDeleteEmployee = (employeeId: string) => {
+    setEmployeeToDelete(employeeId);
+    setDeleteConfirmOpen(true);
+  };
+
   return <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
         <h2 className="text-2xl font-semibold text-primary">Workforce Management</h2>
@@ -489,59 +572,97 @@ const EmployeesView = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredEmployees.length > 0 ? filteredEmployees.map(employee => <TableRow key={employee.id} draggable onDragStart={e => handleEmployeeDragStart(e, employee)} className="hover:bg-accent/50 transition-colors cursor-grab">
-                          <TableCell className="w-10">
-                            <GripHorizontal className="h-4 w-4 text-muted-foreground" />
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-8 w-8 border">
-                                <AvatarFallback>{employee.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                              </Avatar>
-                              <span>{employee.name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{employee.position}</TableCell>
-                          <TableCell>
-                            <div className="text-sm text-muted-foreground">
-                              {employee.email && <div>{employee.email}</div>}
-                              {employee.phone && <div>{employee.phone}</div>}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {employee.crews && employee.crews.length > 0 ? <div className="flex flex-wrap gap-1">
-                                {employee.crews.map(crewId => <Badge key={crewId} variant="outline" className="text-xs">
-                                    {getCrewNameById(crewId)}
-                                  </Badge>)}
-                              </div> : <span className="text-muted-foreground text-sm">No crews</span>}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="Assign to crew" onClick={() => {
-                          setSelectedEmployee(employee.id);
-                          setIsCrewAssignOpen(true);
-                        }}>
-                                <Users className="h-4 w-4" />
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="Schedule task" onClick={() => openTaskAssignmentForEmployee(employee.id, employee.name)}>
-                                <Calendar className="h-4 w-4" />
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="Download schedule" onClick={() => {
-                          setSelectedEmployeeForDownload({
-                            id: employee.id,
-                            name: employee.name
-                          });
-                          setIsEmployeeScheduleDownloadOpen(true);
-                        }}>
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>) : <TableRow>
-                        <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
-                          No employees found
-                        </TableCell>
-                      </TableRow>}
+                    {filteredEmployees.length > 0 ? filteredEmployees.map(employee => (
+                          <TableRow key={employee.id} draggable onDragStart={e => handleEmployeeDragStart(e, employee)} className="hover:bg-accent/50 transition-colors cursor-grab">
+                            <TableCell className="w-10">
+                              <GripHorizontal className="h-4 w-4 text-muted-foreground" />
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8 border">
+                                  <AvatarFallback>{employee.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <span>{employee.name}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>{employee.position}</TableCell>
+                            <TableCell>
+                              <div className="text-sm text-muted-foreground">
+                                {employee.email && <div>{employee.email}</div>}
+                                {employee.phone && <div>{employee.phone}</div>}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {employee.crews && employee.crews.length > 0 ? (
+                                <div className="flex flex-wrap gap-1">
+                                  {employee.crews.map(crewId => (
+                                    <Badge key={crewId} variant="outline" className="text-xs">
+                                      {getCrewNameById(crewId)}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">No crews</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0"
+                                  title="Assign to crew"
+                                  onClick={() => {
+                                    setSelectedEmployee(employee.id);
+                                    setIsCrewAssignOpen(true);
+                                  }}
+                                >
+                                  <Users className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0"
+                                  title="Schedule task"
+                                  onClick={() => openTaskAssignmentForEmployee(employee.id, employee.name)}
+                                >
+                                  <Calendar className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0"
+                                  title="Download schedule"
+                                  onClick={() => {
+                                    setSelectedEmployeeForDownload({
+                                      id: employee.id,
+                                      name: employee.name
+                                    });
+                                    setIsEmployeeScheduleDownloadOpen(true);
+                                  }}
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                                {/* Add delete button */}
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  title="Remove employee"
+                                  onClick={() => confirmDeleteEmployee(employee.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )) : (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                              No employees found
+                            </TableCell>
+                          </TableRow>
+                        )}
                   </TableBody>
                 </Table>
               </div>
@@ -936,6 +1057,34 @@ const EmployeesView = () => {
           <CrewScheduleDownload crews={crews} selectedCrewId={selectedCrew} onClose={() => setIsCrewScheduleDownloadOpen(false)} />
         </DialogContent>
       </Dialog>
+
+      {/* Add Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Employee</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this employee? This action cannot be undone.
+              The employee will be removed from all crews and tasks they are assigned to.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setDeleteConfirmOpen(false);
+              setEmployeeToDelete(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteEmployee}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>;
 };
+
 export default EmployeesView;
