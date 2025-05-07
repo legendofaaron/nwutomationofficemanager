@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -187,7 +188,7 @@ const ScheduleView: React.FC = () => {
                 endTime: updatedData.endTime,
                 location: updatedData.location,
                 crewId: updatedData.crewId,
-                crewName: updatedData.crewName || todo.crewName
+                crewName: updatedData.crewName
               } 
             : todo
         )
