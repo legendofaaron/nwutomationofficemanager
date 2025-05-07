@@ -30,6 +30,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
   const [currentMonth, setCurrentMonth] = useState<Date>(selectedDate || new Date());
   const { isDragging } = useDragDrop();
   const [activeDropTarget, setActiveDropTarget] = useState<string | null>(null);
+  const [lastDropTime, setLastDropTime] = useState<number>(0);
 
   // Effect to update currentMonth when selectedDate changes significantly (different month)
   useEffect(() => {
@@ -56,8 +57,15 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
     };
   }, [isDragging]);
 
-  // Handle dropping a task on a day
+  // Handle dropping a task on a day with debounce to prevent duplicate drops
   const handleDayDrop = (item: DragItem, date: Date) => {
+    // Prevent duplicate drops (this fixes the multiple drag issue)
+    const now = Date.now();
+    if (now - lastDropTime < 500) {
+      return; // Ignore drops that happen too quickly after another
+    }
+    setLastDropTime(now);
+    
     // Reset active drop target
     setActiveDropTarget(null);
     
@@ -132,7 +140,8 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="p-4">
-        <style jsx global>{`
+        <style>
+        {`
           .calendar-day-cell {
             transition: all 0.2s ease-out;
           }
@@ -150,7 +159,8 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
             margin: 0;
             width: 100%;
           }
-        `}</style>
+        `}
+        </style>
         <Calendar 
           mode="single" 
           selected={selectedDate} 

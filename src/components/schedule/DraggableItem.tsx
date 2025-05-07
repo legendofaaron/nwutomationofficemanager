@@ -60,7 +60,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       }
     }
     
-    // Create item data
+    // Create item data - ensure all necessary properties are included
     const item: DragItem = {
       id,
       type,
@@ -72,9 +72,13 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       }
     };
     
-    // Set data transfer
+    // Set data transfer with improved reliability
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('application/json', JSON.stringify(item));
+    const stringifiedData = JSON.stringify(item);
+    e.dataTransfer.setData('application/json', stringifiedData);
+    
+    // Set a fallback data format for better cross-browser compatibility
+    e.dataTransfer.setData('text/plain', stringifiedData);
     
     // Create a custom drag image with preview of content
     try {
@@ -122,7 +126,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     // Set state
     setIsDraggingThis(true);
     
-    // Trigger global drag start
+    // Trigger global drag start with all necessary data
     startDrag({
       item,
       node: itemRef.current!,
@@ -172,8 +176,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       data-draggable-id={id}
       data-draggable-type={type}
     >
-      <style>
-        {`
+      <style jsx>{`
         .dragging-active {
           opacity: 0.6;
           transform: scale(0.98);
@@ -185,8 +188,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
           0%, 100% { background-color: transparent; }
           50% { background-color: rgba(var(--primary), 0.2); }
         }
-        `}
-      </style>
+      `}</style>
       {children}
     </div>
   );
