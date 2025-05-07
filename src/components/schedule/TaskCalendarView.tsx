@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import DraggableItem from './DraggableItem';
 import DroppableArea from './DroppableArea';
 import { useDragDrop } from './DragDropContext';
+import { formatMonthAndYear } from '@/components/calendar/CalendarUtils';
 
 interface TaskCalendarViewProps {
   tasks: Task[];
@@ -84,11 +85,25 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
 
   // Handle month navigation
   const handlePreviousMonth = () => {
-    setCurrentMonth(prevMonth => subMonths(prevMonth, 1));
+    const prevMonth = subMonths(currentMonth, 1);
+    setCurrentMonth(prevMonth);
+    // If onMonthChange is supported by the calendar component
+    // this ensures the internal state is also updated
+    onMonthChange(prevMonth);
   };
 
   const handleNextMonth = () => {
-    setCurrentMonth(prevMonth => addMonths(prevMonth, 1));
+    const nextMonth = addMonths(currentMonth, 1);
+    setCurrentMonth(nextMonth);
+    // If onMonthChange is supported by the calendar component
+    // this ensures the internal state is also updated
+    onMonthChange(nextMonth);
+  };
+
+  // Add a function to be called when calendar's month changes internally
+  const onMonthChange = (newMonth: Date) => {
+    setCurrentMonth(newMonth);
+    // No need to update selected date - we just want to view a different month
   };
 
   return <div className="grid gap-6 md:grid-cols-2">
@@ -107,17 +122,19 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
                 size="sm" 
                 onClick={handlePreviousMonth}
                 className="h-7 w-7 p-0"
+                type="button"
               >
                 ←
               </Button>
               <span className="text-sm font-medium">
-                {format(currentMonth, 'MMMM yyyy')}
+                {formatMonthAndYear(currentMonth)}
               </span>
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={handleNextMonth}
                 className="h-7 w-7 p-0"
+                type="button"
               >
                 →
               </Button>
@@ -133,7 +150,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
             selected={selectedDate} 
             onSelect={onSelectDate} 
             month={currentMonth} 
-            onMonthChange={setCurrentMonth} 
+            onMonthChange={onMonthChange} 
             className={cn("rounded-xl border shadow-sm", "calendar-grid")} 
             components={{
               DayContent: (props: DayProps) => {

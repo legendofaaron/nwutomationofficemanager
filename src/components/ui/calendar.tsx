@@ -45,6 +45,7 @@ const CustomCaption = ({ displayMonth, onPreviousClick, onNextClick }: CustomCap
           isSuperDarkMode && "bg-[#0A0A0A] border-[#181818] text-gray-300 hover:bg-[#111111]"
         )}
         aria-label="Previous month"
+        type="button"
       >
         <ChevronLeft className={cn("h-4 w-4 text-primary", isSuperDarkMode && "text-gray-300")} />
       </button>
@@ -61,6 +62,7 @@ const CustomCaption = ({ displayMonth, onPreviousClick, onNextClick }: CustomCap
           isSuperDarkMode && "bg-[#0A0A0A] border-[#181818] text-gray-300 hover:bg-[#111111]"
         )}
         aria-label="Next month"
+        type="button"
       >
         <ChevronRight className={cn("h-4 w-4 text-primary", isSuperDarkMode && "text-gray-300")} />
       </button>

@@ -110,3 +110,13 @@ export function getStableDateKey(date: Date | string): string {
     return "invalid-date";
   }
 }
+
+// Format month and year for display (used in calendar headers)
+export function formatMonthAndYear(date: Date): string {
+  try {
+    return `${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear()}`;
+  } catch (e) {
+    console.error("Error formatting month and year:", e);
+    return "Invalid Date";
+  }
+}

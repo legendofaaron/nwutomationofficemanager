@@ -47,7 +47,7 @@ export const useScheduleTasks = () => {
       clientLocationId: todo.clientLocationId,
       description: todo.description,
       crewId: todo.crewId,
-      crewName: todo.crewName
+      crewName: todo.crewName || '' // Add default empty string to fix TypeScript error
     }));
   }, [todos]);
   
@@ -197,4 +197,3 @@ export const useScheduleTasks = () => {
     clientLocations,
   };
 };
-
