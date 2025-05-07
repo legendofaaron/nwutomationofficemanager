@@ -66,8 +66,10 @@ export function useDraggable({
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('application/json', JSON.stringify(item));
     
-    // Set cursor style
-    e.dataTransfer.setDragImage(new Image(), 0, 0); // Invisible drag image
+    // Set cursor style - using a transparent image allows us to style the drag element
+    const dragImage = new Image();
+    dragImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; // Transparent 1px image
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
     
     // Set state
     setIsDraggingThis(true);
@@ -159,6 +161,9 @@ export function useDroppable({
       setDragOverTarget(id);
       setIsOver(true);
       
+      // Add visual feedback for the drop target
+      e.currentTarget.classList.add('drag-over-active');
+      
       // Call custom handler
       if (onDragEnter) {
         onDragEnter(e);
@@ -173,6 +178,8 @@ export function useDroppable({
     // Set drop effect
     if (!disabled && canAcceptCurrent) {
       e.dataTransfer.dropEffect = 'move';
+      // Optional: add a CSS class to highlight the drop target
+      e.currentTarget.classList.add('drag-over-active');
     } else {
       e.dataTransfer.dropEffect = 'none';
     }
@@ -187,6 +194,9 @@ export function useDroppable({
     if (dragEnterCountRef[0] === 0) {
       setDragOverTarget(null);
       setIsOver(false);
+      
+      // Remove visual feedback
+      e.currentTarget.classList.remove('drag-over-active');
       
       // Call custom handler
       if (onDragLeave) {
@@ -203,6 +213,16 @@ export function useDroppable({
     dragEnterCountRef[0] = 0;
     setIsOver(false);
     setDragOverTarget(null);
+    
+    // Remove visual feedback
+    e.currentTarget.classList.remove('drag-over-active');
+    
+    // Add visual feedback for the drop
+    const element = e.currentTarget;
+    element.classList.add('drop-highlight');
+    setTimeout(() => {
+      element.classList.remove('drop-highlight');
+    }, 500);
     
     // Handle drop
     try {

@@ -10,6 +10,7 @@ import { format, addMonths, subMonths } from 'date-fns';
 import { DayProps } from 'react-day-picker';
 import DroppableArea from '../DroppableArea';
 import { useDragDrop } from '../DragDropContext';
+import { toast } from 'sonner'; // Import toast for feedback
 
 interface CalendarCardProps {
   tasks: Task[];
@@ -38,6 +39,12 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
   const handleDayDrop = (item: DragItem, date: Date) => {
     if (item.type === 'task' && onMoveTask) {
       onMoveTask(item.id, date);
+      
+      // Show a toast notification for successful drop
+      const taskTitle = item.data.title || 'Task';
+      toast.success(`Task "${taskTitle}" moved to ${format(date, 'MMMM d')}`, {
+        duration: 3000,
+      });
     }
   };
 
@@ -102,6 +109,8 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
               const hasCompletedTasks = dayTasks.some(task => task.completed);
               const hasPendingTasks = dayTasks.some(task => !task.completed);
               const droppableId = `day-${dayDate.toISOString()}`;
+              const isToday = dayDate.toDateString() === new Date().toDateString();
+              const isSelected = selectedDate?.toDateString() === dayDate.toDateString();
 
               return (
                 <DroppableArea
@@ -109,17 +118,18 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
                   acceptTypes={['task', 'employee', 'crew', 'client']}
                   onDrop={(item, event) => handleDayDrop(item, dayDate)}
                   className={cn(
-                    "calendar-day-cell relative h-full flex items-center justify-center rounded-md transition-colors", 
-                    dayDate.toDateString() === selectedDate?.toDateString() && "selected-day",
+                    "calendar-day-cell relative h-full w-full flex items-center justify-center rounded-md transition-colors", 
+                    isSelected && "selected-day bg-primary/10",
+                    isDragging && "drag-target",
                     hasTasks && "font-medium"
                   )}
-                  activeClassName="bg-blue-100 dark:bg-blue-800/30 border-dashed border-blue-400"
+                  activeClassName="bg-primary/20 dark:bg-primary/30 border-dashed border-2 border-primary"
                 >
                   {/* Day number */}
                   <div className={cn(
                     "z-10 font-medium",
-                    dayDate.toDateString() === new Date().toDateString() && 
-                    "bg-primary text-white rounded-full w-7 h-7 flex items-center justify-center"
+                    isToday && 
+                    "bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center"
                   )}>
                     {format(dayDate, 'd')}
                   </div>
