@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Building2, Calendar, Receipt, Settings, Users, BookOpen, Briefcase, Heart, Coffee } from 'lucide-react';
+import { Building2, Calendar, Receipt, Settings, Users, BookOpen, Briefcase, Heart, Coffee, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import EmployeesView from './EmployeesView';
 import ScheduleView from './ScheduleView';
@@ -27,6 +26,10 @@ const OfficeManagerDashboard = () => {
     window.open('https://paypal.me/aaronthelegend', '_blank');
   };
 
+  const handleEmailDeveloper = () => {
+    window.location.href = 'mailto:northwesternautomation@gmail.com?subject=Office%20Manager%20Source%20Code%20Request&body=I%20would%20like%20to%20request%20the%20source%20code%20for%20Office%20Manager.';
+  };
+
   return (
     <>
       <PaymentVerifier />
@@ -39,11 +42,11 @@ const OfficeManagerDashboard = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleTipMe}
+            onClick={handleEmailDeveloper}
             className="gap-2 text-amber-500 hover:text-amber-600 hover:bg-amber-100/10"
           >
-            <Coffee className="h-4 w-4" />
-            Tip Developer
+            <Mail className="h-4 w-4" />
+            Email for Source Code
           </Button>
         </div>
 

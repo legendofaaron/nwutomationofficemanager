@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, MessageSquare, BookOpenText, Building2, Heart, Coffee, Sparkles, Github, Download, Code } from 'lucide-react';
+import { ArrowRight, MessageSquare, BookOpenText, Building2, Heart, Coffee, Sparkles, Github, Download, Code, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
@@ -51,6 +51,10 @@ const WelcomeDashboard = () => {
       
   const handleTipMe = () => {
     window.open('https://paypal.me/aaronthelegend', '_blank');
+  };
+
+  const handleEmailDeveloper = () => {
+    window.location.href = 'mailto:northwesternautomation@gmail.com?subject=Office%20Manager%20Source%20Code%20Request&body=I%20would%20like%20to%20request%20the%20source%20code%20for%20Office%20Manager.';
   };
 
   const handleOpenGithub = () => {
@@ -260,23 +264,23 @@ const WelcomeDashboard = () => {
           </Card>
         </div>
         
-        {/* Tip Me Section */}
+        {/* Tip Me Section - updated to Email for Source Code */}
         <div className="mt-6 text-center animate-fade-in" style={{animationDelay: '700ms'}}>
           <Card className={`max-w-md mx-auto ${cardBgClass} border-t-4 border-t-amber-500`}>
             <CardContent className="pt-6 pb-4">
               <div className="flex flex-col items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <Coffee className="h-5 w-5 text-amber-500" />
-                  <h3 className="text-lg font-medium">Support the Developer</h3>
+                  <Mail className="h-5 w-5 text-amber-500" />
+                  <h3 className="text-lg font-medium">Contact for Source Code</h3>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Enjoying Office Manager? Consider supporting the developer with a small tip.
+                  Enjoying Office Manager? Contact the developer directly to request the complete source code.
                 </p>
                 <Button 
-                  onClick={handleTipMe} 
+                  onClick={handleEmailDeveloper} 
                   className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white gap-2"
                 >
-                  <Heart className="h-4 w-4" fill="currentColor" /> Tip @aaronthelegend on PayPal
+                  <Mail className="h-4 w-4" /> Email for Source Code
                 </Button>
               </div>
             </CardContent>
