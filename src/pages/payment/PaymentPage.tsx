@@ -15,19 +15,19 @@ const PaymentPage = () => {
   
   const handleContinue = () => {
     toast({
-      title: "All features unlocked",
-      description: "You have access to all features.",
+      title: "Thank you for using Office Manager",
+      description: "All features are completely free.",
       variant: "default",
     });
     navigate('/dashboard');
   };
 
   const handleEmailDeveloper = () => {
-    window.location.href = 'mailto:northwesternautomation@gmail.com?subject=Office%20Manager%20Source%20Code%20Request&body=I%20would%20like%20to%20request%20the%20source%20code%20for%20Office%20Manager.';
+    window.location.href = 'mailto:contact@example.com?subject=Office%20Manager%20Feedback&body=I%20have%20some%20feedback%20about%20Office%20Manager.';
   };
   
   const handleTipMe = () => {
-    window.open('https://paypal.me/aaronthelegend', '_blank');
+    window.open('https://ko-fi.com/officemanager', '_blank');
   };
 
   return (
@@ -41,14 +41,14 @@ const PaymentPage = () => {
             <Logo />
             <h1 className="mt-6 text-2xl font-bold">Office Manager</h1>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Enjoy full access to all features
+              100% Free Software
             </p>
           </div>
           
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-8">
             <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <Mail className="mr-2 h-5 w-5 text-blue-500" />
-              All Features Included
+              <CheckCircle className="mr-2 h-5 w-5 text-green-500" />
+              All Features Included for Free
             </h2>
             
             <div className="grid md:grid-cols-2 gap-6">
@@ -89,27 +89,39 @@ const PaymentPage = () => {
               </div>
             </div>
             
-            <div className="flex flex-wrap gap-2 mt-6">
+            <div className="mt-8 p-4 border border-amber-200 dark:border-amber-800 rounded-lg bg-amber-50 dark:bg-amber-900/20">
+              <h3 className="font-medium mb-2 flex items-center">
+                <Heart className="h-4 w-4 mr-2 text-red-500" fill="currentColor" /> 
+                Support Development
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Office Manager is completely free. If you find it useful, please consider supporting its development with a tip.
+              </p>
+              
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1"
+                  onClick={handleTipMe}
+                >
+                  <Heart className="h-4 w-4" fill="currentColor" /> Support With A Tip
+                </Button>
+                
+                <Button 
+                  variant="outline"
+                  className="flex items-center gap-1" 
+                  onClick={handleEmailDeveloper}
+                >
+                  <Mail className="h-4 w-4" /> Send Feedback
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex justify-center mt-6">
               <Button 
-                className="flex-1" 
+                className="w-full max-w-xs" 
                 onClick={handleContinue}
               >
                 Continue to Dashboard
-              </Button>
-              
-              <Button 
-                variant="outline"
-                className="flex items-center gap-1" 
-                onClick={handleEmailDeveloper}
-              >
-                <Mail className="h-4 w-4" /> Email for Source
-              </Button>
-              
-              <Button 
-                className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1"
-                onClick={handleTipMe}
-              >
-                <Heart className="h-4 w-4" fill="currentColor" /> Tip Developer
               </Button>
             </div>
           </div>

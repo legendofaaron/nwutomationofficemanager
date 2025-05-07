@@ -1,11 +1,11 @@
 
-# Office Manager - Free & Open Source
+# Office Manager - 100% Free Software
 <img width="1005" alt="light and dark mode " src="https://github.com/user-attachments/assets/3920a9bc-b4f9-43c5-8ece-803d06aeb412" />
 
 
 ## Overview
 
-Office Manager is a free and open-source solution for document management, schedule organization, and enhanced workplace productivity. It's available under the MIT license for both commercial and personal use.
+Office Manager is a completely free solution for document management, schedule organization, and enhanced workplace productivity. It's available at no cost for both commercial and personal use.
 
 ## Features
 
@@ -13,7 +13,7 @@ Office Manager is a free and open-source solution for document management, sched
 - **Knowledge Base**: Build and maintain a searchable company knowledge base
 - **Office Management**: Schedule management, team coordination, and productivity tools
 - **Intelligent Assistant**: AI-powered assistance for various office tasks
-- **Free & Open Source**: All features available at no cost under MIT license
+- **100% Free**: All features available at no cost
 
 ## Project info
 
@@ -74,7 +74,7 @@ npm run dev
 You can download the source code in several ways:
 
 1. Clone the repository using Git
-2. Download as ZIP from the [GitHub repository](https://github.com/lovable-labs/office-manager)
+2. Download as ZIP from the GitHub repository
 3. Use the download button in the app interface
 
 ## Technologies Used
@@ -104,10 +104,10 @@ npm run build
 npx electron-builder build
 ```
 
-## Contributing
+## Support Development
 
-Contributions are welcome! Feel free to fork the repository, make changes, and submit pull requests.
+If you find Office Manager useful, please consider supporting its development with a tip at [Ko-fi](https://ko-fi.com/officemanager).
 
 ## Contact
 
-For questions or support, please open an issue on the GitHub repository.
+For questions or support, please open an issue on the GitHub repository or contact us at contact@example.com.

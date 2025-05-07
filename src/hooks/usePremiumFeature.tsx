@@ -22,7 +22,6 @@ export type PremiumFeature =
   | 'AI Assistant Setup';
 
 export function usePremiumFeature() {
-  const { user } = useAuth();
   const [showPremiumDialog, setShowPremiumDialog] = useState(false);
   const [currentFeature, setCurrentFeature] = useState<string>('');
   
