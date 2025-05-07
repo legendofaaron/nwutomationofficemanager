@@ -16,13 +16,13 @@ export interface TodoBase {
   clientLocationId?: string;
   description?: string;
   crewId?: string;
+  title?: string; // Changed from required to optional to match AppContext.tsx
 }
 
 export interface Todo extends TodoBase {
-  title: string; // Ensure title is required
-  crewName?: string; // Add missing property
+  crewName?: string;
   crewMembers?: string[];
-  assignedToAvatar?: string; // Add missing property
+  assignedToAvatar?: string;
 }
 
 // Define types for the different items that can be dropped

@@ -112,10 +112,10 @@ const DashboardCalendar = () => {
   const addTodo = (newTodoText: string) => {
     if (newTodoText.trim() === '') return;
     
-    const newTodo: Todo = {
+    const newTodo = {
       id: Date.now().toString(),
       text: newTodoText,
-      title: newTodoText, // Add title for compatibility
+      title: newTodoText, // Ensure title is always set
       completed: false,
       date: selectedDate
     };
@@ -125,10 +125,10 @@ const DashboardCalendar = () => {
   };
 
   const onSubmitNewTask = (values: TaskFormValues) => {
-    const newTodo: Todo = {
+    const newTodo = {
       id: Date.now().toString(),
       text: values.text,
-      title: values.text, // Add title for compatibility
+      title: values.text, // Ensure title is always set
       completed: false,
       date: values.date || selectedDate,
       location: values.location,
@@ -146,10 +146,10 @@ const DashboardCalendar = () => {
   const onSubmitEmployeeTask = (values: TaskFormValues) => {
     if (!droppedItem || droppedItem.type !== 'employee') return;
 
-    const newTodo: Todo = {
+    const newTodo = {
       id: Date.now().toString(),
       text: values.text,
-      title: values.text, // Add title for compatibility
+      title: values.text, // Ensure title is always set
       completed: false,
       date: values.date || selectedDate,
       location: values.location,
@@ -170,10 +170,10 @@ const DashboardCalendar = () => {
     if (!droppedItem || droppedItem.type !== 'crew') return;
 
     const crewName = droppedItem.originalData?.name || droppedItem.text.split(' - ')[1];
-    const newTodo: Todo = {
+    const newTodo = {
       id: Date.now().toString(),
       text: values.text,
-      title: values.text, // Add title for compatibility
+      title: values.text, // Ensure title is always set
       completed: false,
       date: values.date || selectedDate,
       location: values.location,
