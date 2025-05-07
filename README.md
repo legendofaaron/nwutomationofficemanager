@@ -1,5 +1,6 @@
 
 # Office Manager - Free & Open Source
+![unnamed-2](https://github.com/user-attachments/assets/9ec82dd2-fedb-42cf-bfab-171c4e94300e)
 
 ## Overview
 
