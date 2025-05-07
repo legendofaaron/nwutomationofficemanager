@@ -9,7 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Task } from './ScheduleTypes';
+import { Task } from '@/components/schedule/ScheduleTypes';
 import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
 import { toast } from 'sonner';
 
@@ -28,7 +28,7 @@ const CrewScheduleDownload = ({ crews, tasks }: CrewScheduleDownloadProps) => {
   const [selectedCrewId, setSelectedCrewId] = useState<string>("");
   const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(),
-    to: undefined,
+    to: new Date(new Date().setMonth(new Date().getMonth() + 1)), // Default to one month ahead
   });
 
   // Get the selected crew

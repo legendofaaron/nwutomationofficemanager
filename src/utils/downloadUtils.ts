@@ -5,11 +5,12 @@ import { format } from 'date-fns';
 
 // Helper to format a task for text display
 const formatTaskForText = (task: Task): string => {
-  const date = format(task.date, 'MMM dd, yyyy');
+  const dateStr = task.date instanceof Date ? task.date : new Date(task.date);
+  const date = format(dateStr, 'MMM dd, yyyy');
   const time = task.startTime && task.endTime ? `${task.startTime} - ${task.endTime}` : 'All day';
   const status = task.completed ? '[✓]' : '[ ]';
   const assignee = task.assignedTo ? `Assigned to: ${task.assignedTo}` : 
-                  task.crew ? `Crew: ${task.crew.join(', ')}` : 'Unassigned';
+                  task.crew && task.crew.length > 0 ? `Crew: ${task.crew.join(', ')}` : 'Unassigned';
   const location = task.location ? `Location: ${task.location}` : '';
   
   return `${status} ${date} | ${time} | ${task.title}\n    ${assignee}\n    ${location}\n`;
@@ -26,7 +27,10 @@ export const generateScheduleText = (tasks: Task[], filter?: ScheduleFilter): st
         (task.crew && task.crew.includes(filter.name || ''))
       );
     } else if (filter.type === 'crew') {
-      filteredTasks = tasks.filter(task => task.crewId === filter.id);
+      filteredTasks = tasks.filter(task => 
+        task.crewId === filter.id || 
+        (task.crew && task.crew.includes(filter.id))
+      );
     } else if (filter.type === 'client') {
       filteredTasks = tasks.filter(task => task.clientId === filter.id);
     }
@@ -34,8 +38,12 @@ export const generateScheduleText = (tasks: Task[], filter?: ScheduleFilter): st
 
   // Sort tasks by date and time
   const sortedTasks = filteredTasks.sort((a, b) => {
+    // Ensure both dates are Date objects
+    const dateA = a.date instanceof Date ? a.date : new Date(a.date);
+    const dateB = b.date instanceof Date ? b.date : new Date(b.date);
+    
     // First sort by date
-    const dateComparison = a.date.getTime() - b.date.getTime();
+    const dateComparison = dateA.getTime() - dateB.getTime();
     if (dateComparison !== 0) return dateComparison;
     
     // Then sort by start time if dates are the same
@@ -58,7 +66,9 @@ export const generateScheduleText = (tasks: Task[], filter?: ScheduleFilter): st
   const tasksByDate: Record<string, Task[]> = {};
   
   sortedTasks.forEach(task => {
-    const dateKey = format(task.date, 'yyyy-MM-dd');
+    const taskDate = task.date instanceof Date ? task.date : new Date(task.date);
+    const dateKey = format(taskDate, 'yyyy-MM-dd');
+    
     if (!tasksByDate[dateKey]) {
       tasksByDate[dateKey] = [];
     }
@@ -68,7 +78,9 @@ export const generateScheduleText = (tasks: Task[], filter?: ScheduleFilter): st
   // Generate text for each date group
   Object.keys(tasksByDate).sort().forEach(dateKey => {
     const tasksForDate = tasksByDate[dateKey];
-    const dateHeader = format(tasksForDate[0].date, 'EEEE, MMMM d, yyyy');
+    const firstTaskDate = tasksForDate[0].date instanceof Date ? 
+      tasksForDate[0].date : new Date(tasksForDate[0].date);
+    const dateHeader = format(firstTaskDate, 'EEEE, MMMM d, yyyy');
     
     text += `${dateHeader}\n`;
     text += "----------------------------------------\n";
@@ -97,13 +109,21 @@ export const generateSchedulePDF = (tasks: Task[], filter?: ScheduleFilter): jsP
         (task.crew && task.crew.includes(filter.name || ''))
       );
     } else if (filter.type === 'crew') {
-      filteredTasks = tasks.filter(task => task.crewId === filter.id);
+      filteredTasks = tasks.filter(task => 
+        task.crewId === filter.id || 
+        (task.crew && task.crew.includes(filter.id))
+      );
     } else if (filter.type === 'client') {
       filteredTasks = tasks.filter(task => task.clientId === filter.id);
     }
   }
   
-  const sortedTasks = filteredTasks.sort((a, b) => a.date.getTime() - b.date.getTime());
+  // Sort tasks by date
+  const sortedTasks = filteredTasks.sort((a, b) => {
+    const dateA = a.date instanceof Date ? a.date : new Date(a.date);
+    const dateB = b.date instanceof Date ? b.date : new Date(b.date);
+    return dateA.getTime() - dateB.getTime();
+  });
   
   // PDF styling
   pdf.setFont("helvetica", "bold");
@@ -123,7 +143,9 @@ export const generateSchedulePDF = (tasks: Task[], filter?: ScheduleFilter): jsP
   const tasksByDate: Record<string, Task[]> = {};
   
   sortedTasks.forEach(task => {
-    const dateKey = format(task.date, 'yyyy-MM-dd');
+    const taskDate = task.date instanceof Date ? task.date : new Date(task.date);
+    const dateKey = format(taskDate, 'yyyy-MM-dd');
+    
     if (!tasksByDate[dateKey]) {
       tasksByDate[dateKey] = [];
     }
@@ -136,7 +158,9 @@ export const generateSchedulePDF = (tasks: Task[], filter?: ScheduleFilter): jsP
   // Generate PDF content for each date group
   Object.keys(tasksByDate).sort().forEach(dateKey => {
     const tasksForDate = tasksByDate[dateKey];
-    const dateHeader = format(tasksForDate[0].date, 'EEEE, MMMM d, yyyy');
+    const firstTaskDate = tasksForDate[0].date instanceof Date ? 
+      tasksForDate[0].date : new Date(tasksForDate[0].date);
+    const dateHeader = format(firstTaskDate, 'EEEE, MMMM d, yyyy');
     
     // Check if we need a new page
     if (yPosition > pageHeight - 40) {
@@ -163,16 +187,17 @@ export const generateSchedulePDF = (tasks: Task[], filter?: ScheduleFilter): jsP
       
       const time = task.startTime && task.endTime ? `${task.startTime} - ${task.endTime}` : 'All day';
       const status = task.completed ? "✓ " : "□ ";
+      const title = task.title || task.text || "Untitled Task"; // Handle both title and text properties
       
       pdf.setFont("helvetica", "bold");
-      pdf.text(`${status}${time} | ${task.title}`, 20, yPosition);
+      pdf.text(`${status}${time} | ${title}`, 20, yPosition);
       yPosition += 6;
       
       pdf.setFont("helvetica", "normal");
       
       // Assignee information
       const assignee = task.assignedTo ? `Assigned to: ${task.assignedTo}` : 
-                      task.crew ? `Crew: ${task.crew.join(', ')}` : 'Unassigned';
+                      task.crew && task.crew.length > 0 ? `Crew: ${task.crew.join(', ')}` : 'Unassigned';
       pdf.text(assignee, 25, yPosition);
       yPosition += 6;
       
@@ -180,6 +205,13 @@ export const generateSchedulePDF = (tasks: Task[], filter?: ScheduleFilter): jsP
       if (task.location) {
         pdf.text(`Location: ${task.location}`, 25, yPosition);
         yPosition += 6;
+      }
+      
+      // Add task description if available
+      if (task.description) {
+        const descLines = pdf.splitTextToSize(task.description, 160);
+        pdf.text(descLines, 25, yPosition);
+        yPosition += 6 * descLines.length;
       }
       
       yPosition += 4; // Add extra space between tasks
@@ -193,6 +225,12 @@ export const generateSchedulePDF = (tasks: Task[], filter?: ScheduleFilter): jsP
 
 // Function to download text file
 export const downloadScheduleAsTxt = (tasks: Task[], filter?: ScheduleFilter): void => {
+  // Make sure we have tasks
+  if (!tasks || tasks.length === 0) {
+    console.error("No tasks provided to downloadScheduleAsTxt");
+    return;
+  }
+  
   const text = generateScheduleText(tasks, filter);
   const blob = new Blob([text], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
@@ -215,6 +253,12 @@ export const downloadScheduleAsTxt = (tasks: Task[], filter?: ScheduleFilter): v
 
 // Function to download PDF file
 export const downloadScheduleAsPdf = (tasks: Task[], filter?: ScheduleFilter): void => {
+  // Make sure we have tasks
+  if (!tasks || tasks.length === 0) {
+    console.error("No tasks provided to downloadScheduleAsPdf");
+    return;
+  }
+  
   const pdf = generateSchedulePDF(tasks, filter);
   
   // Create filename with current date and filter info
@@ -227,12 +271,30 @@ export const downloadScheduleAsPdf = (tasks: Task[], filter?: ScheduleFilter): v
   pdf.save(filename);
 };
 
-// New utility functions for date range filtering
+// Now update the function in EmployeesView to convert todos to tasks properly
+export const convertTodosToTasks = (todos: any[]): Task[] => {
+  return todos.map(todo => ({
+    id: todo.id,
+    title: todo.text || todo.title || "Untitled Task", // Support both text and title properties
+    date: todo.date instanceof Date ? todo.date : new Date(todo.date || new Date()),
+    completed: !!todo.completed,
+    assignedTo: todo.assignedTo,
+    crewId: todo.crewId || (todo.crew && todo.crew[0]), // Use crewId or first item in crew array
+    crew: todo.crew || [],
+    startTime: todo.startTime,
+    endTime: todo.endTime,
+    location: todo.location,
+    clientId: todo.clientId,
+    description: todo.description || ""
+  }));
+};
+
+// Utility to filter tasks by date range
 export const filterTasksByDateRange = (tasks: Task[], startDate?: Date, endDate?: Date): Task[] => {
   if (!startDate) return tasks;
   
   return tasks.filter(task => {
-    const taskDate = new Date(task.date);
+    const taskDate = task.date instanceof Date ? task.date : new Date(task.date);
     if (endDate) {
       return taskDate >= startDate && taskDate <= endDate;
     }
@@ -250,7 +312,10 @@ export const getEmployeeTasks = (tasks: Task[], employeeName: string): Task[] =>
 
 // Utility to get crew tasks
 export const getCrewTasks = (tasks: Task[], crewId: string): Task[] => {
-  return tasks.filter(task => task.crewId === crewId);
+  return tasks.filter(task => 
+    task.crewId === crewId || 
+    (task.crew && task.crew.includes(crewId))
+  );
 };
 
 // Utility to format date range into a readable string
@@ -263,4 +328,3 @@ export const formatDateRange = (startDate?: Date, endDate?: Date): string => {
   
   return format(startDate, 'MMMM dd, yyyy');
 };
-

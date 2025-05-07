@@ -348,17 +348,18 @@ const EmployeesView: React.FC = () => {
   const convertTodosToTasks = (): any[] => {
     return todos.map(todo => ({
       id: todo.id,
-      title: todo.text,
-      date: todo.date,
-      completed: todo.completed,
+      title: todo.text || "Untitled Task",
+      date: todo.date instanceof Date ? todo.date : new Date(todo.date || new Date()),
+      completed: !!todo.completed,
       assignedTo: todo.assignedTo,
       crew: todo.crew || [],
-      crewId: todo.crew?.[0], // Use the first item in the crew array as crewId for compatibility
+      crewId: todo.crewId || (todo.crew && todo.crew[0]), // Use crewId or first item in crew array
       startTime: todo.startTime,
       endTime: todo.endTime,
       location: todo.location,
-      clientId: (todo as any).clientId,
-      clientLocationId: (todo as any).clientLocationId
+      clientId: todo.clientId,
+      clientLocationId: todo.clientLocationId,
+      description: todo.description || ""
     }));
   };
 

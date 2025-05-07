@@ -20,11 +20,11 @@ interface EmployeeListProps {
   onHandleEmployeeDragStart: (e: React.DragEvent, employee: Employee) => void;
   onSelectEmployee: (employeeId: string) => void;
   onEditEmployee: (employee: Employee) => void;
-  onDeleteEmployee: (employeeId: string, employeeName: string) => void; // Changed from object to separate params
+  onDeleteEmployee: (employeeId: string, employeeName: string) => void; 
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
-  onAssignTask: (employeeId: string, employeeName: string) => void; // Changed from object to separate params
-  onDownloadSchedule: (employeeId: string) => void; // Changed from object to string
+  onAssignTask: (employeeId: string, employeeName: string) => void; 
+  onDownloadSchedule: (employeeId: string) => void;
   getEmployeeCrews: (employeeId: string) => string[];
   getEmployeeTasks: (employeeId: string) => TaskForEmployeeView[];
 }

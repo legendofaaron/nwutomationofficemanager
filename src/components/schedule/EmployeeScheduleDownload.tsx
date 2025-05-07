@@ -2,13 +2,13 @@
 import React, { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { CalendarIcon, Download, FileText, FileDown } from 'lucide-react';
+import { CalendarIcon, FileText, FileDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { Task } from './ScheduleTypes';
+import { Task } from '@/components/schedule/ScheduleTypes';
 import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
 import { toast } from 'sonner';
 
@@ -21,26 +21,23 @@ interface EmployeeScheduleDownloadProps {
 const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks }: EmployeeScheduleDownloadProps) => {
   const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(),
-    to: undefined,
+    to: new Date(new Date().setMonth(new Date().getMonth() + 1)), // Default to one month ahead
   });
 
-  // Filter tasks for this employee and within selected date range
+  // Filter tasks for the selected employee and within selected date range
   const getFilteredTasks = (): Task[] => {
-    if (!date?.from) return [];
+    if (!employeeId || !date?.from) return [];
     
     return tasks.filter(task => {
       // Check if task is assigned to this employee
       const isAssignedToEmployee = task.assignedTo === employeeName;
       
-      // Check if employee is part of a crew assigned to this task
-      const isInAssignedCrew = task.crew?.includes(employeeName) || false;
-      
       // Check if task date is within the selected range
-      const taskDate = new Date(task.date);
+      const taskDate = task.date instanceof Date ? task.date : new Date(task.date);
       const isInDateRange = date.from && taskDate >= date.from && 
                             (!date.to || taskDate <= date.to);
       
-      return (isAssignedToEmployee || isInAssignedCrew) && isInDateRange;
+      return isAssignedToEmployee && isInDateRange;
     });
   };
 
@@ -48,7 +45,7 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks }: EmployeeS
     const filteredTasks = getFilteredTasks();
     
     if (filteredTasks.length === 0) {
-      toast.error("No scheduled tasks in the selected date range");
+      toast.error("No scheduled tasks for this employee in the selected date range");
       return;
     }
     
@@ -69,7 +66,7 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks }: EmployeeS
     const filteredTasks = getFilteredTasks();
     
     if (filteredTasks.length === 0) {
-      toast.error("No scheduled tasks in the selected date range");
+      toast.error("No scheduled tasks for this employee in the selected date range");
       return;
     }
     
@@ -89,51 +86,49 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks }: EmployeeS
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-medium">Download Schedule</CardTitle>
+        <CardTitle className="text-base font-medium">Employee Schedule Download</CardTitle>
         <CardDescription>
-          Download {employeeName}'s schedule for a specific date range
+          Download schedule for {employeeName}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-2">
-          <div className="flex flex-col">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="date"
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date?.from ? (
-                    date.to ? (
-                      <>
-                        {format(date.from, "LLL dd, y")} -{" "}
-                        {format(date.to, "LLL dd, y")}
-                      </>
-                    ) : (
-                      format(date.from, "LLL dd, y")
-                    )
+        <div className="flex flex-col">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="date"
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date?.from ? (
+                  date.to ? (
+                    <>
+                      {format(date.from, "LLL dd, y")} -{" "}
+                      {format(date.to, "LLL dd, y")}
+                    </>
                   ) : (
-                    <span>Pick a date range</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={date?.from}
-                  selected={date}
-                  onSelect={setDate}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+                    format(date.from, "LLL dd, y")
+                  )
+                ) : (
+                  <span>Pick a date range</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={date?.from}
+                selected={date}
+                onSelect={setDate}
+                numberOfMonths={2}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
