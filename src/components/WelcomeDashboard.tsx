@@ -190,33 +190,29 @@ const WelcomeDashboard = () => {
           Select a feature from the sidebar or use the Intelligent Assistant to get started
         </p>
         
-        {/* Contact for Source Code and Tip Developer Section - Made More Subtle */}
+        {/* Contact for Source Code and Tip Developer Section */}
         <div className="mt-12 text-center animate-fade-in" style={{animationDelay: '700ms'}}>
-          <Card className={`max-w-xl mx-auto ${cardBgClass} border-t border-t-gray-200 dark:border-t-gray-700`}>
+          <Card className={`max-w-xl mx-auto ${cardBgClass} border-t-4 border-t-amber-500`}>
             <CardContent className="pt-6 pb-4">
               <div className="flex items-center justify-center gap-2 mb-3">
-                <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                <h3 className="text-base font-medium text-gray-700 dark:text-gray-300">Contact Information</h3>
+                <Mail className="h-5 w-5 text-amber-500" />
+                <h3 className="text-lg font-medium">Contact for Source Code</h3>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 max-w-lg mx-auto">
-                Have questions about Office Manager? Need additional resources?
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 max-w-lg mx-auto">
+                Enjoying Office Manager? Contact the developer directly to request the complete source code.
               </p>
               <div className="flex flex-wrap gap-3 justify-center">
                 <Button 
                   onClick={handleEmailDeveloper} 
-                  variant="outline"
-                  size="sm"
-                  className="text-xs border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300"
+                  className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
                 >
-                  <Mail className="h-3.5 w-3.5 mr-1.5 text-gray-500" /> Contact for Resources
+                  <Mail className="h-4 w-4" /> Email for Source Code
                 </Button>
                 <Button 
                   onClick={handleTipMe}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300"
+                  className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white gap-2"
                 >
-                  <Heart className="h-3.5 w-3.5 mr-1.5 text-gray-500" /> Support Development
+                  <Heart className="h-4 w-4" fill="currentColor" /> Tip Developer on PayPal
                 </Button>
               </div>
             </CardContent>

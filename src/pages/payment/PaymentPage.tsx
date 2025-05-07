@@ -89,32 +89,29 @@ const PaymentPage = () => {
               </div>
             </div>
             
-            <div className="mt-8 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/70">
-              <h3 className="font-medium mb-2 flex items-center text-gray-700 dark:text-gray-300">
-                <Heart className="h-4 w-4 mr-2 text-gray-500" /> 
-                Supporting Development
+            <div className="mt-8 p-4 border border-amber-200 dark:border-amber-800 rounded-lg bg-amber-50 dark:bg-amber-900/20">
+              <h3 className="font-medium mb-2 flex items-center">
+                <Heart className="h-4 w-4 mr-2 text-red-500" fill="currentColor" /> 
+                Support Development
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                Office Manager is completely free to use.
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Office Manager is completely free. If you find it useful, please consider supporting its development with a tip.
               </p>
               
               <div className="flex flex-wrap gap-2">
                 <Button 
-                  variant="outline"
-                  size="sm"
-                  className="text-xs text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100/50 dark:hover:bg-gray-700/50"
+                  className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1"
                   onClick={handleTipMe}
                 >
-                  <Heart className="h-3 w-3 mr-1 text-gray-400" /> Support
+                  <Heart className="h-4 w-4" fill="currentColor" /> Support With A Tip
                 </Button>
                 
                 <Button 
                   variant="outline"
-                  size="sm"
-                  className="text-xs text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100/50 dark:hover:bg-gray-700/50" 
+                  className="flex items-center gap-1" 
                   onClick={handleEmailDeveloper}
                 >
-                  <Mail className="h-3 w-3 mr-1 text-gray-400" /> Contact
+                  <Mail className="h-4 w-4" /> Send Feedback
                 </Button>
               </div>
             </div>

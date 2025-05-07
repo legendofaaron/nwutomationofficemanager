@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useDragDrop } from './DragDropContext';
@@ -18,7 +17,7 @@ interface DroppableAreaProps {
 
 const DroppableArea: React.FC<DroppableAreaProps> = ({
   id,
-  acceptTypes = [], // Provide default empty array
+  acceptTypes,
   onDrop,
   onDragEnter,
   onDragLeave,
@@ -32,10 +31,7 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
   const dropAreaRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    // Ensure acceptTypes is always an array to prevent .join errors
-    const typesToRegister = Array.isArray(acceptTypes) ? acceptTypes : [];
-    registerDropTarget(id, typesToRegister);
-    
+    registerDropTarget(id, acceptTypes);
     return () => {
       unregisterDropTarget(id);
     };
@@ -45,7 +41,7 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
     event.preventDefault();
     event.stopPropagation();
     
-    if (isDragging && draggedItem && Array.isArray(acceptTypes) && acceptTypes.includes(draggedItem.type)) {
+    if (isDragging && draggedItem && acceptTypes.includes(draggedItem.type)) {
       setIsActive(true);
       if (onDragEnter) {
         onDragEnter(event);
@@ -76,7 +72,7 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
       const itemData = event.dataTransfer.getData('application/json');
       if (itemData) {
         const item: DragItem = JSON.parse(itemData);
-        if (Array.isArray(acceptTypes) && acceptTypes.includes(item.type) && onDrop) {
+        if (acceptTypes.includes(item.type) && onDrop) {
           onDrop(item, event);
         }
       }
@@ -85,6 +81,7 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
     }
   };
 
+  // Fix the style tag
   return (
     <div
       ref={dropAreaRef}
@@ -100,7 +97,7 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
       onDrop={handleDrop}
       onClick={onClick}
       data-droppable-id={id}
-      data-accept-types={Array.isArray(acceptTypes) ? acceptTypes.join(',') : ''}
+      data-accept-types={acceptTypes.join(',')}
     >
       <style>
         {`
