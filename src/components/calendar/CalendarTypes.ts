@@ -1,3 +1,4 @@
+
 export interface Todo {
   id: string;
   text: string;
@@ -12,6 +13,10 @@ export interface Todo {
   crewId?: string;
   crewName?: string;
   crewMembers?: string[];
+  crew?: string[];
+  clientId?: string;
+  clientLocationId?: string;
+  description?: string;
 }
 
 export interface TaskFormValues {

@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { format, addMonths, subMonths } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -37,32 +37,40 @@ const CalendarContainer: React.FC<CalendarContainerProps> = memo(({
   handleCalendarDragOver,
 }) => {
   // Create navigation handlers that don't recreate on each render
-  const goToPreviousMonth = () => {
+  const goToPreviousMonth = useCallback(() => {
     const newDate = subMonths(currentMonth, 1);
     setCurrentMonth(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
-  };
+  }, [currentMonth, setCurrentMonth]);
   
-  const goToNextMonth = () => {
+  const goToNextMonth = useCallback(() => {
     const newDate = addMonths(currentMonth, 1);
     setCurrentMonth(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
-  };
+  }, [currentMonth, setCurrentMonth]);
   
-  // Calendar grid setup - memoized generation
-  const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
-  const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+  // Calendar grid setup - memoized to prevent recalculation on each render
+  const { daysGrid, daysOfWeek } = useMemo(() => {
+    // Calculate days in month and first day offset
+    const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+    const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+    
+    // Generate days grid with appropriate offset for the first day of the month
+    const grid = [];
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      grid.push(null); // Empty cells for days before the 1st of the month
+    }
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      grid.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day));
+    }
+    
+    // Determine days of week
+    const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    
+    return { daysGrid: grid, daysOfWeek: weekDays };
+  }, [currentMonth]);
   
-  // Generate days grid with appropriate offset for the first day of the month
-  const daysGrid = [];
-  for (let i = 0; i < firstDayOfMonth; i++) {
-    daysGrid.push(null); // Empty cells for days before the 1st of the month
-  }
-  
-  for (let day = 1; day <= daysInMonth; day++) {
-    daysGrid.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day));
-  }
-  
-  // Determine days of week
-  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  // Format month title - memoized
+  const monthTitle = useMemo(() => formatMonthAndYear(currentMonth), [currentMonth]);
   
   return (
     <div 
@@ -82,7 +90,7 @@ const CalendarContainer: React.FC<CalendarContainerProps> = memo(({
         </Button>
         
         <div className="text-sm font-medium">
-          {formatMonthAndYear(currentMonth)}
+          {monthTitle}
         </div>
         
         <Button 
@@ -133,6 +141,15 @@ const CalendarContainer: React.FC<CalendarContainerProps> = memo(({
         })}
       </div>
     </div>
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison function for more precise memoization
+  return (
+    prevProps.selectedDate.toDateString() === nextProps.selectedDate.toDateString() &&
+    prevProps.currentMonth.toDateString() === nextProps.currentMonth.toDateString() &&
+    prevProps.isDragging === nextProps.isDragging &&
+    prevProps.draggedTodo?.id === nextProps.draggedTodo?.id
+    // Note: We intentionally don't compare function references as they're stable in parent components
   );
 });
 

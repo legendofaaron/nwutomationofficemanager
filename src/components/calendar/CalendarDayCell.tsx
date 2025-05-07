@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Todo } from './CalendarTypes';
@@ -29,23 +29,26 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = memo(({
   const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
   const dateValue = date.getDate();
   
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     // Add visual feedback
     e.currentTarget.classList.add("bg-accent/30", "border-primary");
-  };
+  }, []);
   
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
     // Remove visual feedback
     e.currentTarget.classList.remove("bg-accent/30", "border-primary");
-  };
+  }, []);
   
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.currentTarget.classList.remove("bg-accent/30", "border-primary");
     onDrop(date, e);
-  };
+  }, [date, onDrop]);
+
+  const handleClick = useCallback(() => onDateClick(date), [date, onDateClick]);
+  const handleDoubleClick = useCallback(() => onDateDoubleClick(date), [date, onDateDoubleClick]);
   
   return (
     <div 
@@ -54,8 +57,8 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = memo(({
         isDragging && "cursor-copy drop-shadow-sm border-2 border-dashed border-primary/50",
         "hover:bg-accent/10 transition-colors cursor-pointer"
       )}
-      onClick={() => onDateClick(date)}
-      onDoubleClick={() => onDateDoubleClick(date)}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -77,6 +80,15 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = memo(({
         )}
       </div>
     </div>
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison function for memoization
+  return (
+    prevProps.date.toDateString() === nextProps.date.toDateString() &&
+    prevProps.taskCount === nextProps.taskCount &&
+    prevProps.isDragging === nextProps.isDragging &&
+    (prevProps.selectedDate?.toDateString() === nextProps.selectedDate?.toDateString()) &&
+    prevProps.draggedTodo?.id === nextProps.draggedTodo?.id
   );
 });
 

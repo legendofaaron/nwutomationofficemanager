@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Task } from '../ScheduleTypes';
 import { normalizeDate, isSameDay } from '@/components/calendar/CalendarUtils';
@@ -39,7 +39,7 @@ export const useScheduleTasks = () => {
       date: todo.date instanceof Date ? new Date(todo.date) : new Date(todo.date),
       completed: todo.completed,
       assignedTo: todo.assignedTo,
-      crew: todo.crew,
+      crew: todo.crew || [],
       startTime: todo.startTime,
       endTime: todo.endTime,
       location: todo.location,
@@ -47,19 +47,20 @@ export const useScheduleTasks = () => {
       clientLocationId: todo.clientLocationId,
       description: todo.description,
       crewId: todo.crewId,
-      crewName: todo.crewName || '' // Add default empty string to fix TypeScript error
+      crewName: todo.crewName || '' // Provide empty string default
     }));
   }, [todos]);
   
+  // Memoize converted tasks to avoid unnecessary re-renders
+  const memoizedTasks = useMemo(() => convertTodosToTasks(), [convertTodosToTasks]);
+
   // Effect to update tasks when todos change, using deep comparison
   useEffect(() => {
-    const convertedTasks = convertTodosToTasks();
-    
-    // Use deep comparison to prevent unnecessary updates
-    if (convertedTasks.length !== tasks.length || !isEqual(convertedTasks, tasks)) {
-      setTasks(convertedTasks);
+    // Use the memoized tasks directly to prevent conversion on each render
+    if (!isEqual(memoizedTasks, tasks)) {
+      setTasks(memoizedTasks);
     }
-  }, [todos, convertTodosToTasks, tasks]);
+  }, [memoizedTasks, tasks]);
   
   // Effect to synchronize selected date with App context
   useEffect(() => {
@@ -73,7 +74,7 @@ export const useScheduleTasks = () => {
     if (normalizedSelectedDate.getTime() !== normalizedContextDate.getTime()) {
       setSelectedDate(normalizedContextDate);
     }
-  }, [calendarDate]);
+  }, [calendarDate, selectedDate]);
 
   // Effect to update global state when local selected date changes
   useEffect(() => {
@@ -132,7 +133,7 @@ export const useScheduleTasks = () => {
     }
   }, [tasks, setTodos, todos]);
 
-  // Toggle task completion
+  // Toggle task completion - optimized to avoid unnecessary renders
   const handleToggleTaskCompletion = useCallback((taskId: string) => {
     setTasks(prevTasks => prevTasks.map(t =>
       t.id === taskId ? { ...t, completed: !t.completed } : t
@@ -147,7 +148,7 @@ export const useScheduleTasks = () => {
     }
   }, [tasks]);
 
-  // Handle moving a task to a different date
+  // Handle moving a task to a different date - memoized to prevent re-creation
   const handleMoveTask = useCallback((taskId: string, newDate: Date) => {
     const task = tasks.find(t => t.id === taskId);
     
@@ -160,12 +161,12 @@ export const useScheduleTasks = () => {
       ));
       
       toast.success(`Task "${task.title}" moved to ${newDate.toLocaleDateString()}`, {
-        description: `${task.startTime} - ${task.endTime}`
+        description: `${task.startTime || ''} - ${task.endTime || ''}`
       });
     }
   }, [tasks]);
   
-  // Save task edit changes
+  // Save task edit changes - memoized function
   const handleSaveTaskChanges = useCallback((taskId: string, updatedData: Partial<Task>) => {
     setTasks(prevTasks => prevTasks.map(task => 
       task.id === taskId ? { ...task, ...updatedData } : task
@@ -176,7 +177,7 @@ export const useScheduleTasks = () => {
     });
   }, []);
   
-  // Add analyzed schedule data
+  // Add analyzed schedule data - memoized function
   const handleApplyScheduleData = useCallback((newTaskFromFile: Task) => {
     setTasks(prevTasks => [...prevTasks, newTaskFromFile]);
     toast.success("New task added from analyzed file");
