@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -42,41 +43,32 @@ const ScheduleView = () => {
     type: 'all'
   });
   
-  // Synchronize tasks with todos from AppContext
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: '1',
-      title: 'Team Meeting',
-      date: new Date(),
-      completed: false,
-      assignedTo: 'John Smith',
-      startTime: '09:00',
-      endTime: '10:00',
-      location: 'Conference Room'
-    },
-    {
-      id: '2',
-      title: 'Project Review',
-      date: new Date(),
-      completed: true,
-      assignedTo: 'Sarah Johnson',
-      startTime: '14:00',
-      endTime: '15:00',
-      location: 'Office'
-    },
-    {
-      id: '3',
-      title: 'Site Inspection',
-      date: new Date(),
-      completed: false,
-      crew: ['John Smith', 'Michael Brown'],
-      startTime: '13:00',
-      endTime: '16:00',
-      location: 'Client Site',
-      clientId: '1',
-      clientLocationId: '1'
-    },
-  ]);
+  // Convert todos to tasks format for this view
+  const [tasks, setTasks] = useState<Task[]>([]);
+  
+  // Effect to convert todos from AppContext to tasks when component mounts or todos change
+  useEffect(() => {
+    if (todos && todos.length > 0) {
+      const convertedTasks = todos.map(todo => ({
+        id: todo.id,
+        title: todo.text || todo.title || '',
+        date: todo.date instanceof Date ? todo.date : new Date(todo.date),
+        completed: todo.completed,
+        assignedTo: todo.assignedTo,
+        crew: todo.crew,
+        startTime: todo.startTime,
+        endTime: todo.endTime,
+        location: todo.location,
+        clientId: todo.clientId,
+        clientLocationId: todo.clientLocationId,
+        description: todo.description,
+        crewId: todo.crewId,
+        crewName: todo.crewName
+      }));
+      
+      setTasks(convertedTasks);
+    }
+  }, [todos]);
   
   // Get filtered tasks based on current filter
   const getFilteredTasks = (): Task[] => {
@@ -124,22 +116,39 @@ const ScheduleView = () => {
     setCalendarDate(normalizedDate);
   }, [selectedDate, setCalendarDate]);
 
-  // Effect to keep todos and tasks synchronized
+  // Effect to update todos in global state when tasks change
   useEffect(() => {
-    // Convert tasks to todos format for global state
-    const updatedTodos = tasks.map(task => ({
-      id: task.id,
-      text: task.title,
-      completed: task.completed,
-      date: task.date,
-      assignedTo: task.assignedTo,
-      crew: task.crew,
-      location: task.location,
-      startTime: task.startTime,
-      endTime: task.endTime
-    }));
-    
-    setTodos(updatedTodos);
+    // Only update todos if tasks have changed (prevent infinite loop)
+    if (tasks.length > 0) {
+      // Convert tasks to todos format for global state
+      const updatedTodos = tasks.map(task => ({
+        id: task.id,
+        text: task.title,
+        title: task.title,
+        completed: task.completed,
+        date: task.date,
+        assignedTo: task.assignedTo,
+        crew: task.crew,
+        location: task.location,
+        startTime: task.startTime,
+        endTime: task.endTime,
+        clientId: task.clientId,
+        clientLocationId: task.clientLocationId,
+        description: task.description,
+        crewId: task.crewId,
+        crewName: task.crewName
+      }));
+      
+      // Compare current todos with updated todos to prevent unnecessary updates
+      const currentIds = new Set(todos.map(todo => todo.id));
+      const updatedIds = new Set(updatedTodos.map(todo => todo.id));
+      
+      // Only update if there are differences
+      if (currentIds.size !== updatedIds.size || 
+          !Array.from(currentIds).every(id => updatedIds.has(id))) {
+        setTodos(updatedTodos);
+      }
+    }
   }, [tasks, setTodos]);
 
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
