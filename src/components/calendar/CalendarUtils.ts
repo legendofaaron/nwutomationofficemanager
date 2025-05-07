@@ -3,10 +3,15 @@ import { Crew } from '@/components/schedule/ScheduleTypes';
 
 // Format date to string in YYYY-MM-DD format
 export function formatDateToYYYYMMDD(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  try {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  } catch (e) {
+    console.error("Error formatting date:", e);
+    return new Date().toISOString().split('T')[0]; // Fallback to today
+  }
 }
 
 // Format date string for comparison
@@ -16,10 +21,16 @@ export function safeToDateString(date: Date | string): string {
     try {
       return formatDateToYYYYMMDD(new Date(date));
     } catch (e) {
+      console.error("Error parsing date string:", e);
       return date;
     }
   }
-  return formatDateToYYYYMMDD(date);
+  try {
+    return formatDateToYYYYMMDD(date);
+  } catch (e) {
+    console.error("Error formatting date:", e);
+    return new Date().toISOString().split('T')[0]; // Fallback to today
+  }
 }
 
 // Check if two dates are the same day
@@ -28,11 +39,8 @@ export function isSameDay(date1: Date | string, date2: Date | string): boolean {
     const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
     const d2 = typeof date2 === 'string' ? new Date(date2) : date2;
     
-    return (
-      d1.getFullYear() === d2.getFullYear() &&
-      d1.getMonth() === d2.getMonth() &&
-      d1.getDate() === d2.getDate()
-    );
+    // Use timestamp comparison of normalized dates for better reliability
+    return normalizeDate(d1).getTime() === normalizeDate(d2).getTime();
   } catch (e) {
     console.error("Date comparison error:", e);
     return false;
@@ -63,15 +71,21 @@ export function getTextByItemType(item: { type: string; text: string; id: string
 
 // Capitalize first letter of a string
 export function capitalizeFirstLetter(text: string): string {
+  if (!text || typeof text !== 'string') return '';
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 // Helper function to ensure we're working with Date objects
 export function ensureDate(date: Date | string): Date {
-  if (date instanceof Date) {
-    return new Date(date.getTime()); // Create a copy to avoid reference issues
+  try {
+    if (date instanceof Date) {
+      return new Date(date.getTime()); // Create a copy to avoid reference issues
+    }
+    return new Date(date);
+  } catch (e) {
+    console.error("Error converting to Date:", e);
+    return new Date(); // Return current date as fallback
   }
-  return new Date(date);
 }
 
 // Normalize date by setting time to midnight to avoid comparison issues
@@ -83,5 +97,16 @@ export function normalizeDate(date: Date | string): Date {
   } catch (e) {
     console.error("Date normalization error:", e);
     return new Date(0); // Return epoch start as fallback
+  }
+}
+
+// Create a stable date string for use as keys or IDs
+export function getStableDateKey(date: Date | string): string {
+  try {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  } catch (e) {
+    console.error("Error creating date key:", e);
+    return "invalid-date";
   }
 }
