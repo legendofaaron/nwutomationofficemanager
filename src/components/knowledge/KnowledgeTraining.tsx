@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Lock } from 'lucide-react';
+import { Brain } from 'lucide-react';
 import { KnowledgeItem } from './types';
 import { usePremiumFeature } from '@/hooks/usePremiumFeature';
 
@@ -21,16 +21,13 @@ export const KnowledgeTraining: React.FC<KnowledgeTrainingProps> = ({
   knowledgeItems,
   trainingProgress,
   isTraining,
-  onStartTraining,
-  isPremium = false
+  onStartTraining
 }) => {
   const { checkAccess, PremiumFeatureGate } = usePremiumFeature();
 
   const handleTraining = () => {
-    // Check if user has access to this premium feature
-    if (checkAccess('AI Training')) {
-      onStartTraining();
-    }
+    // Since all features are free, we just call the training function directly
+    onStartTraining();
   };
 
   return (
@@ -39,12 +36,6 @@ export const KnowledgeTraining: React.FC<KnowledgeTrainingProps> = ({
         <CardTitle className="flex items-center">
           <Brain className="mr-2 h-5 w-5 text-primary" />
           AI Training
-          {!isPremium && (
-            <Badge variant="outline" className="ml-2 bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700">
-              <Lock className="h-3 w-3 mr-1" />
-              Premium
-            </Badge>
-          )}
         </CardTitle>
         <CardDescription>
           Train your AI assistant with your knowledge base
