@@ -10,14 +10,27 @@ import { useForm } from 'react-hook-form';
 import { useAppContext } from '@/context/AppContext';
 
 // Import the new components and types
-import { Todo, DroppedItem, TaskFormValues, ensureDate } from './calendar/CalendarTypes';
+import { 
+  Todo, 
+  DroppedItem, 
+  TaskFormValues, 
+  ensureDate, 
+  normalizeDate 
+} from './calendar/CalendarTypes';
 import CalendarDayView from './calendar/CalendarDayView';
 import CalendarDayCell from './calendar/CalendarDayCell';
 import TaskFormDialog from './calendar/TaskFormDialog';
 import EmployeeTaskDialog from './calendar/EmployeeTaskDialog';
 import CrewTaskDialog from './calendar/CrewTaskDialog';
 import TaskInput from './calendar/TaskInput';
-import { getCrewDisplayCode, getTextByItemType, capitalizeFirstLetter, safeToDateString } from './calendar/CalendarUtils';
+import { 
+  getCrewDisplayCode, 
+  getTextByItemType, 
+  capitalizeFirstLetter, 
+  safeToDateString, 
+  isSameDay,
+  formatDateToYYYYMMDD
+} from './calendar/CalendarUtils';
 
 const DashboardCalendar = () => {
   // Use the useAppContext hook to access todos and other data
@@ -29,7 +42,7 @@ const DashboardCalendar = () => {
     setCalendarDate: setContextDate
   } = useAppContext();
   
-  const [selectedDate, setSelectedDate] = useState<Date>(contextDate || new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(contextDate ? new Date(contextDate) : new Date());
   const [draggedTodo, setDraggedTodo] = useState<Todo | null>(null);
   
   // Use the todos from context instead of local state
@@ -39,24 +52,37 @@ const DashboardCalendar = () => {
   const [crewTaskDialogOpen, setCrewTaskDialogOpen] = useState(false);
   const [droppedItem, setDroppedItem] = useState<DroppedItem | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
-  const [currentMonth, setCurrentMonth] = useState<Date>(contextDate || new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date>(contextDate ? new Date(contextDate) : new Date());
 
   // Update local selected date when context date changes
   useEffect(() => {
     if (contextDate) {
-      setSelectedDate(new Date(contextDate));
-      setCurrentMonth(new Date(contextDate));
+      // Ensure we're working with a Date object
+      const newDate = typeof contextDate === 'string' ? new Date(contextDate) : contextDate;
+      
+      // Normalize the dates to avoid unnecessary re-renders due to time components
+      if (!isSameDay(selectedDate, newDate)) {
+        setSelectedDate(normalizeDate(newDate));
+        setCurrentMonth(normalizeDate(newDate));
+      }
     }
-  }, [contextDate]);
+  }, [contextDate, selectedDate]);
 
   // Update context date when local selected date changes
   useEffect(() => {
-    if (selectedDate && (!contextDate || selectedDate.getTime() !== new Date(contextDate).getTime())) {
-      setContextDate(selectedDate);
+    if (selectedDate) {
+      const normalizedContextDate = contextDate ? normalizeDate(contextDate) : null;
+      const normalizedSelectedDate = normalizeDate(selectedDate);
+      
+      // Only update if dates are actually different
+      if (!normalizedContextDate || 
+          normalizedSelectedDate.getTime() !== normalizedContextDate.getTime()) {
+        setContextDate(normalizedSelectedDate);
+      }
     }
   }, [selectedDate, contextDate, setContextDate]);
 
-  // Process todos to ensure dates are Date objects
+  // Process todos to ensure dates are Date objects and titles are defined
   const processedTodos = contextTodos.map(todo => ({
     ...todo,
     date: ensureDate(todo.date),
@@ -109,12 +135,12 @@ const DashboardCalendar = () => {
 
   // Filter todos for the selected date using safeToDateString
   const todaysTodos = processedTodos.filter(
-    todo => safeToDateString(todo.date) === selectedDate.toDateString()
+    todo => isSameDay(todo.date, selectedDate)
   );
 
   // Count tasks for each day
   const getTaskCountForDay = (date: Date): number => {
-    return processedTodos.filter(todo => safeToDateString(todo.date) === date.toDateString()).length;
+    return processedTodos.filter(todo => isSameDay(todo.date, date)).length;
   };
 
   const addTodo = (newTodoText: string) => {
@@ -250,19 +276,21 @@ const DashboardCalendar = () => {
 
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
-      setSelectedDate(date);
-      setContextDate(date);
+      // Normalize the date before setting it
+      const normalizedDate = normalizeDate(date);
+      setSelectedDate(normalizedDate);
+      setContextDate(normalizedDate);
       
       // If there's a todo being dragged, update its date
       if (draggedTodo) {
         const updatedTodos = contextTodos.map(todo => 
           todo.id === draggedTodo.id 
-            ? { ...todo, date } 
+            ? { ...todo, date: normalizedDate } 
             : todo
         );
         setContextTodos(updatedTodos);
         setDraggedTodo(null);
-        toast.success("Task moved to " + format(date, 'MMM d, yyyy'));
+        toast.success("Task moved to " + format(normalizedDate, 'MMM d, yyyy'));
       }
     }
   };

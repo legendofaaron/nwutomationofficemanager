@@ -37,3 +37,25 @@ export const safeToDateString = (date: Date | string): string => {
   }
   return date.toDateString();
 };
+
+// Helper for comparing dates without time components 
+export const isSameDay = (date1: Date | string, date2: Date | string): boolean => {
+  const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
+  const d2 = typeof date2 === 'string' ? new Date(date2) : date2;
+  
+  return d1.getFullYear() === d2.getFullYear() && 
+         d1.getMonth() === d2.getMonth() && 
+         d1.getDate() === d2.getDate();
+};
+
+// Format a date as YYYY-MM-DD for consistent string representation
+export const formatDateToYYYYMMDD = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+// Parse a YYYY-MM-DD string to Date
+export const parseYYYYMMDDToDate = (dateStr: string): Date => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};

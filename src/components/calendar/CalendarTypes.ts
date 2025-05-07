@@ -49,3 +49,11 @@ export const ensureDate = (date: Date | string): Date => {
   }
   return new Date(date);
 };
+
+// Helper to sync date between calendar components by normalizing the date
+// This removes time components to make date comparison consistent
+export const normalizeDate = (date: Date | string): Date => {
+  const d = ensureDate(date);
+  // Create a new date with just year, month, day (no time)
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+};

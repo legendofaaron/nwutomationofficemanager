@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useAppContext } from '@/context/AppContext';
 import { Task, TaskFormData, AssignmentType, LocationType, ScheduleFilter, FilterType } from './ScheduleTypes';
 import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
+import { normalizeDate, isSameDay } from '@/components/calendar/CalendarUtils';
 
 // Import components
 import TaskCalendarView from './TaskCalendarView';
@@ -29,7 +30,12 @@ const ScheduleView = () => {
     setTodos 
   } = useAppContext();
   
-  const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
+  // Use normalized date to ensure consistency with other calendar components
+  const [selectedDate, setSelectedDate] = useState<Date>(
+    calendarDate ? 
+      (typeof calendarDate === 'string' ? new Date(calendarDate) : calendarDate) : 
+      new Date()
+  );
   
   // Initialize schedule filter state
   const [currentFilter, setCurrentFilter] = useState<ScheduleFilter>({
@@ -103,14 +109,19 @@ const ScheduleView = () => {
 
   // Effect to synchronize selected date with App context
   useEffect(() => {
-    if (calendarDate && calendarDate.getTime() !== selectedDate.getTime()) {
-      setSelectedDate(calendarDate);
+    if (calendarDate) {
+      const contextDateObj = typeof calendarDate === 'string' ? new Date(calendarDate) : calendarDate;
+      
+      if (!isSameDay(selectedDate, contextDateObj)) {
+        setSelectedDate(normalizeDate(contextDateObj));
+      }
     }
   }, [calendarDate]);
 
   // Effect to update global state when local selected date changes
   useEffect(() => {
-    setCalendarDate(selectedDate);
+    const normalizedDate = normalizeDate(selectedDate);
+    setCalendarDate(normalizedDate);
   }, [selectedDate, setCalendarDate]);
 
   // Effect to keep todos and tasks synchronized
