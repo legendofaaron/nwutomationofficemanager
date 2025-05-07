@@ -17,6 +17,7 @@ interface CalendarCardProps {
   selectedDate: Date;
   onSelectDate: (date: Date | undefined) => void;
   onMoveTask?: (taskId: string, newDate: Date) => void;
+  onItemDrop?: (item: DragItem, date: Date) => void;
 }
 
 const CalendarCard: React.FC<CalendarCardProps> = ({
@@ -24,6 +25,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
   selectedDate,
   onSelectDate,
   onMoveTask,
+  onItemDrop,
 }) => {
   const [currentMonth, setCurrentMonth] = useState<Date>(selectedDate || new Date());
   const { isDragging } = useDragDrop();
@@ -45,6 +47,9 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
       toast.success(`Task "${taskTitle}" moved to ${format(date, 'MMMM d')}`, {
         duration: 3000,
       });
+    } else if (onItemDrop && (item.type === 'employee' || item.type === 'crew' || item.type === 'client')) {
+      // Pass non-task item drops to the parent handler
+      onItemDrop(item, date);
     }
   };
 
