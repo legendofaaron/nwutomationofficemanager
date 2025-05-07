@@ -21,7 +21,6 @@
   box-shadow: none !important;
 }
 
-/* Theme specific styling */
 body.dark .n8n-chat,
 body.superdark .n8n-chat {
   --n8n-chat-background-color: #0D1117 !important;
@@ -32,43 +31,4 @@ body.superdark .n8n-chat {
 body.superdark .n8n-chat {
   --n8n-chat-background-color: #000000 !important;
   --n8n-chat-border-color: #181818 !important;
-}
-
-/* Light mode styling */
-body.light .n8n-chat {
-  --n8n-chat-background-color: #FFFFFF !important;
-  --n8n-chat-border-color: #E5E7EB !important;
-  --n8n-chat-text-color: #374151 !important;
-}
-
-/* Make the messages match our theme */
-body.light .n8n-chat .message.user {
-  background-color: #3b82f6 !important;
-  color: white !important;
-}
-
-body.light .n8n-chat .message.bot {
-  background-color: #F3F4F6 !important;
-  color: #1F2937 !important;
-}
-
-body.dark .n8n-chat .message.user {
-  background-color: #4661F1 !important;
-  color: white !important;
-}
-
-body.dark .n8n-chat .message.bot {
-  background-color: #0A101B !important;
-  color: #E5EAF2 !important;
-}
-
-body.superdark .n8n-chat .message.user {
-  background-color: #1E64D0 !important;
-  color: white !important;
-}
-
-body.superdark .n8n-chat .message.bot {
-  background-color: #0A0A0A !important;
-  border: 1px solid #181818 !important;
-  color: #E0E0E0 !important;
 }

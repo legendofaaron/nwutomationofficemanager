@@ -9,10 +9,6 @@ import { ScrollArea } from './ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/context/ThemeContext';
 import { usePremiumFeature } from '@/hooks/usePremiumFeature';
-import FloatingMenuBar from './document/FloatingMenuBar';
-import GenerateDocumentDialog from './document/GenerateDocumentDialog';
-import { Button } from './ui/button';
-import { FileText, Save, Loader2 } from 'lucide-react';
 
 const DocumentViewer = () => {
   const { currentFile, files, setFiles, setCurrentFile, setViewMode } = useAppContext();
@@ -22,7 +18,6 @@ const DocumentViewer = () => {
   const { setTheme, resolvedTheme } = useTheme();
   const [selectionStart, setSelectionStart] = useState(0);
   const [selectionEnd, setSelectionEnd] = useState(0);
-  const [isSaving, setIsSaving] = useState(false);
   
   // Add premium feature hook
   const { checkAccess, PremiumFeatureGate } = usePremiumFeature();
@@ -54,15 +49,8 @@ const DocumentViewer = () => {
 
   if (!currentFile) {
     return (
-      <div className={`flex flex-col items-center justify-center h-full ${resolvedTheme === 'superdark' ? 'bg-black' : ''}`}>
-        <FileText className="h-16 w-16 text-muted-foreground mb-4 opacity-40" />
-        <p className="text-gray-400 mb-6">Select a document to view or edit</p>
-        <div className="flex gap-4">
-          <Button variant="outline" onClick={() => setViewMode('files')}>
-            Browse Files
-          </Button>
-          <GenerateDocumentDialog />
-        </div>
+      <div className={`flex items-center justify-center h-full ${resolvedTheme === 'superdark' ? 'bg-black' : ''}`}>
+        <p className="text-gray-400">Select a document to view or edit</p>
       </div>
     );
   }
@@ -294,19 +282,12 @@ const DocumentViewer = () => {
     }
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    
-    // Simulate save operation
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
+  const handleSave = () => {
     toast({
       title: "Document saved",
       description: "Your document has been saved successfully",
       duration: 2000,
     });
-    
-    setIsSaving(false);
   };
 
   const isDarkMode = resolvedTheme === 'dark';
@@ -318,12 +299,6 @@ const DocumentViewer = () => {
 
   return (
     <div className={`relative h-full ${bgColor}`}>
-      {/* Add Floating Menu Bar */}
-      <FloatingMenuBar 
-        onSave={handleSave}
-        onFormatText={handleFormatText} 
-      />
-      
       {/* Add the Premium Feature Gate component */}
       <PremiumFeatureGate />
       
@@ -364,28 +339,6 @@ const DocumentViewer = () => {
               </>
             )}
           </div>
-          {currentFile.type === 'document' && (
-            <div className="flex justify-end mt-4">
-              <Button
-                variant={isSaving ? "outline" : "default"}
-                className="min-w-[100px]"
-                onClick={handleSave}
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
         </div>
       </ScrollArea>
     </div>

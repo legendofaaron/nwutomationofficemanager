@@ -3,12 +3,10 @@ import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FilePlus, Wand2 } from "lucide-react";
+import { FilePlus } from "lucide-react";
 import { cn } from '@/lib/utils';
 import DocumentCreationForm from './document/DocumentCreationForm';
 import { useToast } from '@/hooks/use-toast';
-import DocumentGenerator from './document/DocumentGenerator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface NewDocumentDialogProps {
   className?: string;
@@ -20,7 +18,6 @@ const NewDocumentDialog = ({ className }: NewDocumentDialogProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [documentName, setDocumentName] = React.useState("");
   const [documentType, setDocumentType] = React.useState("blank");
-  const [activeTab, setActiveTab] = React.useState("basic");
 
   const getTemplateContent = (type: string, name: string) => {
     switch(type) {
@@ -75,37 +72,18 @@ const NewDocumentDialog = ({ className }: NewDocumentDialogProps) => {
           New Document
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[625px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create New Document</DialogTitle>
         </DialogHeader>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-2 mb-6">
-            <TabsTrigger value="basic">
-              Basic Template
-            </TabsTrigger>
-            <TabsTrigger value="ai">
-              <Wand2 className="h-3.5 w-3.5 mr-1.5" />
-              AI Document
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="basic">
-            <DocumentCreationForm
-              documentName={documentName}
-              documentType={documentType}
-              onNameChange={setDocumentName}
-              onTypeChange={setDocumentType}
-              onSubmit={handleCreateDocument}
-              onSkip={() => createDocument()}
-            />
-          </TabsContent>
-          
-          <TabsContent value="ai">
-            <DocumentGenerator onClose={() => setIsOpen(false)} />
-          </TabsContent>
-        </Tabs>
+        <DocumentCreationForm
+          documentName={documentName}
+          documentType={documentType}
+          onNameChange={setDocumentName}
+          onTypeChange={setDocumentType}
+          onSubmit={handleCreateDocument}
+          onSkip={() => createDocument()}
+        />
       </DialogContent>
     </Dialog>
   );

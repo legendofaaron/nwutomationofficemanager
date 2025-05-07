@@ -46,7 +46,7 @@ addThemeInitScript();
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(
-    () => (typeof localStorage !== 'undefined' ? (localStorage.getItem('theme') as Theme) : 'light') || 'light'
+    () => (typeof localStorage !== 'undefined' ? (localStorage.getItem('theme') as Theme) : 'system') || 'system'
   );
   
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark' | 'superdark'>(

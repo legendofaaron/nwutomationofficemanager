@@ -1,6 +1,6 @@
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { useToast } from '@/components/ui/use-toast';
 import { localAuth, LocalSession, LocalUser } from '@/services/localAuth';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -34,7 +34,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const { toast } = useToast();
-  const hasShownSignInToast = useRef(false);
 
   // Function to check if user has an active subscription
   const checkSubscription = useCallback(async (): Promise<boolean> => {
@@ -175,24 +174,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setIsLoading(false);
       
-      // Show toast notifications for auth events but only once per session
-      if (event === 'SIGNED_IN' && !hasShownSignInToast.current) {
-        hasShownSignInToast.current = true;
+      // Show toast notifications for auth events
+      if (event === 'SIGNED_IN') {
         setTimeout(() => {
           toast({
             title: "Signed in successfully",
             description: `Welcome${currentSession?.user?.user_metadata?.username ? ', ' + currentSession.user.user_metadata.username : ''}!`,
-            duration: 3000,
           });
         }, 0);
       } else if (event === 'SIGNED_OUT') {
-        // Reset the sign-in toast flag when signing out
-        hasShownSignInToast.current = false;
         setTimeout(() => {
           toast({
             title: "Signed out",
             description: "You have been signed out successfully.",
-            duration: 3000,
           });
         }, 0);
       }
@@ -205,18 +199,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isDemoMode) {
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
-      
-      // Only show the initial sign-in toast if we haven't shown it yet
-      if (initialSession?.user && !hasShownSignInToast.current) {
-        hasShownSignInToast.current = true;
-        setTimeout(() => {
-          toast({
-            title: "Signed in successfully",
-            description: `Welcome${initialSession?.user?.user_metadata?.username ? ', ' + initialSession.user.user_metadata.username : ''}!`,
-            duration: 3000,
-          });
-        }, 0);
-      }
       
       // Check subscription if user is signed in
       if (initialSession?.user) {
@@ -237,8 +219,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Reset demo mode
       setDemoMode(false);
-      // Reset the sign-in toast flag when signing out
-      hasShownSignInToast.current = false;
       await localAuth.signOut();
       
       // Force refresh to ensure clean state
