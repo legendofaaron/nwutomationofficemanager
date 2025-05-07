@@ -49,25 +49,36 @@ export const useScheduleTasks = () => {
       }));
       
       setTasks(convertedTasks);
+    } else {
+      setTasks([]);
     }
   }, [todos]);
   
-  // Effect to synchronize selected date with App context
+  // Effect to synchronize selected date with App context - prevent unnecessary updates
   useEffect(() => {
     if (calendarDate) {
       const contextDateObj = typeof calendarDate === 'string' ? new Date(calendarDate) : calendarDate;
+      const normalizedContextDate = normalizeDate(contextDateObj);
+      const normalizedSelectedDate = normalizeDate(selectedDate);
       
-      if (!isSameDay(selectedDate, contextDateObj)) {
-        setSelectedDate(normalizeDate(contextDateObj));
+      // Only update if dates are truly different to prevent infinite loops
+      if (normalizedSelectedDate.getTime() !== normalizedContextDate.getTime()) {
+        setSelectedDate(normalizedContextDate);
       }
     }
-  }, [calendarDate, selectedDate]);
+  }, [calendarDate]);
 
-  // Effect to update global state when local selected date changes
+  // Effect to update global state when local selected date changes - prevent unnecessary updates
   useEffect(() => {
-    const normalizedDate = normalizeDate(selectedDate);
-    setCalendarDate(normalizedDate);
-  }, [selectedDate, setCalendarDate]);
+    const normalizedSelectedDate = normalizeDate(selectedDate);
+    
+    // Only update the context if necessary
+    if (!calendarDate || 
+        (typeof calendarDate === 'string' && normalizeDate(new Date(calendarDate)).getTime() !== normalizedSelectedDate.getTime()) ||
+        (calendarDate instanceof Date && normalizeDate(calendarDate).getTime() !== normalizedSelectedDate.getTime())) {
+      setCalendarDate(normalizedSelectedDate);
+    }
+  }, [selectedDate, setCalendarDate, calendarDate]);
 
   // Effect to update todos in global state when tasks change
   useEffect(() => {
@@ -93,14 +104,29 @@ export const useScheduleTasks = () => {
       }));
       
       // Compare current todos with updated todos to prevent unnecessary updates
-      const currentIds = new Set(todos.map(todo => todo.id));
-      const updatedIds = new Set(updatedTodos.map(todo => todo.id));
+      const currentIdsMap = new Map(todos.map(todo => [todo.id, JSON.stringify(todo)]));
+      const updatedIdsMap = new Map(updatedTodos.map(todo => [todo.id, JSON.stringify(todo)]));
+      
+      // Check if there are actual differences before updating
+      let hasChanges = currentIdsMap.size !== updatedIdsMap.size;
+      
+      if (!hasChanges) {
+        // Check if any specific todo has changed
+        for (const [id, todoJson] of currentIdsMap.entries()) {
+          if (!updatedIdsMap.has(id) || updatedIdsMap.get(id) !== todoJson) {
+            hasChanges = true;
+            break;
+          }
+        }
+      }
       
       // Only update if there are differences
-      if (currentIds.size !== updatedIds.size || 
-          !Array.from(currentIds).every(id => updatedIds.has(id))) {
+      if (hasChanges) {
         setTodos(updatedTodos);
       }
+    } else if (todos.length > 0 && tasks.length === 0) {
+      // If we have todos but no tasks, clear the todos
+      setTodos([]);
     }
   }, [tasks, setTodos, todos]);
 
@@ -123,7 +149,7 @@ export const useScheduleTasks = () => {
   const handleMoveTask = (taskId: string, newDate: Date) => {
     const task = tasks.find(t => t.id === taskId);
     
-    if (task && task.date.toDateString() !== newDate.toDateString()) {
+    if (task && !isSameDay(task.date, newDate)) {
       // Create task copy with updated date
       setTasks(tasks.map(t => 
         t.id === taskId 

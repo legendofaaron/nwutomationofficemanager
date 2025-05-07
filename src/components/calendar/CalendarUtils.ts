@@ -24,14 +24,19 @@ export function safeToDateString(date: Date | string): string {
 
 // Check if two dates are the same day
 export function isSameDay(date1: Date | string, date2: Date | string): boolean {
-  const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
-  const d2 = typeof date2 === 'string' ? new Date(date2) : date2;
-  
-  return (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
-  );
+  try {
+    const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
+    const d2 = typeof date2 === 'string' ? new Date(date2) : date2;
+    
+    return (
+      d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate()
+    );
+  } catch (e) {
+    console.error("Date comparison error:", e);
+    return false;
+  }
 }
 
 // Get crew code for display
@@ -64,14 +69,19 @@ export function capitalizeFirstLetter(text: string): string {
 // Helper function to ensure we're working with Date objects
 export function ensureDate(date: Date | string): Date {
   if (date instanceof Date) {
-    return date;
+    return new Date(date.getTime()); // Create a copy to avoid reference issues
   }
   return new Date(date);
 }
 
 // Normalize date by setting time to midnight to avoid comparison issues
 export function normalizeDate(date: Date | string): Date {
-  const d = ensureDate(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  try {
+    const d = ensureDate(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  } catch (e) {
+    console.error("Date normalization error:", e);
+    return new Date(0); // Return epoch start as fallback
+  }
 }

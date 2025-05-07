@@ -45,43 +45,47 @@ const DashboardCalendar = () => {
     setCalendarDate: setContextDate
   } = useAppContext();
   
-  const [selectedDate, setSelectedDate] = useState<Date>(contextDate ? new Date(contextDate) : new Date());
-  const [draggedTodo, setDraggedTodo] = useState<Todo | null>(null);
+  // Normalize the initial date from context to avoid time component issues
+  const initialDate = contextDate ? 
+    normalizeDate(typeof contextDate === 'string' ? new Date(contextDate) : contextDate) : 
+    normalizeDate(new Date());
   
-  // Use the todos from context instead of local state
+  const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
+  const [draggedTodo, setDraggedTodo] = useState<Todo | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [employeeTaskDialogOpen, setEmployeeTaskDialogOpen] = useState(false);
   const [crewTaskDialogOpen, setCrewTaskDialogOpen] = useState(false);
   const [droppedItem, setDroppedItem] = useState<DroppedItem | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
-  const [currentMonth, setCurrentMonth] = useState<Date>(contextDate ? new Date(contextDate) : new Date());
-
-  // Update local selected date when context date changes
+  const [currentMonth, setCurrentMonth] = useState<Date>(initialDate);
+  
+  // Date synchronization - use normalized dates to prevent unnecessary re-renders
   useEffect(() => {
     if (contextDate) {
-      // Ensure we're working with a Date object
-      const newDate = typeof contextDate === 'string' ? new Date(contextDate) : contextDate;
+      // Ensure we're working with a normalized Date object
+      const normalizedContextDate = normalizeDate(
+        typeof contextDate === 'string' ? new Date(contextDate) : contextDate
+      );
+      const normalizedSelectedDate = normalizeDate(selectedDate);
       
-      // Normalize the dates to avoid unnecessary re-renders due to time components
-      if (!isSameDay(selectedDate, newDate)) {
-        setSelectedDate(normalizeDate(newDate));
-        setCurrentMonth(normalizeDate(newDate));
+      // Only update if dates are actually different by comparing timestamps
+      if (normalizedSelectedDate.getTime() !== normalizedContextDate.getTime()) {
+        setSelectedDate(normalizedContextDate);
+        setCurrentMonth(new Date(normalizedContextDate)); // Also update month view
       }
     }
   }, [contextDate, selectedDate]);
 
-  // Update context date when local selected date changes
+  // Update context date when local selected date changes - prevent unnecessary updates
   useEffect(() => {
-    if (selectedDate) {
-      const normalizedContextDate = contextDate ? normalizeDate(contextDate) : null;
-      const normalizedSelectedDate = normalizeDate(selectedDate);
-      
-      // Only update if dates are actually different
-      if (!normalizedContextDate || 
-          normalizedSelectedDate.getTime() !== normalizedContextDate.getTime()) {
-        setContextDate(normalizedSelectedDate);
-      }
+    const normalizedSelectedDate = normalizeDate(selectedDate);
+    
+    // Check if we need to update the context
+    if (!contextDate || 
+        (typeof contextDate === 'string' && normalizeDate(new Date(contextDate)).getTime() !== normalizedSelectedDate.getTime()) ||
+        (contextDate instanceof Date && normalizeDate(contextDate).getTime() !== normalizedSelectedDate.getTime())) {
+      setContextDate(normalizedSelectedDate);
     }
   }, [selectedDate, contextDate, setContextDate]);
 
@@ -136,7 +140,7 @@ const DashboardCalendar = () => {
     };
   }, []);
 
-  // Filter todos for the selected date using safeToDateString
+  // Filter todos for the selected date using isSameDay for reliable comparison
   const todaysTodos = processedTodos.filter(
     todo => isSameDay(todo.date, selectedDate)
   );
@@ -279,10 +283,9 @@ const DashboardCalendar = () => {
 
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
-      // Normalize the date before setting it
+      // Normalize the date before setting it to ensure consistent comparison
       const normalizedDate = normalizeDate(date);
       setSelectedDate(normalizedDate);
-      setContextDate(normalizedDate);
       
       // If there's a todo being dragged, update its date
       if (draggedTodo) {
@@ -381,13 +384,15 @@ const DashboardCalendar = () => {
                 taskCount={getTaskCountForDay(props.date)} 
                 isDragging={isDragging}
                 onDateClick={(date) => {
-                  setSelectedDate(date);
-                  setContextDate(date);
+                  // Normalize date before setting
+                  const normalizedDate = normalizeDate(date);
+                  setSelectedDate(normalizedDate);
                 }}
                 onDateDoubleClick={(date) => {
-                  setSelectedDate(date);
-                  setContextDate(date);
-                  form.setValue('date', date);
+                  // Normalize date before setting
+                  const normalizedDate = normalizeDate(date);
+                  setSelectedDate(normalizedDate);
+                  form.setValue('date', normalizedDate);
                   setIsDialogOpen(true);
                 }}
                 onDrop={handleDayDrop}
