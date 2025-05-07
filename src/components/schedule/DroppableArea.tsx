@@ -180,6 +180,21 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
       {...rest}
     >
       {children}
+      <style>
+        {`
+          .drag-over-active {
+            border: 2px dashed var(--primary);
+            background-color: rgba(var(--primary), 0.1);
+          }
+          .drop-highlight {
+            animation: highlight-pulse 0.5s ease-in-out;
+          }
+          @keyframes highlight-pulse {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: rgba(var(--primary), 0.2); }
+          }
+        `}
+      </style>
     </div>
   );
 };

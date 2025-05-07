@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import CalendarCard from './CalendarCard';
 import TasksCard from './TasksCard';
+import { useAppContext } from '@/context/AppContext';
 
 interface TaskCalendarViewProps {
   tasks: Task[];
@@ -27,6 +28,21 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   onMoveTask,
   onEditTask
 }) => {
+  // Get global calendar date from AppContext
+  const { calendarDate, setCalendarDate } = useAppContext();
+  
+  // Sync local state with global state on mount and when global state changes
+  useEffect(() => {
+    if (calendarDate) {
+      onSelectDate(calendarDate);
+    }
+  }, [calendarDate, onSelectDate]);
+  
+  // Update global state when local state changes
+  useEffect(() => {
+    setCalendarDate(selectedDate);
+  }, [selectedDate, setCalendarDate]);
+  
   // Listen for global drag events to make interaction more reliable
   useEffect(() => {
     const handleDragOver = (e: DragEvent) => {
