@@ -214,7 +214,8 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
       {...rest}
     >
       {children}
-      <style jsx>{`
+      <style>
+        {`
         .drag-over-active {
           border: 2px dashed var(--primary);
           background-color: rgba(var(--primary), 0.1);
@@ -226,7 +227,8 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
           0%, 100% { background-color: transparent; }
           50% { background-color: rgba(var(--primary), 0.2); }
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
