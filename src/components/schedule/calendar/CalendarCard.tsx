@@ -57,6 +57,14 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
     };
   }, [isDragging]);
 
+  // Handle day selection with a single click
+  const handleDaySelect = (date: Date | undefined) => {
+    if (date) {
+      // Immediately update the selected date with a single click
+      onSelectDate(date);
+    }
+  };
+
   // Handle dropping a task on a day with debounce to prevent duplicate drops
   const handleDayDrop = (item: DragItem, date: Date) => {
     // Prevent duplicate drops (this fixes the multiple drag issue)
@@ -136,7 +144,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
           </div>
         </div>
         <CardDescription className="text-sm text-muted-foreground">
-          Drag tasks to reschedule or select a date to view details
+          Click on a day to see tasks for that date
         </CardDescription>
       </CardHeader>
       <CardContent className="p-4">
@@ -144,6 +152,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
         {`
           .calendar-day-cell {
             transition: all 0.2s ease-out;
+            cursor: pointer !important;
           }
           .calendar-day-cell.drop-highlight {
             background-color: rgba(var(--primary), 0.3);
@@ -158,13 +167,14 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
             height: 40px;
             margin: 0;
             width: 100%;
+            cursor: pointer !important;
           }
         `}
         </style>
         <Calendar 
           mode="single" 
           selected={selectedDate} 
-          onSelect={onSelectDate} 
+          onSelect={handleDaySelect} 
           month={currentMonth} 
           onMonthChange={setCurrentMonth} 
           className={cn("rounded-xl border shadow-sm", "calendar-grid", isDragging && "drag-active-calendar")} 
@@ -198,6 +208,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
                   activeClassName="bg-primary/20 dark:bg-primary/30 border-dashed border-2 border-primary scale-105"
                   onDragEnter={() => setActiveDropTarget(droppableId)}
                   onDragLeave={() => setActiveDropTarget(null)}
+                  onClick={() => handleDaySelect(dayDate)}
                   data-date={dateAttr}
                 >
                   {/* Day number */}

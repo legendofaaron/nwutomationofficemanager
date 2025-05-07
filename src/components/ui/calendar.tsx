@@ -101,7 +101,7 @@ function Calendar({
         cell: "h-8 w-8 text-center text-sm p-0 relative flex-shrink-0 focus-within:relative focus-within:z-20",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-8 w-8 p-0 font-normal aria-selected:opacity-100 text-xs",
+          "h-8 w-8 p-0 font-normal aria-selected:opacity-100 text-xs cursor-pointer",
           isSuperDarkMode && "hover:bg-[#111111] text-gray-300"
         ),
         day_range_end: "day-range-end",

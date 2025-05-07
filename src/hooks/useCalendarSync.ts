@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 
 /**
@@ -13,7 +13,7 @@ export function useCalendarSync(initialDate?: Date) {
     initialDate || calendarDate || new Date()
   );
   
-  // Sync from global to local
+  // Sync from global to local - immediately respond to changes
   useEffect(() => {
     if (calendarDate && (!localDate || calendarDate.toDateString() !== localDate.toDateString())) {
       setLocalDate(calendarDate);
@@ -21,12 +21,12 @@ export function useCalendarSync(initialDate?: Date) {
   }, [calendarDate, localDate]);
   
   // Function to update both local and global state
-  const updateDate = (newDate: Date | undefined) => {
+  const updateDate = useCallback((newDate: Date | undefined) => {
     if (newDate) {
       setLocalDate(newDate);
       setCalendarDate(newDate);
     }
-  };
+  }, [setCalendarDate]);
   
   return {
     date: localDate,

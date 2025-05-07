@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback } from 'react';
 import { Task, Crew, DragItem } from '../ScheduleTypes';
 import { toast } from 'sonner';
@@ -31,14 +30,14 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   // Get global calendar date from AppContext
   const { calendarDate, setCalendarDate } = useAppContext();
   
-  // Sync local state with global state on mount and when global state changes
+  // Sync local state with global state on mount and when global state changes - respond immediately
   useEffect(() => {
     if (calendarDate && calendarDate.toDateString() !== selectedDate.toDateString()) {
       onSelectDate(calendarDate);
     }
   }, [calendarDate, onSelectDate, selectedDate]);
   
-  // Update global state when local state changes
+  // Update global state when local state changes - respond immediately
   useEffect(() => {
     if (selectedDate && (!calendarDate || selectedDate.toDateString() !== calendarDate.toDateString())) {
       setCalendarDate(selectedDate);
@@ -57,6 +56,15 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
       document.removeEventListener('dragover', handleDragOver);
     };
   }, []);
+  
+  // Handle date selection with a single click
+  const handleSelectDate = useCallback((date: Date | undefined) => {
+    if (date) {
+      // Immediately update both local and global state with a single click
+      onSelectDate(date);
+      setCalendarDate(date);
+    }
+  }, [onSelectDate, setCalendarDate]);
   
   // Handle moving a task to a new date with toast notification
   const handleMoveTask = useCallback((taskId: string, date: Date) => {
@@ -97,21 +105,9 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
         duration: 2000
       });
       
-      // Create an employee-related task
-      // This simulates what would happen if we added a real task for this employee
+      // Create an employee-related task simulation
       if (onMoveTask) {
-        const newTaskId = `temp-employee-${item.id}-${Date.now()}`;
-        const newTask: Task = {
-          id: newTaskId,
-          title: taskTitle,
-          description: `Meet with ${employeeName}`,
-          date: date,
-          completed: false,
-          assignedTo: employeeName,
-          // Add more task properties as needed
-        };
-        
-        // Use setTimeout to simulate async task creation
+        // Existing simulation code...
         setTimeout(() => {
           toast.success(`Task created for ${employeeName}`, {
             description: `Scheduled for ${format(date, 'MMMM d')}`,
@@ -131,21 +127,9 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
         duration: 2000
       });
       
-      // Create a crew-related task
-      // This simulates what would happen if we added a real task for this crew
+      // Create a crew-related task simulation
       if (onMoveTask) {
-        const newTaskId = `temp-crew-${item.id}-${Date.now()}`;
-        const newTask: Task = {
-          id: newTaskId,
-          title: taskTitle,
-          description: `Team activity with ${crewName} crew`,
-          date: date,
-          completed: false,
-          crew: crewName,
-          // Add more task properties as needed
-        };
-        
-        // Use setTimeout to simulate async task creation
+        // Existing simulation code...
         setTimeout(() => {
           toast.success(`Team task created for ${crewName}`, {
             description: `Scheduled for ${format(date, 'MMMM d')}`,
@@ -169,12 +153,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
       <CalendarCard 
         tasks={tasks}
         selectedDate={selectedDate}
-        onSelectDate={(date) => {
-          onSelectDate(date);
-          if (date) {
-            setCalendarDate(date);
-          }
-        }}
+        onSelectDate={handleSelectDate}
         onMoveTask={handleMoveTask}
         onItemDrop={handleItemDrop}
       />

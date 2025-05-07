@@ -258,6 +258,14 @@ const DashboardCalendar = () => {
     e.stopPropagation();
   };
 
+  // Handle date selection with a single click
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+      setCalendarDate(date);
+    }
+  };
+
   // Handle date change and sync with global state
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
@@ -343,9 +351,11 @@ const DashboardCalendar = () => {
           "hover:bg-accent/10 transition-colors cursor-pointer"
         )}
         onClick={() => {
-          setSelectedDate(date);
+          // Simple single click handling - update date immediately
+          handleDateSelect(date);
         }}
         onDoubleClick={() => {
+          // Double click opens dialog
           setSelectedDate(date);
           form.setValue('date', date);
           setIsDialogOpen(true);
@@ -428,7 +438,7 @@ const DashboardCalendar = () => {
         <Calendar
           mode="single"
           selected={selectedDate}
-          onSelect={handleDateChange}
+          onSelect={handleDateSelect} // Use our new handler for single click
           month={currentMonth}
           onMonthChange={(date) => {
             setCurrentMonth(date);

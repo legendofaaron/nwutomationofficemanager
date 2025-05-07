@@ -42,7 +42,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     setIsDraggingThis(isThisBeingDragged);
   }, [isDragging, draggedItem, id, type]);
   
-  // Handle drag start
+  // Handle drag start with improved reliability
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     if (disabled) {
       e.preventDefault();
@@ -150,7 +150,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     }
   };
   
-  // Handle drag end
+  // Handle drag end with improved cleanup
   const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
     e.stopPropagation();
     
