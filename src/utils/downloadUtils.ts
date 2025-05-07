@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { Task, ScheduleFilter } from '@/components/schedule/ScheduleTypes';
 import { format } from 'date-fns';
@@ -13,7 +12,7 @@ const formatTaskForText = (task: Task): string => {
                   task.crew && task.crew.length > 0 ? `Crew: ${task.crew.join(', ')}` : 'Unassigned';
   const location = task.location ? `Location: ${task.location}` : '';
   
-  return `${status} ${date} | ${time} | ${task.title}\n    ${assignee}\n    ${location}\n`;
+  return `${status} ${date} | ${time} | ${task.title || task.text || "Untitled Task"}\n    ${assignee}\n    ${location}\n`;
 };
 
 // Generate a text version of the schedule
@@ -185,9 +184,8 @@ export const generateSchedulePDF = (tasks: Task[], filter?: ScheduleFilter): jsP
         yPosition = 20;
       }
       
-      const time = task.startTime && task.endTime ? `${task.startTime} - ${task.endTime}` : 'All day';
-      const status = task.completed ? "✓ " : "□ ";
-      const title = task.title || task.text || "Untitled Task"; // Handle both title and text properties
+      // Make sure to use both title and text properties for backwards compatibility
+      const title = task.title || task.text || "Untitled Task";
       
       pdf.setFont("helvetica", "bold");
       pdf.text(`${status}${time} | ${title}`, 20, yPosition);
@@ -276,6 +274,7 @@ export const convertTodosToTasks = (todos: any[]): Task[] => {
   return todos.map(todo => ({
     id: todo.id,
     title: todo.text || todo.title || "Untitled Task", // Support both text and title properties
+    text: todo.text || todo.title, // Include text property for backward compatibility
     date: todo.date instanceof Date ? todo.date : new Date(todo.date || new Date()),
     completed: !!todo.completed,
     assignedTo: todo.assignedTo,
@@ -284,7 +283,8 @@ export const convertTodosToTasks = (todos: any[]): Task[] => {
     startTime: todo.startTime,
     endTime: todo.endTime,
     location: todo.location,
-    clientId: todo.clientId,
+    clientId: todo.clientId || undefined,
+    clientLocationId: todo.clientLocationId || undefined,
     description: todo.description || ""
   }));
 };

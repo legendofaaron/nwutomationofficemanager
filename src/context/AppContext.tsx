@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export type ViewMode = 'welcome' | 'files' | 'database' | 'document' | 'knowledge' | 'office' | 'spreadsheet' | 'settings';
@@ -24,6 +23,10 @@ interface Todo {
   location?: string;
   startTime?: string;
   endTime?: string;
+  clientId?: string;  // Add clientId
+  clientLocationId?: string;  // Add clientLocationId
+  description?: string;  // Add description
+  crewId?: string;  // Add crewId for compatibility
 }
 
 interface SpreadsheetData {

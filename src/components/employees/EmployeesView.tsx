@@ -349,6 +349,7 @@ const EmployeesView: React.FC = () => {
     return todos.map(todo => ({
       id: todo.id,
       title: todo.text || "Untitled Task",
+      text: todo.text,
       date: todo.date instanceof Date ? todo.date : new Date(todo.date || new Date()),
       completed: !!todo.completed,
       assignedTo: todo.assignedTo,
@@ -357,8 +358,8 @@ const EmployeesView: React.FC = () => {
       startTime: todo.startTime,
       endTime: todo.endTime,
       location: todo.location,
-      clientId: todo.clientId,
-      clientLocationId: todo.clientLocationId,
+      clientId: todo.clientId || undefined,
+      clientLocationId: todo.clientLocationId || undefined,
       description: todo.description || ""
     }));
   };
