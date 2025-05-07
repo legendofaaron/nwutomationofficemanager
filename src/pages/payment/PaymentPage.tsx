@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -23,11 +22,11 @@ const PaymentPage = () => {
   };
 
   const handleViewSource = () => {
-    window.open('https://github.com/aaronthelegend/office-manager', '_blank');
+    window.open('https://github.com/lovable-labs/office-manager', '_blank');
   };
 
   const handleDownloadSource = () => {
-    window.open('https://github.com/aaronthelegend/office-manager/archive/refs/heads/main.zip', '_blank');
+    window.open('https://github.com/lovable-labs/office-manager/archive/refs/heads/main.zip', '_blank');
   };
 
   return (

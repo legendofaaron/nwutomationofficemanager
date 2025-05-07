@@ -10,11 +10,11 @@ export const OpenSourceInfo = () => {
   const isDark = resolvedTheme === 'dark' || resolvedTheme === 'superdark';
   
   const handleOpenGithub = () => {
-    window.open('https://github.com/aaronthelegend/office-manager', '_blank');
+    window.open('https://github.com/lovable-labs/office-manager', '_blank');
   };
 
   const handleDownloadSource = () => {
-    window.open('https://github.com/aaronthelegend/office-manager/archive/refs/heads/main.zip', '_blank');
+    window.open('https://github.com/lovable-labs/office-manager/archive/refs/heads/main.zip', '_blank');
   };
 
   const handleViewLicense = () => {

@@ -41,10 +41,10 @@ Follow these steps:
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone https://github.com/lovable-labs/office-manager.git
 
 # Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+cd office-manager
 
 # Step 3: Install the necessary dependencies.
 npm i
@@ -72,7 +72,7 @@ npm run dev
 You can download the source code in several ways:
 
 1. Clone the repository using Git
-2. Download as ZIP from the [GitHub repository](https://github.com/aaronthelegend/office-manager)
+2. Download as ZIP from the [GitHub repository](https://github.com/lovable-labs/office-manager)
 3. Use the download button in the app interface
 
 ## Technologies Used

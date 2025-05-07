@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, MessageSquare, BookOpenText, Building2, Heart, Coffee, Sparkles, Github, Download, Code } from 'lucide-react';
@@ -55,11 +54,11 @@ const WelcomeDashboard = () => {
   };
 
   const handleOpenGithub = () => {
-    window.open('https://github.com/aaronthelegend/office-manager', '_blank');
+    window.open('https://github.com/lovable-labs/office-manager', '_blank');
   };
 
   const handleDownloadSource = () => {
-    window.open('https://github.com/aaronthelegend/office-manager/archive/refs/heads/main.zip', '_blank');
+    window.open('https://github.com/lovable-labs/office-manager/archive/refs/heads/main.zip', '_blank');
   };
 
   return (
