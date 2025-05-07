@@ -8,7 +8,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, User, ArrowRight, AlertCircle, Shield, Presentation, Sparkles } from 'lucide-react';
+import { User, Lock, ArrowRight, AlertCircle, Shield, Presentation, Sparkles } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/Logo';
 import { useAppContext } from '@/context/AppContext';
