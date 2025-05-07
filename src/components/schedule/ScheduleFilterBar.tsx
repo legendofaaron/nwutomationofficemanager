@@ -4,9 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileDown, FileText, Filter } from 'lucide-react';
-import { Employee, Crew, Client, FilterType, ScheduleFilter, Task } from './ScheduleTypes';
-import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
-import { toast } from 'sonner';
+import { Employee, Crew, Client, FilterType, ScheduleFilter } from './ScheduleTypes';
 
 interface ScheduleFilterBarProps {
   employees: Employee[];
@@ -14,7 +12,6 @@ interface ScheduleFilterBarProps {
   clients: Client[];
   currentFilter: ScheduleFilter;
   onFilterChange: (filter: ScheduleFilter) => void;
-  tasks: Task[];
 }
 
 const ScheduleFilterBar: React.FC<ScheduleFilterBarProps> = ({
@@ -22,8 +19,7 @@ const ScheduleFilterBar: React.FC<ScheduleFilterBarProps> = ({
   crews,
   clients,
   currentFilter,
-  onFilterChange,
-  tasks
+  onFilterChange
 }) => {
   // Handle filter type change
   const handleFilterTypeChange = (value: FilterType) => {
@@ -56,25 +52,13 @@ const ScheduleFilterBar: React.FC<ScheduleFilterBarProps> = ({
     });
   };
 
-  // Implement download buttons functionality
+  // Dummy functions for download buttons - can be implemented later
   const handleDownloadPdf = () => {
-    try {
-      downloadScheduleAsPdf(tasks, currentFilter);
-      toast.success('Schedule downloaded as PDF');
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-      toast.error('Failed to download schedule as PDF');
-    }
+    console.log('Download PDF');
   };
 
   const handleDownloadTxt = () => {
-    try {
-      downloadScheduleAsTxt(tasks, currentFilter);
-      toast.success('Schedule downloaded as TXT');
-    } catch (error) {
-      console.error('Error downloading TXT:', error);
-      toast.error('Failed to download schedule as TXT');
-    }
+    console.log('Download TXT');
   };
 
   return (
