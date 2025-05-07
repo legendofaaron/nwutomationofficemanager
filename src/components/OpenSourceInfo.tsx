@@ -12,15 +12,11 @@ export const OpenSourceInfo = () => {
   const isDark = resolvedTheme === 'dark' || resolvedTheme === 'superdark';
   
   const handleEmailDeveloper = () => {
-    window.location.href = 'mailto:northwesternautomation@gmail.com?subject=Office%20Manager%20Source%20Code%20Request&body=I%20would%20like%20to%20request%20the%20source%20code%20for%20Office%20Manager.';
-  };
-
-  const handleTipMe = () => {
-    window.open('https://paypal.me/aaronthelegend', '_blank');
+    window.location.href = 'mailto:contact@example.com?subject=Office%20Manager%20Source%20Code%20Request&body=I%20would%20like%20to%20request%20the%20source%20code%20for%20Office%20Manager.';
   };
   
   const handleGitHubRedirect = () => {
-    window.open('https://github.com/lovable-labs/office-manager', '_blank');
+    window.open('https://github.com/legendofaaron/nwutomationofficemanager', '_blank');
   };
 
   return (
@@ -32,13 +28,13 @@ export const OpenSourceInfo = () => {
             <CardTitle>Contact for Source Code</CardTitle>
           </div>
           <CardDescription>
-            Get in touch for the source code or support the developer
+            Get in touch for the source code or support
           </CardDescription>
         </CardHeader>
         
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            Enjoying Office Manager? Contact the developer directly to request the complete source code.
+            Enjoying Office Manager? Contact us directly to request the complete source code.
           </p>
         </CardContent>
         
@@ -48,12 +44,6 @@ export const OpenSourceInfo = () => {
             onClick={handleEmailDeveloper}
           >
             <Mail className="h-4 w-4" /> Email for Source Code
-          </Button>
-          <Button 
-            className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white"
-            onClick={handleTipMe}
-          >
-            <Heart className="h-4 w-4" fill="currentColor" /> Tip Developer on PayPal
           </Button>
         </CardFooter>
       </Card>
@@ -81,7 +71,7 @@ export const OpenSourceInfo = () => {
               <div className="text-sm text-muted-foreground space-y-2">
                 <p className="mb-2">Clone the repository to your local machine:</p>
                 <pre className="bg-slate-100 dark:bg-slate-800 p-2 rounded-md text-xs overflow-x-auto">
-                  git clone https://github.com/lovable-labs/office-manager.git
+                  git clone https://github.com/legendofaaron/nwutomationofficemanager.git
                 </pre>
                 <p>Or download directly as a ZIP file from the GitHub repository.</p>
               </div>
