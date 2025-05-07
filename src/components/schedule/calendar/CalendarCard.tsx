@@ -17,6 +17,7 @@ interface CalendarCardProps {
   handleNextMonth: () => void;
   tasks: Task[];
   handleDayDrop: (data: any, event: React.DragEvent, date: Date) => void;
+  onAddNewTask: (type?: string) => void;
 }
 
 const CalendarCard = memo(({
@@ -27,7 +28,8 @@ const CalendarCard = memo(({
   handlePreviousMonth,
   handleNextMonth,
   tasks,
-  handleDayDrop
+  handleDayDrop,
+  onAddNewTask
 }: CalendarCardProps) => {
   return (
     <Card className="shadow-md border rounded-xl overflow-hidden">

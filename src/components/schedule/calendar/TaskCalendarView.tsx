@@ -1,12 +1,15 @@
 
-import React, { memo, useCallback } from 'react';
+import React, { memo, useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { DragDropProvider } from '../DragDropContext';
 import { Task, Crew } from '../ScheduleTypes';
 import { isSameDay } from '@/components/calendar/CalendarUtils';
+import { useDragDrop } from '../hooks/useDragDrop';
+import { toast } from 'sonner';
 import CalendarCard from './CalendarCard';
 import TaskDetailsCard from './TaskDetailsCard';
+import { addMonths, subMonths } from 'date-fns';
 
 interface TaskCalendarViewProps {
   tasks: Task[];
@@ -29,6 +32,16 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = memo(({
   onAddNewTask,
   onMoveTask
 }) => {
+  // State for calendar navigation
+  const [currentMonth, setCurrentMonth] = useState<Date>(selectedDate || new Date());
+
+  // Effect to update currentMonth when selectedDate changes significantly (different month)
+  useEffect(() => {
+    if (selectedDate && (selectedDate.getMonth() !== currentMonth.getMonth() || selectedDate.getFullYear() !== currentMonth.getFullYear())) {
+      setCurrentMonth(selectedDate);
+    }
+  }, [selectedDate, currentMonth]);
+
   // Calculate task counts for the selected date
   const tasksForSelectedDate = tasks.filter(task => 
     isSameDay(task.date, selectedDate)
@@ -43,15 +56,38 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = memo(({
   const completedTasks = tasksForSelectedDate.filter(t => t.completed).length;
   const pendingTasks = tasksForSelectedDate.length - completedTasks;
   
-  const handleDragStart = useCallback((data: any, event: React.DragEvent) => {
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('text/plain', JSON.stringify(data));
-    }
-  }, []);
+  // Use our refactored drag and drop hook
+  const { handleDragStart, handleDragEnd } = useDragDrop({
+    onTaskMove: onMoveTask,
+    acceptTypes: ['task']
+  });
   
-  const handleDragEnd = useCallback(() => {
-    // Reset drag state
+  // Handle dropping a task on a day
+  const handleDayDrop = (data: any, event: React.DragEvent, date: Date) => {
+    if (data.type === 'task' && onMoveTask) {
+      onMoveTask(data.id, date);
+      toast.success(`Task rescheduled to ${format(date, 'MMMM d')}`, {
+        description: data.title
+      });
+    }
+  };
+
+  // Handle month navigation
+  const handlePreviousMonth = useCallback(() => {
+    const prevMonth = subMonths(currentMonth, 1);
+    setCurrentMonth(prevMonth);
+    onMonthChange(prevMonth);
+  }, [currentMonth]);
+
+  const handleNextMonth = useCallback(() => {
+    const nextMonth = addMonths(currentMonth, 1);
+    setCurrentMonth(nextMonth);
+    onMonthChange(nextMonth);
+  }, [currentMonth]);
+
+  // Add a function to be called when calendar's month changes internally
+  const onMonthChange = useCallback((newMonth: Date) => {
+    setCurrentMonth(newMonth);
   }, []);
 
   return (
@@ -62,8 +98,12 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = memo(({
             tasks={tasks}
             selectedDate={selectedDate}
             onSelectDate={onSelectDate}
+            currentMonth={currentMonth}
+            onMonthChange={onMonthChange}
+            handlePreviousMonth={handlePreviousMonth}
+            handleNextMonth={handleNextMonth}
+            handleDayDrop={handleDayDrop}
             onAddNewTask={onAddNewTask}
-            onMoveTask={onMoveTask}
           />
         </DragDropProvider>
       </div>
