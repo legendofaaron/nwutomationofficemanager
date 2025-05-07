@@ -1,80 +1,72 @@
 
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { DroppableArea } from '../DroppableArea';
+import { Task } from '../ScheduleTypes';
+import { Badge } from '@/components/ui/badge';
+import { isSameDay } from '@/components/calendar/CalendarUtils';
+import { useDroppable } from '@/components/schedule/useDraggable';
 
 interface TaskIndicatorProps {
   date: Date;
-  tasks: any[];
-  selectedDate?: Date | null;
+  tasks: Task[];
+  selectedDate: Date;
   onDayDrop: (data: any, event: React.DragEvent, date: Date) => void;
 }
 
-const TaskIndicator = memo(({ 
-  date, 
-  tasks, 
+const TaskIndicator: React.FC<TaskIndicatorProps> = memo(({
+  date,
+  tasks,
   selectedDate,
   onDayDrop
-}: TaskIndicatorProps) => {
-  const dayTasks = tasks.filter(task => task.date.toDateString() === date.toDateString());
-  const hasTasks = dayTasks.length > 0;
-  const hasCompletedTasks = dayTasks.some(task => task.completed);
-  const hasPendingTasks = dayTasks.some(task => !task.completed);
-  const isToday = date.toDateString() === new Date().toDateString();
-  const isSelected = selectedDate?.toDateString() === date.toDateString();
-
+}) => {
+  const isSelected = isSameDay(date, selectedDate);
+  const dateValue = date.getDate();
+  
+  // Filter tasks for this specific date
+  const tasksForDay = tasks.filter(task => isSameDay(task.date, date));
+  const pendingTasks = tasksForDay.filter(task => !task.completed).length;
+  const completedTasks = tasksForDay.filter(task => task.completed).length;
+  
+  // Setup droppable area
+  const { isOver, dropProps } = useDroppable({
+    accept: ['task', 'employee', 'crew'],
+    onDrop: (data, event) => onDayDrop(data, event, date)
+  });
+  
   return (
-    <DroppableArea
-      id={`day-${date.toISOString()}`}
-      acceptTypes={['task']}
-      onDrop={(data, event) => onDayDrop(data, event, date)}
+    <div 
       className={cn(
-        "calendar-day-cell relative h-full flex items-center justify-center", 
-        isSelected && "selected-day",
-        hasTasks && "font-medium"
+        "relative w-full h-full flex flex-col items-center justify-center",
+        isSelected && "bg-primary/5 font-medium",
+        isOver && "bg-primary/10",
+        "transition-all duration-200"
       )}
-      activeClassName="bg-blue-100 dark:bg-blue-800/30 border-dashed border-blue-400"
+      {...dropProps}
     >
-      {/* Day number */}
-      <div className={cn(
-        "z-10 font-medium",
-        isToday && 
-        "bg-primary text-white rounded-full w-7 h-7 flex items-center justify-center"
-      )}>
-        {format(date, 'd')}
+      <div className="p-0.5 text-center">
+        {dateValue}
       </div>
       
-      {/* Task indicators */}
-      {hasTasks && (
-        <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-0.5 pb-0.5">
-          {hasPendingTasks && <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />}
-          {hasCompletedTasks && <div className="h-1.5 w-1.5 rounded-full bg-green-500" />}
-          
-          {/* If there are many tasks, show a count */}
-          {dayTasks.length > 2 && (
-            <span className="text-[0.6rem] text-muted-foreground absolute -bottom-1 left-1/2 transform -translate-x-1/2 font-normal">
-              {dayTasks.length}
-            </span>
+      {tasksForDay.length > 0 && (
+        <div className="flex gap-0.5 absolute bottom-0 left-0 right-0 justify-center">
+          {pendingTasks > 0 && (
+            <Badge
+              variant="secondary"
+              className="h-1.5 w-1.5 p-0 rounded-full bg-blue-500"
+              aria-label={`${pendingTasks} pending tasks`}
+            />
+          )}
+          {completedTasks > 0 && (
+            <Badge
+              variant="secondary"
+              className="h-1.5 w-1.5 p-0 rounded-full bg-green-500"
+              aria-label={`${completedTasks} completed tasks`}
+            />
           )}
         </div>
       )}
-    </DroppableArea>
+    </div>
   );
-}, (prevProps, nextProps) => {
-  // Optimize re-renders
-  if (prevProps.date.toDateString() !== nextProps.date.toDateString()) return false;
-  
-  // Compare if tasks for this day have changed
-  const prevTasks = prevProps.tasks.filter(task => task.date.toDateString() === prevProps.date.toDateString());
-  const nextTasks = nextProps.tasks.filter(task => task.date.toDateString() === nextProps.date.toDateString());
-  
-  if (prevTasks.length !== nextTasks.length) return false;
-  
-  // Check if selected state changed
-  if ((prevProps.selectedDate?.toDateString() ?? '') !== (nextProps.selectedDate?.toDateString() ?? '')) return false;
-  
-  return true;
 });
 
 TaskIndicator.displayName = 'TaskIndicator';

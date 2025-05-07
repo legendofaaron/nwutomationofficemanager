@@ -13,6 +13,13 @@ interface UseDragDropOptions<T = any> {
   acceptTypes?: string[];
   // Make tasks optional to avoid type errors
   tasks?: Task[];
+  // Add these properties to fix the build error
+  selectedDate?: Date;
+  setFormData?: React.Dispatch<React.SetStateAction<any>>;
+  formData?: any;
+  setDroppedCrewId?: React.Dispatch<React.SetStateAction<string | null>>;
+  setAssignmentType?: React.Dispatch<React.SetStateAction<'individual' | 'crew'>>;
+  setTeamEventDialogOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const useDragDrop = <T extends Record<string, any> = any>({
@@ -22,7 +29,13 @@ export const useDragDrop = <T extends Record<string, any> = any>({
   dropZoneClassName = "schedule-drop-zone",
   dropZoneActiveClassName = "drag-over",
   acceptTypes = ['task', 'crew'],
-  tasks = []
+  tasks = [],
+  selectedDate,
+  setFormData,
+  formData,
+  setDroppedCrewId,
+  setAssignmentType,
+  setTeamEventDialogOpen
 }: UseDragDropOptions<T> = {}) => {
   // Get context from DragDropContext
   const contextDragDrop = useContextDragDrop();
@@ -74,8 +87,40 @@ export const useDragDrop = <T extends Record<string, any> = any>({
           toast.success(`Creating event for ${dragData.name} crew`, {
             description: "Fill in the details to schedule this team event"
           });
+        } 
+        // Handle employee drops for scheduling
+        else if (dragData.type === 'employee' && setFormData && setAssignmentType && setTeamEventDialogOpen && selectedDate) {
+          // Pre-fill form data for the employee task
+          setFormData({
+            ...formData,
+            title: `Task for ${dragData.name}`,
+            assignedTo: dragData.id,
+            startTime: '09:00',
+            endTime: '10:00'
+          });
+          
+          setAssignmentType('individual');
+          setTeamEventDialogOpen(true);
+          
+          toast.success(`Creating task for ${dragData.name}`, {
+            description: "Fill in the details to schedule this employee's task"
+          });
         }
-        
+        // Handle crew drop for scheduling a team event
+        else if (dragData.type === 'crew' && setDroppedCrewId && setFormData && setTeamEventDialogOpen && selectedDate) {
+          setDroppedCrewId(dragData.id);
+          
+          // Pre-fill form data for the crew event
+          setFormData({
+            ...formData,
+            title: `${dragData.name} Team Event`,
+            assignedCrew: dragData.id,
+            startTime: '09:00',
+            endTime: '16:00'
+          });
+          
+          setTeamEventDialogOpen(true);
+        }
         // Handle task drop for reordering or moving to a different day
         else if (dragData.type === 'task') {
           // If we have a specific handler for task moves and the target is a date
@@ -96,7 +141,7 @@ export const useDragDrop = <T extends Record<string, any> = any>({
       console.error('Error handling drop:', error);
       toast.error("Error processing the dragged item");
     }
-  }, [dropZoneClassName, dropZoneActiveClassName, acceptTypes, onCrewDrop, onTaskMove, onItemDrop]);
+  }, [dropZoneClassName, dropZoneActiveClassName, acceptTypes, onCrewDrop, onTaskMove, onItemDrop, formData, selectedDate, setFormData, setAssignmentType, setTeamEventDialogOpen, setDroppedCrewId]);
 
   const handleDragStart = useCallback((data: any, e: React.DragEvent) => {
     contextDragDrop.setIsDragging(true);

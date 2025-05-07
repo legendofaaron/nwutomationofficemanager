@@ -1,4 +1,4 @@
-@import './components/chat/n8nChat.css';
+@import './styles/scheduling.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

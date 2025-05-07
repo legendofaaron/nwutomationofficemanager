@@ -1,0 +1,146 @@
+
+/* Enhanced Scheduling & Drag/Drop Styles */
+
+/* Smooth animations for draggable items */
+[draggable=true] {
+  cursor: grab;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+[draggable=true]:active {
+  cursor: grabbing;
+}
+
+/* Professional task styling */
+.task-item {
+  transition: all 0.2s ease;
+}
+
+.task-item:hover:not(.completed) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.task-item.completed {
+  opacity: 0.85;
+}
+
+/* Enhanced drop target visualization */
+.schedule-drop-zone {
+  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.schedule-drop-zone.drag-over {
+  background-color: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+/* Custom drag image that appears when dragging */
+.task-drag-preview {
+  padding: 8px 12px;
+  background-color: rgba(59, 130, 246, 0.95);
+  color: white;
+  border-radius: 6px;
+  font-size: 13px;
+  pointer-events: none;
+  z-index: 9999;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Calendar day styling */
+.rdp-cell.rdp-day {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.rdp-cell.rdp-day_selected {
+  background-color: rgba(59, 130, 246, 0.08);
+  font-weight: 500;
+}
+
+.rdp-cell.rdp-day:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* Animate task list transitions */
+.task-list-transition {
+  transition: all 0.3s ease;
+}
+
+.task-list-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.task-list-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.task-list-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.task-list-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* Body class when dragging is happening */
+body.dragging {
+  cursor: grabbing !important;
+}
+
+body.dragging * {
+  cursor: grabbing !important;
+}
+
+/* Improve how tasks appear in the calendar */
+.calendar-task-label {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  width: 100%;
+}
+
+/* Make resizable panels work smoothly */
+.resizable-panel {
+  transition: width 0.2s ease;
+  position: relative;
+}
+
+.resizable-handle {
+  position: absolute;
+  right: -5px;
+  top: 0;
+  height: 100%;
+  width: 10px;
+  cursor: col-resize;
+  z-index: 10;
+}
+
+.resizable-handle:hover,
+.resizable-handle.active {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .calendar-grid {
+    font-size: 0.85rem;
+  }
+  
+  .task-item {
+    padding: 0.75rem;
+  }
+}
