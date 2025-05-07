@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, MessageSquare, BookOpenText, Building2, Heart, Coffee } from 'lucide-react';
+import { ArrowRight, MessageSquare, BookOpenText, Building2, Heart, Coffee, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
