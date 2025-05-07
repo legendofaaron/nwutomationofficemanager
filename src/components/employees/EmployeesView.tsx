@@ -230,7 +230,7 @@ const EmployeesView: React.FC = () => {
   const getTodosByCrewId = (crewId: string): TaskForEmployeeView[] => {
     return todos.filter(todo => {
       // Check both crew array and crewId property for backward compatibility
-      return (todo.crew && todo.crew.includes(crewId)) || todo.crewId === crewId;
+      return (todo.crew && todo.crew.includes(crewId)) || todo.crew?.[0] === crewId;
     }).map(todo => ({
       id: todo.id,
       text: todo.text,
@@ -305,9 +305,9 @@ const EmployeesView: React.FC = () => {
       const updatedTodos = todos.map(todo => {
         // Check both crew array and crewId property for backward compatibility
         if ((todo.crew && todo.crew.includes(crewToDelete.id)) || 
-            (todo.crewId === crewToDelete.id)) {
+            (todo.crew?.[0] === crewToDelete.id)) {
           // Create a new object without the crew-related properties
-          const { crew, crewId, ...rest } = todo;
+          const { crew, ...rest } = todo;
           return rest;
         }
         return todo;
@@ -352,7 +352,7 @@ const EmployeesView: React.FC = () => {
       date: todo.date,
       completed: todo.completed,
       assignedTo: todo.assignedTo,
-      crew: todo.crew,
+      crew: todo.crew || [],
       crewId: todo.crew?.[0], // Use the first item in the crew array as crewId for compatibility
       startTime: todo.startTime,
       endTime: todo.endTime,
