@@ -12,32 +12,36 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { GripHorizontal, Users, Calendar, Download, Trash2 } from 'lucide-react';
-import { Employee, Crew } from './types';
+import { Employee, Crew, TaskForEmployeeView } from './types';
 
 interface EmployeeListProps {
   employees: Employee[];
-  crews: Crew[];
   searchTerm: string;
   onHandleEmployeeDragStart: (e: React.DragEvent, employee: Employee) => void;
   onSelectEmployee: (employeeId: string) => void;
-  onAssignToCrew: (employeeId: string) => void;
-  onScheduleTask: (employeeId: string, employeeName: string) => void;
-  onDownloadSchedule: (employee: { id: string, name: string }) => void;
-  onDeleteEmployee: (employee: { id: string, name: string }) => void;
-  getCrewNameById: (crewId: string) => string;
+  onEditEmployee: (employee: Employee) => void;
+  onDeleteEmployee: (employeeId: string, employeeName: string) => void; // Changed from object to separate params
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  onAssignTask: (employeeId: string, employeeName: string) => void; // Changed from object to separate params
+  onDownloadSchedule: (employeeId: string) => void; // Changed from object to string
+  getEmployeeCrews: (employeeId: string) => string[];
+  getEmployeeTasks: (employeeId: string) => TaskForEmployeeView[];
 }
 
 const EmployeeList: React.FC<EmployeeListProps> = ({
   employees,
-  crews,
   searchTerm,
   onHandleEmployeeDragStart,
   onSelectEmployee,
-  onAssignToCrew,
-  onScheduleTask,
-  onDownloadSchedule,
+  onEditEmployee,
   onDeleteEmployee,
-  getCrewNameById
+  onDragOver,
+  onDrop,
+  onAssignTask,
+  onDownloadSchedule,
+  getEmployeeCrews,
+  getEmployeeTasks
 }) => {
   const filteredEmployees = searchTerm 
     ? employees.filter(emp => 
@@ -96,7 +100,7 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
                     <div className="flex flex-wrap gap-1">
                       {employee.crews.map(crewId => (
                         <Badge key={crewId} variant="outline" className="text-xs">
-                          {getCrewNameById(crewId)}
+                          {getEmployeeCrews(employee.id).find(crew => crew === crewId) || crewId}
                         </Badge>
                       ))}
                     </div>
@@ -111,7 +115,7 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
                       variant="ghost"
                       className="h-8 w-8 p-0"
                       title="Assign to crew"
-                      onClick={() => onAssignToCrew(employee.id)}
+                      onClick={() => onSelectEmployee(employee.id)}
                     >
                       <Users className="h-4 w-4" />
                     </Button>
@@ -120,7 +124,7 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
                       variant="ghost"
                       className="h-8 w-8 p-0"
                       title="Schedule task"
-                      onClick={() => onScheduleTask(employee.id, employee.name)}
+                      onClick={() => onAssignTask(employee.id, employee.name)}
                     >
                       <Calendar className="h-4 w-4" />
                     </Button>
@@ -129,10 +133,7 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
                       variant="ghost"
                       className="h-8 w-8 p-0"
                       title="Download schedule"
-                      onClick={() => onDownloadSchedule({
-                        id: employee.id,
-                        name: employee.name
-                      })}
+                      onClick={() => onDownloadSchedule(employee.id)}
                     >
                       <Download className="h-4 w-4" />
                     </Button>
@@ -141,10 +142,7 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
                       variant="ghost"
                       className="h-8 w-8 p-0 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
                       title="Delete employee"
-                      onClick={() => onDeleteEmployee({
-                        id: employee.id,
-                        name: employee.name
-                      })}
+                      onClick={() => onDeleteEmployee(employee.id, employee.name)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
