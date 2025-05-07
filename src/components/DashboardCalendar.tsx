@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -10,14 +9,14 @@ import { useForm } from 'react-hook-form';
 import { useAppContext } from '@/context/AppContext';
 
 // Import the new components and types
-import { Todo, DroppedItem, TaskFormValues } from './calendar/CalendarTypes';
+import { Todo, DroppedItem, TaskFormValues, ensureDate } from './calendar/CalendarTypes';
 import CalendarDayView from './calendar/CalendarDayView';
 import CalendarDayCell from './calendar/CalendarDayCell';
 import TaskFormDialog from './calendar/TaskFormDialog';
 import EmployeeTaskDialog from './calendar/EmployeeTaskDialog';
 import CrewTaskDialog from './calendar/CrewTaskDialog';
 import TaskInput from './calendar/TaskInput';
-import { getCrewDisplayCode, getTextByItemType, capitalizeFirstLetter } from './calendar/CalendarUtils';
+import { getCrewDisplayCode, getTextByItemType, capitalizeFirstLetter, safeToDateString } from './calendar/CalendarUtils';
 
 const DashboardCalendar = () => {
   // Use the useAppContext hook to access todos and other data
@@ -55,6 +54,12 @@ const DashboardCalendar = () => {
       setContextDate(selectedDate);
     }
   }, [selectedDate, contextDate, setContextDate]);
+
+  // Process todos to ensure dates are Date objects
+  const processedTodos = contextTodos.map(todo => ({
+    ...todo,
+    date: ensureDate(todo.date)
+  }));
 
   const form = useForm<TaskFormValues>({
     defaultValues: {
@@ -100,13 +105,14 @@ const DashboardCalendar = () => {
     };
   }, []);
 
-  const todaysTodos = contextTodos.filter(
-    todo => new Date(todo.date).toDateString() === selectedDate.toDateString()
+  // Filter todos for the selected date using safeToDateString
+  const todaysTodos = processedTodos.filter(
+    todo => safeToDateString(todo.date) === selectedDate.toDateString()
   );
 
   // Count tasks for each day
   const getTaskCountForDay = (date: Date): number => {
-    return contextTodos.filter(todo => new Date(todo.date).toDateString() === date.toDateString()).length;
+    return processedTodos.filter(todo => safeToDateString(todo.date) === date.toDateString()).length;
   };
 
   const addTodo = (newTodoText: string) => {

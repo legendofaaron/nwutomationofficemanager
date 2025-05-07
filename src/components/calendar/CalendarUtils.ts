@@ -29,3 +29,11 @@ export const getTextByItemType = (item: DroppedItem): string => {
       return item.text;
   }
 };
+
+// Helper function to safely get toDateString from a date that might be a string
+export const safeToDateString = (date: Date | string): string => {
+  if (typeof date === 'string') {
+    return new Date(date).toDateString();
+  }
+  return date.toDateString();
+};

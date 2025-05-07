@@ -5,7 +5,7 @@ export interface TodoBase {
   id: string;
   text: string;
   completed: boolean;
-  date: Date;
+  date: Date | string; // Allow for string dates that will be converted to Date objects
   assignedTo?: string;
   assignedToAvatars?: string[];
   crew?: string[];
@@ -16,7 +16,7 @@ export interface TodoBase {
   clientLocationId?: string;
   description?: string;
   crewId?: string;
-  title?: string; // Changed from required to optional to match AppContext.tsx
+  title?: string; // Optional to match AppContext.tsx
 }
 
 export interface Todo extends TodoBase {
@@ -41,3 +41,11 @@ export interface TaskFormValues {
   endTime?: string;
   assignedTo?: string;
 }
+
+// Helper function to ensure a date is a proper Date object
+export const ensureDate = (date: Date | string): Date => {
+  if (date instanceof Date) {
+    return date;
+  }
+  return new Date(date);
+};

@@ -5,6 +5,19 @@
 
 import { useState, useEffect } from 'react';
 
+// Helper function to safely parse dates in JSON
+const parseWithDate = (text: string) => {
+  const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
+  
+  return JSON.parse(text, (key, value) => {
+    // Check if the value could be an ISO date string
+    if (typeof value === 'string' && isoDatePattern.test(value)) {
+      return new Date(value);
+    }
+    return value;
+  });
+};
+
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
   // Get from local storage then parse stored json or return initialValue
   const readValue = (): T => {
@@ -15,7 +28,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
 
     try {
       const item = window.localStorage.getItem(key);
-      return item ? (JSON.parse(item) as T) : initialValue;
+      return item ? (parseWithDate(item) as T) : initialValue;
     } catch (error) {
       console.warn(`Error reading localStorage key "${key}":`, error);
       return initialValue;
@@ -52,7 +65,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === key && e.newValue) {
-        setStoredValue(JSON.parse(e.newValue));
+        setStoredValue(parseWithDate(e.newValue));
       }
     };
 

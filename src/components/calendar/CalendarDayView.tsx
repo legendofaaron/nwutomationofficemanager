@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { Todo } from './CalendarTypes';
@@ -9,6 +8,7 @@ import { MapPin, Clock, User, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAppContext } from '@/context/AppContext';
 import { toast } from 'sonner';
+import { safeToDateString } from './CalendarUtils';
 
 interface CalendarDayViewProps {
   todos: Todo[];
