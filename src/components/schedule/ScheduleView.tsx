@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useDragAndDrop } from './useDragAndDrop';
 import DragDropProvider from './DragDropContext';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
   const [employees] = useState<Employee[]>(initialEmployees || mockData.employees);
   const [crews] = useState<Crew[]>(initialCrews || mockData.crews);
   const [clients] = useState<Client[]>(initialClients || mockData.clients);
+  const [clientLocations] = useState(mockData.clientLocations || []);
   
   // View state
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
@@ -76,9 +77,21 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
   };
 
   // Open task for editing
-  const handleEditTask = (task: Task) => {
-    setEditingTask(task);
-    setIsCreateDialogOpen(true);
+  const handleEditTask = (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      setEditingTask(task);
+      setIsCreateDialogOpen(true);
+    }
+  };
+
+  // Toggle task completion
+  const handleToggleTaskCompletion = (taskId: string) => {
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId ? { ...task, completed: !task.completed } : task
+      )
+    );
   };
 
   // Handle task changes (create/update)
@@ -97,7 +110,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
         crewName: taskData.crewName || undefined,
         clientId: taskData.clientId || undefined,
         location: taskData.location || undefined,
-        notes: taskData.notes || undefined,
+        notes: taskData.notes || '',
         completed: false,
         status: taskData.status || 'scheduled'
       };
@@ -128,7 +141,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
   };
 
   return (
-    <DragDropProvider>
+    <DragDropProvider onDragEnd={handleDragEnd}>
       <div className="container mx-auto space-y-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Schedule</h1>
@@ -169,9 +182,10 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
           <TaskListView 
             tasks={filteredTasks}
             onEditTask={handleEditTask}
-            employees={employees}
+            onToggleTaskCompletion={handleToggleTaskCompletion}
             crews={crews}
             clients={clients}
+            clientLocations={clientLocations}
           />
         )}
       </div>

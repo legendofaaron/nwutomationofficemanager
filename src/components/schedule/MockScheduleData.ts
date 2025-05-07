@@ -93,7 +93,9 @@ export const generateMockTasks = (
       completed: false,
       crewId: 'crew-1',
       clientId: 'client-1',
-      locationId: 'loc-1'
+      locationId: 'loc-1',
+      notes: '',
+      status: 'scheduled'
     },
     {
       id: 'task-2',
@@ -104,7 +106,9 @@ export const generateMockTasks = (
       completed: true,
       assignedTo: 'emp-3',
       clientId: 'client-2',
-      locationId: 'loc-3'
+      locationId: 'loc-3',
+      notes: '',
+      status: 'completed'
     },
     {
       id: 'task-3',
@@ -115,7 +119,9 @@ export const generateMockTasks = (
       completed: false,
       assignedTo: 'emp-4',
       clientId: 'client-3',
-      locationId: 'loc-4'
+      locationId: 'loc-4',
+      notes: '',
+      status: 'scheduled'
     },
     {
       id: 'task-4',
@@ -126,7 +132,9 @@ export const generateMockTasks = (
       completed: false,
       crewId: 'crew-2',
       clientId: 'client-1',
-      locationId: 'loc-2'
+      locationId: 'loc-2',
+      notes: '',
+      status: 'scheduled'
     },
     {
       id: 'task-5',
@@ -137,7 +145,26 @@ export const generateMockTasks = (
       completed: true,
       assignedTo: 'emp-1',
       clientId: 'client-2',
-      locationId: 'loc-3'
+      locationId: 'loc-3',
+      notes: '',
+      status: 'completed'
     },
   ];
+};
+
+// Add the combined generate function that ScheduleView is looking for
+export const generateMockScheduleData = () => {
+  const employees = generateMockEmployees();
+  const crews = generateMockCrews(employees);
+  const clients = generateMockClients();
+  const clientLocations = generateMockClientLocations(clients);
+  const tasks = generateMockTasks(employees, crews, clients, clientLocations);
+  
+  return {
+    employees,
+    crews,
+    clients,
+    clientLocations,
+    tasks
+  };
 };
