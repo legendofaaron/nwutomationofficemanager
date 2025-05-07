@@ -2,10 +2,10 @@
 export interface Employee {
   id: string;
   name: string;
-  position: string;
-  email: string;
-  phone: string;
-  crews: string[];
+  position?: string;
+  email?: string;
+  phone?: string;
+  crews?: string[];
   avatarUrl?: string;
 }
 
