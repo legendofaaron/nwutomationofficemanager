@@ -9,25 +9,31 @@ import AssignmentTab from './AssignmentTab';
 import { initializeFormData, getInitialAssignmentType, getInitialLocationType } from './TaskEditFormData';
 
 interface TaskEditDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSaveChanges: (taskId: string, updatedData: Partial<Task>) => void;
   task: Task | null;
   crews: Crew[];
   employees: Employee[];
   clients: Client[];
-  clientLocations: ClientLocation[];
+  clientLocations?: ClientLocation[];
+  onSave: (taskData: Partial<Task>, isNew: boolean) => void;
+  onDelete: (taskId: string) => void;
+  onCancel: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onSaveChanges?: (taskId: string, updatedData: Partial<Task>) => void;
 }
 
 const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
-  open,
-  onOpenChange,
-  onSaveChanges,
   task,
   crews,
   employees,
   clients,
-  clientLocations
+  clientLocations = [],
+  onSave,
+  onDelete,
+  onCancel,
+  open,
+  onOpenChange,
+  onSaveChanges
 }) => {
   const [formData, setFormData] = useState<TaskFormData>(initializeFormData(task));
   const [assignmentType, setAssignmentType] = useState<AssignmentType>(getInitialAssignmentType(task));
@@ -86,8 +92,27 @@ const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
       }
     }
 
-    onSaveChanges(task.id, updatedTask);
-    onOpenChange(false);
+    // Use the appropriate save method based on what was provided
+    if (onSaveChanges && task.id) {
+      onSaveChanges(task.id, updatedTask);
+    } else {
+      onSave(updatedTask, !task.id);
+    }
+    
+    // Close dialog if needed
+    if (onOpenChange) {
+      onOpenChange(false);
+    }
+  };
+
+  const handleDelete = () => {
+    if (!task || !task.id) return;
+    onDelete(task.id);
+    
+    // Close dialog if needed
+    if (onOpenChange) {
+      onOpenChange(false);
+    }
   };
 
   return (
@@ -132,7 +157,7 @@ const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
       <div className="flex justify-end gap-2 mt-6">
         <Button 
           variant="outline" 
-          onClick={() => onOpenChange(false)}
+          onClick={onCancel}
           className="gap-1"
         >
           <X className="h-4 w-4" /> Cancel

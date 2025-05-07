@@ -141,3 +141,20 @@ export const generateMockTasks = (
     },
   ];
 };
+
+// Add the missing generateMockScheduleData function
+export const generateMockScheduleData = () => {
+  const employees = generateMockEmployees();
+  const crews = generateMockCrews(employees);
+  const clients = generateMockClients();
+  const locations = generateMockClientLocations(clients);
+  const tasks = generateMockTasks(employees, crews, clients, locations);
+  
+  return {
+    employees,
+    crews,
+    clients,
+    clientLocations: locations,
+    tasks
+  };
+};
