@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, MessageSquare, BookOpenText, Building2, LayoutDashboard, Sparkles } from 'lucide-react';
+import { ArrowRight, MessageSquare, BookOpenText, Building2, Heart, Coffee } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
@@ -49,6 +48,10 @@ const WelcomeDashboard = () => {
     : isDark
       ? 'border-blue-900/50 bg-[#111827] hover:bg-[#1e293b] text-white'
       : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700';
+      
+  const handleTipMe = () => {
+    window.open('https://paypal.me/aaronthelegend', '_blank');
+  };
 
   return (
     <ScrollArea className="h-full">
@@ -181,6 +184,29 @@ const WelcomeDashboard = () => {
         <p className="text-center text-xs md:text-sm text-gray-500 dark:text-gray-400 animate-fade-in mt-8" style={{animationDelay: '600ms'}}>
           Select a feature from the sidebar or use the Intelligent Assistant to get started
         </p>
+        
+        {/* Tip Me Section */}
+        <div className="mt-12 text-center animate-fade-in" style={{animationDelay: '700ms'}}>
+          <Card className={`max-w-md mx-auto ${cardBgClass} border-t-4 border-t-amber-500`}>
+            <CardContent className="pt-6 pb-4">
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Coffee className="h-5 w-5 text-amber-500" />
+                  <h3 className="text-lg font-medium">Support the Developer</h3>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Enjoying Office Manager? Consider supporting the developer with a small tip.
+                </p>
+                <Button 
+                  onClick={handleTipMe} 
+                  className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white gap-2"
+                >
+                  <Heart className="h-4 w-4" fill="currentColor" /> Tip @aaronthelegend on PayPal
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </ScrollArea>
   );

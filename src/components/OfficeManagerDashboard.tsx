@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Building2, Calendar, Receipt, Settings, Users, BookOpen, Briefcase } from 'lucide-react';
+import { Building2, Calendar, Receipt, Settings, Users, BookOpen, Briefcase, Heart, Coffee } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import EmployeesView from './EmployeesView';
 import ScheduleView from './ScheduleView';
@@ -22,6 +23,10 @@ const OfficeManagerDashboard = () => {
   const bgColor = isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-white';
   const headerBgColor = isSuperDark ? 'bg-black' : isDark ? 'bg-[#0f1419]' : 'bg-[#F8F9FA]';
 
+  const handleTipMe = () => {
+    window.open('https://paypal.me/aaronthelegend', '_blank');
+  };
+
   return (
     <>
       <PaymentVerifier />
@@ -31,6 +36,15 @@ const OfficeManagerDashboard = () => {
             <Logo small />
             <div className="font-medium text-xl">Office Manager</div>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleTipMe}
+            className="gap-2 text-amber-500 hover:text-amber-600 hover:bg-amber-100/10"
+          >
+            <Coffee className="h-4 w-4" />
+            Tip Developer
+          </Button>
         </div>
 
         <div className={`p-3 border-b ${bgColor} ${borderColor} shadow-sm`}>
