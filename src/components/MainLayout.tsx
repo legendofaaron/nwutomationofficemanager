@@ -225,7 +225,7 @@ const MainLayout = () => {
                           <UserAvatar className="h-7 w-7" />
                           <div className="flex flex-col">
                             <span className="font-medium">{user?.user_metadata?.full_name || 'User'}</span>
-                            <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
+                            <span className="text-xs text-muted-foreground truncate">@{user?.user_metadata?.username}</span>
                           </div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />

@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 
 export interface LocalUser {
@@ -20,6 +19,7 @@ export interface LocalUser {
   created_at: string;
   reset_token?: string;
   reset_token_expires?: number;
+  // No email property - we've moved to username-only authentication
 }
 
 export interface LocalSession {

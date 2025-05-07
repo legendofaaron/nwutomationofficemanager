@@ -249,7 +249,7 @@ export function ProfileSettings() {
                   </h4>
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <Mail className="h-3 w-3" />
-                    {user?.email}
+                    @{user?.user_metadata?.username}
                   </p>
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
