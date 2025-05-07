@@ -103,36 +103,31 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
           
           {/* Calendar dates */}
           <div className="grid grid-cols-7 gap-1 mb-6">
-            {weekDays.map(date => {
-              const dropConfig = getDropConfig(date);
-              return (
-                <DroppableArea 
-                  key={date.toISOString()} 
-                  id={dropConfig.id}
-                  acceptTypes={dropConfig.acceptTypes}
-                  onDrop={dropConfig.onDrop}
-                  className={cn(
-                    "aspect-square flex flex-col items-center justify-center rounded-md border text-sm hover:bg-muted/50 cursor-pointer transition-all",
-                    isSameDay(date, new Date()) && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-900/30",
-                    isSameDay(date, selectedDate) && "bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-800/50"
+            {weekDays.map(date => (
+              <DroppableArea 
+                key={date.toISOString()} 
+                config={getDropConfig(date)}
+                className={cn(
+                  "aspect-square flex flex-col items-center justify-center rounded-md border text-sm hover:bg-muted/50 cursor-pointer transition-all",
+                  isSameDay(date, new Date()) && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-900/30",
+                  isSameDay(date, selectedDate) && "bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-800/50"
+                )}
+                onClick={() => setSelectedDate(date)}
+              >
+                <span className={cn(
+                  "font-medium",
+                  isSameDay(date, new Date()) && "text-blue-600 dark:text-blue-400",
+                  isSameDay(date, selectedDate) && "text-blue-700 dark:text-blue-300"
+                )}>{format(date, 'd')}</span>
+                
+                {/* Task indicators */}
+                <div className="flex mt-1 gap-0.5">
+                  {tasks.filter(task => isSameDay(task.date, date)).length > 0 && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-blue-500 dark:bg-blue-400"></span>
                   )}
-                  onClick={() => setSelectedDate(date)}
-                >
-                  <span className={cn(
-                    "font-medium",
-                    isSameDay(date, new Date()) && "text-blue-600 dark:text-blue-400",
-                    isSameDay(date, selectedDate) && "text-blue-700 dark:text-blue-300"
-                  )}>{format(date, 'd')}</span>
-                  
-                  {/* Task indicators */}
-                  <div className="flex mt-1 gap-0.5">
-                    {tasks.filter(task => isSameDay(task.date, date)).length > 0 && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-blue-500 dark:bg-blue-400"></span>
-                    )}
-                  </div>
-                </DroppableArea>
-              );
-            })}
+                </div>
+              </DroppableArea>
+            ))}
           </div>
         </CardContent>
       </Card>
