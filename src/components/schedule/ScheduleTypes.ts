@@ -1,3 +1,4 @@
+
 export interface Task {
   id: string;
   title: string;
@@ -7,6 +8,7 @@ export interface Task {
   assignedTo?: string;
   crew?: string[];
   crewId?: string;
+  crewName?: string; // Adding crewName property
   startTime?: string;
   endTime?: string;
   location?: string;

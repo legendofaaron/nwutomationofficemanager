@@ -17,10 +17,10 @@ export interface TodoBase {
   description?: string;
   crewId?: string;
   title?: string; // Make title optional to match AppContext.tsx Todo type
+  crewName?: string; // Adding crewName property
 }
 
 export interface Todo extends TodoBase {
-  crewName?: string;
   crewMembers?: string[];
   assignedToAvatar?: string;
 }
