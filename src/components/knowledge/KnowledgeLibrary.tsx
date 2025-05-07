@@ -18,7 +18,6 @@ interface KnowledgeLibraryProps {
   onDeleteItem: (id: string) => void;
   searchQuery: string;
   onClearFilters: () => void;
-  isPremium?: boolean; // Added isPremium as an optional prop
 }
 
 export const KnowledgeLibrary: React.FC<KnowledgeLibraryProps> = ({
@@ -28,8 +27,7 @@ export const KnowledgeLibrary: React.FC<KnowledgeLibraryProps> = ({
   onUploadClick,
   onDeleteItem,
   searchQuery,
-  onClearFilters,
-  isPremium = false // Default value if not provided
+  onClearFilters
 }) => {
   
   const getCategoryIcon = (categoryId: string) => {

@@ -18,7 +18,6 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ModelUploader } from './ModelUploader';
 import { initLlamaCpp } from '@/utils/llm';
-import { usePremiumFeature } from '@/hooks/usePremiumFeature';
 
 export interface LlmConfig {
   endpoint: string;
@@ -45,18 +44,14 @@ export interface LlmConfig {
   };
 }
 
-interface LlmSettingsProps {
-  onConfigured?: () => void;
-}
-
-export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
-  // Set default active tab to "local"
+export const LlmSettings = () => {
+  // Set default active tab to "local" instead of "general"
   const [activeTab, setActiveTab] = useState<string>('local');
   
   const [config, setConfig] = useState<LlmConfig>({
     endpoint: 'http://localhost:5678/workflow/EQL62DuHvzL2PmBk',
     enabled: true,
-    model: 'local', // Default model set to 'local'
+    model: 'local', // Change default model to 'local'
     webhookUrl: 'http://localhost:5678/webhook-test/bf4dd093-bb02-472c-9454-7ab9af97bd1d'
   });
 
@@ -71,9 +66,6 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [downloadModelName, setDownloadModelName] = useState<string>('');
   const [uploadedModels, setUploadedModels] = useState<Array<{name: string, path: string}>>([]);
-  
-  // Import and use the premium feature hook
-  const { checkAccess, PremiumFeatureGate } = usePremiumFeature();
 
   // Load config from localStorage on component mount
   useEffect(() => {
@@ -99,15 +91,6 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
               batchSize: 512
             }
           }));
-        }
-        
-        // If configuration looks valid, notify parent
-        if (parsedConfig.localLlama?.enabled && parsedConfig.localLlama?.modelPath) {
-          onConfigured?.();
-        } else if (parsedConfig.openAi?.enabled && parsedConfig.openAi?.apiKey) {
-          onConfigured?.();
-        } else if (parsedConfig.customModel?.isCustom && parsedConfig.customModel?.apiKey) {
-          onConfigured?.();
         }
       } catch (error) {
         console.error('Failed to parse saved LLM config:', error);
@@ -135,28 +118,129 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
         console.error('Failed to parse saved uploaded models:', error);
       }
     }
-  }, [onConfigured]);
+  }, []);
 
   // Save config to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('llmConfig', JSON.stringify(config));
-    
-    // Check if the config should be considered "configured"
-    const isConfigured = (
-      (config.localLlama?.enabled && config.localLlama?.modelPath) ||
-      (config.openAi?.enabled && config.openAi?.apiKey) ||
-      (config.customModel?.isCustom && config.customModel?.apiKey)
-    );
-    
-    if (isConfigured) {
-      onConfigured?.();
-    }
-  }, [config, onConfigured]);
+  }, [config]);
 
   // Save uploaded models to localStorage when they change
   useEffect(() => {
     localStorage.setItem('uploadedModels', JSON.stringify(uploadedModels));
   }, [uploadedModels]);
+
+  const testConnection = async () => {
+    try {
+      const response = await fetch(config.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: "Test connection",
+          model: config.model,
+          customModel: config.customModel
+        }),
+      });
+      
+      if (response.ok) {
+        toast({
+          title: 'Connection Successful',
+          description: 'Successfully connected to the language model'
+        });
+      } else {
+        throw new Error('Failed to connect');
+      }
+    } catch (error) {
+      toast({
+        title: 'Connection Failed',
+        description: 'Could not connect to the specified endpoint. Please check your configuration.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const testWebhook = async () => {
+    if (!config.webhookUrl) {
+      toast({
+        title: 'Missing Webhook URL',
+        description: 'Please enter a webhook URL to test',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(config.webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: "Test webhook connection",
+          timestamp: new Date().toISOString()
+        }),
+      });
+      
+      if (response.ok) {
+        toast({
+          title: 'Webhook Test Successful',
+          description: 'Successfully connected to webhook endpoint'
+        });
+      } else {
+        throw new Error('Failed to connect to webhook');
+      }
+    } catch (error) {
+      toast({
+        title: 'Webhook Test Failed',
+        description: 'Could not connect to webhook. Please check your URL and ensure the endpoint is running.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const testOpenAiKey = async () => {
+    if (!config.openAi?.apiKey) {
+      toast({
+        title: 'Missing API Key',
+        description: 'Please enter an OpenAI API key to test',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setTestingOpenAi(true);
+    
+    try {
+      // Simple test request to OpenAI API
+      const response = await fetch('https://api.openai.com/v1/models', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${config.openAi.apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        toast({
+          title: 'OpenAI Connection Successful',
+          description: 'Your API key is valid and working correctly'
+        });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Invalid API key');
+      }
+    } catch (error) {
+      toast({
+        title: 'Connection Failed',
+        description: error instanceof Error ? error.message : 'Failed to validate OpenAI API key',
+        variant: 'destructive'
+      });
+    } finally {
+      setTestingOpenAi(false);
+    }
+  };
 
   const handleModelTypeChange = (isCustom: boolean) => {
     setIsCustomModel(isCustom);
@@ -181,9 +265,6 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
   };
 
   const handleOpenAiToggle = (enabled: boolean) => {
-    // First check if this is a premium feature
-    if (enabled && !checkAccess('OpenAI Integration')) return;
-    
     setUseOpenAiKey(enabled);
     
     if (enabled) {
@@ -206,43 +287,33 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
   };
 
   const handleLocalLlamaToggle = (enabled: boolean) => {
-    if (!enabled || (enabled && checkAccess('Local Models'))) {
-      setUseLocalLlama(enabled);
-      
-      if (enabled) {
-        setConfig(prev => ({
-          ...prev,
-          model: 'local', // Set the model to local when local LLama is enabled
-          localLlama: {
-            enabled: true,
-            modelPath: prev.localLlama?.modelPath || '',
-            threads: prev.localLlama?.threads || navigator.hardwareConcurrency || 4,
-            contextSize: prev.localLlama?.contextSize || 2048,
-            batchSize: prev.localLlama?.batchSize || 512
-          }
-        }));
-        
-        // If the model path is already set, trigger configured callback
-        if (config.localLlama?.modelPath) {
-          onConfigured?.();
+    setUseLocalLlama(enabled);
+    
+    if (enabled) {
+      setConfig(prev => ({
+        ...prev,
+        model: 'local', // Set the model to local when local LLama is enabled
+        localLlama: {
+          enabled: true,
+          modelPath: prev.localLlama?.modelPath || '',
+          threads: prev.localLlama?.threads || navigator.hardwareConcurrency || 4,
+          contextSize: prev.localLlama?.contextSize || 2048,
+          batchSize: prev.localLlama?.batchSize || 512
         }
-      } else {
-        setConfig(prev => ({
-          ...prev,
-          model: 'default', // Reset to default model when local LLama is disabled
-          localLlama: {
-            ...prev.localLlama,
-            enabled: false
-          }
-        }));
-      }
+      }));
+    } else {
+      setConfig(prev => ({
+        ...prev,
+        model: 'default', // Reset to default model when local LLama is disabled
+        localLlama: {
+          ...prev.localLlama,
+          enabled: false
+        }
+      }));
     }
   };
 
   const downloadLocalModel = (modelName: string) => {
-    // Check if this is a premium feature
-    if (!checkAccess('Model Downloads')) return;
-    
     setIsDownloading(true);
     setDownloadModelName(modelName);
     setDownloadProgress(0);
@@ -270,9 +341,6 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
             description: `${modelName} has been successfully downloaded and is ready to use.`
           });
           
-          // Notify parent that a valid configuration is now available
-          onConfigured?.();
-          
           return 100;
         }
         return next;
@@ -281,9 +349,6 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
   };
 
   const handleModelUploaded = (modelPath: string, modelName: string) => {
-    // Check if this is a premium feature
-    if (!checkAccess('Custom Model Upload')) return;
-    
     // Add the newly uploaded model to the list
     const newModel = { name: modelName, path: modelPath };
     setUploadedModels(prev => [...prev, newModel]);
@@ -308,15 +373,9 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
       description: `${modelName} has been uploaded and selected as your local model.`,
       duration: 3000
     });
-    
-    // Notify parent that a valid configuration is now available
-    onConfigured?.();
   };
 
   const selectUploadedModel = (modelPath: string) => {
-    // Check if this is a premium feature
-    if (!checkAccess('Custom Models')) return;
-    
     setConfig(prev => ({
       ...prev,
       model: 'local', // Set model to local when selecting a local model
@@ -333,9 +392,6 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
       description: `Model has been selected for local inference.`,
       duration: 2000
     });
-    
-    // Notify parent that a valid configuration is now available
-    onConfigured?.();
   };
 
   // Initialize LLaMA.cpp when local model setting is enabled
@@ -377,9 +433,6 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
           title: 'Local Model Ready',
           description: `Model at ${config.localLlama?.modelPath} is working correctly`
         });
-        
-        // Notify parent that a valid configuration is now available
-        onConfigured?.();
       }, 1500);
     } catch (error) {
       toast({
@@ -390,51 +443,6 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
     }
   };
 
-  const testOpenAiKey = async () => {
-    if (!config.openAi?.apiKey) {
-      toast({
-        title: 'Missing API Key',
-        description: 'Please enter an OpenAI API key to test',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    setTestingOpenAi(true);
-    
-    try {
-      // Simple test request to OpenAI API
-      const response = await fetch('https://api.openai.com/v1/models', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${config.openAi.apiKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        toast({
-          title: 'OpenAI Connection Successful',
-          description: 'Your API key is valid and working correctly'
-        });
-        
-        // Notify parent that a valid configuration is now available
-        onConfigured?.();
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Invalid API key');
-      }
-    } catch (error) {
-      toast({
-        title: 'Connection Failed',
-        description: error instanceof Error ? error.message : 'Failed to validate OpenAI API key',
-        variant: 'destructive'
-      });
-    } finally {
-      setTestingOpenAi(false);
-    }
-  };
-
   return (
     <div className="space-y-6 p-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -442,6 +450,7 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
           <TabsTrigger value="local">Local Models</TabsTrigger>
           <TabsTrigger value="openai">OpenAI</TabsTrigger>
           <TabsTrigger value="custom">Custom Model</TabsTrigger>
+          <TabsTrigger value="general">External API</TabsTrigger>
         </TabsList>
 
         <TabsContent value="local" className="space-y-6">
@@ -520,74 +529,6 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
                   <ModelUploader onModelUploaded={handleModelUploaded} />
                 </div>
                 
-                {/* Available models section */}
-                <div className="mt-4">
-                  <Label>Available Models</Label>
-                  <div className="grid grid-cols-1 gap-2 mt-2">
-                    <Card 
-                      className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => downloadLocalModel('llama-3-8b-q4')}
-                    >
-                      <div className="flex flex-col space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-medium">Llama 3 (8B, Q4)</h4>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-7 px-2"
-                            disabled={isDownloading}
-                          >
-                            <Download className="h-3 w-3 mr-1" />
-                            <span className="text-xs">Download</span>
-                          </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Balanced model, good for general use (~4.3GB)
-                        </p>
-                        {isDownloading && downloadModelName === 'llama-3-8b-q4' && (
-                          <div className="pt-1">
-                            <Progress value={downloadProgress} className="h-1" />
-                            <p className="text-xs text-center pt-1">
-                              {downloadProgress < 100 ? 'Downloading...' : 'Installing...'}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                    
-                    <Card 
-                      className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => downloadLocalModel('llama-3-1b-q4')}
-                    >
-                      <div className="flex flex-col space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-medium">Llama 3 (1B, Q4)</h4>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-7 px-2"
-                            disabled={isDownloading}
-                          >
-                            <Download className="h-3 w-3 mr-1" />
-                            <span className="text-xs">Download</span>
-                          </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Lightweight model, fast on low-end devices (~600MB)
-                        </p>
-                        {isDownloading && downloadModelName === 'llama-3-1b-q4' && (
-                          <div className="pt-1">
-                            <Progress value={downloadProgress} className="h-1" />
-                            <p className="text-xs text-center pt-1">
-                              {downloadProgress < 100 ? 'Downloading...' : 'Installing...'}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-                
                 {/* Uploaded models section */}
                 {uploadedModels.length > 0 && (
                   <div className="mt-4">
@@ -616,6 +557,13 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
                   </div>
                 )}
                 
+                {uploadedModels.length === 0 && (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <p>No models uploaded yet</p>
+                    <p className="text-xs mt-1">Upload a GGUF model file to get started</p>
+                  </div>
+                )}
+                
                 <div className="space-y-2">
                   <Label htmlFor="model-path">Custom Model Path</Label>
                   <Input
@@ -634,10 +582,6 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
                     Enter the file path to a custom GGUF model
                   </p>
                 </div>
-                
-                <Button className="w-full" onClick={testLocalModel}>
-                  Test Model Connection
-                </Button>
               </div>
               
               <div className="flex items-center justify-between pt-2">
@@ -653,7 +597,7 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
         <TabsContent value="openai" className="space-y-6">
           <div>
             <h3 className="text-lg font-medium">OpenAI Configuration</h3>
-            <p className="text-sm text-gray-500 mb-4">Configure your OpenAI API key as a fallback option</p>
+            <p className="text-sm text-gray-500 mb-4">Configure your OpenAI API key to use with the application</p>
           </div>
           
           <div className="flex items-center justify-between">
@@ -822,10 +766,86 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
             </div>
           </div>
         </TabsContent>
+        
+        <TabsContent value="general" className="space-y-6">
+          <div>
+            <h3 className="text-lg font-medium">External API</h3>
+            <p className="text-sm text-gray-500 mb-4">Configure your external API settings</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="endpoint">Workflow Endpoint</Label>
+              <Input
+                id="endpoint"
+                value={config.endpoint}
+                onChange={(e) => setConfig(prev => ({ ...prev, endpoint: e.target.value }))}
+                placeholder="http://localhost:5678/workflow/[ID]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="webhookUrl">Webhook URL</Label>
+              <Input
+                id="webhookUrl"
+                value={config.webhookUrl}
+                onChange={(e) => setConfig(prev => ({ ...prev, webhookUrl: e.target.value }))}
+                placeholder="http://localhost:5678/webhook-test/[ID]"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Enter the webhook URL for bidirectional communication
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="model-type">Model Type</Label>
+                <Switch 
+                  id="custom-model-toggle"
+                  checked={isCustomModel}
+                  onCheckedChange={handleModelTypeChange}
+                />
+                <Label htmlFor="custom-model-toggle" className="text-sm ml-2">
+                  Use Custom Model
+                </Label>
+              </div>
+              
+              {!isCustomModel && (
+                <div className="mt-4">
+                  <Label htmlFor="model">Predefined Model</Label>
+                  <Select
+                    value={config.model}
+                    onValueChange={(value) => setConfig(prev => ({ ...prev, model: value }))}
+                    disabled={isCustomModel}
+                  >
+                    <SelectTrigger id="model" className="w-full">
+                      <SelectValue placeholder="Select a model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="llama-3.2-3b">Llama 3.2 (3B)</SelectItem>
+                      <SelectItem value="default">Default</SelectItem>
+                      <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                      <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
+                      <SelectItem value="gpt-4.5-preview">GPT-4.5 Preview</SelectItem>
+                      <SelectItem value="llama-3.1-8b">Llama 3.1 (8B)</SelectItem>
+                      <SelectItem value="llama-3.1-70b">Llama 3.1 (70B)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            <div className="flex space-x-2 pt-2">
+              <Button onClick={testConnection}>
+                Test Connection
+              </Button>
+              <Button onClick={testWebhook} variant="outline">
+                Test Webhook
+              </Button>
+            </div>
+          </div>
+        </TabsContent>
       </Tabs>
-      
-      {/* Add PremiumFeatureGate component */}
-      <PremiumFeatureGate />
     </div>
   );
 };

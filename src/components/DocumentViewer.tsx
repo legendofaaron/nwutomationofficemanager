@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,7 +9,6 @@ import AiSuggestions from './document/AiSuggestions';
 import { ScrollArea } from './ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/context/ThemeContext';
-import { usePremiumFeature } from '@/hooks/usePremiumFeature';
 
 const DocumentViewer = () => {
   const { currentFile, files, setFiles, setCurrentFile, setViewMode } = useAppContext();
@@ -18,9 +18,6 @@ const DocumentViewer = () => {
   const { setTheme, resolvedTheme } = useTheme();
   const [selectionStart, setSelectionStart] = useState(0);
   const [selectionEnd, setSelectionEnd] = useState(0);
-  
-  // Add premium feature hook
-  const { checkAccess, PremiumFeatureGate } = usePremiumFeature();
   
   // Set dark mode when document is opened
   useEffect(() => {
@@ -79,11 +76,6 @@ const DocumentViewer = () => {
   };
 
   const handleConvertToSpreadsheet = () => {
-    // Check if user has access to premium features
-    if (!checkAccess('Spreadsheet Conversion')) {
-      return;
-    }
-    
     const spreadsheetData = {
       headers: ['Column 1', 'Column 2', 'Column 3'],
       rows: [
@@ -160,11 +152,6 @@ const DocumentViewer = () => {
   };
 
   const handleSuggestionApply = (suggestion: string) => {
-    // Check if user has access to AI suggestions
-    if (!checkAccess('AI Suggestions')) {
-      return;
-    }
-    
     handleContentChange(suggestion);
   };
 
@@ -299,9 +286,6 @@ const DocumentViewer = () => {
 
   return (
     <div className={`relative h-full ${bgColor}`}>
-      {/* Add the Premium Feature Gate component */}
-      <PremiumFeatureGate />
-      
       <DocumentHeader 
         currentFile={currentFile}
         onNameChange={handleNameChange}

@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
 import { Check, ThumbsUp, Send, Save } from 'lucide-react';
-import { usePremiumFeature } from '@/hooks/usePremiumFeature';
 
 interface SetupWizardProps {
   messages: Message[];
@@ -34,12 +33,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
   });
   const [testingOpenAi, setTestingOpenAi] = useState(false);
   const [saving, setSaving] = useState(false);
-  const { checkAccess, PremiumFeatureGate } = usePremiumFeature();
 
   // Define the handleSendMessage function to fix the TS error
   const handleSendMessage = (message: string) => {
-    if (!checkAccess('AI Assistant Setup')) return;
-    
     if (onSendResponse) {
       onSendResponse(message);
     }
@@ -71,8 +67,6 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkAccess('AI Assistant Setup')) return;
-    
     if (inputValue.trim() !== '') {
       onSendResponse(inputValue.trim());
       setInputValue('');
@@ -80,8 +74,6 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
   };
 
   const handleSaveAndLaunch = async () => {
-    if (!checkAccess('AI Assistant Setup')) return;
-    
     setSaving(true);
     try {
       // Save API key and other configuration to localStorage
@@ -168,8 +160,6 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
           />
         </form>
       </div>
-
-      <PremiumFeatureGate />
     </div>
   );
 };

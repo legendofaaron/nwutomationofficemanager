@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,9 +9,7 @@ import { KnowledgeTraining } from './knowledge/KnowledgeTraining';
 import { AddKnowledgeDialog } from './knowledge/dialogs/AddKnowledgeDialog';
 import { UploadFileDialog } from './knowledge/dialogs/UploadFileDialog';
 import { v4 as uuidv4 } from 'uuid';
-import { useToast } from '@/hooks/use-toast';
-import { usePremiumFeature } from '@/hooks/usePremiumFeature';
-
+import { useToast } from '@/components/ui/use-toast';
 const KnowledgeBase = () => {
   const [knowledgeItems, setKnowledgeItems] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -21,22 +18,19 @@ const KnowledgeBase = () => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [trainingProgress, setTrainingProgress] = useState(0);
   const [isTraining, setIsTraining] = useState(false);
-  const { toast } = useToast();
-  const { checkAccess, PremiumFeatureGate, hasAccess } = usePremiumFeature();
+  const {
+    toast
+  } = useToast();
 
   // Filter knowledge items based on selected category and search query
   const filteredItems = knowledgeItems.filter(item => {
     const matchesCategory = selectedCategory ? item.category === selectedCategory : true;
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         item.content.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.content.toLowerCase().includes(searchQuery.toLowerCase()) || item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
   // Handle adding a new knowledge item
   const handleAddItem = newItem => {
-    if (!checkAccess('Knowledge Base')) return;
-    
     const fullItem = {
       id: uuidv4(),
       title: newItem.title || 'Untitled',
@@ -55,8 +49,6 @@ const KnowledgeBase = () => {
 
   // Handle uploading a file
   const handleUploadFile = file => {
-    if (!checkAccess('Knowledge Base')) return;
-    
     // Convert single file to array to maintain compatibility with existing code
     const files = [file];
     const newItems = files.map(file => ({
@@ -77,8 +69,6 @@ const KnowledgeBase = () => {
 
   // Handle deleting a knowledge item
   const handleDeleteItem = id => {
-    if (!checkAccess('Knowledge Base')) return;
-    
     setKnowledgeItems(knowledgeItems.filter(item => item.id !== id));
     toast({
       title: "Knowledge item deleted",
@@ -88,8 +78,6 @@ const KnowledgeBase = () => {
 
   // Handle starting the AI training process
   const handleStartTraining = () => {
-    if (!checkAccess('AI Training')) return;
-    
     setIsTraining(true);
     setTrainingProgress(0);
 
@@ -109,38 +97,19 @@ const KnowledgeBase = () => {
       });
     }, 800);
   };
-
-  const handleOpenAddDialog = () => {
-    if (checkAccess('Knowledge Base')) {
-      setIsAddDialogOpen(true);
-    }
-  };
-
-  const handleOpenUploadDialog = () => {
-    if (checkAccess('Knowledge Base')) {
-      setIsUploadDialogOpen(true);
-    }
-  };
-
-  return (
-    <div className="h-full flex flex-col">
+  return <div className="h-full flex flex-col">
       <div className="flex justify-between items-center p-4 border-b">
         <h1 className="text-2xl font-bold">Knowledge Base</h1>
         <div className="flex items-center space-x-2">
           <div className="relative w-64">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search knowledge base..." 
-              className="pl-8" 
-              value={searchQuery} 
-              onChange={e => setSearchQuery(e.target.value)} 
-            />
+            <Input placeholder="Search knowledge base..." className="pl-8" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
           </div>
-          <Button onClick={handleOpenAddDialog}>
+          <Button onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add
           </Button>
-          <Button variant="outline" onClick={handleOpenUploadDialog} className="mx-[56px]">
+          <Button variant="outline" onClick={() => setIsUploadDialogOpen(true)} className="mx-[56px]">
             <Upload className="h-4 w-4 mr-2" />
             Upload
           </Button>
@@ -156,71 +125,36 @@ const KnowledgeBase = () => {
           
           <TabsContent value="library" className="h-[calc(100%-2.5rem)] pt-4">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
-              <KnowledgeSidebar 
-                selectedCategory={selectedCategory} 
-                knowledgeItems={knowledgeItems} 
-                onSelectCategory={categoryId => {
-                  setSelectedCategory(categoryId === selectedCategory ? null : categoryId);
-                }} 
-              />
+              <KnowledgeSidebar selectedCategory={selectedCategory} knowledgeItems={knowledgeItems} onSelectCategory={categoryId => {
+              setSelectedCategory(categoryId === selectedCategory ? null : categoryId);
+            }} />
               
               <div className="lg:col-span-3 h-full">
-                <KnowledgeLibrary 
-                  filteredItems={filteredItems}
-                  hasKnowledgeItems={knowledgeItems.length > 0}
-                  onAddClick={handleOpenAddDialog}
-                  onUploadClick={handleOpenUploadDialog}
-                  onDeleteItem={handleDeleteItem}
-                  searchQuery={searchQuery}
-                  isPremium={!hasAccess}
-                  onClearFilters={() => {
-                    setSearchQuery('');
-                    setSelectedCategory(null);
-                  }} 
-                />
+                <KnowledgeLibrary filteredItems={filteredItems} hasKnowledgeItems={knowledgeItems.length > 0} onAddClick={() => setIsAddDialogOpen(true)} onUploadClick={() => setIsUploadDialogOpen(true)} onDeleteItem={handleDeleteItem} searchQuery={searchQuery} onClearFilters={() => {
+                setSearchQuery('');
+                setSelectedCategory(null);
+              }} />
               </div>
             </div>
           </TabsContent>
           
           <TabsContent value="training" className="h-[calc(100%-2.5rem)] pt-4">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
-              <KnowledgeSidebar 
-                selectedCategory={selectedCategory} 
-                knowledgeItems={knowledgeItems} 
-                onSelectCategory={categoryId => {
-                  setSelectedCategory(categoryId === selectedCategory ? null : categoryId);
-                }} 
-              />
+              <KnowledgeSidebar selectedCategory={selectedCategory} knowledgeItems={knowledgeItems} onSelectCategory={categoryId => {
+              setSelectedCategory(categoryId === selectedCategory ? null : categoryId);
+            }} />
               
               <div className="lg:col-span-3 h-full">
-                <KnowledgeTraining 
-                  knowledgeItems={knowledgeItems}
-                  trainingProgress={trainingProgress}
-                  isTraining={isTraining}
-                  onStartTraining={handleStartTraining}
-                  isPremium={!hasAccess}
-                />
+                <KnowledgeTraining knowledgeItems={knowledgeItems} trainingProgress={trainingProgress} isTraining={isTraining} onStartTraining={handleStartTraining} />
               </div>
             </div>
           </TabsContent>
         </Tabs>
       </div>
       
-      <AddKnowledgeDialog 
-        isOpen={isAddDialogOpen} 
-        onClose={() => setIsAddDialogOpen(false)} 
-        onAddItem={handleAddItem} 
-      />
+      <AddKnowledgeDialog isOpen={isAddDialogOpen} onClose={() => setIsAddDialogOpen(false)} onAddItem={handleAddItem} />
       
-      <UploadFileDialog 
-        isOpen={isUploadDialogOpen} 
-        onClose={() => setIsUploadDialogOpen(false)} 
-        onUploadFile={handleUploadFile} 
-      />
-
-      <PremiumFeatureGate />
-    </div>
-  );
+      <UploadFileDialog isOpen={isUploadDialogOpen} onClose={() => setIsUploadDialogOpen(false)} onUploadFile={handleUploadFile} />
+    </div>;
 };
-
 export default KnowledgeBase;

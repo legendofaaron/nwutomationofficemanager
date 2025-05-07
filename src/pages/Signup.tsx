@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -86,8 +87,8 @@ const Signup = () => {
         description: "You're now signed up for Office Manager",
       });
       
-      // User is signed up and logged in - now redirect to payment page instead of dashboard
-      navigate('/payment');
+      // User is signed up and logged in
+      navigate('/dashboard');
       
     } catch (error) {
       // Handle signup errors
