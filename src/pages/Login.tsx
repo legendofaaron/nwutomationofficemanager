@@ -35,9 +35,13 @@ const Login = () => {
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await localAuth.getSession();
-      if (data.session) {
-        navigate('/dashboard');
+      try {
+        const { data } = await localAuth.getSession();
+        if (data.session) {
+          navigate('/dashboard');
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
       }
     };
     
