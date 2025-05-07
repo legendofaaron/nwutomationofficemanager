@@ -1,11 +1,31 @@
 
 import jsPDF from 'jspdf';
 import { Task, ScheduleFilter } from '@/components/schedule/ScheduleTypes';
-import { format } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
+
+// Helper to ensure we have a valid date object
+const ensureValidDate = (dateInput: Date | string): Date => {
+  if (dateInput instanceof Date && isValid(dateInput)) {
+    return dateInput;
+  }
+  
+  if (typeof dateInput === 'string') {
+    try {
+      const parsedDate = new Date(dateInput);
+      if (isValid(parsedDate)) {
+        return parsedDate;
+      }
+    } catch (e) {
+      console.error("Invalid date string:", dateInput);
+    }
+  }
+  
+  return new Date(); // Return current date as fallback
+};
 
 // Helper to format a task for text display
 const formatTaskForText = (task: Task): string => {
-  const date = format(task.date, 'MMM dd, yyyy');
+  const date = format(ensureValidDate(task.date), 'MMM dd, yyyy');
   const time = task.startTime && task.endTime ? `${task.startTime} - ${task.endTime}` : 'All day';
   const status = task.completed ? '[✓]' : '[ ]';
   const assignee = task.assignedTo ? `Assigned to: ${task.assignedTo}` : 
@@ -35,7 +55,9 @@ export const generateScheduleText = (tasks: Task[], filter?: ScheduleFilter): st
   // Sort tasks by date and time
   const sortedTasks = filteredTasks.sort((a, b) => {
     // First sort by date
-    const dateComparison = a.date.getTime() - b.date.getTime();
+    const aDate = ensureValidDate(a.date);
+    const bDate = ensureValidDate(b.date);
+    const dateComparison = aDate.getTime() - bDate.getTime();
     if (dateComparison !== 0) return dateComparison;
     
     // Then sort by start time if dates are the same
@@ -58,7 +80,7 @@ export const generateScheduleText = (tasks: Task[], filter?: ScheduleFilter): st
   const tasksByDate: Record<string, Task[]> = {};
   
   sortedTasks.forEach(task => {
-    const dateKey = format(task.date, 'yyyy-MM-dd');
+    const dateKey = format(ensureValidDate(task.date), 'yyyy-MM-dd');
     if (!tasksByDate[dateKey]) {
       tasksByDate[dateKey] = [];
     }
@@ -68,7 +90,9 @@ export const generateScheduleText = (tasks: Task[], filter?: ScheduleFilter): st
   // Generate text for each date group
   Object.keys(tasksByDate).sort().forEach(dateKey => {
     const tasksForDate = tasksByDate[dateKey];
-    const dateHeader = format(tasksForDate[0].date, 'EEEE, MMMM d, yyyy');
+    if (tasksForDate.length === 0) return;
+    
+    const dateHeader = format(ensureValidDate(tasksForDate[0].date), 'EEEE, MMMM d, yyyy');
     
     text += `${dateHeader}\n`;
     text += "----------------------------------------\n";
@@ -103,7 +127,11 @@ export const generateSchedulePDF = (tasks: Task[], filter?: ScheduleFilter): jsP
     }
   }
   
-  const sortedTasks = filteredTasks.sort((a, b) => a.date.getTime() - b.date.getTime());
+  const sortedTasks = filteredTasks.sort((a, b) => {
+    const aDate = ensureValidDate(a.date);
+    const bDate = ensureValidDate(b.date);
+    return aDate.getTime() - bDate.getTime();
+  });
   
   // PDF styling
   pdf.setFont("helvetica", "bold");
@@ -123,7 +151,7 @@ export const generateSchedulePDF = (tasks: Task[], filter?: ScheduleFilter): jsP
   const tasksByDate: Record<string, Task[]> = {};
   
   sortedTasks.forEach(task => {
-    const dateKey = format(task.date, 'yyyy-MM-dd');
+    const dateKey = format(ensureValidDate(task.date), 'yyyy-MM-dd');
     if (!tasksByDate[dateKey]) {
       tasksByDate[dateKey] = [];
     }
@@ -133,10 +161,20 @@ export const generateSchedulePDF = (tasks: Task[], filter?: ScheduleFilter): jsP
   let yPosition = filter && filter.type !== 'all' ? 45 : 35;
   const pageHeight = pdf.internal.pageSize.height;
   
+  // Check if we have any tasks
+  if (Object.keys(tasksByDate).length === 0) {
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(12);
+    pdf.text("No tasks scheduled for the selected criteria.", 20, yPosition);
+    return pdf;
+  }
+  
   // Generate PDF content for each date group
   Object.keys(tasksByDate).sort().forEach(dateKey => {
     const tasksForDate = tasksByDate[dateKey];
-    const dateHeader = format(tasksForDate[0].date, 'EEEE, MMMM d, yyyy');
+    if (tasksForDate.length === 0) return;
+    
+    const dateHeader = format(ensureValidDate(tasksForDate[0].date), 'EEEE, MMMM d, yyyy');
     
     // Check if we need a new page
     if (yPosition > pageHeight - 40) {

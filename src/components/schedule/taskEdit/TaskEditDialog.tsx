@@ -18,7 +18,7 @@ const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
   onCancel
 }) => {
   // Local state for task data (to avoid mutating props)
-  const [taskData, setTaskData] = useState<Partial<Task>>({
+  const [taskData, setTaskData] = useState<Task>({
     ...task
   });
   
@@ -51,7 +51,7 @@ const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
         ...prev,
         crewId,
         crewName: selectedCrew.name,
-        crew: selectedCrew.members.map(member => member.name)
+        crew: selectedCrew.members
       }));
     }
   };

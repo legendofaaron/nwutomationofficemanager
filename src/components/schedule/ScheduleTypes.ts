@@ -1,3 +1,4 @@
+
 export interface Task {
   id: string;
   title: string;
@@ -7,11 +8,12 @@ export interface Task {
   assignedTo?: string;
   crew?: string[];
   crewId?: string;
-  crewName?: string; // Adding this missing property
+  crewName?: string; 
   startTime?: string;
   endTime?: string;
   location?: string;
   clientId?: string;
+  clientName?: string; // Adding clientName property
   locationId?: string;
   clientLocationId?: string;
 }
@@ -152,4 +154,15 @@ export interface TaskEditDialogProps {
   onSaveChanges: (taskData: Partial<Task>, isNew: boolean) => void;
   onDelete: (taskId: string) => void;
   onCancel: () => void;
+}
+
+export interface AssignmentTabProps {
+  task: Task; // Change from Partial<Task> to Task
+  employees: Employee[];
+  crews: Crew[];
+  clients: Client[];
+  clientLocations: ClientLocation[];
+  onTaskChange: (field: keyof Task, value: any) => void;
+  onCrewChange: (crewId: string | undefined) => void;
+  onClientChange: (clientId: string | undefined) => void;
 }

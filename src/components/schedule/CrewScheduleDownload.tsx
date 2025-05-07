@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { DateRange } from 'react-day-picker';
-import { format } from 'date-fns';
+import { format, parseISO, isWithinInterval, startOfDay } from 'date-fns';
 import { CalendarIcon, FileText, FileDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,18 +36,38 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
   
   // Filter tasks for selected crew and within selected date range
   const getFilteredTasks = (): Task[] => {
-    if (!date?.from || !selectedCrew) return [];
+    if (!selectedCrew) return [];
     
     return tasks.filter(task => {
       // Check if task is assigned to this crew
       const isAssignedToCrew = task.crewId === selectedCrew;
       
-      // Check if task date is within the selected range
-      const taskDate = new Date(task.date);
-      const isInDateRange = date.from && taskDate >= date.from && 
-                            (!date.to || taskDate <= date.to);
+      if (!isAssignedToCrew) return false;
       
-      return isAssignedToCrew && isInDateRange;
+      // Handle date filtering
+      if (!date?.from) return true;
+      
+      // Ensure task.date is a Date object
+      let taskDate = task.date;
+      if (!(taskDate instanceof Date)) {
+        try {
+          taskDate = new Date(taskDate);
+        } catch (e) {
+          console.error("Invalid date format:", taskDate);
+          return false;
+        }
+      }
+      
+      const start = startOfDay(date.from);
+      
+      // If no end date, check if task is on or after start date
+      if (!date.to) {
+        return taskDate >= start;
+      }
+      
+      // Check if task date is within range
+      const end = startOfDay(date.to);
+      return taskDate >= start && taskDate <= end;
     });
   };
   
@@ -66,7 +86,7 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
     const filteredTasks = getFilteredTasks();
     
     if (filteredTasks.length === 0) {
-      toast.error("No scheduled tasks in the selected date range");
+      toast.error("No scheduled tasks in the selected date range for this crew");
       return;
     }
     
@@ -93,7 +113,7 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
     const filteredTasks = getFilteredTasks();
     
     if (filteredTasks.length === 0) {
-      toast.error("No scheduled tasks in the selected date range");
+      toast.error("No scheduled tasks in the selected date range for this crew");
       return;
     }
     
@@ -186,7 +206,7 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
           variant="outline" 
           className="w-full gap-2" 
           onClick={handleDownloadTxt}
-          disabled={!selectedCrew || !date?.from}
+          disabled={!selectedCrew}
         >
           <FileText className="h-4 w-4" />
           Download as TXT
@@ -194,7 +214,7 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
         <Button 
           className="w-full gap-2 ml-2" 
           onClick={handleDownloadPdf}
-          disabled={!selectedCrew || !date?.from}
+          disabled={!selectedCrew}
         >
           <FileDown className="h-4 w-4" />
           Download as PDF
