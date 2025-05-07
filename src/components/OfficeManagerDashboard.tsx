@@ -45,18 +45,18 @@ const OfficeManagerDashboard = () => {
               variant="ghost"
               size="sm"
               onClick={handleEmailDeveloper}
-              className="gap-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100/10 dark:hover:bg-gray-800/20"
+              className="gap-1 text-xs text-gray-400 hover:text-gray-600 hover:bg-gray-100/5 dark:hover:bg-gray-800/10"
             >
-              <Mail className="h-3.5 w-3.5" />
+              <Mail className="h-3 w-3" />
               <span className="hidden sm:inline">Contact</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleTipMe}
-              className="gap-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100/10 dark:hover:bg-gray-800/20"
+              className="gap-1 text-xs text-gray-400 hover:text-gray-600 hover:bg-gray-100/5 dark:hover:bg-gray-800/10"
             >
-              <Heart className="h-3.5 w-3.5" />
+              <Heart className="h-3 w-3" />
               <span className="hidden sm:inline">Support</span>
             </Button>
           </div>

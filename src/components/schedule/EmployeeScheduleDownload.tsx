@@ -2,14 +2,14 @@
 import React, { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { CalendarIcon, Download, FileText, FileDown } from 'lucide-react';
+import { CalendarIcon, FileText, FileDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { Task } from './ScheduleTypes';
-import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
+import { downloadScheduleAsPdf, downloadScheduleAsTxt, filterTasksByDateRange } from '@/utils/downloadUtils';
 import { toast } from 'sonner';
 
 interface EmployeeScheduleDownloadProps {
@@ -29,20 +29,15 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
   const getFilteredTasks = (): Task[] => {
     if (!date?.from) return [];
     
-    return tasks.filter(task => {
-      // Check if task is assigned to this employee
+    // First, filter by employee
+    const employeeTasks = tasks.filter(task => {
       const isAssignedToEmployee = task.assignedTo === employeeName;
-      
-      // Check if employee is part of a crew assigned to this task
       const isInAssignedCrew = task.crew?.includes(employeeName) || false;
-      
-      // Check if task date is within the selected range
-      const taskDate = new Date(task.date);
-      const isInDateRange = date.from && taskDate >= date.from && 
-                            (!date.to || taskDate <= date.to);
-      
-      return (isAssignedToEmployee || isInAssignedCrew) && isInDateRange;
+      return isAssignedToEmployee || isInAssignedCrew;
     });
+    
+    // Then filter by date range
+    return filterTasksByDateRange(employeeTasks, date.from, date.to);
   };
 
   const handleDownloadPdf = () => {
