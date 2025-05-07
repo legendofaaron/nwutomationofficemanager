@@ -33,9 +33,13 @@ const DragDropContext = createContext<DragDropContextType>({
 // Provider component
 interface DragDropProviderProps {
   children: ReactNode;
+  onDragEnd?: (result: any) => void;
 }
 
-export const DragDropProvider: React.FC<DragDropProviderProps> = ({ children }) => {
+export const DragDropProvider: React.FC<DragDropProviderProps> = ({ 
+  children,
+  onDragEnd 
+}) => {
   const [isDragging, setIsDragging] = useState(false);
   const [draggedItem, setDraggedItem] = useState<DragItem | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
@@ -79,6 +83,22 @@ export const DragDropProvider: React.FC<DragDropProviderProps> = ({ children }) 
         sourceId: draggedItemRef.current.id,
         targetId: dropTarget
       });
+
+      // Call the onDragEnd callback if provided
+      if (onDragEnd && draggedItemRef.current) {
+        onDragEnd({
+          draggableId: draggedItemRef.current.id,
+          type: draggedItemRef.current.type,
+          source: {
+            droppableId: draggedItemRef.current.sourceContainerId || 'unknown',
+            index: -1 // We don't track indices in this system
+          },
+          destination: {
+            droppableId: dropTarget,
+            index: -1
+          }
+        });
+      }
     }
     
     setIsDragging(false);
@@ -87,7 +107,7 @@ export const DragDropProvider: React.FC<DragDropProviderProps> = ({ children }) 
     
     // Clean up any global state
     document.body.classList.remove('dragging');
-  }, []);
+  }, [onDragEnd]);
   
   // Register a drop target
   const registerDropTarget = useCallback((id: string, acceptTypes: DraggableItemType[]) => {
@@ -136,4 +156,5 @@ export const useDragDrop = () => {
   return context;
 };
 
+// Export the provider as default
 export default DragDropProvider;

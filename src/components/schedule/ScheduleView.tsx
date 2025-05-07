@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useDragAndDrop } from './useDragAndDrop';
-import { DragDropContext } from './DragDropContext';
+import DragDropProvider from './DragDropContext';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -128,7 +128,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
   };
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
+    <DragDropProvider>
       <div className="container mx-auto space-y-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Schedule</h1>
@@ -189,7 +189,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
           />
         </DialogContent>
       </Dialog>
-    </DragDropContext>
+    </DragDropProvider>
   );
 };
 
