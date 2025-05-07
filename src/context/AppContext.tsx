@@ -23,10 +23,11 @@ interface Todo {
   location?: string;
   startTime?: string;
   endTime?: string;
-  clientId?: string;  // Add clientId
-  clientLocationId?: string;  // Add clientLocationId
-  description?: string;  // Add description
-  crewId?: string;  // Add crewId for compatibility
+  clientId?: string;  
+  clientLocationId?: string;  
+  description?: string;  
+  crewId?: string;  // Add crewId for compatibility with Task interface
+  title?: string;   // Add title for better compatibility with Task interface
 }
 
 interface SpreadsheetData {
@@ -129,31 +130,37 @@ interface AppContextType {
   setClientLocations: (locations: ClientLocation[]) => void;
 }
 
-// Default todos with sample tasks
+// Default todos with sample tasks that persist
 const defaultTodos: Todo[] = [
   { 
     id: '1', 
-    text: 'Team meeting', 
+    text: 'Team meeting',
+    title: 'Team meeting',
     completed: false, 
     date: new Date(),
     location: 'Conference Room',
     startTime: '10:00',
-    endTime: '11:00'
+    endTime: '11:00',
+    description: 'Weekly team sync'
   },
   { 
     id: '2', 
-    text: 'Review project proposal', 
+    text: 'Review project proposal',
+    title: 'Review project proposal',
     completed: true, 
     date: new Date(),
-    assignedTo: 'John Smith'
+    assignedTo: 'John Smith',
+    description: 'Review the latest project proposal'
   },
   { 
     id: '3', 
-    text: 'Call with client', 
+    text: 'Call with client',
+    title: 'Call with client',
     completed: false, 
     date: new Date(),
     startTime: '14:30',
-    endTime: '15:00'
+    endTime: '15:00',
+    description: 'Discuss project requirements'
   },
 ];
 

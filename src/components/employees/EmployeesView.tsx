@@ -361,7 +361,7 @@ const EmployeesView: React.FC = () => {
       location: todo.location || "Office",
       clientId: todo.clientId || undefined,
       clientLocationId: todo.clientLocationId || undefined,
-      description: todo.description || ""
+      description: todo.description || todo.text || "" // Ensure description is populated
     }));
   };
 
