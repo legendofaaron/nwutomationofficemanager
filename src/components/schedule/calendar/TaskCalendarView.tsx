@@ -2,14 +2,14 @@
 import React, { memo, useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { DragDropProvider } from '../DragDropContext';
-import { Task, Crew } from '../ScheduleTypes';
 import { isSameDay } from '@/components/calendar/CalendarUtils';
 import { useDragDrop } from '../hooks/useDragDrop';
-import { toast } from 'sonner';
+import { Task, Crew } from '../ScheduleTypes';
+import { addMonths, subMonths } from 'date-fns';
+
+// Import our optimized components
 import CalendarCard from './CalendarCard';
 import TaskDetailsCard from './TaskDetailsCard';
-import { addMonths, subMonths } from 'date-fns';
 
 interface TaskCalendarViewProps {
   tasks: Task[];
@@ -59,18 +59,16 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = memo(({
   // Use our refactored drag and drop hook
   const { handleDragStart, handleDragEnd } = useDragDrop({
     onTaskMove: onMoveTask,
-    acceptTypes: ['task']
+    acceptTypes: ['task'],
+    tasks // Pass tasks to the hook
   });
   
   // Handle dropping a task on a day
-  const handleDayDrop = (data: any, event: React.DragEvent, date: Date) => {
+  const handleDayDrop = useCallback((data: any, event: React.DragEvent, date: Date) => {
     if (data.type === 'task' && onMoveTask) {
       onMoveTask(data.id, date);
-      toast.success(`Task rescheduled to ${format(date, 'MMMM d')}`, {
-        description: data.title
-      });
     }
-  };
+  }, [onMoveTask]);
 
   // Handle month navigation
   const handlePreviousMonth = useCallback(() => {
@@ -93,19 +91,17 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = memo(({
   return (
     <div className="grid gap-6 lg:grid-cols-7 md:grid-cols-1">
       <div className="lg:col-span-5">
-        <DragDropProvider>
-          <CalendarCard 
-            tasks={tasks}
-            selectedDate={selectedDate}
-            onSelectDate={onSelectDate}
-            currentMonth={currentMonth}
-            onMonthChange={onMonthChange}
-            handlePreviousMonth={handlePreviousMonth}
-            handleNextMonth={handleNextMonth}
-            handleDayDrop={handleDayDrop}
-            onAddNewTask={onAddNewTask}
-          />
-        </DragDropProvider>
+        <CalendarCard 
+          tasks={tasks}
+          selectedDate={selectedDate}
+          onSelectDate={onSelectDate}
+          currentMonth={currentMonth}
+          onMonthChange={onMonthChange}
+          handlePreviousMonth={handlePreviousMonth}
+          handleNextMonth={handleNextMonth}
+          handleDayDrop={handleDayDrop}
+          onAddNewTask={onAddNewTask}
+        />
       </div>
       
       <div className="lg:col-span-2">

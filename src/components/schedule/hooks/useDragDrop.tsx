@@ -11,6 +11,8 @@ interface UseDragDropOptions<T = any> {
   dropZoneClassName?: string;
   dropZoneActiveClassName?: string;
   acceptTypes?: string[];
+  // Make tasks optional to avoid type errors
+  tasks?: Task[];
 }
 
 export const useDragDrop = <T extends Record<string, any> = any>({
@@ -19,7 +21,8 @@ export const useDragDrop = <T extends Record<string, any> = any>({
   onTaskMove,
   dropZoneClassName = "schedule-drop-zone",
   dropZoneActiveClassName = "drag-over",
-  acceptTypes = ['task', 'crew']
+  acceptTypes = ['task', 'crew'],
+  tasks = []
 }: UseDragDropOptions<T> = {}) => {
   // Get context from DragDropContext
   const contextDragDrop = useContextDragDrop();

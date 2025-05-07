@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Clock, CheckCircle } from 'lucide-react';
 
@@ -8,7 +8,7 @@ interface TaskStatusBadgesProps {
   completedTasks: number;
 }
 
-const TaskStatusBadges = memo(({ pendingTasks, completedTasks }: TaskStatusBadgesProps) => {
+const TaskStatusBadges: React.FC<TaskStatusBadgesProps> = ({ pendingTasks, completedTasks }) => {
   return (
     <div className="flex gap-3">
       {pendingTasks > 0 && (
@@ -25,8 +25,6 @@ const TaskStatusBadges = memo(({ pendingTasks, completedTasks }: TaskStatusBadge
       )}
     </div>
   );
-});
-
-TaskStatusBadges.displayName = 'TaskStatusBadges';
+};
 
 export default TaskStatusBadges;
