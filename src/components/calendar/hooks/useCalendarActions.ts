@@ -13,7 +13,7 @@ interface CalendarActionsProps {
   setIsDragging: (isDragging: boolean) => void;
   setSelectedDate: (date: Date) => void;
   selectedDate: Date;
-  setContextDate: (date: Date) => void;
+  setContextDate: (date: Date) => void;  // Properly define this property
 }
 
 // Hook for handling calendar actions (adding/editing/deleting todos)

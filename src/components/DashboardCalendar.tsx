@@ -65,7 +65,7 @@ const DashboardCalendar = () => {
     setIsDragging,
     setSelectedDate,
     selectedDate,
-    setContextDate
+    setContextDate: setCalendarDate  // Pass the correct function from context
   });
   
   const {
