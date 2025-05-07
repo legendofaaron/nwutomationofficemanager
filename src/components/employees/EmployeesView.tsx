@@ -98,13 +98,16 @@ const EmployeesView: React.FC = () => {
     }
   };
 
-  const handleSelectEmployee = (employee: Employee) => {
-    setSelectedEmployee(employee);
+  const handleSelectEmployee = (employeeId: string) => {
+    const employee = employees.find(emp => emp.id === employeeId);
+    if (employee) {
+      setSelectedEmployee(employee);
+    }
   };
 
   const handleManageCrew = (crewId: string) => {
     const crew = crews.find(crew => crew.id === crewId);
-    setSelectedCrew(crew);
+    setSelectedCrew(crew || null);
     setIsCrewAssignDialogOpen(true);
   };
 
@@ -196,13 +199,13 @@ const EmployeesView: React.FC = () => {
     setIsAddEmployeeDialogOpen(false);
   };
 
-  const confirmAddCrew = (crewName: string, selectedEmployeeIds: string[]) => {
-    const newCrew = {
+  const confirmAddCrew = (newCrew: Omit<Crew, "id">) => {
+    const crewWithId = {
       id: uuidv4(),
-      name: crewName,
-      members: selectedEmployeeIds,
+      name: newCrew.name,
+      members: newCrew.members,
     };
-    setCrews([...crews, newCrew]);
+    setCrews([...crews, crewWithId]);
     setIsAddCrewDialogOpen(false);
     toast.success('Crew added successfully');
   };
@@ -213,7 +216,10 @@ const EmployeesView: React.FC = () => {
   };
 
   const getTodosByEmployeeId = (employeeId: string): TaskForEmployeeView[] => {
-    return todos.filter(todo => todo.assignedTo === employeeId).map(todo => ({
+    const employee = employees.find(emp => emp.id === employeeId);
+    if (!employee) return [];
+    
+    return todos.filter(todo => todo.assignedTo === employee.name).map(todo => ({
       id: todo.id,
       text: todo.text,
       completed: todo.completed,
@@ -222,7 +228,10 @@ const EmployeesView: React.FC = () => {
   };
 
   const getTodosByCrewId = (crewId: string): TaskForEmployeeView[] => {
-    return todos.filter(todo => todo.crewId === crewId).map(todo => ({
+    return todos.filter(todo => {
+      // Check both crew array and crewId property for backward compatibility
+      return (todo.crew && todo.crew.includes(crewId)) || todo.crewId === crewId;
+    }).map(todo => ({
       id: todo.id,
       text: todo.text,
       completed: todo.completed,
@@ -294,8 +303,11 @@ const EmployeesView: React.FC = () => {
       
       // Remove crew assignments from tasks
       const updatedTodos = todos.map(todo => {
-        if (todo.crewId === crewToDelete.id) {
-          const { crewId, crew, ...rest } = todo;
+        // Check both crew array and crewId property for backward compatibility
+        if ((todo.crew && todo.crew.includes(crewToDelete.id)) || 
+            (todo.crewId === crewToDelete.id)) {
+          // Create a new object without the crew-related properties
+          const { crew, crewId, ...rest } = todo;
           return rest;
         }
         return todo;
@@ -341,7 +353,7 @@ const EmployeesView: React.FC = () => {
       completed: todo.completed,
       assignedTo: todo.assignedTo,
       crew: todo.crew,
-      crewId: todo.crewId,
+      crewId: todo.crew?.[0], // Use the first item in the crew array as crewId for compatibility
       startTime: todo.startTime,
       endTime: todo.endTime,
       location: todo.location,
@@ -434,7 +446,7 @@ const EmployeesView: React.FC = () => {
             crews={crews}
             searchTerm={crewSearchTerm}
             onHandleCrewDragStart={handleCrewDragStart}
-            onSelectCrew={handleSelectCrew}
+            onSelectCrew={handleSelectEmployee}
             onManageCrew={handleManageCrew}
             onAssignTask={handleOpenAssignTaskToCrew}
             onDownloadSchedule={handleOpenCrewSchedule}
@@ -457,7 +469,7 @@ const EmployeesView: React.FC = () => {
       <AddEmployeeDialog
         isOpen={isAddEmployeeDialogOpen}
         onClose={() => setIsAddEmployeeDialogOpen(false)}
-        existingEmployee={editingEmployee}
+        employee={editingEmployee}
         onAddEmployee={confirmAddEmployee}
         crews={crews}
       />
@@ -472,7 +484,7 @@ const EmployeesView: React.FC = () => {
       <CrewAssignDialog
         isOpen={isCrewAssignDialogOpen}
         onClose={() => setIsCrewAssignDialogOpen(false)}
-        crew={selectedCrew}
+        selectedCrew={selectedCrew}
         employees={employees}
         onSave={handleSaveCrewAssignments}
       />
@@ -480,7 +492,7 @@ const EmployeesView: React.FC = () => {
       <TaskDialog
         isOpen={isTaskDialogOpen}
         onClose={() => setIsTaskDialogOpen(false)}
-        assignedTo={taskAssignee}
+        taskAssignee={taskAssignee}
         onSave={handleSaveTask}
       />
 
@@ -512,7 +524,8 @@ const EmployeesView: React.FC = () => {
       <Dialog open={isEmployeeScheduleDialogOpen} onOpenChange={setIsEmployeeScheduleDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <EmployeeScheduleDownload
-            employees={selectedEmployeeForSchedule ? employees.filter(e => e.id === selectedEmployeeForSchedule) : employees}
+            employeeId={selectedEmployeeForSchedule || ""}
+            employeeName={selectedEmployeeForSchedule ? getEmployeeNameById(selectedEmployeeForSchedule) : ""}
             tasks={convertTodosToTasks()}
           />
         </DialogContent>

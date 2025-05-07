@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { CalendarIcon, FileText, FilePdf } from 'lucide-react';
+import { CalendarIcon, FileText, FileDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -183,7 +183,7 @@ const CrewScheduleDownload = ({ crews, tasks }: CrewScheduleDownloadProps) => {
           onClick={handleDownloadPdf}
           disabled={!selectedCrewId || !date?.from}
         >
-          <FilePdf className="h-4 w-4" />
+          <FileDown className="h-4 w-4" />
           Download as PDF
         </Button>
       </CardFooter>
