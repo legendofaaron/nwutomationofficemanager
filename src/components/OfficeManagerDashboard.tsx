@@ -39,15 +39,26 @@ const OfficeManagerDashboard = () => {
             <Logo small />
             <div className="font-medium text-xl">Office Manager</div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleEmailDeveloper}
-            className="gap-2 text-amber-500 hover:text-amber-600 hover:bg-amber-100/10"
-          >
-            <Mail className="h-4 w-4" />
-            Email for Source Code
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleEmailDeveloper}
+              className="gap-2 text-blue-500 hover:text-blue-600 hover:bg-blue-100/10"
+            >
+              <Mail className="h-4 w-4" />
+              Email for Source
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleTipMe}
+              className="gap-2 text-amber-500 hover:text-amber-600 hover:bg-amber-100/10"
+            >
+              <Heart className="h-4 w-4" fill="currentColor" />
+              Tip Developer
+            </Button>
+          </div>
         </div>
 
         <div className={`p-3 border-b ${bgColor} ${borderColor} shadow-sm`}>

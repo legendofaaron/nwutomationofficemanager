@@ -234,53 +234,57 @@ const WelcomeDashboard = () => {
         
         {/* Free and Open Source Information */}
         <div className="mt-12 text-center animate-fade-in" style={{animationDelay: '650ms'}}>
-          <Card className={`max-w-md mx-auto ${cardBgClass} border-t-4 border-t-green-500 mb-6`}>
+          <Card className={`max-w-xl mx-auto ${cardBgClass} border-t-4 border-t-green-500 mb-6`}>
             <CardContent className="pt-6 pb-4">
-              <div className="flex flex-col items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Code className="h-5 w-5 text-green-500" />
-                  <h3 className="text-lg font-medium">Free & Open Source</h3>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Office Manager is freely available for both commercial and personal use under the MIT License. 
-                  You can modify, distribute, and use it in your projects without restrictions.
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  <Button 
-                    onClick={handleOpenGithub}
-                    className="bg-gray-900 hover:bg-black text-white gap-2"
-                  >
-                    <Github className="h-4 w-4" /> View Source on GitHub
-                  </Button>
-                  <Button 
-                    onClick={handleDownloadSource}
-                    className="bg-green-600 hover:bg-green-700 text-white gap-2"
-                  >
-                    <Download className="h-4 w-4" /> Download Source
-                  </Button>
-                </div>
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Code className="h-5 w-5 text-green-500" />
+                <h3 className="text-lg font-medium">Free & Open Source</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 max-w-lg mx-auto">
+                Office Manager is freely available for both commercial and personal use under the MIT License. 
+                You can modify, distribute, and use it in your projects without restrictions.
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Button 
+                  onClick={handleOpenGithub}
+                  className="bg-gray-900 hover:bg-black text-white gap-2"
+                >
+                  <Github className="h-4 w-4" /> View Source on GitHub
+                </Button>
+                <Button 
+                  onClick={handleDownloadSource}
+                  className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                >
+                  <Download className="h-4 w-4" /> Download Source
+                </Button>
               </div>
             </CardContent>
           </Card>
         </div>
         
-        {/* Tip Me Section - updated to Email for Source Code */}
+        {/* Combined Email for Source Code and Tip Developer Section */}
         <div className="mt-6 text-center animate-fade-in" style={{animationDelay: '700ms'}}>
-          <Card className={`max-w-md mx-auto ${cardBgClass} border-t-4 border-t-amber-500`}>
+          <Card className={`max-w-xl mx-auto ${cardBgClass} border-t-4 border-t-amber-500`}>
             <CardContent className="pt-6 pb-4">
-              <div className="flex flex-col items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-5 w-5 text-amber-500" />
-                  <h3 className="text-lg font-medium">Contact for Source Code</h3>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Enjoying Office Manager? Contact the developer directly to request the complete source code.
-                </p>
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Mail className="h-5 w-5 text-amber-500" />
+                <h3 className="text-lg font-medium">Contact for Source Code</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 max-w-lg mx-auto">
+                Enjoying Office Manager? Contact the developer directly to request the complete source code.
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center">
                 <Button 
                   onClick={handleEmailDeveloper} 
-                  className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white gap-2"
+                  className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
                 >
                   <Mail className="h-4 w-4" /> Email for Source Code
+                </Button>
+                <Button 
+                  onClick={handleTipMe}
+                  className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white gap-2"
+                >
+                  <Heart className="h-4 w-4" fill="currentColor" /> Tip Developer on PayPal
                 </Button>
               </div>
             </CardContent>
