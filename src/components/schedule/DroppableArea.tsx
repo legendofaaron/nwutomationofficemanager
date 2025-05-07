@@ -16,6 +16,7 @@ interface DroppableAreaProps {
   rejectClassName?: string;
   disabled?: boolean;
   children: React.ReactNode;
+  'data-date'?: string;
 }
 
 export const DroppableArea: React.FC<DroppableAreaProps> = ({
@@ -29,12 +30,14 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
   acceptClassName = 'valid-drop-target',
   rejectClassName = 'invalid-drop-target',
   disabled = false,
-  children
+  children,
+  ...rest
 }) => {
   const [isOver, setIsOver] = useState(false);
   const [canAcceptCurrent, setCanAcceptCurrent] = useState(false);
   const { isDragging, draggedItem, registerDropTarget, unregisterDropTarget, setDragOverTarget } = useDragDrop();
   const dragEnterCount = useRef(0);
+  const elementRef = useRef<HTMLDivElement>(null);
   
   // Register this drop area with the context
   useEffect(() => {
@@ -67,6 +70,11 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
       setDragOverTarget(id);
       setIsOver(true);
       
+      // Add visual feedback
+      if (elementRef.current) {
+        elementRef.current.classList.add('drag-over-active');
+      }
+      
       // Call custom handler
       if (onDragEnter) {
         onDragEnter(e);
@@ -82,6 +90,11 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
     // Set drop effect
     if (!disabled && canAcceptCurrent) {
       e.dataTransfer.dropEffect = 'move';
+      
+      // Ensure visual feedback stays consistent
+      if (elementRef.current && !elementRef.current.classList.contains('drag-over-active')) {
+        elementRef.current.classList.add('drag-over-active');
+      }
     } else {
       e.dataTransfer.dropEffect = 'none';
     }
@@ -97,6 +110,11 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
     if (dragEnterCount.current === 0) {
       setDragOverTarget(null);
       setIsOver(false);
+      
+      // Remove visual feedback
+      if (elementRef.current) {
+        elementRef.current.classList.remove('drag-over-active');
+      }
       
       // Call custom handler
       if (onDragLeave) {
@@ -114,6 +132,11 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
     dragEnterCount.current = 0;
     setIsOver(false);
     setDragOverTarget(null);
+    
+    // Remove visual feedback
+    if (elementRef.current) {
+      elementRef.current.classList.remove('drag-over-active');
+    }
     
     // Add visual feedback for the drop
     const element = e.currentTarget;
@@ -138,13 +161,14 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
   
   return (
     <div
+      ref={elementRef}
       id={`droppable-${id}`}
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        'transition-colors duration-200',
+        'transition-all duration-200',
         className,
         isDragging && canAcceptCurrent && !disabled && acceptClassName,
         isDragging && !canAcceptCurrent && !disabled && rejectClassName,
@@ -153,6 +177,7 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
       data-droppable-id={id}
       data-droppable-accepts={acceptTypes.join(',')}
       aria-disabled={disabled}
+      {...rest}
     >
       {children}
     </div>

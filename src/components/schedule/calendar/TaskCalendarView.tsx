@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Task, Crew, DragItem } from '../ScheduleTypes';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -27,6 +27,19 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   onMoveTask,
   onEditTask
 }) => {
+  // Listen for global drag events to make interaction more reliable
+  useEffect(() => {
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+    };
+    
+    document.addEventListener('dragover', handleDragOver);
+    
+    return () => {
+      document.removeEventListener('dragover', handleDragOver);
+    };
+  }, []);
+  
   // Handle moving a task to a new date with toast notification
   const handleMoveTask = (taskId: string, date: Date) => {
     if (onMoveTask) {

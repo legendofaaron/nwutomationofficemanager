@@ -10,7 +10,7 @@ import { format, addMonths, subMonths } from 'date-fns';
 import { DayProps } from 'react-day-picker';
 import DroppableArea from '../DroppableArea';
 import { useDragDrop } from '../DragDropContext';
-import { toast } from 'sonner'; // Import toast for feedback
+import { toast } from 'sonner';
 
 interface CalendarCardProps {
   tasks: Task[];
@@ -29,6 +29,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
 }) => {
   const [currentMonth, setCurrentMonth] = useState<Date>(selectedDate || new Date());
   const { isDragging } = useDragDrop();
+  const [activeDropTarget, setActiveDropTarget] = useState<string | null>(null);
 
   // Effect to update currentMonth when selectedDate changes significantly (different month)
   useEffect(() => {
@@ -37,8 +38,38 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
     }
   }, [selectedDate, currentMonth]);
 
+  // Listen for drag end to reset active drop target
+  useEffect(() => {
+    if (!isDragging) {
+      setActiveDropTarget(null);
+    }
+    
+    // Add global drag event listeners for improved reliability
+    const handleDragEnd = () => {
+      setActiveDropTarget(null);
+    };
+    
+    document.addEventListener('dragend', handleDragEnd);
+    
+    return () => {
+      document.removeEventListener('dragend', handleDragEnd);
+    };
+  }, [isDragging]);
+
   // Handle dropping a task on a day
   const handleDayDrop = (item: DragItem, date: Date) => {
+    // Reset active drop target
+    setActiveDropTarget(null);
+    
+    // Add visual feedback
+    const dayElement = document.querySelector(`[data-date="${date.toISOString().split('T')[0]}"]`);
+    if (dayElement) {
+      dayElement.classList.add('drop-highlight');
+      setTimeout(() => {
+        dayElement.classList.remove('drop-highlight');
+      }, 500);
+    }
+    
     if (item.type === 'task' && onMoveTask) {
       onMoveTask(item.id, date);
       
@@ -50,6 +81,8 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
     } else if (onItemDrop && (item.type === 'employee' || item.type === 'crew' || item.type === 'client')) {
       // Pass non-task item drops to the parent handler
       onItemDrop(item, date);
+      // Update selected date to where the item was dropped
+      onSelectDate(date);
     }
   };
 
@@ -99,13 +132,32 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="p-4">
+        <style jsx global>{`
+          .calendar-day-cell {
+            transition: all 0.2s ease-out;
+          }
+          .calendar-day-cell.drop-highlight {
+            background-color: rgba(var(--primary), 0.3);
+            transform: scale(1.05);
+            transition: all 0.2s ease-out;
+          }
+          .drop-target-active {
+            background-color: rgba(var(--primary), 0.15);
+            border: 2px dashed hsl(var(--primary));
+          }
+          .calendar-grid .rdp-day {
+            height: 40px;
+            margin: 0;
+            width: 100%;
+          }
+        `}</style>
         <Calendar 
           mode="single" 
           selected={selectedDate} 
           onSelect={onSelectDate} 
           month={currentMonth} 
           onMonthChange={setCurrentMonth} 
-          className={cn("rounded-xl border shadow-sm", "calendar-grid")} 
+          className={cn("rounded-xl border shadow-sm", "calendar-grid", isDragging && "drag-active-calendar")} 
           components={{
             DayContent: (props: DayProps) => {
               const dayDate = props.date;
@@ -116,6 +168,10 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
               const droppableId = `day-${dayDate.toISOString()}`;
               const isToday = dayDate.toDateString() === new Date().toDateString();
               const isSelected = selectedDate?.toDateString() === dayDate.toDateString();
+              const isActiveTarget = activeDropTarget === droppableId;
+              
+              // Format date for data attribute (for targeting with feedback animations)
+              const dateAttr = dayDate.toISOString().split('T')[0];
 
               return (
                 <DroppableArea
@@ -126,9 +182,13 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
                     "calendar-day-cell relative h-full w-full flex items-center justify-center rounded-md transition-colors", 
                     isSelected && "selected-day bg-primary/10",
                     isDragging && "drag-target",
+                    isActiveTarget && "drop-target-active",
                     hasTasks && "font-medium"
                   )}
-                  activeClassName="bg-primary/20 dark:bg-primary/30 border-dashed border-2 border-primary"
+                  activeClassName="bg-primary/20 dark:bg-primary/30 border-dashed border-2 border-primary scale-105"
+                  onDragEnter={() => setActiveDropTarget(droppableId)}
+                  onDragLeave={() => setActiveDropTarget(null)}
+                  data-date={dateAttr}
                 >
                   {/* Day number */}
                   <div className={cn(
