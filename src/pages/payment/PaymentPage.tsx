@@ -89,29 +89,32 @@ const PaymentPage = () => {
               </div>
             </div>
             
-            <div className="mt-8 p-4 border border-amber-200 dark:border-amber-800 rounded-lg bg-amber-50 dark:bg-amber-900/20">
-              <h3 className="font-medium mb-2 flex items-center">
-                <Heart className="h-4 w-4 mr-2 text-red-500" fill="currentColor" /> 
+            <div className="mt-8 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/70">
+              <h3 className="font-medium mb-2 flex items-center text-gray-700 dark:text-gray-300">
+                <Heart className="h-4 w-4 mr-2 text-gray-500" /> 
                 Support Development
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Office Manager is completely free. If you find it useful, please consider supporting its development with a tip.
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">
+                Office Manager is completely free to use. If you find it valuable, you may support its development.
               </p>
               
               <div className="flex flex-wrap gap-2">
                 <Button 
-                  className="bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1"
+                  variant="outline"
+                  size="sm"
+                  className="text-xs text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={handleTipMe}
                 >
-                  <Heart className="h-4 w-4" fill="currentColor" /> Support With A Tip
+                  <Heart className="h-3.5 w-3.5 mr-1 text-gray-500" /> Support Development
                 </Button>
                 
                 <Button 
                   variant="outline"
-                  className="flex items-center gap-1" 
+                  size="sm"
+                  className="text-xs text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700" 
                   onClick={handleEmailDeveloper}
                 >
-                  <Mail className="h-4 w-4" /> Send Feedback
+                  <Mail className="h-3.5 w-3.5 mr-1 text-gray-500" /> Send Feedback
                 </Button>
               </div>
             </div>
