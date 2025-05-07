@@ -349,8 +349,8 @@ const EmployeesView: React.FC = () => {
     console.log("Converting todos to tasks, count:", todos.length);
     return todos.map(todo => ({
       id: todo.id,
-      title: todo.text || todo.title || "Untitled Task",
-      text: todo.text || todo.title,
+      title: todo.text || "Untitled Task", // Use text as the title if available
+      text: todo.text, // Ensure text property is set
       date: todo.date instanceof Date ? todo.date : new Date(todo.date || new Date()),
       completed: !!todo.completed,
       assignedTo: todo.assignedTo,
