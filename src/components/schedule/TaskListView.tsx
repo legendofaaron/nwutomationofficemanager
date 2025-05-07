@@ -15,7 +15,7 @@ interface TaskListViewProps {
   onToggleTaskCompletion: (taskId: string) => void;
   crews: Crew[];
   clients: Client[];
-  clientLocations: ClientLocation[];
+  clientLocations?: ClientLocation[];
   onEditTask?: (taskId: string) => void;
 }
 
@@ -24,7 +24,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({
   onToggleTaskCompletion, 
   crews,
   clients,
-  clientLocations,
+  clientLocations = [],
   onEditTask
 }) => {
   // Sort tasks by date and then by start time

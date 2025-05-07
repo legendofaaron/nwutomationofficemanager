@@ -1,171 +1,148 @@
-import React, { useEffect, useCallback } from 'react';
-import { Task, Crew, DragItem } from '../ScheduleTypes';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
-import CalendarCard from './CalendarCard';
+
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { addDays, subDays, format, startOfWeek, addWeeks, subWeeks, isSameDay } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Calendar as CalendarIcon, 
+} from 'lucide-react';
+import DroppableArea from '../DroppableArea';
+import { Task, DroppableConfig } from '../ScheduleTypes';
+import { cn } from '@/lib/utils';
 import TasksCard from './TasksCard';
-import { useAppContext } from '@/context/AppContext';
 
 interface TaskCalendarViewProps {
   tasks: Task[];
-  selectedDate: Date;
-  onSelectDate: (date: Date | undefined) => void;
+  crews?: any[];
+  onEditTask: (taskId: string) => void;
   onToggleTaskCompletion: (taskId: string) => void;
-  crews: Crew[];
-  onAddNewTask: () => void;
-  onMoveTask?: (taskId: string, newDate: Date) => void;
-  onEditTask?: (taskId: string) => void;
 }
 
-const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
+const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({ 
   tasks,
-  selectedDate,
-  onSelectDate,
-  onToggleTaskCompletion,
-  crews,
-  onAddNewTask,
-  onMoveTask,
-  onEditTask
+  crews = [],
+  onEditTask,
+  onToggleTaskCompletion
 }) => {
-  // Get global calendar date from AppContext
-  const { calendarDate, setCalendarDate } = useAppContext();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [viewingWeek, setViewingWeek] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
   
-  // Sync local state with global state on mount and when global state changes - respond immediately
-  useEffect(() => {
-    if (calendarDate && calendarDate.toDateString() !== selectedDate.toDateString()) {
-      onSelectDate(calendarDate);
-    }
-  }, [calendarDate, onSelectDate, selectedDate]);
-  
-  // Update global state when local state changes - respond immediately
-  useEffect(() => {
-    if (selectedDate && (!calendarDate || selectedDate.toDateString() !== calendarDate.toDateString())) {
-      setCalendarDate(selectedDate);
-    }
-  }, [selectedDate, setCalendarDate, calendarDate]);
-  
-  // Listen for global drag events to make interaction more reliable
-  useEffect(() => {
-    const handleDragOver = (e: DragEvent) => {
-      e.preventDefault();
-    };
-    
-    document.addEventListener('dragover', handleDragOver);
-    
-    return () => {
-      document.removeEventListener('dragover', handleDragOver);
-    };
-  }, []);
-  
-  // Handle date selection with a single click
-  const handleSelectDate = useCallback((date: Date | undefined) => {
-    if (date) {
-      // Immediately update both local and global state with a single click
-      onSelectDate(date);
-      setCalendarDate(date);
-    }
-  }, [onSelectDate, setCalendarDate]);
-  
-  // Handle moving a task to a new date with toast notification
-  const handleMoveTask = useCallback((taskId: string, date: Date) => {
-    if (onMoveTask) {
-      // Find the task to get its title
-      const task = tasks.find(t => t.id === taskId);
-      const taskTitle = task?.title || 'Task';
-      
-      // Move the task
-      onMoveTask(taskId, date);
-      
-      // Also update the global calendar date to match the new task date
-      setCalendarDate(date);
-      
-      // Show success message
-      toast.success(`Task rescheduled to ${format(date, 'MMMM d')}`, {
-        description: taskTitle
-      });
-    }
-  }, [onMoveTask, tasks, setCalendarDate]);
+  // Calendar navigation
+  const prevWeek = () => setViewingWeek(subWeeks(viewingWeek, 1));
+  const nextWeek = () => setViewingWeek(addWeeks(viewingWeek, 1));
+  const goToToday = () => {
+    setViewingWeek(startOfWeek(new Date(), { weekStartsOn: 1 }));
+    setSelectedDate(new Date());
+  };
 
-  // Handle dropping other item types (employee, crew, client)
-  const handleItemDrop = useCallback((item: DragItem, date: Date) => {
-    // Always update the selected date when an item is dropped
-    onSelectDate(date);
-    setCalendarDate(date);
-    
-    if (item.type === 'employee') {
-      // Get employee name from data
-      const employeeName = item.data?.name || 'Employee';
-      
-      // Create task title
-      const taskTitle = `Meeting with ${employeeName}`;
-      
-      // Show temporary feedback toast while we're creating the task
-      toast.info(`Employee dropped on ${format(date, 'MMMM d')}`, {
-        description: `Creating task for ${employeeName}`,
-        duration: 2000
-      });
-      
-      // Create an employee-related task simulation
-      if (onMoveTask) {
-        // Existing simulation code...
-        setTimeout(() => {
-          toast.success(`Task created for ${employeeName}`, {
-            description: `Scheduled for ${format(date, 'MMMM d')}`,
-          });
-        }, 500);
+  // Generate the 7 days of the week starting from the viewingWeek
+  const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(viewingWeek, i));
+
+  // Handle drop configuration for days
+  const getDropConfig = (date: Date): DroppableConfig => {
+    return {
+      id: `day-${format(date, 'yyyy-MM-dd')}`,
+      acceptTypes: ['task'],
+      onDrop: (item) => {
+        console.log(`Dropped task ${item.id} on ${format(date, 'yyyy-MM-dd')}`);
       }
-    } else if (item.type === 'crew') {
-      // Get crew name from data
-      const crewName = item.data?.name || 'Crew';
-      
-      // Create task title
-      const taskTitle = `Team activity with ${crewName}`;
-      
-      // Show temporary feedback toast
-      toast.info(`Crew dropped on ${format(date, 'MMMM d')}`, {
-        description: `Creating task for ${crewName} crew`,
-        duration: 2000
-      });
-      
-      // Create a crew-related task simulation
-      if (onMoveTask) {
-        // Existing simulation code...
-        setTimeout(() => {
-          toast.success(`Team task created for ${crewName}`, {
-            description: `Scheduled for ${format(date, 'MMMM d')}`,
-          });
-        }, 500);
-      }
-    } else if (item.type === 'client') {
-      toast.info(`Client dropped on ${format(date, 'MMMM d')}`, {
-        description: `${item.data.name || 'Client'} - Create a new task for this client?`
-      });
-    } else if (item.type === 'task') {
-      // If we're dropping a task, use the move task handler
-      if (onMoveTask && item.id) {
-        handleMoveTask(item.id, date);
-      }
-    }
-  }, [onSelectDate, setCalendarDate, onMoveTask, handleMoveTask]);
+    };
+  };
+
+  // Handle creating a new task
+  const handleAddNewTask = () => {
+    // Implementation is handled in the parent component
+  };
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <CalendarCard 
-        tasks={tasks}
-        selectedDate={selectedDate}
-        onSelectDate={handleSelectDate}
-        onMoveTask={handleMoveTask}
-        onItemDrop={handleItemDrop}
-      />
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Card className="md:col-span-2 shadow-md">
+        <CardContent className="p-4">
+          {/* Calendar header with navigation */}
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={prevWeek}
+                className="rounded-r-none border-r-0"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={goToToday}
+                className="rounded-none px-3 border-x-0"
+              >
+                <CalendarIcon className="h-4 w-4 mr-1" /> Today
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={nextWeek}
+                className="rounded-l-none border-l-0"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="font-medium">
+              {format(viewingWeek, 'MMMM yyyy')}
+            </div>
+          </div>
+          
+          {/* Calendar days */}
+          <div className="grid grid-cols-7 gap-1 mb-1">
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+              <div key={day} className="text-center text-sm font-medium py-1">
+                {day}
+              </div>
+            ))}
+          </div>
+          
+          {/* Calendar dates */}
+          <div className="grid grid-cols-7 gap-1 mb-6">
+            {weekDays.map(date => (
+              <DroppableArea 
+                key={date.toISOString()} 
+                config={getDropConfig(date)}
+                className={cn(
+                  "aspect-square flex flex-col items-center justify-center rounded-md border text-sm hover:bg-muted/50 cursor-pointer transition-all",
+                  isSameDay(date, new Date()) && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-900/30",
+                  isSameDay(date, selectedDate) && "bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-800/50"
+                )}
+                onClick={() => setSelectedDate(date)}
+              >
+                <span className={cn(
+                  "font-medium",
+                  isSameDay(date, new Date()) && "text-blue-600 dark:text-blue-400",
+                  isSameDay(date, selectedDate) && "text-blue-700 dark:text-blue-300"
+                )}>{format(date, 'd')}</span>
+                
+                {/* Task indicators */}
+                <div className="flex mt-1 gap-0.5">
+                  {tasks.filter(task => isSameDay(task.date, date)).length > 0 && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-blue-500 dark:bg-blue-400"></span>
+                  )}
+                </div>
+              </DroppableArea>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
       
-      <TasksCard
-        tasks={tasks}
-        selectedDate={selectedDate}
-        onToggleTaskCompletion={onToggleTaskCompletion}
-        crews={crews}
-        onAddNewTask={onAddNewTask}
-        onEditTask={onEditTask}
-      />
+      {/* Tasks for selected date */}
+      <Card className="md:col-span-1">
+        <TasksCard 
+          tasks={tasks}
+          selectedDate={selectedDate}
+          onToggleTaskCompletion={onToggleTaskCompletion}
+          crews={crews}
+          onAddNewTask={handleAddNewTask}
+          onEditTask={onEditTask}
+        />
+      </Card>
     </div>
   );
 };
