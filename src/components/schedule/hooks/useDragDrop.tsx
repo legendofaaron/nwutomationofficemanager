@@ -20,6 +20,8 @@ interface UseDragDropOptions<T = any> {
   setDroppedCrewId?: React.Dispatch<React.SetStateAction<string | null>>;
   setAssignmentType?: React.Dispatch<React.SetStateAction<'individual' | 'crew'>>;
   setTeamEventDialogOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  // Add the setTasks property to fix the build error
+  setTasks?: React.Dispatch<React.SetStateAction<Task[]>>;
 }
 
 export const useDragDrop = <T extends Record<string, any> = any>({
@@ -35,7 +37,8 @@ export const useDragDrop = <T extends Record<string, any> = any>({
   formData,
   setDroppedCrewId,
   setAssignmentType,
-  setTeamEventDialogOpen
+  setTeamEventDialogOpen,
+  setTasks
 }: UseDragDropOptions<T> = {}) => {
   // Get context from DragDropContext
   const contextDragDrop = useContextDragDrop();
