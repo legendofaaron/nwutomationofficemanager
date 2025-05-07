@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Task, TaskFormData, AssignmentType, LocationType } from '../ScheduleTypes';
 import { toast } from 'sonner';
 import { useAppContext } from '@/context/AppContext';
+import { parseClientLocationValue } from '../ScheduleHelpers';
 
 interface UseTaskDialogsProps {
   tasks: Task[];
@@ -96,6 +97,45 @@ export const useTaskDialogs = ({ tasks, setTasks, selectedDate }: UseTaskDialogs
     }
   };
 
+  // Handle creating a client visit task
+  const handleCreateClientTask = () => {
+    if (formData.title && formData.startTime && formData.endTime && formData.assignedCrew && formData.clientId && formData.clientLocationId) {
+      const client = clients.find(c => c.id === formData.clientId);
+      const location = clientLocations.find(l => l.id === formData.clientLocationId);
+      const crew = crews.find(c => c.id === formData.assignedCrew);
+      
+      if (!client || !location || !crew) {
+        toast.error("Missing client, location, or crew information");
+        return;
+      }
+      
+      const task: Task = {
+        id: Date.now().toString(),
+        title: formData.title,
+        date: selectedDate,
+        completed: false,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        crewId: formData.assignedCrew,
+        crewName: crew.name,
+        location: `${client.name} - ${location.name}`,
+        clientId: formData.clientId,
+        clientLocationId: formData.clientLocationId,
+        description: formData.description || '',
+        crew: crew.members.map(memberId => {
+          const employee = employees.find(emp => emp.id === memberId);
+          return employee ? employee.name : '';
+        }).filter(name => name !== '')
+      };
+      
+      setTasks([...tasks, task]);
+      resetFormData();
+      toast.success("Client visit scheduled successfully");
+    } else {
+      toast.error("Please fill in all required fields");
+    }
+  };
+
   const handleOpenAddTaskDialog = (type: 'individual' | 'crew' = 'individual') => {
     // Reset form data
     resetFormData();
@@ -109,6 +149,9 @@ export const useTaskDialogs = ({ tasks, setTasks, selectedDate }: UseTaskDialogs
     
     // Set assignment type based on button clicked
     setAssignmentType(type);
+    
+    // Reset location type to default
+    setLocationType('custom');
     
     // Open the dialog
     setIsTaskDialogOpen(true);
@@ -166,6 +209,7 @@ export const useTaskDialogs = ({ tasks, setTasks, selectedDate }: UseTaskDialogs
     setFormData,
     resetFormData,
     handleAddTask,
+    handleCreateClientTask,
     handleOpenAddTaskDialog,
     handleOpenCrewVisitDialog,
     handleEditTask,

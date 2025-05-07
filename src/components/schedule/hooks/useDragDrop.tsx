@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { Task } from '../ScheduleTypes';
 import { toast } from 'sonner';
@@ -6,6 +7,7 @@ import { useDragDrop as useContextDragDrop } from '../DragDropContext';
 interface UseDragDropOptions<T = any> {
   onItemDrop?: (data: T, target: any) => void;
   onCrewDrop?: (crewId: string, targetData?: any) => void;
+  onClientDrop?: (clientId: string, name: string, targetData?: any) => void;
   onTaskMove?: (taskId: string, date: Date) => void;
   dropZoneClassName?: string;
   dropZoneActiveClassName?: string;
@@ -17,8 +19,11 @@ interface UseDragDropOptions<T = any> {
   setFormData?: React.Dispatch<React.SetStateAction<any>>;
   formData?: any;
   setDroppedCrewId?: React.Dispatch<React.SetStateAction<string | null>>;
+  setDroppedClientId?: React.Dispatch<React.SetStateAction<string | null>>;
   setAssignmentType?: React.Dispatch<React.SetStateAction<'individual' | 'crew'>>;
+  setLocationType?: React.Dispatch<React.SetStateAction<'custom' | 'client'>>;
   setTeamEventDialogOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  setClientVisitDialogOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   // Add the setTasks property to fix the build error
   setTasks?: React.Dispatch<React.SetStateAction<Task[]>>;
 }
@@ -26,17 +31,21 @@ interface UseDragDropOptions<T = any> {
 export const useDragDrop = <T extends Record<string, any> = any>({
   onItemDrop,
   onCrewDrop,
+  onClientDrop,
   onTaskMove,
   dropZoneClassName = "schedule-drop-zone",
   dropZoneActiveClassName = "drag-over",
-  acceptTypes = ['task', 'crew'],
+  acceptTypes = ['task', 'crew', 'client'],
   tasks = [],
   selectedDate,
   setFormData,
   formData,
   setDroppedCrewId,
+  setDroppedClientId,
   setAssignmentType,
+  setLocationType,
   setTeamEventDialogOpen,
+  setClientVisitDialogOpen,
   setTasks
 }: UseDragDropOptions<T> = {}) => {
   // Get context from DragDropContext
@@ -90,6 +99,26 @@ export const useDragDrop = <T extends Record<string, any> = any>({
             description: "Fill in the details to schedule this team event"
           });
         } 
+        // Handle client drop for scheduling a client visit
+        else if (dragData.type === 'client' && setDroppedClientId && setFormData && setClientVisitDialogOpen && selectedDate) {
+          setDroppedClientId(dragData.id);
+          
+          // Pre-fill form data for the client visit
+          setFormData({
+            ...formData,
+            title: `Visit to ${dragData.name}`,
+            clientId: dragData.id,
+            startTime: '09:00',
+            endTime: '12:00'
+          });
+          
+          setLocationType('client');
+          setClientVisitDialogOpen(true);
+          
+          toast.success(`Creating visit to ${dragData.name}`, {
+            description: "Fill in the details to schedule this client visit"
+          });
+        }
         // Handle employee drops for scheduling
         else if (dragData.type === 'employee' && setFormData && setAssignmentType && setTeamEventDialogOpen && selectedDate) {
           // Pre-fill form data for the employee task
@@ -143,7 +172,7 @@ export const useDragDrop = <T extends Record<string, any> = any>({
       console.error('Error handling drop:', error);
       toast.error("Error processing the dragged item");
     }
-  }, [dropZoneClassName, dropZoneActiveClassName, acceptTypes, onCrewDrop, onTaskMove, onItemDrop, formData, selectedDate, setFormData, setAssignmentType, setTeamEventDialogOpen, setDroppedCrewId]);
+  }, [dropZoneClassName, dropZoneActiveClassName, acceptTypes, onCrewDrop, onClientDrop, onTaskMove, onItemDrop, formData, selectedDate, setFormData, setAssignmentType, setTeamEventDialogOpen, setDroppedCrewId, setDroppedClientId, setClientVisitDialogOpen, setLocationType]);
 
   const handleDragStart = useCallback((data: any, e: React.DragEvent) => {
     contextDragDrop.setIsDragging(true);

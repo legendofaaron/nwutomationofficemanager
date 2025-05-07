@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CalendarIcon, List, FileUp } from 'lucide-react';
@@ -21,8 +21,13 @@ import ScheduleFilterBar from './ScheduleFilterBar';
 import UploadAnalyzeSection from './UploadAnalyzeSection';
 import ScheduleHeader from './components/ScheduleHeader';
 import ScheduleGuide from './components/ScheduleGuide';
+import ClientVisitDialog from './ClientVisitDialog';
 
 const ScheduleView = () => {
+  // State for client visit dialog
+  const [clientVisitDialogOpen, setClientVisitDialogOpen] = useState(false);
+  const [droppedClientId, setDroppedClientId] = useState<string | null>(null);
+
   // Use custom hooks
   const {
     selectedDate,
@@ -64,6 +69,7 @@ const ScheduleView = () => {
     setFormData,
     resetFormData,
     handleAddTask,
+    handleCreateClientTask,
     handleOpenAddTaskDialog,
     handleOpenCrewVisitDialog,
     handleEditTask,
@@ -85,14 +91,24 @@ const ScheduleView = () => {
     setFormData,
     formData,
     setDroppedCrewId,
+    setDroppedClientId,
     setAssignmentType,
-    setTeamEventDialogOpen
+    setLocationType,
+    setTeamEventDialogOpen,
+    setClientVisitDialogOpen
   });
   
   const {
     handleDownloadTxt,
     handleDownloadPdf
   } = useScheduleDownload(tasks, currentFilter);
+
+  // Handle creating a client visit task
+  const handleCreateClientVisit = () => {
+    handleCreateClientTask();
+    setClientVisitDialogOpen(false);
+    setDroppedClientId(null);
+  };
   
   // Get filtered tasks
   const filteredTasks = getFilteredTasks(tasks);
@@ -189,6 +205,27 @@ const ScheduleView = () => {
 
       {/* Scheduling Guide */}
       <ScheduleGuide />
+
+      {/* Client Visit Dialog */}
+      <Dialog open={clientVisitDialogOpen} onOpenChange={setClientVisitDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Schedule Client Visit</DialogTitle>
+          </DialogHeader>
+          <ClientVisitDialog
+            open={clientVisitDialogOpen}
+            onOpenChange={setClientVisitDialogOpen}
+            onCreateVisit={handleCreateClientVisit}
+            formData={formData}
+            setFormData={setFormData}
+            selectedDate={selectedDate}
+            crews={crews}
+            clients={clients}
+            clientLocations={clientLocations}
+            droppedClientId={droppedClientId}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Team Event Dialog for dropped crews */}
       <TeamEventDialog 
