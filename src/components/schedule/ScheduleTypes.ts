@@ -20,6 +20,12 @@ export interface Task {
 export interface Employee {
   id: string;
   name: string;
+  position?: string;
+  role?: string;
+  email?: string;
+  phone?: string;
+  crews?: string[];
+  avatarUrl?: string;
 }
 
 export interface Crew {
@@ -61,7 +67,7 @@ export interface TaskFormData {
   location: string;
   clientId: string;
   clientLocationId: string;
-  description?: string; // Add missing description property
+  description?: string;
 }
 
 export type LocationType = 'custom' | 'client';

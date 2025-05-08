@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, memo, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CalendarIcon, List, FileUp } from 'lucide-react';
@@ -22,6 +22,13 @@ import UploadAnalyzeSection from './UploadAnalyzeSection';
 import ScheduleHeader from './components/ScheduleHeader';
 import ScheduleGuide from './components/ScheduleGuide';
 import ClientVisitDialog from './ClientVisitDialog';
+
+// Memoize dialogs to prevent unnecessary re-renders
+const MemoizedTeamEventDialog = memo(TeamEventDialog);
+const MemoizedTaskEditDialog = memo(TaskEditDialog);
+const MemoizedClientVisitDialog = memo(ClientVisitDialog);
+const MemoizedTaskCalendarView = memo(TaskCalendarView);
+const MemoizedTaskListView = memo(TaskListView);
 
 const ScheduleView = () => {
   // State for client visit dialog
@@ -103,15 +110,20 @@ const ScheduleView = () => {
     handleDownloadPdf
   } = useScheduleDownload(tasks, currentFilter);
 
-  // Handle creating a client visit task
-  const handleCreateClientVisit = () => {
+  // Handle creating a client visit task - wrapped in useCallback for stability
+  const handleCreateClientVisit = useCallback(() => {
     handleCreateClientTask();
     setClientVisitDialogOpen(false);
     setDroppedClientId(null);
-  };
+  }, [handleCreateClientTask]);
   
   // Get filtered tasks
   const filteredTasks = getFilteredTasks(tasks);
+
+  // Memoized event handlers to prevent recreating functions on each render
+  const handleDateChange = useCallback((date: Date) => {
+    if (date) setSelectedDate(date);
+  }, [setSelectedDate]);
 
   return (
     <div 
@@ -119,6 +131,7 @@ const ScheduleView = () => {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      style={{ willChange: 'transform', transform: 'translateZ(0)' }}
     >
       {/* Header with action buttons */}
       <ScheduleHeader
@@ -164,10 +177,10 @@ const ScheduleView = () => {
         </TabsList>
         
         <TabsContent value="calendar" className="mt-0">
-          <TaskCalendarView
+          <MemoizedTaskCalendarView
             tasks={filteredTasks}
             selectedDate={selectedDate}
-            onSelectDate={(date) => date && setSelectedDate(date)}
+            onSelectDate={handleDateChange}
             onToggleTaskCompletion={handleToggleTaskCompletion}
             crews={crews}
             onAddNewTask={handleOpenAddTaskDialog}
@@ -177,7 +190,7 @@ const ScheduleView = () => {
         </TabsContent>
         
         <TabsContent value="list" className="mt-0">
-          <TaskListView
+          <MemoizedTaskListView
             tasks={filteredTasks}
             onToggleTaskCompletion={handleToggleTaskCompletion}
             crews={crews}
@@ -212,7 +225,7 @@ const ScheduleView = () => {
           <DialogHeader>
             <DialogTitle>Schedule Client Visit</DialogTitle>
           </DialogHeader>
-          <ClientVisitDialog
+          <MemoizedClientVisitDialog
             open={clientVisitDialogOpen}
             onOpenChange={setClientVisitDialogOpen}
             onCreateVisit={handleCreateClientVisit}
@@ -228,7 +241,7 @@ const ScheduleView = () => {
       </Dialog>
 
       {/* Team Event Dialog for dropped crews */}
-      <TeamEventDialog 
+      <MemoizedTeamEventDialog 
         open={teamEventDialogOpen}
         onOpenChange={setTeamEventDialogOpen}
         onCreateEvent={handleCreateTeamEvent}
@@ -257,7 +270,7 @@ const ScheduleView = () => {
                   : 'Schedule Crew Task'}
             </DialogTitle>
           </DialogHeader>
-          <TeamEventDialog 
+          <MemoizedTeamEventDialog 
             open={isTaskDialogOpen}
             onOpenChange={setIsTaskDialogOpen}
             onCreateEvent={handleAddTask}
@@ -282,7 +295,7 @@ const ScheduleView = () => {
           <DialogHeader>
             <DialogTitle>Edit Task</DialogTitle>
           </DialogHeader>
-          <TaskEditDialog
+          <MemoizedTaskEditDialog
             open={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
             onSaveChanges={handleSaveTaskChanges}

@@ -3,16 +3,18 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DownloadCloud, Users } from 'lucide-react';
-import { Employee } from './types';
+import { Employee, Crew } from './types';
 
 interface DownloadCardsSectionProps {
   employees: Employee[];
+  crews?: Crew[];
   onDownloadEmployeeSchedule: () => void;
   onDownloadCrewSchedule: () => void;
 }
 
 const DownloadCardsSection: React.FC<DownloadCardsSectionProps> = ({ 
   employees,
+  crews = [],
   onDownloadEmployeeSchedule,
   onDownloadCrewSchedule
 }) => {
@@ -47,7 +49,7 @@ const DownloadCardsSection: React.FC<DownloadCardsSectionProps> = ({
             <div>
               <h3 className="font-medium">Crew Schedules</h3>
               <p className="text-sm text-muted-foreground">
-                Task assignments for crews
+                {crews.length} crews total
               </p>
             </div>
           </div>

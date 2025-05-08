@@ -3,6 +3,19 @@
 #root {
   width: 100%;
   overflow: hidden;
+  contain: layout style;
+}
+
+/* Prevent content jumping with stable height containers */
+.stable-height {
+  min-height: 200px;
+}
+
+/* Performance optimizations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 /* Transitions */

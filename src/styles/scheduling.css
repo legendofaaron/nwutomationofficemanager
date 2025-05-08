@@ -1,10 +1,18 @@
 
 /* Enhanced Scheduling & Drag/Drop Styles */
 
+/* Performance optimizations for smooth rendering */
+.optimize-gpu {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
 /* Smooth animations for draggable items */
 [draggable=true] {
   cursor: grab;
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  will-change: transform, opacity;
 }
 
 [draggable=true]:active {
@@ -14,6 +22,7 @@
 /* Professional task styling */
 .task-item {
   transition: all 0.2s ease;
+  will-change: transform, box-shadow;
 }
 
 .task-item:hover:not(.completed) {
@@ -28,6 +37,7 @@
 /* Enhanced drop target visualization */
 .schedule-drop-zone {
   transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  will-change: background-color, border-color;
 }
 
 .schedule-drop-zone.drag-over {
@@ -51,6 +61,7 @@
   text-overflow: ellipsis;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  will-change: transform;
 }
 
 /* Calendar day styling */
@@ -71,6 +82,7 @@
 /* Animate task list transitions */
 .task-list-transition {
   transition: all 0.3s ease;
+  will-change: opacity, transform;
 }
 
 .task-list-enter {
@@ -117,6 +129,7 @@ body.dragging * {
 .resizable-panel {
   transition: width 0.2s ease;
   position: relative;
+  will-change: width;
 }
 
 .resizable-handle {
@@ -143,4 +156,29 @@ body.dragging * {
   .task-item {
     padding: 0.75rem;
   }
+}
+
+/* Prevent rendering flickers with all transitions */
+.transition-all-no-flicker {
+  transition-duration: 0.2s;
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+/* Optimize calendar rendering */
+.calendar-container {
+  will-change: contents;
+  contain: layout style;
+}
+
+/* Fix for dropdown flickering */
+.dropdown-content {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Optimize dialog rendering */
+.dialog-content {
+  will-change: transform, opacity;
 }

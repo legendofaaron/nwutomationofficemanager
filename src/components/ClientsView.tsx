@@ -21,6 +21,7 @@ interface ClientFormData {
   state: string;
   zip: string;
   status: 'active' | 'inactive' | 'pending';
+  tags?: string[];
 }
 
 const ClientsView = () => {
@@ -34,7 +35,8 @@ const ClientsView = () => {
     city: '',
     state: '',
     zip: '',
-    status: 'active'
+    status: 'active',
+    tags: []
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredClients, setFilteredClients] = useState<Client[]>(clients || []);
@@ -81,7 +83,8 @@ const ClientsView = () => {
         city: '',
         state: '',
         zip: '',
-        status: 'active'
+        status: 'active',
+        tags: []
       });
     }
   };
