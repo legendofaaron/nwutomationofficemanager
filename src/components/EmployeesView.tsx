@@ -13,7 +13,7 @@ import EmployeeDeleteDialog from './employees/EmployeeDeleteDialog';
 import CrewDeleteDialog from './employees/CrewDeleteDialog';
 import CrewAssignDialog from './employees/CrewAssignDialog';
 import DownloadCardsSection from './employees/DownloadCardsSection';
-import { EmployeeData, CrewData } from './employees/types';
+import { Employee, Crew } from './employees/types';
 import { DragDropProvider } from './schedule/DragDropContext';
 
 const EmployeesView = () => {
@@ -25,18 +25,18 @@ const EmployeesView = () => {
   const [isDeleteEmployeeOpen, setIsDeleteEmployeeOpen] = useState(false);
   const [isDeleteCrewOpen, setIsDeleteCrewOpen] = useState(false);
   const [isAssignCrewOpen, setIsAssignCrewOpen] = useState(false);
-  const [currentEmployee, setCurrentEmployee] = useState<EmployeeData | null>(null);
-  const [currentCrew, setCurrentCrew] = useState<CrewData | null>(null);
+  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
+  const [currentCrew, setCurrentCrew] = useState<Crew | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredEmployees, setFilteredEmployees] = useState<EmployeeData[]>([]);
-  const [filteredCrews, setFilteredCrews] = useState<CrewData[]>([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+  const [filteredCrews, setFilteredCrews] = useState<Crew[]>([]);
 
   // Filter employees and crews based on search query
   useEffect(() => {
     if (employees) {
       const filtered = employees.filter(employee =>
         employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        employee.role.toLowerCase().includes(searchQuery.toLowerCase())
+        (employee.position?.toLowerCase().includes(searchQuery.toLowerCase()) || false)
       );
       setFilteredEmployees(filtered);
     }
@@ -50,25 +50,25 @@ const EmployeesView = () => {
   }, [searchQuery, employees, crews]);
 
   // Add employee handler
-  const handleAddEmployee = useCallback((employeeData: EmployeeData) => {
+  const handleAddEmployee = useCallback((employeeData: Employee) => {
     setEmployees([...(employees || []), employeeData]);
     setIsAddEmployeeOpen(false);
   }, [employees, setEmployees]);
 
   // Add crew handler
-  const handleAddCrew = useCallback((crewData: CrewData) => {
+  const handleAddCrew = useCallback((crewData: Crew) => {
     setCrews([...(crews || []), crewData]);
     setIsAddCrewOpen(false);
   }, [crews, setCrews]);
 
   // Edit employee handler
-  const handleEditEmployee = useCallback((employeeData: EmployeeData) => {
+  const handleEditEmployee = useCallback((employeeData: Employee) => {
     setCurrentEmployee(employeeData);
     setIsEditEmployeeOpen(true);
   }, []);
 
   // Save edited employee
-  const handleSaveEmployee = useCallback((editedEmployee: EmployeeData) => {
+  const handleSaveEmployee = useCallback((editedEmployee: Employee) => {
     setEmployees(
       employees?.map(emp => (emp.id === editedEmployee.id ? editedEmployee : emp)) || []
     );
@@ -77,13 +77,13 @@ const EmployeesView = () => {
   }, [employees, setEmployees]);
 
   // Edit crew handler
-  const handleEditCrew = useCallback((crewData: CrewData) => {
+  const handleEditCrew = useCallback((crewData: Crew) => {
     setCurrentCrew(crewData);
     setIsEditCrewOpen(true);
   }, []);
   
   // Save edited crew
-  const handleSaveCrew = useCallback((editedCrew: CrewData) => {
+  const handleSaveCrew = useCallback((editedCrew: Crew) => {
     setCrews(
       crews?.map(crew => (crew.id === editedCrew.id ? editedCrew : crew)) || []
     );
@@ -92,7 +92,7 @@ const EmployeesView = () => {
   }, [crews, setCrews]);
 
   // Delete employee handler
-  const handleDeleteEmployeeRequest = useCallback((employeeData: EmployeeData) => {
+  const handleDeleteEmployeeRequest = useCallback((employeeData: Employee) => {
     setCurrentEmployee(employeeData);
     setIsDeleteEmployeeOpen(true);
   }, []);
@@ -107,7 +107,7 @@ const EmployeesView = () => {
   }, [currentEmployee, employees, setEmployees]);
 
   // Delete crew handler
-  const handleDeleteCrewRequest = useCallback((crewData: CrewData) => {
+  const handleDeleteCrewRequest = useCallback((crewData: Crew) => {
     setCurrentCrew(crewData);
     setIsDeleteCrewOpen(true);
   }, []);
@@ -122,7 +122,7 @@ const EmployeesView = () => {
   }, [currentCrew, crews, setCrews]);
 
   // Assign crew handler
-  const handleAssignCrewRequest = useCallback((crewData: CrewData) => {
+  const handleAssignCrewRequest = useCallback((crewData: Crew) => {
     setCurrentCrew(crewData);
     setIsAssignCrewOpen(true);
   }, []);
@@ -130,14 +130,26 @@ const EmployeesView = () => {
   // Save crew assignments
   const handleSaveCrewAssignments = useCallback((crewId: string, memberIds: string[]) => {
     setCrews(prevCrews => 
-      prevCrews?.map(crew => 
+      (prevCrews?.map(crew => 
         crew.id === crewId 
           ? { ...crew, members: memberIds }
           : crew
-      ) || []
+      ) || [])
     );
     setIsAssignCrewOpen(false);
   }, [setCrews]);
+
+  // Mock handlers for props that we need to pass but aren't using in this component
+  const handleDragStart = useCallback(() => {}, []);
+  const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); }, []);
+  const handleDrop = useCallback((e: React.DragEvent) => { e.preventDefault(); }, []);
+  const handleSelectEmployee = useCallback(() => {}, []);
+  const handleAssignTask = useCallback(() => {}, []);
+  const handleDownloadSchedule = useCallback(() => {}, []);
+  const getEmployeeCrews = useCallback(() => [], []);
+  const getEmployeeTasks = useCallback(() => [], []);
+  const getCrewTasks = useCallback(() => [], []);
+  const getEmployeeNameById = useCallback(() => '', []);
 
   return (
     <DragDropProvider>
@@ -176,74 +188,95 @@ const EmployeesView = () => {
           
           <TabsContent value="employees">
             <EmployeeList 
-              employees={filteredEmployees} 
+              employees={filteredEmployees}
+              searchTerm=""
+              onHandleEmployeeDragStart={handleDragStart}
+              onSelectEmployee={handleSelectEmployee}
               onEditEmployee={handleEditEmployee}
               onDeleteEmployee={handleDeleteEmployeeRequest}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onAssignTask={handleAssignTask}
+              onDownloadSchedule={handleDownloadSchedule}
+              getEmployeeCrews={getEmployeeCrews}
+              getEmployeeTasks={getEmployeeTasks}
             />
           </TabsContent>
           
           <TabsContent value="crews">
             <CrewList 
               crews={filteredCrews}
-              employees={employees || []}
+              searchTerm=""
+              onHandleCrewDragStart={handleDragStart}
+              onSelectCrew={handleSelectEmployee}
+              onManageCrew={handleAssignCrewRequest}
               onEditCrew={handleEditCrew}
               onDeleteCrew={handleDeleteCrewRequest}
-              onAssignCrew={handleAssignCrewRequest}
+              onAssignTask={handleAssignTask}
+              onDownloadSchedule={handleDownloadSchedule}
+              getCrewTasks={getCrewTasks}
+              getEmployeeNameById={getEmployeeNameById}
             />
           </TabsContent>
         </Tabs>
         
-        <DownloadCardsSection employees={employees || []} crews={crews || []} />
+        <DownloadCardsSection 
+          employees={employees || []}
+          onDownloadEmployeeSchedule={() => {}}
+          onDownloadCrewSchedule={() => {}}
+        />
 
         {/* Dialogs */}
         <AddEmployeeDialog
-          open={isAddEmployeeOpen}
-          onOpenChange={setIsAddEmployeeOpen}
+          isOpen={isAddEmployeeOpen}
+          onClose={() => setIsAddEmployeeOpen(false)}
           onAddEmployee={handleAddEmployee}
+          crews={crews || []}
+          employee={null}
         />
         
         {/* Same dialog is reused for editing with prefilled data */}
         <AddEmployeeDialog
-          open={isEditEmployeeOpen}
-          onOpenChange={setIsEditEmployeeOpen}
+          isOpen={isEditEmployeeOpen}
+          onClose={() => setIsEditEmployeeOpen(false)}
           onAddEmployee={handleSaveEmployee}
-          employeeData={currentEmployee}
-          isEditing={true}
+          employee={currentEmployee}
+          crews={crews || []}
         />
         
         <AddCrewDialog
-          open={isAddCrewOpen}
-          onOpenChange={setIsAddCrewOpen}
+          isOpen={isAddCrewOpen}
+          onClose={() => setIsAddCrewOpen(false)}
           onAddCrew={handleAddCrew}
+          employees={employees || []}
         />
         
         {/* Same dialog is reused for editing with prefilled data */}
         <AddCrewDialog
-          open={isEditCrewOpen}
-          onOpenChange={setIsEditCrewOpen}
+          isOpen={isEditCrewOpen}
+          onClose={() => setIsEditCrewOpen(false)}
           onAddCrew={handleSaveCrew}
-          crewData={currentCrew}
-          isEditing={true}
+          employees={employees || []}
         />
         
         <EmployeeDeleteDialog
-          open={isDeleteEmployeeOpen}
-          onOpenChange={setIsDeleteEmployeeOpen}
-          onDeleteConfirm={handleConfirmDeleteEmployee}
-          employee={currentEmployee}
+          isOpen={isDeleteEmployeeOpen}
+          onClose={() => setIsDeleteEmployeeOpen(false)}
+          onDelete={handleConfirmDeleteEmployee}
+          employeeName={currentEmployee?.name || null}
         />
         
         <CrewDeleteDialog
-          open={isDeleteCrewOpen}
-          onOpenChange={setIsDeleteCrewOpen}
-          onDeleteConfirm={handleConfirmDeleteCrew}
-          crew={currentCrew}
+          isOpen={isDeleteCrewOpen}
+          onClose={() => setIsDeleteCrewOpen(false)}
+          onDelete={handleConfirmDeleteCrew}
+          crewName={currentCrew?.name || null}
         />
         
         <CrewAssignDialog
-          open={isAssignCrewOpen}
-          onOpenChange={setIsAssignCrewOpen}
-          crew={currentCrew}
+          isOpen={isAssignCrewOpen}
+          onClose={() => setIsAssignCrewOpen(false)}
+          selectedCrew={currentCrew}
           employees={employees || []}
           onSave={handleSaveCrewAssignments}
         />

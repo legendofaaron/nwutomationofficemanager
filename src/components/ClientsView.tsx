@@ -8,8 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Briefcase, Search, Plus, Calendar, ArrowRight } from 'lucide-react';
 import { DragDropProvider } from './schedule/DragDropContext';
 import DraggableClientCard from './clients/DraggableClientCard';
+import { Client } from './schedule/ScheduleTypes';
 
-// Client form interface
+// Client form interface matching the Client type from ScheduleTypes
 interface ClientFormData {
   id?: string;
   name: string;
@@ -36,7 +37,7 @@ const ClientsView = () => {
     status: 'active'
   });
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredClients, setFilteredClients] = useState(clients || []);
+  const [filteredClients, setFilteredClients] = useState<Client[]>(clients || []);
 
   // Update filtered clients when clients change or search query changes
   useEffect(() => {
@@ -65,7 +66,7 @@ const ClientsView = () => {
   // Handle adding a new client
   const handleAddClient = () => {
     if (formData.name) {
-      const newClient = {
+      const newClient: Client = {
         ...formData,
         id: Date.now().toString(),
       };

@@ -31,6 +31,14 @@ export interface Crew {
 export interface Client {
   id: string;
   name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  tags?: string[];
+  status?: 'active' | 'inactive' | 'pending';
 }
 
 export interface ClientLocation {
@@ -53,6 +61,7 @@ export interface TaskFormData {
   location: string;
   clientId: string;
   clientLocationId: string;
+  description?: string; // Add missing description property
 }
 
 export type LocationType = 'custom' | 'client';
