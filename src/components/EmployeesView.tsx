@@ -13,10 +13,10 @@ import EmployeeDeleteDialog from './employees/EmployeeDeleteDialog';
 import CrewDeleteDialog from './employees/CrewDeleteDialog';
 import CrewAssignDialog from './employees/CrewAssignDialog';
 import DownloadCardsSection from './employees/DownloadCardsSection';
-import { Employee, Crew } from './employees/types';
+import { Employee, Crew } from './schedule/ScheduleTypes';
 import { DragDropProvider } from './schedule/DragDropContext';
 
-const EmployeesView = () => {
+const EmployeesView = React.memo(() => {
   const { employees, setEmployees, crews, setCrews } = useAppContext();
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
   const [isAddCrewOpen, setIsAddCrewOpen] = useState(false);
@@ -92,8 +92,8 @@ const EmployeesView = () => {
   }, [crews, setCrews]);
 
   // Delete employee handler
-  const handleDeleteEmployeeRequest = useCallback((employeeData: Employee) => {
-    setCurrentEmployee(employeeData);
+  const handleDeleteEmployeeRequest = useCallback((employeeId: string, employeeName: string) => {
+    setCurrentEmployee({ id: employeeId, name: employeeName } as Employee);
     setIsDeleteEmployeeOpen(true);
   }, []);
 
@@ -107,8 +107,8 @@ const EmployeesView = () => {
   }, [currentEmployee, employees, setEmployees]);
 
   // Delete crew handler
-  const handleDeleteCrewRequest = useCallback((crewData: Crew) => {
-    setCurrentCrew(crewData);
+  const handleDeleteCrewRequest = useCallback((crewId: string, crewName: string) => {
+    setCurrentCrew({ id: crewId, name: crewName, members: [] } as Crew);
     setIsDeleteCrewOpen(true);
   }, []);
 
@@ -122,22 +122,22 @@ const EmployeesView = () => {
   }, [currentCrew, crews, setCrews]);
 
   // Assign crew handler
-  const handleAssignCrewRequest = useCallback((crewData: Crew) => {
-    setCurrentCrew(crewData);
+  const handleAssignCrewRequest = useCallback((crewId: string) => {
+    const crew = crews?.find(c => c.id === crewId);
+    setCurrentCrew(crew || null);
     setIsAssignCrewOpen(true);
-  }, []);
+  }, [crews]);
 
-  // Save crew assignments
+  // Save crew assignments - fix the callback signature to match the expected type
   const handleSaveCrewAssignments = useCallback((crewId: string, memberIds: string[]) => {
-    setCrews(prevCrews => 
-      (prevCrews?.map(crew => 
-        crew.id === crewId 
-          ? { ...crew, members: memberIds }
-          : crew
-      ) || [])
-    );
+    if (crews) {
+      const updatedCrews = crews.map(crew => 
+        crew.id === crewId ? { ...crew, members: memberIds } : crew
+      );
+      setCrews(updatedCrews);
+    }
     setIsAssignCrewOpen(false);
-  }, [setCrews]);
+  }, [crews, setCrews]);
 
   // Mock handlers for props that we need to pass but aren't using in this component
   const handleDragStart = useCallback(() => {}, []);
@@ -145,8 +145,8 @@ const EmployeesView = () => {
   const handleDrop = useCallback((e: React.DragEvent) => { e.preventDefault(); }, []);
   const handleSelectEmployee = useCallback(() => {}, []);
   const handleAssignTask = useCallback(() => {}, []);
-  const handleDownloadSchedule = useCallback(() => {}, []);
-  const getEmployeeCrews = useCallback(() => [], []);
+  const handleDownloadSchedule = useCallback((id: string) => {}, []);
+  const getEmployeeCrews = useCallback(() => [] as string[], []);
   const getEmployeeTasks = useCallback(() => [], []);
   const getCrewTasks = useCallback(() => [], []);
   const getEmployeeNameById = useCallback(() => '', []);
@@ -210,9 +210,9 @@ const EmployeesView = () => {
               onHandleCrewDragStart={handleDragStart}
               onSelectCrew={handleSelectEmployee}
               onManageCrew={handleAssignCrewRequest}
-              onEditCrew={handleEditCrew}
+              onEditCrew={() => {}}
               onDeleteCrew={handleDeleteCrewRequest}
-              onAssignTask={handleAssignTask}
+              onAssignTask={(crewId: string, crewName: string) => {}}
               onDownloadSchedule={handleDownloadSchedule}
               getCrewTasks={getCrewTasks}
               getEmployeeNameById={getEmployeeNameById}
@@ -222,6 +222,7 @@ const EmployeesView = () => {
         
         <DownloadCardsSection 
           employees={employees || []}
+          crews={crews}
           onDownloadEmployeeSchedule={() => {}}
           onDownloadCrewSchedule={() => {}}
         />
@@ -283,6 +284,8 @@ const EmployeesView = () => {
       </div>
     </DragDropProvider>
   );
-};
+});
+
+EmployeesView.displayName = 'EmployeesView';
 
 export default EmployeesView;

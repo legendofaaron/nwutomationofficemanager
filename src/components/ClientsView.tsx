@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +10,7 @@ import { DragDropProvider } from './schedule/DragDropContext';
 import DraggableClientCard from './clients/DraggableClientCard';
 import { Client } from './schedule/ScheduleTypes';
 
-// Client form interface matching the Client type from ScheduleTypes
+// Client form interface that matches the Client type from ScheduleTypes
 interface ClientFormData {
   id?: string;
   name: string;
@@ -22,9 +22,10 @@ interface ClientFormData {
   zip: string;
   status: 'active' | 'inactive' | 'pending';
   tags?: string[];
+  active?: boolean; // Added to match the updated Client type
 }
 
-const ClientsView = () => {
+const ClientsView = React.memo(() => {
   const { clients, setClients } = useAppContext();
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
   const [formData, setFormData] = useState<ClientFormData>({
@@ -36,7 +37,8 @@ const ClientsView = () => {
     state: '',
     zip: '',
     status: 'active',
-    tags: []
+    tags: [],
+    active: true // Initialize with true
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredClients, setFilteredClients] = useState<Client[]>(clients || []);
@@ -71,6 +73,7 @@ const ClientsView = () => {
       const newClient: Client = {
         ...formData,
         id: Date.now().toString(),
+        active: true // Ensure the active property is set
       };
       
       setClients([...(clients || []), newClient]);
@@ -84,7 +87,8 @@ const ClientsView = () => {
         state: '',
         zip: '',
         status: 'active',
-        tags: []
+        tags: [],
+        active: true // Reset with default value
       });
     }
   };

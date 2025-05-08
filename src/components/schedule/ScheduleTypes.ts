@@ -45,6 +45,7 @@ export interface Client {
   zip?: string;
   tags?: string[];
   status?: 'active' | 'inactive' | 'pending';
+  active?: boolean; // Adding the required active property
 }
 
 export interface ClientLocation {

@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DownloadCloud, Users } from 'lucide-react';
-import { Employee, Crew } from './types';
+import { Employee, Crew } from '../schedule/ScheduleTypes';
 
 interface DownloadCardsSectionProps {
   employees: Employee[];

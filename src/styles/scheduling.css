@@ -6,13 +6,17 @@
   will-change: transform;
   transform: translateZ(0);
   backface-visibility: hidden;
+  contain: content;
 }
 
 /* Smooth animations for draggable items */
 [draggable=true] {
   cursor: grab;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1), 
+              box-shadow 0.2s cubic-bezier(0.25, 0.1, 0.25, 1), 
+              opacity 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
   will-change: transform, opacity;
+  contain: layout style paint;
 }
 
 [draggable=true]:active {
@@ -21,8 +25,9 @@
 
 /* Professional task styling */
 .task-item {
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
   will-change: transform, box-shadow;
+  contain: layout style;
 }
 
 .task-item:hover:not(.completed) {
@@ -38,6 +43,7 @@
 .schedule-drop-zone {
   transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
   will-change: background-color, border-color;
+  contain: layout style;
 }
 
 .schedule-drop-zone.drag-over {
@@ -62,12 +68,14 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
   will-change: transform;
+  contain: layout style paint;
 }
 
 /* Calendar day styling */
 .rdp-cell.rdp-day {
   position: relative;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  contain: layout style;
 }
 
 .rdp-cell.rdp-day_selected {
@@ -81,8 +89,9 @@
 
 /* Animate task list transitions */
 .task-list-transition {
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
   will-change: opacity, transform;
+  contain: content;
 }
 
 .task-list-enter {
@@ -127,9 +136,10 @@ body.dragging * {
 
 /* Make resizable panels work smoothly */
 .resizable-panel {
-  transition: width 0.2s ease;
+  transition: width 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
   position: relative;
   will-change: width;
+  contain: layout;
 }
 
 .resizable-handle {
@@ -162,8 +172,9 @@ body.dragging * {
 .transition-all-no-flicker {
   transition-duration: 0.2s;
   transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
   will-change: transform;
+  contain: layout style paint;
 }
 
 /* Optimize calendar rendering */
@@ -176,9 +187,44 @@ body.dragging * {
 .dropdown-content {
   transform: translateZ(0);
   backface-visibility: hidden;
+  contain: layout style;
 }
 
 /* Optimize dialog rendering */
 .dialog-content {
   will-change: transform, opacity;
+  contain: layout style;
+}
+
+/* Anti-flicker measures */
+.anti-flicker {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  contain: content;
+}
+
+/* Prevent layout shifts */
+.prevent-layout-shift {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  contain: layout style paint;
+}
+
+/* Improve rendering performance for lists */
+.optimize-list {
+  contain: content;
+  will-change: contents;
+}
+
+/* Optimize table rendering */
+table {
+  contain: layout style;
+  will-change: contents;
+}
+
+/* Fix for Safari rendering issues */
+.safari-fix {
+  -webkit-transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
 }
