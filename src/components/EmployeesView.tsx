@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -210,7 +209,6 @@ const EmployeesView = React.memo(() => {
               onHandleCrewDragStart={handleDragStart}
               onSelectCrew={handleSelectEmployee}
               onManageCrew={handleAssignCrewRequest}
-              onEditCrew={() => {}}
               onDeleteCrew={handleDeleteCrewRequest}
               onAssignTask={(crewId: string, crewName: string) => {}}
               onDownloadSchedule={handleDownloadSchedule}
