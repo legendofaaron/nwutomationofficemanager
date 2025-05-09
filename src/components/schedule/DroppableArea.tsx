@@ -1,227 +1,112 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useDragDrop } from './DragDropContext';
-import { DroppableConfig, DraggableItemType, DragItem } from './ScheduleTypes';
+import { DragItem, DraggableItemType } from './ScheduleTypes';
 
 interface DroppableAreaProps {
   id: string;
   acceptTypes: DraggableItemType[];
-  onDrop: (item: DragItem, e: React.DragEvent<HTMLDivElement>) => void;
-  onDragEnter?: (e: React.DragEvent<HTMLDivElement>) => void;
-  onDragLeave?: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDrop?: (item: DragItem, event: React.DragEvent<HTMLDivElement>) => void;
+  onDragEnter?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDragLeave?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   className?: string;
   activeClassName?: string;
-  acceptClassName?: string;
-  rejectClassName?: string;
-  disabled?: boolean;
-  children: React.ReactNode;
-  'data-date'?: string;
+  children?: React.ReactNode;
 }
 
-export const DroppableArea: React.FC<DroppableAreaProps> = ({
+const DroppableArea: React.FC<DroppableAreaProps> = ({
   id,
   acceptTypes,
   onDrop,
   onDragEnter,
   onDragLeave,
+  onClick,
   className,
-  activeClassName = 'drag-over border-dashed border-2 border-primary bg-primary/10',
-  acceptClassName = 'valid-drop-target',
-  rejectClassName = 'invalid-drop-target',
-  disabled = false,
-  children,
-  ...rest
+  activeClassName,
+  children
 }) => {
-  const [isOver, setIsOver] = useState(false);
-  const [canAcceptCurrent, setCanAcceptCurrent] = useState(false);
-  const { isDragging, draggedItem, registerDropTarget, unregisterDropTarget, setDragOverTarget } = useDragDrop();
-  const dragEnterCount = useRef(0);
-  const elementRef = useRef<HTMLDivElement>(null);
+  const { isDragging, draggedItem, registerDropTarget, unregisterDropTarget } = useDragDrop();
+  const [isActive, setIsActive] = useState(false);
+  const dropAreaRef = useRef<HTMLDivElement>(null);
   
-  // Register this drop area with the context
   useEffect(() => {
-    if (!disabled) {
-      registerDropTarget(id, acceptTypes);
-    }
-    
+    registerDropTarget(id, acceptTypes);
     return () => {
       unregisterDropTarget(id);
     };
-  }, [id, acceptTypes.join(','), disabled, registerDropTarget, unregisterDropTarget]);
+  }, [id, acceptTypes, registerDropTarget, unregisterDropTarget]);
   
-  // Check if this area can accept the currently dragged item
-  useEffect(() => {
-    if (isDragging && draggedItem) {
-      setCanAcceptCurrent(acceptTypes.includes(draggedItem.type));
-    } else {
-      setCanAcceptCurrent(false);
-    }
-  }, [isDragging, draggedItem, acceptTypes]);
-  
-  // Reset drag enter count when drag session ends
-  useEffect(() => {
-    if (!isDragging) {
-      dragEnterCount.current = 0;
-      setIsOver(false);
-    }
-  }, [isDragging]);
-  
-  // Handle drag enter
-  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
     
-    dragEnterCount.current++;
-    
-    if (dragEnterCount.current === 1) {
-      setDragOverTarget(id);
-      setIsOver(true);
-      
-      // Add visual feedback
-      if (elementRef.current) {
-        elementRef.current.classList.add('drag-over-active');
-      }
-      
-      // Call custom handler
+    if (isDragging && draggedItem && acceptTypes.includes(draggedItem.type)) {
+      setIsActive(true);
       if (onDragEnter) {
-        onDragEnter(e);
+        onDragEnter(event);
       }
     }
   };
   
-  // Handle drag over with improved detection
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Set drop effect
-    if (!disabled && canAcceptCurrent) {
-      e.dataTransfer.dropEffect = 'move';
-      
-      // Ensure visual feedback stays consistent
-      if (elementRef.current && !elementRef.current.classList.contains('drag-over-active')) {
-        elementRef.current.classList.add('drag-over-active');
-        setIsOver(true);
-        setDragOverTarget(id);
-      }
-    } else {
-      e.dataTransfer.dropEffect = 'none';
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsActive(false);
+    if (onDragLeave) {
+      onDragLeave(event);
     }
   };
   
-  // Handle drag leave with improved counter
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsActive(false);
     
-    dragEnterCount.current--;
-    
-    // Add a timeout to prevent flickering between child elements
-    setTimeout(() => {
-      if (dragEnterCount.current === 0) {
-        setDragOverTarget(null);
-        setIsOver(false);
-        
-        // Remove visual feedback
-        if (elementRef.current) {
-          elementRef.current.classList.remove('drag-over-active');
-        }
-        
-        // Call custom handler
-        if (onDragLeave) {
-          onDragLeave(e);
-        }
-      }
-    }, 50);
-  };
-  
-  // Handle drop with improved parsing
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Reset state
-    dragEnterCount.current = 0;
-    setIsOver(false);
-    setDragOverTarget(null);
-    
-    // Remove visual feedback
-    if (elementRef.current) {
-      elementRef.current.classList.remove('drag-over-active');
-    }
-    
-    // Add visual feedback for the drop
-    const element = e.currentTarget;
-    element.classList.add('drop-highlight');
-    setTimeout(() => {
-      element.classList.remove('drop-highlight');
-    }, 500);
-    
-    // Handle drop with multiple fallbacks
     try {
-      let itemData: DragItem | null = null;
-      
-      // Try primary format
-      const jsonData = e.dataTransfer.getData('application/json');
-      if (jsonData) {
-        try {
-          itemData = JSON.parse(jsonData);
-        } catch (error) {
-          console.warn('Failed to parse application/json data:', error);
+      const itemData = event.dataTransfer.getData('application/json');
+      if (itemData) {
+        const item: DragItem = JSON.parse(itemData);
+        if (acceptTypes.includes(item.type) && onDrop) {
+          onDrop(item, event);
         }
-      }
-      
-      // Try fallback format if primary failed
-      if (!itemData) {
-        const textData = e.dataTransfer.getData('text/plain');
-        if (textData) {
-          try {
-            itemData = JSON.parse(textData);
-          } catch (error) {
-            console.warn('Failed to parse text/plain data:', error);
-          }
-        }
-      }
-      
-      // Process the drop if we have valid data
-      if (itemData && acceptTypes.includes(itemData.type) && !disabled) {
-        onDrop(itemData, e);
       }
     } catch (error) {
-      console.error('Error handling drop:', error);
+      console.error("Error processing dropped item:", error);
     }
   };
-  
+
+  // Fix the style tag
   return (
     <div
-      ref={elementRef}
+      ref={dropAreaRef}
       id={`droppable-${id}`}
+      className={cn(
+        'drop-area',
+        className,
+        isActive && activeClassName
+      )}
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={cn(
-        'transition-all duration-200',
-        className,
-        isDragging && canAcceptCurrent && !disabled && acceptClassName,
-        isDragging && !canAcceptCurrent && !disabled && rejectClassName,
-        isOver && !disabled && activeClassName
-      )}
+      onClick={onClick}
       data-droppable-id={id}
-      data-droppable-accepts={acceptTypes.join(',')}
-      aria-disabled={disabled}
-      {...rest}
+      data-accept-types={acceptTypes.join(',')}
     >
-      {children}
       <style>
         {`
-        .drag-over-active {
-          border: 2px dashed var(--primary);
+        .drop-area-active {
+          outline: 2px dashed hsl(var(--primary));
           background-color: rgba(var(--primary), 0.1);
         }
-        .drop-highlight {
-          animation: highlight-pulse 0.5s ease-in-out;
+        .drop-target-highlight {
+          animation: highlight-pulse 0.8s ease;
         }
         @keyframes highlight-pulse {
           0%, 100% { background-color: transparent; }
@@ -229,6 +114,7 @@ export const DroppableArea: React.FC<DroppableAreaProps> = ({
         }
         `}
       </style>
+      {children}
     </div>
   );
 };

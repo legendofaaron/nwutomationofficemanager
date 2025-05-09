@@ -1,12 +1,14 @@
+
 export interface Task {
   id: string;
   title: string;
-  description?: string; // Adding the missing description field
+  description?: string;
   date: Date;
   completed: boolean;
   assignedTo?: string;
   crew?: string[];
   crewId?: string;
+  crewName?: string; // Adding this missing property
   startTime?: string;
   endTime?: string;
   location?: string;
