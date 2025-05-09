@@ -5,28 +5,39 @@ import { useAppContext } from '@/context/AppContext';
 /**
  * Custom hook to synchronize a local date state with the global calendar date
  * @param initialDate Optional initial date (defaults to the global calendar date or now)
+ * @param syncMode Optional sync mode: 'bidirectional' (default) or 'readonly'
  * @returns Object with synchronized date state and setter function
  */
-export function useCalendarSync(initialDate?: Date) {
+export function useCalendarSync(initialDate?: Date, syncMode: 'bidirectional' | 'readonly' = 'bidirectional') {
   const { calendarDate, setCalendarDate } = useAppContext();
+  
+  // Initialize with global date if available, fallback to provided initialDate or current date
   const [localDate, setLocalDate] = useState<Date>(
-    initialDate || calendarDate || new Date()
+    calendarDate || initialDate || new Date()
   );
   
-  // Sync from global to local - immediately respond to changes
+  // Sync from global to local - immediately respond to changes in global date
   useEffect(() => {
-    if (calendarDate && (!localDate || calendarDate.toDateString() !== localDate.toDateString())) {
-      setLocalDate(calendarDate);
+    if (calendarDate) {
+      // Only update if dates are different (compare by day, not time)
+      if (!localDate || calendarDate.toDateString() !== localDate.toDateString()) {
+        setLocalDate(new Date(calendarDate));
+      }
     }
   }, [calendarDate, localDate]);
   
   // Function to update both local and global state
   const updateDate = useCallback((newDate: Date | undefined) => {
     if (newDate) {
-      setLocalDate(newDate);
-      setCalendarDate(newDate);
+      // Always update local date
+      setLocalDate(new Date(newDate));
+      
+      // Only update global date if in bidirectional mode
+      if (syncMode === 'bidirectional') {
+        setCalendarDate(new Date(newDate));
+      }
     }
-  }, [setCalendarDate]);
+  }, [setCalendarDate, syncMode]);
   
   return {
     date: localDate,

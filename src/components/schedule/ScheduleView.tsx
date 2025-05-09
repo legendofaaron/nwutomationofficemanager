@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -11,6 +10,7 @@ import { generateMockTasks, generateMockEmployees, generateMockCrews, generateMo
 import ScheduleFilterBar from './ScheduleFilterBar';
 import { useAppContext } from '@/context/AppContext';
 import { toast } from 'sonner';
+import { useCalendarSync } from '@/hooks/useCalendarSync';
 
 const ScheduleView: React.FC = () => {
   // State for tasks and related data
@@ -20,30 +20,18 @@ const ScheduleView: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [clientLocations, setClientLocations] = useState<ClientLocation[]>([]);
   
-  // Get global calendar date from AppContext
-  const { calendarDate, setCalendarDate, todos, setTodos } = useAppContext();
+  // Get global todos from AppContext
+  const { todos, setTodos } = useAppContext();
+  
+  // Use the enhanced calendar sync hook
+  const { date: selectedDate, setDate: setSelectedDate } = useCalendarSync();
   
   // UI state
-  const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<ScheduleFilter>({ type: 'all' });
 
-  // Sync with global calendar date
-  useEffect(() => {
-    if (calendarDate && calendarDate.toDateString() !== selectedDate.toDateString()) {
-      setSelectedDate(calendarDate);
-    }
-  }, [calendarDate, selectedDate]);
-  
-  // Update global state when local date changes
-  useEffect(() => {
-    if (selectedDate) {
-      setCalendarDate(selectedDate);
-    }
-  }, [selectedDate, setCalendarDate]);
-  
   // Load mock data and synchronize with global todos
   useEffect(() => {
     const mockEmployees = generateMockEmployees();
@@ -231,13 +219,12 @@ const ScheduleView: React.FC = () => {
     }]);
   }, [selectedDate, setTodos]);
 
-  // Handle date change (sync with global date)
+  // Handle date change (sync with global date using the enhanced hook)
   const handleDateChange = useCallback((date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      setCalendarDate(date);
     }
-  }, [setCalendarDate]);
+  }, [setSelectedDate]);
 
   return (
     <div className="space-y-6">

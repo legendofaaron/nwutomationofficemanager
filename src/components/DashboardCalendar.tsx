@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useAppContext } from '@/context/AppContext';
+import { useCalendarSync } from '@/hooks/useCalendarSync';
 
 interface Todo {
   id: string;
@@ -51,10 +52,11 @@ interface DroppedItem {
 
 const DashboardCalendar = () => {
   // Add the useAppContext hook to access crews and calendar date
-  const { crews, calendarDate, setCalendarDate, todos, setTodos } = useAppContext();
+  const { crews, todos, setTodos } = useAppContext();
   
-  // Use the global calendar date
-  const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
+  // Use the enhanced calendar sync hook
+  const { date: selectedDate, setDate: setSelectedDate } = useCalendarSync();
+  
   const [newTodoText, setNewTodoText] = useState('');
   const [draggedTodo, setDraggedTodo] = useState<Todo | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -64,18 +66,6 @@ const DashboardCalendar = () => {
   const [droppedItem, setDroppedItem] = useState<DroppedItem | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
-
-  // Sync local selected date with global date
-  useEffect(() => {
-    if (calendarDate) {
-      setSelectedDate(calendarDate);
-    }
-  }, [calendarDate]);
-  
-  // Update global state when local date changes
-  useEffect(() => {
-    setCalendarDate(selectedDate);
-  }, [selectedDate, setCalendarDate]);
 
   const form = useForm<TaskFormValues>({
     defaultValues: {
@@ -258,11 +248,10 @@ const DashboardCalendar = () => {
     e.stopPropagation();
   };
 
-  // Handle date selection with a single click
+  // Handle date selection with a single click - uses the enhanced hook
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      setCalendarDate(date);
     }
   };
 
@@ -270,7 +259,6 @@ const DashboardCalendar = () => {
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      setCalendarDate(date);
       
       // If there's a todo being dragged, update its date
       if (draggedTodo) {
@@ -438,7 +426,7 @@ const DashboardCalendar = () => {
         <Calendar
           mode="single"
           selected={selectedDate}
-          onSelect={handleDateSelect} // Use our new handler for single click
+          onSelect={handleDateSelect} // Use our synchronized handler
           month={currentMonth}
           onMonthChange={(date) => {
             setCurrentMonth(date);

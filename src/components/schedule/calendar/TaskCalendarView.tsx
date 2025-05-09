@@ -1,10 +1,11 @@
+
 import React, { useEffect, useCallback } from 'react';
 import { Task, Crew, DragItem } from '../ScheduleTypes';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import CalendarCard from './CalendarCard';
 import TasksCard from './TasksCard';
-import { useAppContext } from '@/context/AppContext';
+import { useCalendarSync } from '@/hooks/useCalendarSync';
 
 interface TaskCalendarViewProps {
   tasks: Task[];
@@ -27,22 +28,22 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   onMoveTask,
   onEditTask
 }) => {
-  // Get global calendar date from AppContext
-  const { calendarDate, setCalendarDate } = useAppContext();
+  // Use the enhanced calendar sync hook
+  const { date, setDate } = useCalendarSync(selectedDate);
   
-  // Sync local state with global state on mount and when global state changes - respond immediately
+  // Sync local prop with hook's state
   useEffect(() => {
-    if (calendarDate && calendarDate.toDateString() !== selectedDate.toDateString()) {
-      onSelectDate(calendarDate);
+    if (date && date.toDateString() !== selectedDate.toDateString()) {
+      onSelectDate(date);
     }
-  }, [calendarDate, onSelectDate, selectedDate]);
+  }, [date, onSelectDate, selectedDate]);
   
-  // Update global state when local state changes - respond immediately
+  // Sync hook's state with local prop
   useEffect(() => {
-    if (selectedDate && (!calendarDate || selectedDate.toDateString() !== calendarDate.toDateString())) {
-      setCalendarDate(selectedDate);
+    if (selectedDate && selectedDate.toDateString() !== date.toDateString()) {
+      setDate(selectedDate);
     }
-  }, [selectedDate, setCalendarDate, calendarDate]);
+  }, [selectedDate, setDate, date]);
   
   // Listen for global drag events to make interaction more reliable
   useEffect(() => {
@@ -60,11 +61,12 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   // Handle date selection with a single click
   const handleSelectDate = useCallback((date: Date | undefined) => {
     if (date) {
-      // Immediately update both local and global state with a single click
+      // Update both local and global state with one call
+      setDate(date);
+      // Let the parent component know about the change
       onSelectDate(date);
-      setCalendarDate(date);
     }
-  }, [onSelectDate, setCalendarDate]);
+  }, [onSelectDate, setDate]);
   
   // Handle moving a task to a new date with toast notification
   const handleMoveTask = useCallback((taskId: string, date: Date) => {
@@ -76,21 +78,21 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
       // Move the task
       onMoveTask(taskId, date);
       
-      // Also update the global calendar date to match the new task date
-      setCalendarDate(date);
+      // Update both local and global date
+      setDate(date);
       
       // Show success message
       toast.success(`Task rescheduled to ${format(date, 'MMMM d')}`, {
         description: taskTitle
       });
     }
-  }, [onMoveTask, tasks, setCalendarDate]);
+  }, [onMoveTask, tasks, setDate]);
 
   // Handle dropping other item types (employee, crew, client)
   const handleItemDrop = useCallback((item: DragItem, date: Date) => {
     // Always update the selected date when an item is dropped
+    setDate(date);
     onSelectDate(date);
-    setCalendarDate(date);
     
     if (item.type === 'employee') {
       // Get employee name from data
@@ -146,13 +148,13 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
         handleMoveTask(item.id, date);
       }
     }
-  }, [onSelectDate, setCalendarDate, onMoveTask, handleMoveTask]);
+  }, [onSelectDate, setDate, onMoveTask, handleMoveTask]);
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <CalendarCard 
         tasks={tasks}
-        selectedDate={selectedDate}
+        selectedDate={date}
         onSelectDate={handleSelectDate}
         onMoveTask={handleMoveTask}
         onItemDrop={handleItemDrop}
@@ -160,7 +162,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
       
       <TasksCard
         tasks={tasks}
-        selectedDate={selectedDate}
+        selectedDate={date}
         onToggleTaskCompletion={onToggleTaskCompletion}
         crews={crews}
         onAddNewTask={onAddNewTask}

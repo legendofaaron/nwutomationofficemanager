@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -11,6 +10,7 @@ import { DayProps } from 'react-day-picker';
 import DroppableArea from '../DroppableArea';
 import { useDragDrop } from '../DragDropContext';
 import { toast } from 'sonner';
+import { useAppContext } from '@/context/AppContext';
 
 interface CalendarCardProps {
   tasks: Task[];
@@ -31,6 +31,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
   const { isDragging } = useDragDrop();
   const [activeDropTarget, setActiveDropTarget] = useState<string | null>(null);
   const [lastDropTime, setLastDropTime] = useState<number>(0);
+  const { calendarDate } = useAppContext();
 
   // Effect to update currentMonth when selectedDate changes significantly (different month)
   useEffect(() => {
@@ -38,6 +39,13 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
       setCurrentMonth(selectedDate);
     }
   }, [selectedDate, currentMonth]);
+
+  // Effect to ensure we're in sync with the global calendar date
+  useEffect(() => {
+    if (calendarDate && calendarDate.toDateString() !== selectedDate?.toDateString()) {
+      onSelectDate(calendarDate);
+    }
+  }, [calendarDate, onSelectDate, selectedDate]);
 
   // Listen for drag end to reset active drop target
   useEffect(() => {
@@ -178,6 +186,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
           month={currentMonth} 
           onMonthChange={setCurrentMonth} 
           className={cn("rounded-xl border shadow-sm", "calendar-grid", isDragging && "drag-active-calendar")} 
+          propagateChanges={true} {/* Enable global date synchronization */}
           components={{
             DayContent: (props: DayProps) => {
               const dayDate = props.date;

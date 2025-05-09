@@ -1,12 +1,13 @@
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker, CaptionProps as DayPickerCaptionProps } from "react-day-picker";
 import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -75,7 +76,30 @@ function Calendar({
   ...props
 }: CalendarProps) {
   const { resolvedTheme } = useTheme();
+  const { calendarDate, setCalendarDate } = useAppContext();
   const isSuperDarkMode = resolvedTheme === 'superdark';
+  
+  // Synchronize with global calendar date if both selected and calendarDate exist but are different
+  React.useEffect(() => {
+    if (props.selected && calendarDate && 
+        props.selected.toDateString() !== calendarDate.toDateString() && 
+        props.onSelect) {
+      props.onSelect(calendarDate);
+    }
+  }, [calendarDate, props.selected, props.onSelect]);
+
+  // Update global calendar date when this calendar's selected date changes (if propagateChanges is true)
+  const handleSelect = React.useCallback((date: Date | undefined) => {
+    if (date && props.onSelect) {
+      props.onSelect(date);
+      
+      // If propagateChanges is true (default), update global calendar date
+      const propagateChanges = props.mode === 'default' || (props as any).propagateChanges !== false;
+      if (propagateChanges) {
+        setCalendarDate(date);
+      }
+    }
+  }, [props.onSelect, props.mode, setCalendarDate]);
   
   return (
     <DayPicker
@@ -156,6 +180,8 @@ function Calendar({
           );
         },
       }}
+      selected={props.selected}
+      onSelect={handleSelect}
       {...props}
     />
   );
