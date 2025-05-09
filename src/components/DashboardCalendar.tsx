@@ -50,13 +50,17 @@ interface DroppedItem {
 }
 
 const DashboardCalendar = () => {
-  // Add the useAppContext hook to access crews and calendar date
-  const { crews, calendarDate, setCalendarDate, todos, setTodos } = useAppContext();
+  // Add the useAppContext hook to access crews
+  const { crews } = useAppContext();
   
-  // Use the global calendar date
-  const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [newTodoText, setNewTodoText] = useState('');
   const [draggedTodo, setDraggedTodo] = useState<Todo | null>(null);
+  const [todos, setTodos] = useState<Todo[]>([
+    { id: '1', text: 'Team meeting', completed: false, date: new Date() },
+    { id: '2', text: 'Review project proposal', completed: true, date: new Date() },
+    { id: '3', text: 'Call with client', completed: false, date: new Date() },
+  ]);
   const [isDragging, setIsDragging] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [employeeTaskDialogOpen, setEmployeeTaskDialogOpen] = useState(false);
@@ -65,22 +69,10 @@ const DashboardCalendar = () => {
   const calendarRef = useRef<HTMLDivElement>(null);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
-  // Sync local selected date with global date
-  useEffect(() => {
-    if (calendarDate) {
-      setSelectedDate(calendarDate);
-    }
-  }, [calendarDate]);
-  
-  // Update global state when local date changes
-  useEffect(() => {
-    setCalendarDate(selectedDate);
-  }, [selectedDate, setCalendarDate]);
-
   const form = useForm<TaskFormValues>({
     defaultValues: {
       text: '',
-      date: selectedDate,
+      date: new Date(),
       location: '',
       startTime: '',
       endTime: '',
@@ -91,7 +83,7 @@ const DashboardCalendar = () => {
   const employeeTaskForm = useForm<TaskFormValues>({
     defaultValues: {
       text: '',
-      date: selectedDate,
+      date: new Date(),
       location: '',
       startTime: '',
       endTime: '',
@@ -101,7 +93,7 @@ const DashboardCalendar = () => {
   const crewTaskForm = useForm<TaskFormValues>({
     defaultValues: {
       text: '',
-      date: selectedDate,
+      date: new Date(),
       location: '',
       startTime: '',
       endTime: '',
@@ -258,11 +250,9 @@ const DashboardCalendar = () => {
     e.stopPropagation();
   };
 
-  // Handle date change and sync with global state
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      setCalendarDate(date);
       
       // If there's a todo being dragged, update its date
       if (draggedTodo) {
@@ -430,10 +420,7 @@ const DashboardCalendar = () => {
           selected={selectedDate}
           onSelect={handleDateChange}
           month={currentMonth}
-          onMonthChange={(date) => {
-            setCurrentMonth(date);
-            // Don't update selectedDate on month change
-          }}
+          onMonthChange={setCurrentMonth}
           className={cn("rounded-md border bg-card shadow-sm w-full", "pointer-events-auto")}
           components={{
             Day: customDayRender

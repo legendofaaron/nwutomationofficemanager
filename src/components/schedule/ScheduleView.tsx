@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -9,7 +8,6 @@ import TaskListView from './TaskListView';
 import TaskEditDialog from './taskEdit/TaskEditDialog';
 import { generateMockTasks, generateMockEmployees, generateMockCrews, generateMockClients, generateMockClientLocations } from './MockScheduleData';
 import ScheduleFilterBar from './ScheduleFilterBar';
-import { useAppContext } from '@/context/AppContext';
 
 const ScheduleView: React.FC = () => {
   // State for tasks and related data
@@ -19,28 +17,13 @@ const ScheduleView: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [clientLocations, setClientLocations] = useState<ClientLocation[]>([]);
   
-  // Get global calendar date from AppContext
-  const { calendarDate, setCalendarDate } = useAppContext();
-  
   // UI state
-  const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<ScheduleFilter>({ type: 'all' });
 
-  // Sync with global calendar date
-  useEffect(() => {
-    if (calendarDate) {
-      setSelectedDate(calendarDate);
-    }
-  }, [calendarDate]);
-  
-  // Update global state when local date changes
-  useEffect(() => {
-    setCalendarDate(selectedDate);
-  }, [selectedDate, setCalendarDate]);
-  
   // Load mock data
   useEffect(() => {
     const mockEmployees = generateMockEmployees();
@@ -127,14 +110,6 @@ const ScheduleView: React.FC = () => {
     setIsEditDialogOpen(true);
   };
 
-  // Handle date change (sync with global date)
-  const handleDateChange = (date: Date | undefined) => {
-    if (date) {
-      setSelectedDate(date);
-      setCalendarDate(date);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -178,7 +153,7 @@ const ScheduleView: React.FC = () => {
           <TaskCalendarView 
             tasks={filteredTasks}
             selectedDate={selectedDate}
-            onSelectDate={handleDateChange}
+            onSelectDate={(date) => date && setSelectedDate(date)}
             onToggleTaskCompletion={handleToggleTaskCompletion}
             crews={crews}
             onAddNewTask={handleAddNewTask}

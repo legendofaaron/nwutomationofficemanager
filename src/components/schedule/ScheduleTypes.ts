@@ -1,7 +1,6 @@
 export interface Task {
   id: string;
   title: string;
-  description?: string; // Adding the missing description field
   date: Date;
   completed: boolean;
   assignedTo?: string;
@@ -11,7 +10,7 @@ export interface Task {
   endTime?: string;
   location?: string;
   clientId?: string;
-  locationId?: string;
+  locationId?: string; // Adding this field to match usage in MockScheduleData
   clientLocationId?: string;
 }
 
