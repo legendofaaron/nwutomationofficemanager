@@ -10,7 +10,7 @@ import { CalendarIcon, Clock, MapPin, User, Users, X, Building2 } from 'lucide-r
 import { format } from 'date-fns';
 import { TaskFormData, Crew, Employee, Client, ClientLocation, LocationType, AssignmentType } from './ScheduleTypes';
 import { parseClientLocationValue, getCrewMemberNames, getClientLocationInfo } from './ScheduleHelpers';
-import { getEmployeeOptions, getCrewOptions, getClientOptions, getClientLocationOptions } from './ScheduleHelperComponents';
+import { getEmployeeOptions, getCrewOptions, getClientLocationCombinedOptions } from './ScheduleHelperComponents';
 
 interface TeamEventDialogProps {
   open: boolean;
@@ -159,7 +159,7 @@ const TeamEventDialog: React.FC<TeamEventDialogProps> = ({
                       <SelectValue placeholder="Select client location" />
                     </SelectTrigger>
                     <SelectContent className="dark:bg-[#1D1D1D] dark:border-gray-700">
-                      {getClientLocationOptions(clients, clientLocations)}
+                      {getClientLocationCombinedOptions(clients, clientLocations)}
                     </SelectContent>
                   </Select>
                   
