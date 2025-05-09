@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import CalendarCard from './CalendarCard';
 import TasksCard from './TasksCard';
 import { useCalendarSync } from '@/hooks/useCalendarSync';
+import { useAppContext } from '@/context/AppContext';
 
 interface TaskCalendarViewProps {
   tasks: Task[];
@@ -28,6 +29,9 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   onMoveTask,
   onEditTask
 }) => {
+  // Get access to the global calendar date setter
+  const { setCalendarDate } = useAppContext();
+  
   // Use the enhanced calendar sync hook
   const { date, setDate } = useCalendarSync(selectedDate);
   
@@ -93,6 +97,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
     // Always update the selected date when an item is dropped
     setDate(date);
     onSelectDate(date);
+    setCalendarDate(date);
     
     if (item.type === 'employee') {
       // Get employee name from data
@@ -148,7 +153,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
         handleMoveTask(item.id, date);
       }
     }
-  }, [onSelectDate, setDate, onMoveTask, handleMoveTask]);
+  }, [onSelectDate, setDate, onMoveTask, handleMoveTask, setCalendarDate]);
 
   return (
     <div className="grid gap-6 md:grid-cols-2">

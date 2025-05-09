@@ -13,8 +13,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useAppContext } from '@/context/AppContext';
 import { useCalendarSync } from '@/hooks/useCalendarSync';
 
@@ -52,7 +50,7 @@ interface DroppedItem {
 
 const DashboardCalendar = () => {
   // Add the useAppContext hook to access crews and calendar date
-  const { crews, todos, setTodos } = useAppContext();
+  const { crews, todos, setTodos, setCalendarDate } = useAppContext();
   
   // Use the enhanced calendar sync hook
   const { date: selectedDate, setDate: setSelectedDate } = useCalendarSync();
@@ -252,6 +250,7 @@ const DashboardCalendar = () => {
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
+      setCalendarDate(date);
     }
   };
 
@@ -259,6 +258,7 @@ const DashboardCalendar = () => {
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
+      setCalendarDate(date);
       
       // If there's a todo being dragged, update its date
       if (draggedTodo) {

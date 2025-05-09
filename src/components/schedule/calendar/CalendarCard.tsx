@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -187,7 +186,6 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
           month={currentMonth} 
           onMonthChange={setCurrentMonth} 
           className={cn("rounded-xl border shadow-sm", "calendar-grid", isDragging && "drag-active-calendar")} 
-          propagateChanges={true}
           components={{
             DayContent: (props: DayProps) => {
               const dayDate = props.date;

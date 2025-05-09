@@ -21,7 +21,7 @@ const ScheduleView: React.FC = () => {
   const [clientLocations, setClientLocations] = useState<ClientLocation[]>([]);
   
   // Get global todos from AppContext
-  const { todos, setTodos } = useAppContext();
+  const { todos, setTodos, setCalendarDate } = useAppContext();
   
   // Use the enhanced calendar sync hook
   const { date: selectedDate, setDate: setSelectedDate } = useCalendarSync();
@@ -140,7 +140,7 @@ const ScheduleView: React.FC = () => {
     // Update the selected date to match the task's new date
     setSelectedDate(newDate);
     setCalendarDate(newDate);
-  }, [todos, setTodos, setCalendarDate]);
+  }, [todos, setTodos, setSelectedDate, setCalendarDate]);
 
   const handleEditTask = useCallback((taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
@@ -190,7 +190,7 @@ const ScheduleView: React.FC = () => {
       setSelectedDate(updatedData.date);
       setCalendarDate(updatedData.date);
     }
-  }, [todos, setTodos, setCalendarDate]);
+  }, [todos, setTodos, setSelectedDate, setCalendarDate]);
 
   const handleAddNewTask = useCallback(() => {
     // Create a new task template

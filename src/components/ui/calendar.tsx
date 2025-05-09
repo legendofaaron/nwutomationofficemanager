@@ -82,24 +82,27 @@ function Calendar({
   // Synchronize with global calendar date if both selected and calendarDate exist but are different
   React.useEffect(() => {
     if (props.selected && calendarDate && 
+        props.mode === "single" && 
+        props.selected instanceof Date && 
+        calendarDate instanceof Date && 
         props.selected.toDateString() !== calendarDate.toDateString() && 
         props.onSelect) {
       props.onSelect(calendarDate);
     }
-  }, [calendarDate, props.selected, props.onSelect]);
+  }, [calendarDate, props]);
 
-  // Update global calendar date when this calendar's selected date changes (if propagateChanges is true)
+  // Update global calendar date when this calendar's selected date changes
   const handleSelect = React.useCallback((date: Date | undefined) => {
     if (date && props.onSelect) {
       props.onSelect(date);
       
-      // If propagateChanges is true (default), update global calendar date
-      const propagateChanges = props.mode === 'default' || (props as any).propagateChanges !== false;
-      if (propagateChanges) {
+      // If this prop exists, update global calendar date
+      const shouldPropagateChanges = (props as any).propagateChanges !== false;
+      if (shouldPropagateChanges && props.mode === "single") {
         setCalendarDate(date);
       }
     }
-  }, [props.onSelect, props.mode, setCalendarDate]);
+  }, [props, setCalendarDate]);
   
   return (
     <DayPicker
