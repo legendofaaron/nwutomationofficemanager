@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -139,8 +140,8 @@ const TodoCalendarBubble = () => {
             setDraggedItem({
               type: parsedData.type,
               id: parsedData.id,
-              name: parsedData.text,
-              originalData: parsedData.originalData
+              name: parsedData.text || parsedData.data?.name || "Untitled",
+              originalData: parsedData.originalData || parsedData.data || {}
             });
             
             // Open task dialog
@@ -151,9 +152,16 @@ const TodoCalendarBubble = () => {
               if (parsedData.type === 'crew') {
                 setNewTask({
                   ...newTask,
-                  title: `${parsedData.text} Team Meeting`,
+                  title: `${parsedData.text || parsedData.data?.name || "Crew"} Team Meeting`,
                   assignedCrew: parsedData.id,
                   assignedTo: '',
+                });
+              } else if (parsedData.type === 'employee') {
+                setNewTask({
+                  ...newTask,
+                  title: `Meeting with ${parsedData.text || parsedData.data?.name || "Employee"}`,
+                  assignedTo: parsedData.data?.name || parsedData.text || "",
+                  assignedCrew: '',
                 });
               }
             }, 100);
@@ -235,7 +243,7 @@ const TodoCalendarBubble = () => {
     setDraggedTodo(null);
   };
 
-  // Fixed: Ensure the handleDateChange function properly updates selectedDate and global state
+  // Handle date selection with user interaction
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
       // Set selected date, create a new Date object to ensure it's a different reference
@@ -265,7 +273,7 @@ const TodoCalendarBubble = () => {
     
     // Handle different types of dragged items
     if (draggedItem?.type === 'employee') {
-      const employeeName = draggedItem.name.split(' - ')[1] || draggedItem.name;
+      const employeeName = draggedItem.originalData?.name || draggedItem.name.split(' - ')[1] || draggedItem.name;
       taskData.assignedTo = employeeName;
     } else if (draggedItem?.type === 'crew') {
       // If dragged item is a crew, assign the crew members
@@ -343,10 +351,20 @@ const TodoCalendarBubble = () => {
           // Allow drop by preventing the default behavior
           e.preventDefault();
           e.stopPropagation();
+          
+          // Add visual feedback
+          e.currentTarget.classList.add("bg-primary/20", "scale-105");
+        }}
+        onDragLeave={(e) => {
+          // Remove visual feedback
+          e.currentTarget.classList.remove("bg-primary/20", "scale-105");
         }}
         onDrop={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          
+          // Remove visual feedback
+          e.currentTarget.classList.remove("bg-primary/20", "scale-105");
           
           try {
             // Check if we have a dragged JSON item first
@@ -358,25 +376,41 @@ const TodoCalendarBubble = () => {
                 setDraggedItem({
                   type: parsedData.type,
                   id: parsedData.id,
-                  name: parsedData.text,
-                  originalData: parsedData.originalData
+                  name: parsedData.text || parsedData.data?.name || "Untitled",
+                  originalData: parsedData.originalData || parsedData.data || {}
                 });
                 
                 // Update the selected date to the drop target date
                 setSelectedDate(new Date(date));
+                setCalendarDate(new Date(date));
                 
                 // Pre-fill task dialog based on dragged item type
                 if (parsedData.type === 'crew') {
                   setNewTask({
                     ...newTask,
-                    title: `${parsedData.text} Team Meeting`,
+                    title: `${parsedData.originalData?.name || parsedData.data?.name || parsedData.text || "Crew"} Team Meeting`,
                     assignedCrew: parsedData.id,
                     assignedTo: '',
+                  });
+                } else if (parsedData.type === 'employee') {
+                  const employeeName = parsedData.originalData?.name || parsedData.data?.name || parsedData.text || "Employee";
+                  setNewTask({
+                    ...newTask,
+                    title: `Meeting with ${employeeName}`,
+                    assignedTo: employeeName,
+                    assignedCrew: '',
                   });
                 }
                 
                 // Open task dialog
                 setIsTaskDialogOpen(true);
+                
+                // Add animation highlight
+                e.currentTarget.classList.add("drop-highlight");
+                setTimeout(() => {
+                  e.currentTarget.classList.remove("drop-highlight");
+                }, 500);
+                
                 return;
               }
             }

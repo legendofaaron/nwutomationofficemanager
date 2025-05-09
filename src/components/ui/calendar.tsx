@@ -79,12 +79,17 @@ function Calendar({
   const { calendarDate, setCalendarDate } = useAppContext();
   const isSuperDarkMode = resolvedTheme === 'superdark';
   
+  // Type guard to check if a value is a Date object
+  const isDateObject = (value: any): value is Date => {
+    return value instanceof Date;
+  };
+
   // Synchronize with global calendar date if both selected and calendarDate exist but are different
   React.useEffect(() => {
     if (props.selected && calendarDate && 
         props.mode === "single" && 
-        props.selected instanceof Date && 
-        calendarDate instanceof Date && 
+        isDateObject(props.selected) && 
+        isDateObject(calendarDate) && 
         props.selected.toDateString() !== calendarDate.toDateString() && 
         props.onSelect) {
       props.onSelect(calendarDate);
@@ -96,9 +101,8 @@ function Calendar({
     if (date && props.onSelect) {
       props.onSelect(date);
       
-      // If this prop exists, update global calendar date
-      const shouldPropagateChanges = (props as any).propagateChanges !== false;
-      if (shouldPropagateChanges && props.mode === "single") {
+      // Always update global calendar date for single mode calendars
+      if (props.mode === "single" && isDateObject(date)) {
         setCalendarDate(date);
       }
     }
