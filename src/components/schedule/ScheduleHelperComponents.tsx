@@ -1,7 +1,20 @@
 
 import React from 'react';
 import { SelectItem } from '@/components/ui/select';
-import { Crew, Client, ClientLocation } from './ScheduleTypes';
+import { Crew, Client, ClientLocation, Employee } from './ScheduleTypes';
+
+// Generate employee options for select components
+export const getEmployeeOptions = (employees: Employee[]) => {
+  if (!employees || employees.length === 0) {
+    return <SelectItem value="no-employees">No employees available</SelectItem>;
+  }
+  
+  return employees.map(employee => (
+    <SelectItem key={employee.id} value={employee.id}>
+      {employee.name}
+    </SelectItem>
+  ));
+};
 
 // Generate crew options for select components
 export const getCrewOptions = (crews: Crew[]) => {

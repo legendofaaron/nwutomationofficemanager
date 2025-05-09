@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { CalendarIcon, Clock, MapPin, User, Users, X, Building2 } from 'lucide-r
 import { format } from 'date-fns';
 import { TaskFormData, Crew, Employee, Client, ClientLocation, LocationType, AssignmentType } from './ScheduleTypes';
 import { parseClientLocationValue, getCrewMemberNames, getClientLocationInfo } from './ScheduleHelpers';
-import { getEmployeeOptions, getCrewOptions, getClientLocationOptions } from './ScheduleHelperComponents';
+import { getEmployeeOptions, getCrewOptions, getClientOptions, getClientLocationOptions } from './ScheduleHelperComponents';
 
 interface TeamEventDialogProps {
   open: boolean;

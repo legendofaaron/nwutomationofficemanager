@@ -11,6 +11,9 @@ interface DragDropContextType {
   setDragType: React.Dispatch<React.SetStateAction<string | null>>;
   dragSource: string | null;
   setDragSource: React.Dispatch<React.SetStateAction<string | null>>;
+  // Add the draggedItemType property
+  draggedItemType: string | null;
+  setDraggedItemType: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 // Create the context
@@ -22,6 +25,7 @@ export const DragDropProvider = ({ children }: { children: ReactNode }) => {
   const [draggedItem, setDraggedItem] = useState<any | null>(null);
   const [dragType, setDragType] = useState<string | null>(null);
   const [dragSource, setDragSource] = useState<string | null>(null);
+  const [draggedItemType, setDraggedItemType] = useState<string | null>(null);
 
   return (
     <DragDropContext.Provider value={{
@@ -32,7 +36,9 @@ export const DragDropProvider = ({ children }: { children: ReactNode }) => {
       dragType,
       setDragType,
       dragSource,
-      setDragSource
+      setDragSource,
+      draggedItemType,
+      setDraggedItemType
     }}>
       <div className="drag-drop-container">
         {children}
