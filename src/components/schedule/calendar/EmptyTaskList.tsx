@@ -1,7 +1,7 @@
 
 import React from 'react';
+import { Calendar, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { CalendarPlus } from 'lucide-react';
 
 interface EmptyTaskListProps {
   onAddNewTask: () => void;
@@ -9,20 +9,22 @@ interface EmptyTaskListProps {
 
 const EmptyTaskList: React.FC<EmptyTaskListProps> = ({ onAddNewTask }) => {
   return (
-    <div className="text-center py-8 space-y-3 border-2 border-dashed border-muted rounded-lg">
-      <div className="mx-auto bg-blue-50 dark:bg-blue-900/20 h-12 w-12 rounded-full flex items-center justify-center">
-        <CalendarPlus className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+    <div className="flex flex-col items-center justify-center h-40 border-2 border-dashed rounded-lg p-6 text-center">
+      <div className="bg-muted/50 p-2 rounded-full mb-3">
+        <Calendar className="h-5 w-5 text-muted-foreground" />
       </div>
-      <div className="space-y-1">
-        <h3 className="font-medium">No tasks scheduled</h3>
-        <p className="text-sm text-muted-foreground">Schedule tasks for this day to see them here</p>
-      </div>
-      <Button
-        variant="outline"
+      <h3 className="text-sm font-medium">No tasks scheduled</h3>
+      <p className="text-muted-foreground text-xs mt-1">
+        Add a new task to start scheduling your day
+      </p>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="mt-4 flex items-center gap-1"
         onClick={onAddNewTask}
-        className="mt-3"
       >
-        Add a task
+        <PlusCircle className="h-3.5 w-3.5" />
+        <span>Add Task</span>
       </Button>
     </div>
   );
