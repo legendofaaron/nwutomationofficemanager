@@ -10,7 +10,11 @@ interface Todo {
   completed: boolean;
   date: Date;
   assignedTo?: string;
+  assignedToAvatar?: string;
   crew?: string[];
+  crewId?: string;
+  crewName?: string;
+  crewMembers?: string[];
   location?: string;
   startTime?: string;
   endTime?: string;

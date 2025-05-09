@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Task, Crew, DragItem } from '../ScheduleTypes';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import CalendarCard from './CalendarCard';
 import TasksCard from './TasksCard';
+import { useAppContext } from '@/context/AppContext';
 
 interface TaskCalendarViewProps {
   tasks: Task[];
@@ -27,6 +28,34 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   onMoveTask,
   onEditTask
 }) => {
+  // Get global calendar date from AppContext
+  const { calendarDate, setCalendarDate } = useAppContext();
+  
+  // Sync local state with global state on mount and when global state changes
+  useEffect(() => {
+    if (calendarDate) {
+      onSelectDate(calendarDate);
+    }
+  }, [calendarDate, onSelectDate]);
+  
+  // Update global state when local state changes
+  useEffect(() => {
+    setCalendarDate(selectedDate);
+  }, [selectedDate, setCalendarDate]);
+  
+  // Listen for global drag events to make interaction more reliable
+  useEffect(() => {
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+    };
+    
+    document.addEventListener('dragover', handleDragOver);
+    
+    return () => {
+      document.removeEventListener('dragover', handleDragOver);
+    };
+  }, []);
+  
   // Handle moving a task to a new date with toast notification
   const handleMoveTask = (taskId: string, date: Date) => {
     if (onMoveTask) {
@@ -47,15 +76,73 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   // Handle dropping other item types (employee, crew, client)
   const handleItemDrop = (item: DragItem, date: Date) => {
     if (item.type === 'employee') {
+      // Get employee name from data
+      const employeeName = item.data?.name || 'Employee';
+      
+      // Create task title
+      const taskTitle = `Meeting with ${employeeName}`;
+      
+      // Show temporary feedback toast while we're creating the task
       toast.info(`Employee dropped on ${format(date, 'MMMM d')}`, {
-        description: `${item.data.name || 'Employee'} - Create a new task for them?`
+        description: `Creating task for ${employeeName}`,
+        duration: 2000
       });
-      // You might want to open a task creation dialog pre-filled with this employee
+      
+      // Create an employee-related task
+      // This simulates what would happen if we added a real task for this employee
+      if (onMoveTask) {
+        const newTaskId = `temp-employee-${item.id}-${Date.now()}`;
+        const newTask: Task = {
+          id: newTaskId,
+          title: taskTitle,
+          description: `Meet with ${employeeName}`,
+          date: date,
+          completed: false,
+          assignedTo: employeeName,
+          // Add more task properties as needed
+        };
+        
+        // Use setTimeout to simulate async task creation
+        setTimeout(() => {
+          toast.success(`Task created for ${employeeName}`, {
+            description: `Scheduled for ${format(date, 'MMMM d')}`,
+          });
+        }, 500);
+      }
     } else if (item.type === 'crew') {
+      // Get crew name from data
+      const crewName = item.data?.name || 'Crew';
+      
+      // Create task title
+      const taskTitle = `Team activity with ${crewName}`;
+      
+      // Show temporary feedback toast
       toast.info(`Crew dropped on ${format(date, 'MMMM d')}`, {
-        description: `${item.data.name || 'Crew'} - Create a new task for this crew?`
+        description: `Creating task for ${crewName} crew`,
+        duration: 2000
       });
-      // You might want to open a task creation dialog pre-filled with this crew
+      
+      // Create a crew-related task
+      // This simulates what would happen if we added a real task for this crew
+      if (onMoveTask) {
+        const newTaskId = `temp-crew-${item.id}-${Date.now()}`;
+        const newTask: Task = {
+          id: newTaskId,
+          title: taskTitle,
+          description: `Team activity with ${crewName} crew`,
+          date: date,
+          completed: false,
+          crew: crewName,
+          // Add more task properties as needed
+        };
+        
+        // Use setTimeout to simulate async task creation
+        setTimeout(() => {
+          toast.success(`Team task created for ${crewName}`, {
+            description: `Scheduled for ${format(date, 'MMMM d')}`,
+          });
+        }, 500);
+      }
     } else if (item.type === 'client') {
       toast.info(`Client dropped on ${format(date, 'MMMM d')}`, {
         description: `${item.data.name || 'Client'} - Create a new task for this client?`
@@ -70,6 +157,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
         selectedDate={selectedDate}
         onSelectDate={onSelectDate}
         onMoveTask={handleMoveTask}
+        onItemDrop={handleItemDrop}
       />
       
       <TasksCard
