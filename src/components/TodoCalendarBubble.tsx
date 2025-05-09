@@ -70,7 +70,7 @@ const TodoCalendarBubble = () => {
   // Update local selected date when global date changes
   useEffect(() => {
     if (calendarDate) {
-      setSelectedDate(calendarDate);
+      setSelectedDate(new Date(calendarDate));
     }
   }, [calendarDate]);
 
@@ -235,11 +235,13 @@ const TodoCalendarBubble = () => {
     setDraggedTodo(null);
   };
 
-  // Fixed: Ensure the handleDateChange function properly updates selectedDate
+  // Fixed: Ensure the handleDateChange function properly updates selectedDate and global state
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
-      // Set selected date and force a re-render of tasks
-      setSelectedDate(new Date(date));
+      // Set selected date, create a new Date object to ensure it's a different reference
+      const newDate = new Date(date);
+      setSelectedDate(newDate);
+      setCalendarDate(newDate);
     }
   };
 
@@ -440,20 +442,28 @@ const TodoCalendarBubble = () => {
   // Total task count for the bubble badge - count only incomplete tasks
   const totalTaskCount = todos.filter(todo => !todo.completed).length;
 
-  // Get employee options for select
-  const getEmployeeOptions = () => {
+  // Get employee options for select - simplified direct implementation
+  const getEmployeeSelectItems = () => {
     return employees.map(employee => (
-      <SelectItem key={employee.id} value={employee.name}>
+      <SelectItem 
+        key={employee.id} 
+        value={employee.name} 
+        description={employee.position || ''}
+      >
         {employee.name}
       </SelectItem>
     ));
   };
 
-  // Get crew options for select
-  const getCrewOptions = () => {
+  // Get crew options for select - simplified direct implementation
+  const getCrewSelectItems = () => {
     return crews.map(crew => (
-      <SelectItem key={crew.id} value={crew.id}>
-        {crew.name} ({crew.members.length} members)
+      <SelectItem 
+        key={crew.id} 
+        value={crew.id} 
+        description={`${crew.members.length} members`}
+      >
+        {crew.name}
       </SelectItem>
     ));
   };
@@ -618,6 +628,21 @@ const TodoCalendarBubble = () => {
         </PopoverContent>
       </Popover>
 
+      <style>
+        {`
+          .calendar-component .react-day-picker {
+            font-size: 0.875rem;
+          }
+          .drop-highlight {
+            animation: highlight-pulse 0.5s ease-in-out;
+          }
+          @keyframes highlight-pulse {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: rgba(var(--primary), 0.2); }
+          }
+        `}
+      </style>
+
       {/* Task Creation Dialog */}
       <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -699,15 +724,17 @@ const TodoCalendarBubble = () => {
                 {!draggedItem || draggedItem.type !== 'employee' ? (
                   <Select 
                     value={newTask.assignedTo} 
-                    onValueChange={value => setNewTask({...newTask, assignedTo: value})}
+                    onValueChange={value => {
+                      setNewTask({...newTask, assignedTo: value, assignedCrew: ''});
+                    }}
                     disabled={!!(draggedItem?.type === 'crew')}
                   >
-                    <SelectTrigger id="assigned-to">
+                    <SelectTrigger id="assigned-to" className="w-full">
                       <SelectValue placeholder="Select an employee" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">No individual assignment</SelectItem>
-                      {getEmployeeOptions()}
+                      {getEmployeeSelectItems()}
                     </SelectContent>
                   </Select>
                 ) : (
@@ -737,15 +764,17 @@ const TodoCalendarBubble = () => {
                 {!draggedItem || draggedItem.type !== 'crew' ? (
                   <Select 
                     value={newTask.assignedCrew} 
-                    onValueChange={value => setNewTask({...newTask, assignedCrew: value})}
+                    onValueChange={value => {
+                      setNewTask({...newTask, assignedCrew: value, assignedTo: ''});
+                    }}
                     disabled={!!(draggedItem?.type === 'employee')}
                   >
-                    <SelectTrigger id="assigned-crew">
+                    <SelectTrigger id="assigned-crew" className="w-full">
                       <SelectValue placeholder="Select a crew" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">No crew assignment</SelectItem>
-                      {getCrewOptions()}
+                      {getCrewSelectItems()}
                     </SelectContent>
                   </Select>
                 ) : (
@@ -768,7 +797,11 @@ const TodoCalendarBubble = () => {
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="button" onClick={handleCreateTask}>
+            <Button 
+              type="button" 
+              onClick={handleCreateTask}
+              disabled={!newTask.title || (!newTask.assignedTo && !newTask.assignedCrew && !draggedItem)}
+            >
               {draggedItem?.type === 'crew' ? 'Create Team Event' : 'Create Task'}
             </Button>
           </DialogFooter>

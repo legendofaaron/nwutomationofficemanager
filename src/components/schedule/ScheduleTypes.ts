@@ -1,37 +1,34 @@
-
 export interface Task {
   id: string;
   title: string;
-  text?: string; // Ensuring text property exists for compatibility
+  description?: string; // Adding the missing description field
   date: Date;
   completed: boolean;
   assignedTo?: string;
   crew?: string[];
   crewId?: string;
-  crewName?: string; // Adding crewName property
   startTime?: string;
   endTime?: string;
   location?: string;
   clientId?: string;
+  locationId?: string;
   clientLocationId?: string;
-  description?: string; // Ensuring description property exists
 }
 
 export interface Employee {
   id: string;
   name: string;
   position?: string;
-  role?: string;
   email?: string;
   phone?: string;
   crews?: string[];
-  avatarUrl?: string;
 }
 
 export interface Crew {
   id: string;
   name: string;
   members: string[];
+  lead?: string; // Adding this field to match usage in MockScheduleData
 }
 
 export interface Client {
@@ -40,12 +37,9 @@ export interface Client {
   email?: string;
   phone?: string;
   address?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
-  tags?: string[];
-  status?: 'active' | 'inactive' | 'pending';
-  active: boolean; // Adding the required active property
+  contactPerson?: string;
+  notes?: string;
+  active?: boolean;
 }
 
 export interface ClientLocation {
@@ -57,6 +51,7 @@ export interface ClientLocation {
   state?: string;
   zipCode?: string;
   isPrimary?: boolean;
+  notes?: string; // Adding this field to match usage in MockScheduleData
 }
 
 export interface TaskFormData {
@@ -68,7 +63,6 @@ export interface TaskFormData {
   location: string;
   clientId: string;
   clientLocationId: string;
-  description?: string;
 }
 
 export type LocationType = 'custom' | 'client';
@@ -88,4 +82,62 @@ export interface ScheduleFilter {
   type: FilterType;
   id?: string;
   name?: string;
+}
+
+// Enhanced DragDrop Types
+export type DraggableItemType = 'task' | 'employee' | 'crew' | 'client' | 'location';
+
+export interface DragItem {
+  id: string;
+  type: DraggableItemType;
+  sourceContainerId?: string;
+  data: any;
+}
+
+export interface DroppableConfig {
+  id: string;
+  acceptTypes: DraggableItemType[];
+  onDrop: (item: DragItem, dropData?: any) => void;
+}
+
+export interface DragStartEventData {
+  item: DragItem;
+  node: HTMLElement;
+  clientX: number;
+  clientY: number;
+}
+
+export interface DragEndEventData {
+  item: DragItem;
+  dropped: boolean;
+  dropTarget?: string;
+}
+
+// Add missing interfaces for files that are using them
+export interface DatabaseTable {
+  id: string;
+  name: string;
+  columns: { name: string; type: string }[];
+  rows: any[];
+  data?: any[];
+}
+
+export interface FileItem {
+  id: string;
+  name: string;
+  type: 'document' | 'spreadsheet' | 'folder';
+  content?: string;
+  spreadsheetData?: {
+    headers: string[];
+    rows: Record<string, any>[];
+  };
+  children?: FileItem[];
+}
+
+export interface Branding {
+  companyName: string;
+  logoType?: 'default' | 'text' | 'image';
+  logoUrl?: string;
+  primaryColor?: string;
+  accentColor?: string;
 }

@@ -1,305 +1,211 @@
 
-import React, { useState, memo, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { CalendarIcon, List, FileUp } from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-// Import hooks
-import { useScheduleTasks } from './hooks/useScheduleTasks';
-import { useTaskDialogs } from './hooks/useTaskDialogs';
-import { useScheduleFiltering } from './hooks/useScheduleFiltering';
-import { useDragDrop } from './hooks/useDragDrop';
-import { useScheduleDownload } from './hooks/useScheduleDownload';
-
-// Import components
-import TaskCalendarView from './TaskCalendarView';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Calendar as CalendarIcon, Users, User, Building2 } from 'lucide-react';
+import { Task, Crew, Employee, Client, ClientLocation, ScheduleFilter } from './ScheduleTypes';
+import TaskCalendarView from './calendar/TaskCalendarView';
 import TaskListView from './TaskListView';
-import TeamEventDialog from './TeamEventDialog';
-import TaskEditDialog from './TaskEditDialog';
+import TaskEditDialog from './taskEdit/TaskEditDialog';
+import { generateMockTasks, generateMockEmployees, generateMockCrews, generateMockClients, generateMockClientLocations } from './MockScheduleData';
 import ScheduleFilterBar from './ScheduleFilterBar';
-import UploadAnalyzeSection from './UploadAnalyzeSection';
-import ScheduleHeader from './components/ScheduleHeader';
-import ScheduleGuide from './components/ScheduleGuide';
-import ClientVisitDialog from './ClientVisitDialog';
+import { useAppContext } from '@/context/AppContext';
 
-// Memoize dialogs to prevent unnecessary re-renders
-const MemoizedTeamEventDialog = memo(TeamEventDialog);
-const MemoizedTaskEditDialog = memo(TaskEditDialog);
-const MemoizedClientVisitDialog = memo(ClientVisitDialog);
-const MemoizedTaskCalendarView = memo(TaskCalendarView);
-const MemoizedTaskListView = memo(TaskListView);
-
-const ScheduleView = () => {
-  // State for client visit dialog
-  const [clientVisitDialogOpen, setClientVisitDialogOpen] = useState(false);
-  const [droppedClientId, setDroppedClientId] = useState<string | null>(null);
-
-  // Use custom hooks
-  const {
-    selectedDate,
-    setSelectedDate,
-    tasks,
-    setTasks,
-    handleToggleTaskCompletion,
-    handleMoveTask,
-    handleSaveTaskChanges,
-    handleApplyScheduleData,
-    employees,
-    crews,
-    clients,
-    clientLocations
-  } = useScheduleTasks();
+const ScheduleView: React.FC = () => {
+  // State for tasks and related data
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [crews, setCrews] = useState<Crew[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [clientLocations, setClientLocations] = useState<ClientLocation[]>([]);
   
-  const {
-    currentFilter,
-    getFilteredTasks,
-    handleFilterChange
-  } = useScheduleFiltering();
+  // Get global calendar date from AppContext
+  const { calendarDate, setCalendarDate } = useAppContext();
   
-  const {
-    currentEditTask,
-    setCurrentEditTask,
-    isEditDialogOpen,
-    setIsEditDialogOpen,
-    isTaskDialogOpen,
-    setIsTaskDialogOpen,
-    teamEventDialogOpen,
-    setTeamEventDialogOpen,
-    droppedCrewId,
-    setDroppedCrewId,
-    assignmentType,
-    setAssignmentType,
-    locationType,
-    setLocationType,
-    formData,
-    setFormData,
-    resetFormData,
-    handleAddTask,
-    handleCreateClientTask,
-    handleOpenAddTaskDialog,
-    handleOpenCrewVisitDialog,
-    handleEditTask,
-    handleCreateTeamEvent
-  } = useTaskDialogs({
-    tasks,
-    setTasks,
-    selectedDate
+  // UI state
+  const [selectedDate, setSelectedDate] = useState<Date>(calendarDate || new Date());
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<ScheduleFilter>({ type: 'all' });
+
+  // Sync with global calendar date
+  useEffect(() => {
+    if (calendarDate) {
+      setSelectedDate(calendarDate);
+    }
+  }, [calendarDate]);
+  
+  // Update global state when local date changes
+  useEffect(() => {
+    setCalendarDate(selectedDate);
+  }, [selectedDate, setCalendarDate]);
+  
+  // Load mock data
+  useEffect(() => {
+    const mockEmployees = generateMockEmployees();
+    const mockCrews = generateMockCrews(mockEmployees);
+    const mockClients = generateMockClients();
+    const mockClientLocations = generateMockClientLocations(mockClients);
+    const mockTasks = generateMockTasks(mockEmployees, mockCrews, mockClients, mockClientLocations);
+    
+    setEmployees(mockEmployees);
+    setCrews(mockCrews);
+    setClients(mockClients);
+    setClientLocations(mockClientLocations);
+    setTasks(mockTasks);
+  }, []);
+
+  // Filter tasks based on active filter
+  const filteredTasks = tasks.filter(task => {
+    if (activeFilter.type === 'all') return true;
+    if (activeFilter.type === 'employee' && activeFilter.id) {
+      return task.assignedTo === activeFilter.id;
+    }
+    if (activeFilter.type === 'crew' && activeFilter.id) {
+      return task.crewId === activeFilter.id;
+    }
+    if (activeFilter.type === 'client' && activeFilter.id) {
+      return task.clientId === activeFilter.id;
+    }
+    return true;
   });
-  
-  const {
-    handleDragOver,
-    handleDragLeave,
-    handleDrop
-  } = useDragDrop({
-    tasks,
-    setTasks,
-    selectedDate,
-    setFormData,
-    formData,
-    setDroppedCrewId,
-    setDroppedClientId,
-    setAssignmentType,
-    setLocationType,
-    setTeamEventDialogOpen,
-    setClientVisitDialogOpen
-  });
-  
-  const {
-    handleDownloadTxt,
-    handleDownloadPdf
-  } = useScheduleDownload(tasks, currentFilter);
 
-  // Handle creating a client visit task - wrapped in useCallback for stability
-  const handleCreateClientVisit = useCallback(() => {
-    handleCreateClientTask();
-    setClientVisitDialogOpen(false);
-    setDroppedClientId(null);
-  }, [handleCreateClientTask]);
-  
-  // Get filtered tasks
-  const filteredTasks = getFilteredTasks(tasks);
+  // Task actions
+  const handleToggleTaskCompletion = (taskId: string) => {
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId 
+          ? { ...task, completed: !task.completed } 
+          : task
+      )
+    );
+  };
 
-  // Memoized event handlers to prevent recreating functions on each render
-  const handleDateChange = useCallback((date: Date) => {
-    if (date) setSelectedDate(date);
-  }, [setSelectedDate]);
+  const handleMoveTask = (taskId: string, newDate: Date) => {
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId 
+          ? { ...task, date: newDate } 
+          : task
+      )
+    );
+  };
+
+  const handleEditTask = (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      setEditingTask(task);
+      setIsEditDialogOpen(true);
+    }
+  };
+
+  const handleSaveTaskChanges = (taskId: string, updatedData: Partial<Task>) => {
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId 
+          ? { ...task, ...updatedData } 
+          : task
+      )
+    );
+  };
+
+  const handleAddNewTask = () => {
+    // Create a new task template
+    const newTask: Task = {
+      id: `task-${Date.now()}`,
+      title: 'New Task',
+      date: selectedDate,
+      completed: false,
+      startTime: '09:00',
+      endTime: '10:00'
+    };
+    
+    // Add to tasks and open editor
+    setTasks(prevTasks => [...prevTasks, newTask]);
+    setEditingTask(newTask);
+    setIsEditDialogOpen(true);
+  };
+
+  // Handle date change (sync with global date)
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+      setCalendarDate(date);
+    }
+  };
 
   return (
-    <div 
-      className="p-4 schedule-drop-zone transition-colors duration-300 rounded-lg" 
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      style={{ willChange: 'transform', transform: 'translateZ(0)' }}
-    >
-      {/* Header with action buttons */}
-      <ScheduleHeader
-        onDownloadPdf={handleDownloadPdf}
-        onDownloadTxt={handleDownloadTxt}
-        onAddIndividualTask={() => handleOpenAddTaskDialog('individual')}
-        onAddCrewTask={() => handleOpenAddTaskDialog('crew')}
-        onAddClientVisit={handleOpenCrewVisitDialog}
-      />
-      
-      {/* Filter bar */}
-      <ScheduleFilterBar
-        employees={employees}
-        crews={crews}
-        clients={clients}
-        currentFilter={currentFilter}
-        onFilterChange={handleFilterChange}
-        onDownloadPdf={handleDownloadPdf}
-        onDownloadTxt={handleDownloadTxt}
-      />
-      
-      {/* Show a message when filtered schedule is empty */}
-      {filteredTasks.length === 0 && currentFilter.type !== 'all' && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
-          <h3 className="text-blue-800 dark:text-blue-300 font-medium">No tasks found</h3>
-          <p className="text-blue-600 dark:text-blue-400 mt-1">
-            There are no tasks scheduled for the selected {currentFilter.type}
-            {currentFilter.name ? `: ${currentFilter.name}` : ''}
-          </p>
-        </div>
-      )}
-      
-      <Tabs defaultValue="calendar" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="calendar" className="gap-2">
-            <CalendarIcon className="h-4 w-4" />
-            Calendar View
-          </TabsTrigger>
-          <TabsTrigger value="list" className="gap-2">
-            <List className="h-4 w-4" />
-            List View
-          </TabsTrigger>
-        </TabsList>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold tracking-tight">Schedule</h1>
         
-        <TabsContent value="calendar" className="mt-0">
-          <MemoizedTaskCalendarView
+        <ScheduleFilterBar 
+          employees={employees}
+          crews={crews}
+          clients={clients}
+          currentFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+        />
+      </div>
+      
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'calendar' | 'list')} className="space-y-4">
+        <div className="flex justify-between items-center">
+          <TabsList>
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4" />
+              Calendar View
+            </TabsTrigger>
+            <TabsTrigger value="list" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              List View
+            </TabsTrigger>
+          </TabsList>
+          
+          <div className="text-sm text-muted-foreground">
+            {activeFilter.type !== 'all' && (
+              <span className="flex items-center gap-1.5">
+                {activeFilter.type === 'employee' && <User className="h-3.5 w-3.5" />}
+                {activeFilter.type === 'crew' && <Users className="h-3.5 w-3.5" />}
+                {activeFilter.type === 'client' && <Building2 className="h-3.5 w-3.5" />}
+                Filtered by {activeFilter.type}: {activeFilter.name}
+              </span>
+            )}
+          </div>
+        </div>
+        
+        <TabsContent value="calendar" className="m-0">
+          <TaskCalendarView 
             tasks={filteredTasks}
             selectedDate={selectedDate}
             onSelectDate={handleDateChange}
             onToggleTaskCompletion={handleToggleTaskCompletion}
             crews={crews}
-            onAddNewTask={handleOpenAddTaskDialog}
+            onAddNewTask={handleAddNewTask}
             onMoveTask={handleMoveTask}
             onEditTask={handleEditTask}
           />
         </TabsContent>
         
-        <TabsContent value="list" className="mt-0">
-          <MemoizedTaskListView
+        <TabsContent value="list" className="m-0">
+          <TaskListView 
             tasks={filteredTasks}
             onToggleTaskCompletion={handleToggleTaskCompletion}
+            onEditTask={handleEditTask}
             crews={crews}
             clients={clients}
             clientLocations={clientLocations}
-            onEditTask={handleEditTask}
           />
         </TabsContent>
       </Tabs>
-
-      {/* Upload and Analyze Section */}
-      <div className="mt-8 border border-border rounded-lg p-6 bg-card">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/30">
-            <FileUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-          </div>
-          <h2 className="text-xl font-semibold">Upload & Analyze Schedule</h2>
-        </div>
-        
-        <UploadAnalyzeSection 
-          onApplyScheduleData={handleApplyScheduleData}
-          selectedDate={selectedDate}
-        />
-      </div>
-
-      {/* Scheduling Guide */}
-      <ScheduleGuide />
-
-      {/* Client Visit Dialog */}
-      <Dialog open={clientVisitDialogOpen} onOpenChange={setClientVisitDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Schedule Client Visit</DialogTitle>
-          </DialogHeader>
-          <MemoizedClientVisitDialog
-            open={clientVisitDialogOpen}
-            onOpenChange={setClientVisitDialogOpen}
-            onCreateVisit={handleCreateClientVisit}
-            formData={formData}
-            setFormData={setFormData}
-            selectedDate={selectedDate}
-            crews={crews}
-            clients={clients}
-            clientLocations={clientLocations}
-            droppedClientId={droppedClientId}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Team Event Dialog for dropped crews */}
-      <MemoizedTeamEventDialog 
-        open={teamEventDialogOpen}
-        onOpenChange={setTeamEventDialogOpen}
-        onCreateEvent={handleCreateTeamEvent}
-        formData={formData}
-        setFormData={setFormData}
-        assignmentType={assignmentType}
-        setAssignmentType={setAssignmentType}
-        locationType={locationType}
-        setLocationType={setLocationType}
-        selectedDate={selectedDate}
-        crews={crews}
-        employees={employees}
-        clients={clients}
-        clientLocations={clientLocations}
-      />
-
-      {/* Task Dialog */}
-      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {assignmentType === 'individual' 
-                ? 'Schedule Employee Task' 
-                : locationType === 'client' 
-                  ? 'Schedule Crew Client Visit' 
-                  : 'Schedule Crew Task'}
-            </DialogTitle>
-          </DialogHeader>
-          <MemoizedTeamEventDialog 
-            open={isTaskDialogOpen}
-            onOpenChange={setIsTaskDialogOpen}
-            onCreateEvent={handleAddTask}
-            formData={formData}
-            setFormData={setFormData}
-            assignmentType={assignmentType}
-            setAssignmentType={setAssignmentType}
-            locationType={locationType}
-            setLocationType={setLocationType}
-            selectedDate={selectedDate}
-            crews={crews}
-            employees={employees}
-            clients={clients}
-            clientLocations={clientLocations}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Task Edit Dialog */}
+      
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Task</DialogTitle>
-          </DialogHeader>
-          <MemoizedTaskEditDialog
+        <DialogContent className="sm:max-w-[500px]">
+          <TaskEditDialog
             open={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
             onSaveChanges={handleSaveTaskChanges}
-            task={currentEditTask}
+            task={editingTask}
             crews={crews}
             employees={employees}
             clients={clients}

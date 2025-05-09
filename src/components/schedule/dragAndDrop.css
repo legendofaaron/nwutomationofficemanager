@@ -1,101 +1,262 @@
 
-/* Drag and drop styling */
+/* Drag and Drop Styling */
+
+/* Base drag styling */
+[draggable=true] {
+  cursor: grab;
+  user-select: none;
+}
+
+[draggable=true]:active {
+  cursor: grabbing;
+}
+
+/* Drag overlay styling */
+.drag-overlay {
+  pointer-events: none;
+  z-index: 9999;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* Visual feedback for draggable items */
 .dragging {
+  opacity: 0.6;
+  transform: scale(0.98);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  border-style: dashed !important;
+  transition: opacity 0.2s, transform 0.2s, border 0.2s, box-shadow 0.2s;
+}
+
+/* Valid drop target styling */
+.valid-drop-target {
+  outline: 2px solid transparent;
+  transition: outline 0.2s, background-color 0.2s;
+}
+
+.valid-drop-target.drag-over {
+  background-color: rgba(59, 130, 246, 0.15);
+  box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.5);
+  outline: 2px dashed rgba(59, 130, 246, 0.5);
+  transition: all 0.2s ease;
+}
+
+/* Invalid drop target styling */
+.invalid-drop-target.drag-over {
+  background-color: rgba(239, 68, 68, 0.1);
+  cursor: not-allowed;
+}
+
+/* Body styling during drag operations */
+body.dragging {
   cursor: grabbing !important;
 }
 
-.schedule-drop-zone {
-  transition: all 0.2s ease;
-  border: 2px solid transparent;
-  border-radius: 0.5rem;
+body.dragging * {
+  cursor: grabbing !important;
 }
 
-.schedule-drop-zone.drag-over {
-  border-color: hsl(var(--primary) / 0.5);
-  background-color: hsl(var(--primary) / 0.05);
+body.dragging .valid-drop-target {
+  cursor: copy !important;
 }
 
-.valid-drop-target {
-  position: relative;
+body.dragging .invalid-drop-target {
+  cursor: no-drop !important;
 }
 
-.valid-drop-target::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: 2px dashed hsl(var(--primary) / 0.4);
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 10;
+/* Task item hover effects */
+.task-item {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-/* Draggable item styling */
-[data-draggable-type="task"] {
+.task-item:hover:not(.completed):not(.dragging) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Calendar day styling */
+.calendar-day-cell {
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.calendar-day-cell.valid-drop-target:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.calendar-day-cell.selected-day {
+  background-color: rgba(59, 130, 246, 0.1);
+  font-weight: 600;
+}
+
+/* Drag handle styling */
+.drag-handle {
   cursor: grab;
+  opacity: 0.7;
+  transition: opacity 0.2s;
 }
 
-[data-draggable-type="task"]:active {
-  cursor: grabbing;
+.drag-handle:hover {
+  opacity: 1;
 }
 
-[data-draggable-type="employee"] {
-  cursor: grab;
-}
-
-[data-draggable-type="employee"]:active {
-  cursor: grabbing;
-}
-
-[data-draggable-type="crew"] {
-  cursor: grab;
-}
-
-[data-draggable-type="crew"]:active {
-  cursor: grabbing;
-}
-
-[data-draggable-type="client"] {
-  cursor: grab;
-}
-
-[data-draggable-type="client"]:active {
-  cursor: grabbing;
-}
-
-/* Task drag preview */
-.task-drag-preview {
-  background-color: hsl(var(--primary) / 0.9);
-  color: white;
-  padding: 6px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  pointer-events: none;
-  max-width: 200px;
+/* Drag preview styles for different item types */
+.task-drag-preview,
+.employee-drag-preview,
+.crew-drag-preview,
+.default-drag-preview {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  max-width: 250px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  color: black;
+  border: 1px solid #e2e8f0;
 }
 
-/* Drop indicator animation */
-@keyframes pulse-border {
-  0% {
-    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.7);
+.dark .task-drag-preview,
+.dark .employee-drag-preview,
+.dark .crew-drag-preview,
+.dark .default-drag-preview {
+  background-color: #1e1e1e;
+  color: white;
+  border-color: #2d3748;
+}
+
+/* Smooth fade-in animation for empty state */
+.empty-day-container {
+  animation: fadeIn 0.3s ease-in-out;
+  transition: background-color 0.2s ease;
+}
+
+.empty-day-container:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+  cursor: pointer;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  70% {
-    box-shadow: 0 0 0 5px hsl(var(--primary) / 0);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  100% {
-    box-shadow: 0 0 0 0 hsl(var(--primary) / 0);
+}
+
+/* Animations during drag and drop */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
   }
 }
 
 .drag-pulse {
-  animation: pulse-border 1.5s infinite;
+  animation: pulse 1.5s infinite;
 }
 
-/* Calendar day cell highlight on dragover */
-.rdp-day[data-highlighted="true"] {
-  background-color: hsl(var(--primary) / 0.15);
-  border-radius: 50%;
+/* Highlight animation for drop area */
+@keyframes dropHighlight {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.drop-highlight {
+  animation: dropHighlight 1s ease-out;
+}
+
+/* Additional styles for the calendar to make it more appealing */
+:root {
+  --day-border-color: rgba(226, 232, 240, 0.8);
+  --day-border-color-hover: rgba(203, 213, 225, 1);
+}
+
+.dark {
+  --day-border-color: rgba(51, 65, 85, 0.5);
+  --day-border-color-hover: rgba(71, 85, 105, 0.8);
+}
+
+.rdp-cell {
+  border: 1px solid var(--day-border-color);
+  transition: border-color 0.2s ease;
+}
+
+.rdp-cell:hover {
+  border-color: var(--day-border-color-hover);
+}
+
+.rdp-day_today {
+  font-weight: 600;
+}
+
+/* Resizable handle styles */
+.react-resizable-handle {
+  position: absolute;
+  width: 10px;
+  height: 100%;
+  bottom: 0;
+  right: -5px;
+  cursor: col-resize;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.react-resizable:hover .react-resizable-handle {
+  opacity: 1;
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+body.resizing * {
+  user-select: none !important;
+}
+
+body.resizing .react-resizable-handle {
+  background-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Fix for the TaskCalendarView to ensure proper drag and drop behavior */
+.calendar-grid .calendar-day-cell {
+  position: relative;
+  min-height: 36px;
+  height: 100%;
+}
+
+.calendar-grid .rdp-cell {
+  position: relative;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .calendar-grid {
+    font-size: 0.875rem;
+  }
+  
+  .task-item {
+    padding: 0.75rem;
+  }
+  
+  .task-drag-preview,
+  .employee-drag-preview,
+  .crew-drag-preview,
+  .default-drag-preview {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
 }

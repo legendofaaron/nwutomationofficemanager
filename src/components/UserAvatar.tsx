@@ -23,7 +23,7 @@ export function UserAvatar({
   const { user } = useAuth();
   
   const getInitials = () => {
-    const fullName = user?.user_metadata?.full_name || user?.email || '';
+    const fullName = user?.user_metadata?.full_name || user?.user_metadata?.username || '';
     return fullName
       .split(' ')
       .map(name => name.charAt(0))
@@ -67,9 +67,9 @@ export function UserAvatar({
           {avatar}
         </TooltipTrigger>
         <TooltipContent>
-          <p>{user.user_metadata?.full_name || user.email}</p>
-          {user.email && (
-            <p className="text-xs text-muted-foreground">{user.email}</p>
+          <p>{user.user_metadata?.full_name || user.user_metadata?.username}</p>
+          {user.user_metadata?.username && (
+            <p className="text-xs text-muted-foreground">@{user.user_metadata?.username}</p>
           )}
         </TooltipContent>
       </Tooltip>

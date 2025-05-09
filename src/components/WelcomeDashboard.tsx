@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, MessageSquare, BookOpenText, Building2, LayoutDashboard, Sparkles } from 'lucide-react';
+import { ArrowRight, MessageSquare, BookOpenText, Building2, Heart, Coffee, Sparkles, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
@@ -49,6 +49,14 @@ const WelcomeDashboard = () => {
     : isDark
       ? 'border-blue-900/50 bg-[#111827] hover:bg-[#1e293b] text-white'
       : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700';
+      
+  const handleTipMe = () => {
+    window.open('https://paypal.me/aaronthelegend', '_blank');
+  };
+
+  const handleEmailDeveloper = () => {
+    window.location.href = 'mailto:northwesternautomation@gmail.com?subject=Office%20Manager%20Source%20Code%20Request&body=I%20would%20like%20to%20request%20the%20source%20code%20for%20Office%20Manager.';
+  };
 
   return (
     <ScrollArea className="h-full">
@@ -181,6 +189,35 @@ const WelcomeDashboard = () => {
         <p className="text-center text-xs md:text-sm text-gray-500 dark:text-gray-400 animate-fade-in mt-8" style={{animationDelay: '600ms'}}>
           Select a feature from the sidebar or use the Intelligent Assistant to get started
         </p>
+        
+        {/* Contact for Source Code and Tip Developer Section */}
+        <div className="mt-12 text-center animate-fade-in" style={{animationDelay: '700ms'}}>
+          <Card className={`max-w-xl mx-auto ${cardBgClass} border-t-4 border-t-amber-500`}>
+            <CardContent className="pt-6 pb-4">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Mail className="h-5 w-5 text-amber-500" />
+                <h3 className="text-lg font-medium">Contact for Source Code</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 max-w-lg mx-auto">
+                Enjoying Office Manager? Contact the developer directly to request the complete source code.
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Button 
+                  onClick={handleEmailDeveloper} 
+                  className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                >
+                  <Mail className="h-4 w-4" /> Email for Source Code
+                </Button>
+                <Button 
+                  onClick={handleTipMe}
+                  className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white gap-2"
+                >
+                  <Heart className="h-4 w-4" fill="currentColor" /> Tip Developer on PayPal
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </ScrollArea>
   );

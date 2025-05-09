@@ -7,50 +7,54 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Task } from '@/components/schedule/ScheduleTypes';
-import { downloadScheduleAsPdf, downloadScheduleAsTxt, filterTasksByDateRange } from '@/utils/downloadUtils';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Crew, Task } from './ScheduleTypes';
+import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
 import { toast } from 'sonner';
-
-interface Crew {
-  id: string;
-  name: string;
-  members: string[];
-}
 
 interface CrewScheduleDownloadProps {
   crews: Crew[];
-  tasks: Task[];
+  tasks?: Task[];
+  selectedCrewId?: string | null;
+  onClose?: () => void;
 }
 
-const CrewScheduleDownload = ({ crews, tasks }: CrewScheduleDownloadProps) => {
-  const [selectedCrewId, setSelectedCrewId] = useState<string>("");
+const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: CrewScheduleDownloadProps) => {
   const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(),
-    to: new Date(new Date().setMonth(new Date().getMonth() + 1)), // Default to one month ahead
+    to: undefined,
   });
-
-  // Get the selected crew
-  const selectedCrew = crews.find(crew => crew.id === selectedCrewId);
-
-  // Filter tasks for the selected crew and within selected date range
+  
+  const [selectedCrew, setSelectedCrew] = useState<string | null>(selectedCrewId || null);
+  
+  // Filter tasks for selected crew and within selected date range
   const getFilteredTasks = (): Task[] => {
-    if (!selectedCrewId || !date?.from) return [];
-    console.log("Filtering tasks for crew:", selectedCrewId);
+    if (!date?.from || !selectedCrew) return [];
     
     return tasks.filter(task => {
       // Check if task is assigned to this crew
-      const isAssignedToCrew = task.crewId === selectedCrewId ||
-                               (task.crew && task.crew.includes(selectedCrewId));
+      const isAssignedToCrew = task.crewId === selectedCrew;
       
       // Check if task date is within the selected range
-      const taskDate = task.date instanceof Date ? task.date : new Date(task.date);
+      const taskDate = new Date(task.date);
       const isInDateRange = date.from && taskDate >= date.from && 
                             (!date.to || taskDate <= date.to);
       
       return isAssignedToCrew && isInDateRange;
     });
+  };
+  
+  // Get crew name by ID
+  const getCrewNameById = (crewId: string): string => {
+    const crew = crews.find(c => c.id === crewId);
+    return crew ? crew.name : "Unknown Crew";
   };
 
   const handleDownloadPdf = () => {
@@ -60,20 +64,20 @@ const CrewScheduleDownload = ({ crews, tasks }: CrewScheduleDownloadProps) => {
     }
     
     const filteredTasks = getFilteredTasks();
-    console.log("Crew Schedule Download - PDF tasks:", filteredTasks.length);
     
     if (filteredTasks.length === 0) {
-      toast.error("No scheduled tasks for this crew in the selected date range");
+      toast.error("No scheduled tasks in the selected date range");
       return;
     }
     
     try {
       downloadScheduleAsPdf(filteredTasks, {
         type: 'crew',
-        id: selectedCrewId,
-        name: selectedCrew.name
+        id: selectedCrew,
+        name: getCrewNameById(selectedCrew)
       });
-      toast.success(`Schedule for ${selectedCrew.name} crew downloaded as PDF`);
+      toast.success(`Schedule for ${getCrewNameById(selectedCrew)} downloaded as PDF`);
+      if (onClose) onClose();
     } catch (error) {
       console.error("Error downloading PDF:", error);
       toast.error("Failed to download schedule as PDF");
@@ -87,20 +91,20 @@ const CrewScheduleDownload = ({ crews, tasks }: CrewScheduleDownloadProps) => {
     }
     
     const filteredTasks = getFilteredTasks();
-    console.log("Crew Schedule Download - TXT tasks:", filteredTasks.length);
     
     if (filteredTasks.length === 0) {
-      toast.error("No scheduled tasks for this crew in the selected date range");
+      toast.error("No scheduled tasks in the selected date range");
       return;
     }
     
     try {
       downloadScheduleAsTxt(filteredTasks, {
         type: 'crew',
-        id: selectedCrewId,
-        name: selectedCrew.name
+        id: selectedCrew,
+        name: getCrewNameById(selectedCrew)
       });
-      toast.success(`Schedule for ${selectedCrew.name} crew downloaded as TXT`);
+      toast.success(`Schedule for ${getCrewNameById(selectedCrew)} downloaded as TXT`);
+      if (onClose) onClose();
     } catch (error) {
       console.error("Error downloading TXT:", error);
       toast.error("Failed to download schedule as TXT");
@@ -110,17 +114,21 @@ const CrewScheduleDownload = ({ crews, tasks }: CrewScheduleDownloadProps) => {
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-medium">Crew Schedule Download</CardTitle>
+        <CardTitle className="text-base font-medium">Download Crew Schedule</CardTitle>
         <CardDescription>
-          Download schedule for a specific crew and date range
+          Download a crew's schedule for a specific date range
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4">
-          <div className="flex flex-col">
-            <Select value={selectedCrewId} onValueChange={setSelectedCrewId}>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Select Crew</label>
+            <Select 
+              value={selectedCrew || ''} 
+              onValueChange={(value) => setSelectedCrew(value)}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Select a crew" />
+                <SelectValue placeholder="Choose a crew" />
               </SelectTrigger>
               <SelectContent>
                 {crews.map(crew => (
@@ -132,7 +140,8 @@ const CrewScheduleDownload = ({ crews, tasks }: CrewScheduleDownloadProps) => {
             </Select>
           </div>
           
-          <div className="flex flex-col">
+          <div>
+            <label className="text-sm font-medium mb-1 block">Select Date Range</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -177,7 +186,7 @@ const CrewScheduleDownload = ({ crews, tasks }: CrewScheduleDownloadProps) => {
           variant="outline" 
           className="w-full gap-2" 
           onClick={handleDownloadTxt}
-          disabled={!selectedCrewId || !date?.from}
+          disabled={!selectedCrew || !date?.from}
         >
           <FileText className="h-4 w-4" />
           Download as TXT
@@ -185,7 +194,7 @@ const CrewScheduleDownload = ({ crews, tasks }: CrewScheduleDownloadProps) => {
         <Button 
           className="w-full gap-2 ml-2" 
           onClick={handleDownloadPdf}
-          disabled={!selectedCrewId || !date?.from}
+          disabled={!selectedCrew || !date?.from}
         >
           <FileDown className="h-4 w-4" />
           Download as PDF

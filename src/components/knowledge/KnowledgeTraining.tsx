@@ -7,12 +7,14 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Brain } from 'lucide-react';
 import { KnowledgeItem } from './types';
+import { usePremiumFeature } from '@/hooks/usePremiumFeature';
 
 interface KnowledgeTrainingProps {
   knowledgeItems: KnowledgeItem[];
   trainingProgress: number;
   isTraining: boolean;
   onStartTraining: () => void;
+  isPremium?: boolean;
 }
 
 export const KnowledgeTraining: React.FC<KnowledgeTrainingProps> = ({
@@ -21,9 +23,16 @@ export const KnowledgeTraining: React.FC<KnowledgeTrainingProps> = ({
   isTraining,
   onStartTraining
 }) => {
+  const { checkAccess, PremiumFeatureGate } = usePremiumFeature();
+
+  const handleTraining = () => {
+    // Since all features are free, we just call the training function directly
+    onStartTraining();
+  };
+
   return (
     <Card className="h-full overflow-hidden">
-      <CardHeader>
+      <CardHeader className="relative">
         <CardTitle className="flex items-center">
           <Brain className="mr-2 h-5 w-5 text-primary" />
           AI Training
@@ -68,7 +77,7 @@ export const KnowledgeTraining: React.FC<KnowledgeTrainingProps> = ({
                 <Button
                   className="w-full"
                   disabled={knowledgeItems.length === 0 || isTraining}
-                  onClick={onStartTraining}
+                  onClick={handleTraining}
                 >
                   <Brain className="h-4 w-4 mr-2" />
                   {isTraining ? "Training..." : trainingProgress === 100 ? "Retrain Model" : "Start Training"}
@@ -78,6 +87,7 @@ export const KnowledgeTraining: React.FC<KnowledgeTrainingProps> = ({
           </div>
         </ScrollArea>
       </CardContent>
+      <PremiumFeatureGate />
     </Card>
   );
 };

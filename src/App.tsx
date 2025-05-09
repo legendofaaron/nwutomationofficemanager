@@ -12,6 +12,7 @@ import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Production from './pages/Production';
+import Payment from './pages/Payment';
 import { LoadingScreen } from './components/LoadingScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -19,6 +20,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 // Protected route component with enhanced security
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, isLoading, isDemoMode } = useAuth();
+  const location = useLocation();
   
   if (isLoading) {
     return <LoadingScreen />;
@@ -46,12 +48,6 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppRoutes = () => {
-  const { isLoading } = useAuth();
-  
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
   return (
     <ErrorBoundary>
       <Routes>
@@ -60,6 +56,7 @@ const AppRoutes = () => {
         <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
         <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
         <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
+        <Route path="/payment" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
         
         {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><MainLayout /></ProtectedRoute>} />

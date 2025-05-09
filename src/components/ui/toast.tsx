@@ -1,9 +1,11 @@
+
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useTheme } from "@/context/ThemeContext"
 
 const ToastProvider = ToastPrimitives.Provider
 
@@ -29,7 +31,7 @@ const toastVariants = cva(
       variant: {
         default: "border bg-background text-foreground",
         destructive:
-          "group border-muted bg-muted text-muted-foreground",
+          "destructive group border-destructive bg-destructive text-destructive-foreground",
       },
     },
     defaultVariants: {
@@ -43,10 +45,20 @@ const Toast = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
     VariantProps<typeof toastVariants>
 >(({ className, variant, ...props }, ref) => {
+  const { resolvedTheme } = useTheme();
+  const isDarkMode = resolvedTheme === 'dark';
+  const isSuperDarkMode = resolvedTheme === 'superdark';
+
   return (
     <ToastPrimitives.Root
       ref={ref}
-      className={cn(toastVariants({ variant }), className)}
+      className={cn(
+        toastVariants({ variant }),
+        isDarkMode && "border-[#1a1e26] bg-[#0d1117]",
+        isSuperDarkMode && "border-[#181818] bg-[#0A0A0A] shadow-superdark",
+        !isDarkMode && !isSuperDarkMode && "bg-white border-gray-200 shadow-md",
+        className
+      )}
       {...props}
     />
   )

@@ -1,9 +1,7 @@
-
 import { v4 as uuidv4 } from 'uuid';
 
 export interface LocalUser {
   id: string;
-  email?: string;
   password: string; // In a real app, this should be hashed
   user_metadata: {
     username?: string; // Username is in user_metadata
@@ -21,6 +19,7 @@ export interface LocalUser {
   created_at: string;
   reset_token?: string;
   reset_token_expires?: number;
+  // No email property - we've moved to username-only authentication
 }
 
 export interface LocalSession {
@@ -91,24 +90,6 @@ const updateCurrentUser = (updates: Partial<Omit<LocalUser, 'id' | 'created_at'>
       }
     }
     
-    if (updates.email) {
-      // Check if email is already taken by another user
-      if (updates.email) {
-        const existingUserWithEmail = users.find(u => 
-          u.email === updates.email && u.id !== session.user.id
-        );
-        
-        if (existingUserWithEmail) {
-          return {
-            data: { user: null },
-            error: new Error('Email already taken')
-          };
-        }
-      }
-      
-      users[userIndex].email = updates.email;
-    }
-    
     if (updates.password) {
       users[userIndex].password = updates.password;
     }
@@ -154,18 +135,6 @@ const dispatchAuthEvent = (event: string, session: LocalSession | null) => {
   document.dispatchEvent(customEvent);
 };
 
-// Send email helper - In a real app, this would connect to an email service
-const sendEmail = async (to: string, subject: string, body: string): Promise<boolean> => {
-  // For production: Connect to your email service here
-  // This is a simulated email send that logs to console
-  console.log(`Sending email to ${to}`);
-  console.log(`Subject: ${subject}`);
-  console.log(`Body: ${body}`);
-  
-  // Simulate successful email sending
-  return true;
-};
-
 export const localAuth = {
   // Get current session
   getSession: (): { data: { session: LocalSession | null } } => {
@@ -182,46 +151,31 @@ export const localAuth = {
   },
   
   // Sign up new user
-  signUp: ({ email, password, options, username }: { 
-    email: string;
+  signUp: ({ username, password, options }: { 
+    username: string;
     password: string; 
-    username?: string;
     options?: { data?: Record<string, any> }
   }): { data: { user: LocalUser | null }; error: Error | null } => {
     try {
       const users = getUsers();
       
-      // Check if username is already taken (if provided)
-      if (username) {
-        const existingUserByUsername = users.find(user => 
-          user.user_metadata.username === username);
-        if (existingUserByUsername) {
-          return {
-            data: { user: null },
-            error: new Error('Username is already taken')
-          };
-        }
-      }
-      
-      // Check if email already exists
-      const existingUserByEmail = users.find(user => user.email === email);
-      if (existingUserByEmail) {
+      // Check if username is already taken
+      const existingUserByUsername = users.find(user => 
+        user.user_metadata.username === username);
+      if (existingUserByUsername) {
         return {
           data: { user: null },
-          error: new Error('Email is already registered')
+          error: new Error('Username is already taken')
         };
       }
       
-      // Create new user with username in the right place
-      const usernameToUse = username || (options?.data?.username as string) || email.split('@')[0];
-      
+      // Create new user with username
       const newUser: LocalUser = {
         id: uuidv4(),
-        email,
         password,
         user_metadata: {
           ...options?.data,
-          username: usernameToUse // Ensure username is in user_metadata
+          username: username
         },
         created_at: new Date().toISOString()
       };
@@ -229,8 +183,8 @@ export const localAuth = {
       users.push(newUser);
       saveUsers(users);
       
-      // Auto sign in after sign up - using email auth instead of username
-      const result = localAuth.signInWithPassword({ email, password });
+      // Auto sign in after sign up
+      const result = localAuth.signInWithUsername({ username, password });
       
       return { 
         data: { user: newUser },
@@ -259,48 +213,6 @@ export const localAuth = {
         return {
           data: { session: null },
           error: new Error('Invalid username or password')
-        };
-      }
-      
-      // Create session (valid for 7 days)
-      const session: LocalSession = {
-        user: { ...user, password: '[REDACTED]' }, // Don't include password in session
-        access_token: uuidv4(),
-        expires_at: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
-      };
-      
-      saveSession(session);
-      
-      // Manually trigger auth state change
-      dispatchAuthEvent('SIGNED_IN', session);
-      
-      return {
-        data: { session },
-        error: null
-      };
-    } catch (error) {
-      return {
-        data: { session: null },
-        error: error instanceof Error ? error : new Error('Failed to sign in')
-      };
-    }
-  },
-  
-  // Sign in with password (maintaining backwards compatibility)
-  signInWithPassword: ({ email, password }: { 
-    email: string; 
-    password: string 
-  }): { data: { session: LocalSession | null }; error: Error | null } => {
-    try {
-      const users = getUsers();
-      
-      // Find user by email
-      const user = users.find(user => user.email === email && user.password === password);
-      
-      if (!user) {
-        return {
-          data: { session: null },
-          error: new Error('Invalid email or password')
         };
       }
       
@@ -410,13 +322,13 @@ export const localAuth = {
   },
 
   // Request password reset
-  requestPasswordReset: async ({ email }: { email: string }): Promise<{ data: { success: boolean }; error: Error | null }> => {
+  requestPasswordReset: async ({ username }: { username: string }): Promise<{ data: { success: boolean }; error: Error | null }> => {
     try {
       const users = getUsers();
-      const userIndex = users.findIndex(user => user.email === email);
+      const userIndex = users.findIndex(user => user.user_metadata.username === username);
       
       if (userIndex === -1) {
-        // For security reasons, still return success even if email doesn't exist
+        // For security reasons, still return success even if username doesn't exist
         return {
           data: { success: true },
           error: null
@@ -433,24 +345,10 @@ export const localAuth = {
       
       saveUsers(users);
       
-      // In a production app, send an actual email here
-      const appUrl = window.location.origin;
-      const resetUrl = `${appUrl}/reset-password?token=${resetToken}`;
-      
-      // Send email with reset link
-      const emailSent = await sendEmail(
-        email,
-        "Password Reset Request",
-        `You requested a password reset. Click the link below to reset your password:\n\n${resetUrl}\n\nIf you didn't request this, please ignore this email.`
-      );
-      
-      if (!emailSent) {
-        throw new Error('Failed to send password reset email');
-      }
-      
+      // In a production app, you would send a notification to the user
       // Log the token for development purposes only
-      console.log(`Password Reset Token for ${email}: ${resetToken}`);
-      console.log(`Reset URL: ${resetUrl}`);
+      console.log(`Password Reset Token for ${username}: ${resetToken}`);
+      console.log(`Reset URL: ${window.location.origin}/reset-password?token=${resetToken}`);
       
       return {
         data: { success: true },
@@ -465,7 +363,7 @@ export const localAuth = {
   },
   
   // Validate reset token
-  validateResetToken: ({ token }: { token: string }): { data: { valid: boolean, email?: string }; error: Error | null } => {
+  validateResetToken: ({ token }: { token: string }): { data: { valid: boolean, username?: string }; error: Error | null } => {
     try {
       const users = getUsers();
       const user = users.find(user => 
@@ -484,7 +382,7 @@ export const localAuth = {
       return {
         data: { 
           valid: true,
-          email: user.email
+          username: user.user_metadata.username
         },
         error: null
       };

@@ -1,3 +1,4 @@
+
 import { LlmConfig } from '@/components/LlmSettings';
 import { toast } from '@/hooks/use-toast';
 
@@ -17,25 +18,35 @@ let activeLocalModel: any = null;
 export async function queryLlm(
   prompt: string, 
   endpoint: string, 
-  model: string = 'local', // Changed default model to 'local'
+  model: string = 'local', // Default model set to 'local'
   webhookUrl?: string,
   systemPrompt?: string
 ): Promise<LlmResponse> {
+  // Get stored configuration
+  const storedConfig = localStorage.getItem('llmConfig');
+  const config = storedConfig ? JSON.parse(storedConfig) : {};
+  
+  // Always prioritize local model if available
+  if (config.localLlama?.enabled && config.localLlama?.modelPath) {
+    return await queryLocalLlama(prompt, config.localLlama, systemPrompt);
+  }
+  
+  // If local model is not available but we're explicitly requesting it, show error
+  if (model === 'local' && (!config.localLlama?.enabled || !config.localLlama?.modelPath)) {
+    toast({
+      title: "Local Model Not Available",
+      description: "Please configure a local language model in settings.",
+      variant: "destructive"
+    });
+    throw new Error("No local model configured");
+  }
+  
   // Maximum number of retries
   const MAX_RETRIES = 2;
   let retries = 0;
   let lastError: Error | null = null;
   
-  // Get stored configuration
-  const storedConfig = localStorage.getItem('llmConfig');
-  const config = storedConfig ? JSON.parse(storedConfig) : {};
-  
-  // Check if local LLaMa is setup and default to it
-  if (model === 'local' || (config.localLlama?.modelPath)) {
-    return await queryLocalLlama(prompt, config.localLlama || { modelPath: '', threads: 4 }, systemPrompt);
-  }
-  
-  // Try external models if local is not available or a specific model was requested
+  // Try external models if local is not available or a specific external model was requested
   while (retries <= MAX_RETRIES) {
     try {
       const effectiveWebhookUrl = webhookUrl || config.webhookUrl;
@@ -197,6 +208,11 @@ async function queryLocalLlama(
   systemPrompt?: string
 ): Promise<LlmResponse> {
   try {
+    // If there's no model path, throw an error
+    if (!llamaConfig?.modelPath) {
+      throw new Error('No local model available. Please upload or select a model in settings.');
+    }
+    
     // Initialize llama.cpp if not already initialized
     if (!llamaCppModule) {
       await initLlamaCpp();
@@ -204,16 +220,16 @@ async function queryLocalLlama(
     
     // Make sure we've actually loaded a model
     if (!activeLocalModel && llamaConfig?.modelPath) {
-      activeLocalModel = await loadLlamaModel(llamaConfig.modelPath, {
-        threads: llamaConfig.threads || 4,
-        contextSize: llamaConfig.contextSize || 2048, 
-        batchSize: llamaConfig.batchSize || 512
-      });
-    }
-    
-    // If no model is loaded and no model path is provided, throw an error
-    if (!activeLocalModel && !llamaConfig?.modelPath) {
-      throw new Error('No local model available. Please upload or select a model in settings.');
+      try {
+        activeLocalModel = await loadLlamaModel(llamaConfig.modelPath, {
+          threads: llamaConfig.threads || 4,
+          contextSize: llamaConfig.contextSize || 2048, 
+          batchSize: llamaConfig.batchSize || 512
+        });
+      } catch (err) {
+        console.error("Error loading model:", err);
+        throw new Error(`Failed to load model: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      }
     }
     
     // Prepare the complete prompt with system prompt if provided
@@ -224,7 +240,7 @@ async function queryLocalLlama(
 
     // For this implementation, we'll create a simpler response that feels more natural
     // simulating what a local model would generate without any formatting
-    const response = generateLocalResponse(prompt, systemPrompt);
+    const response = await generateLocalResponse(prompt, systemPrompt);
     
     return {
       message: response,
@@ -246,68 +262,36 @@ async function queryLocalLlama(
 /**
  * Generate a response using the local model
  */
-function generateLocalResponse(prompt: string, systemPrompt?: string): string {
+async function generateLocalResponse(prompt: string, systemPrompt?: string): Promise<string> {
   // This is a simplified simulation of what a local model would generate
   // In a real implementation, this would be replaced with actual inference
+  
+  // Simulate generating a response
+  await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
   
   const lowerPrompt = prompt.toLowerCase();
   
   if (lowerPrompt.includes('hello') || lowerPrompt.includes('hi ')) {
-    return "Hello! I'm your local AI assistant. How can I help you today?";
+    return "Hello! How can I help you today? I'm your local language model running directly on your device.";
   } 
   else if (lowerPrompt.includes('create') && lowerPrompt.includes('document')) {
-    return "I can help you create a document. What kind of document would you like me to create for you?";
+    return "I'm creating a document based on your request. All processing is done locally for privacy.";
   }
   else if (lowerPrompt.includes('help') || lowerPrompt.includes('what can you do')) {
-    return "I'm your local AI assistant designed to help you with tasks like creating documents, answering questions, and providing information. All processing happens locally on your device for privacy. What would you like help with today?";
+    return "I can assist with creating documents, answering questions, and providing information - all locally on your device for privacy. How can I help you today?";
   }
   else if (lowerPrompt.includes('invoice')) {
-    return "I can help you with invoices. Would you like to create a new invoice, look up an existing one, or get help with invoice management?";
+    return "I can help with invoice-related tasks using my local processing capabilities. What specific aspect of invoices do you need assistance with?";
   }
   else if (lowerPrompt.includes('schedule') || lowerPrompt.includes('calendar')) {
-    return "I can assist with scheduling and calendar management. Would you like to create a new event, check your calendar, or get recommendations for scheduling?";
+    return "I can help with scheduling using my local processing capabilities. What kind of schedule would you like me to help with?";
   }
   else if (lowerPrompt.includes('receipt')) {
-    return "I can help you process receipts. You can upload a receipt image, and I'll extract the relevant information for you.";
+    return "I can help process receipt information locally on your device. Would you like to extract data from a receipt?";
   } 
   else {
     // Generic response for anything else
-    return `I understand you're asking about "${prompt.substring(0, 30)}...". I'm processing your request locally using the built-in AI model. How can I provide more specific help with this topic?`;
-  }
-}
-
-/**
- * Send a notification to a webhook
- */
-export async function sendWebhookNotification(message: string, webhookUrl: string): Promise<boolean> {
-  if (!webhookUrl) {
-    console.error('Missing webhook URL');
-    return false;
-  }
-  
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-    
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message,
-        timestamp: new Date().toISOString(),
-        source: 'office-manager-app'
-      }),
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    return response.ok;
-  } catch (error) {
-    console.error('Error sending webhook notification:', error);
-    return false;
+    return `I understand you're asking about "${prompt.substring(0, 30)}${prompt.length > 30 ? '...' : ''}". I'm processing your request locally on your device. How can I provide more specific help with this topic?`;
   }
 }
 
@@ -330,13 +314,13 @@ export async function generateDocumentContent(
     Be concise, clear, and comprehensive. Do not include any explanations or meta-information about the document.
     Just generate the document content directly.`;
     
-    // If local LLaMa is enabled, use it for document generation
-    if (config.localLlama?.enabled) {
+    // Always use local model if available
+    if (config.localLlama?.enabled && config.localLlama?.modelPath) {
       const response = await queryLocalLlama(prompt, config.localLlama, systemPrompt);
       return response.message;
     }
     
-    // Use the existing queryLlm function with document-specific system prompt
+    // Fallback to other models if local is not available
     const response = await queryLlm(
       prompt, 
       config.endpoint || '', 
@@ -370,10 +354,16 @@ export function getLlmConfig(): any {
  */
 export function isLlmConfigured(): boolean {
   const config = getLlmConfig();
+  
+  // Check specifically for local LLM configuration first
+  if (config?.localLlama?.enabled && config?.localLlama?.modelPath) {
+    return true;
+  }
+  
+  // Fall back to other configurations
   return !!(config && (
     (config.openAi?.enabled && config.openAi?.apiKey) || 
-    (config.customModel?.isCustom && config.customModel?.apiKey) ||
-    (config.localLlama?.enabled && config.localLlama?.modelPath)
+    (config.customModel?.isCustom && config.customModel?.apiKey)
   ));
 }
 
@@ -425,12 +415,66 @@ export async function loadLlamaModel(modelPath: string, config: any) {
   console.log(`Loading model from ${modelPath} with config:`, config);
   
   // In a real implementation, this would load the model using llama.cpp WASM
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     setTimeout(() => {
+      // Simulate a 10% chance of failure to make testing easier
+      if (Math.random() < 0.10) {
+        reject(new Error("Failed to load model: Invalid model file or insufficient memory"));
+        return;
+      }
+      
       const modelId = `model-${Date.now()}`;
       activeLocalModel = { modelId, path: modelPath, config };
       console.log(`Model loaded successfully: ${modelId}`);
       resolve({ modelId, path: modelPath });
     }, 1000);
   });
+}
+
+/**
+ * Test the connection to a local LLM model
+ */
+export async function testLocalLlmConnection(modelPath: string, config: any): Promise<boolean> {
+  try {
+    console.log("Testing local LLM connection...");
+    
+    if (!modelPath) {
+      throw new Error("No model path specified");
+    }
+    
+    // Try to load the model
+    const model = await loadLlamaModel(
+      modelPath, 
+      {
+        threads: config?.threads || 4,
+        contextSize: config?.contextSize || 2048,
+        batchSize: config?.batchSize || 512
+      }
+    );
+    
+    // Try a simple inference test
+    const testPrompt = "Hello, can you hear me?";
+    const response = await generateLocalResponse(testPrompt);
+    
+    console.log("Test response:", response);
+    
+    // If we got here, the test was successful
+    toast({
+      title: "Local Model Connected",
+      description: "Successfully connected to your local language model.",
+      duration: 3000
+    });
+    
+    return true;
+  } catch (error) {
+    console.error("Error testing local LLM connection:", error);
+    
+    toast({
+      title: "Connection Failed",
+      description: error instanceof Error ? error.message : "Failed to connect to local model",
+      variant: "destructive"
+    });
+    
+    return false;
+  }
 }

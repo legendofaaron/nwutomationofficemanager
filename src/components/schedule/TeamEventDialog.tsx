@@ -9,8 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarIcon, Clock, MapPin, User, Users, X, Building2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { TaskFormData, Crew, Employee, Client, ClientLocation, LocationType, AssignmentType } from './ScheduleTypes';
-import { parseClientLocationValue, getCrewMemberNames, getClientLocationInfo } from './ScheduleHelpers';
-import { getEmployeeOptions, getCrewOptions, getClientLocationCombinedOptions } from './ScheduleHelperComponents';
+import { getEmployeeOptions, getCrewOptions, getClientLocationOptions, parseClientLocationValue, getCrewMemberNames, getClientLocationInfo } from './ScheduleHelpers';
 
 interface TeamEventDialogProps {
   open: boolean;
@@ -159,7 +158,7 @@ const TeamEventDialog: React.FC<TeamEventDialogProps> = ({
                       <SelectValue placeholder="Select client location" />
                     </SelectTrigger>
                     <SelectContent className="dark:bg-[#1D1D1D] dark:border-gray-700">
-                      {getClientLocationCombinedOptions(clients, clientLocations)}
+                      {getClientLocationOptions(clients, clientLocations)}
                     </SelectContent>
                   </Select>
                   
@@ -217,36 +216,66 @@ const TeamEventDialog: React.FC<TeamEventDialogProps> = ({
               <div className="space-y-2">
                 <Label className="text-base" htmlFor="employee">Assign To</Label>
                 <Select
-                  value={formData.assignedTo}
-                  onValueChange={(value) => setFormData({ ...formData, assignedTo: value })}
+                  value={formData.assignedTo || ""}
+                  onValueChange={(value) => setFormData({ ...formData, assignedTo: value, assignedCrew: '' })}
                 >
-                  <SelectTrigger className="h-11 dark:bg-[#1E1E1E] dark:border-gray-700 dark:text-white rounded-lg">
+                  <SelectTrigger id="employee" className="h-11 dark:bg-[#1E1E1E] dark:border-gray-700 dark:text-white rounded-lg">
                     <SelectValue placeholder="Select employee" />
                   </SelectTrigger>
-                  <SelectContent className="dark:bg-[#1D1D1D] dark:border-gray-700">
-                    {getEmployeeOptions(employees)}
+                  <SelectContent className="dark:bg-[#1D1D1D] dark:border-gray-700 max-h-[300px] overflow-y-auto">
+                    {employees.map(employee => (
+                      <SelectItem key={employee.id} value={employee.name}>
+                        {employee.name} {employee.position ? `- ${employee.position}` : ''}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                
+                {formData.assignedTo && (
+                  <div className="mt-2 text-sm bg-muted/30 dark:bg-[#1A1A1A] p-3 rounded-md">
+                    <div className="font-medium text-foreground dark:text-gray-100">
+                      Task will be assigned to {formData.assignedTo}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-2">
                 <Label className="text-base" htmlFor="crew">Assign To Crew</Label>
                 <Select
-                  value={formData.assignedCrew}
-                  onValueChange={(value) => setFormData({ ...formData, assignedCrew: value })}
+                  value={formData.assignedCrew || ""}
+                  onValueChange={(value) => setFormData({ ...formData, assignedCrew: value, assignedTo: '' })}
                 >
-                  <SelectTrigger className="h-11 dark:bg-[#1E1E1E] dark:border-gray-700 dark:text-white rounded-lg">
+                  <SelectTrigger id="crew" className="h-11 dark:bg-[#1E1E1E] dark:border-gray-700 dark:text-white rounded-lg">
                     <SelectValue placeholder="Select crew" />
                   </SelectTrigger>
-                  <SelectContent className="dark:bg-[#1D1D1D] dark:border-gray-700">
-                    {getCrewOptions(crews)}
+                  <SelectContent className="dark:bg-[#1D1D1D] dark:border-gray-700 max-h-[300px] overflow-y-auto">
+                    {crews.map(crew => (
+                      <SelectItem 
+                        key={crew.id} 
+                        value={crew.id}
+                        description={`${crew.members.length} members`}
+                      >
+                        {crew.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 
                 {formData.assignedCrew && (
                   <div className="mt-2 text-sm text-muted-foreground bg-muted/30 dark:bg-[#1A1A1A] p-3 rounded-md">
                     <div className="font-medium text-foreground dark:text-gray-100">Crew members:</div>
-                    <div className="mt-1">{getCrewMemberNames(formData.assignedCrew, crews, employees)}</div>
+                    <div className="mt-1">
+                      {(() => {
+                        const selectedCrew = crews.find(c => c.id === formData.assignedCrew);
+                        if (!selectedCrew) return "No members found";
+                        
+                        return selectedCrew.members.map(memberId => {
+                          const employee = employees.find(e => e.id === memberId);
+                          return employee ? employee.name : "";
+                        }).filter(Boolean).join(", ");
+                      })()}
+                    </div>
                   </div>
                 )}
               </div>
@@ -257,6 +286,7 @@ const TeamEventDialog: React.FC<TeamEventDialogProps> = ({
       
       <Button 
         onClick={onCreateEvent} 
+        disabled={!formData.title || (!formData.assignedTo && !formData.assignedCrew)}
         className="w-full mt-4 h-11 text-base"
       >
         Create Task

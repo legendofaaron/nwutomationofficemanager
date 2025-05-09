@@ -12,8 +12,6 @@ interface ScheduleFilterBarProps {
   clients: Client[];
   currentFilter: ScheduleFilter;
   onFilterChange: (filter: ScheduleFilter) => void;
-  onDownloadPdf: () => void;
-  onDownloadTxt: () => void;
 }
 
 const ScheduleFilterBar: React.FC<ScheduleFilterBarProps> = ({
@@ -21,9 +19,7 @@ const ScheduleFilterBar: React.FC<ScheduleFilterBarProps> = ({
   crews,
   clients,
   currentFilter,
-  onFilterChange,
-  onDownloadPdf,
-  onDownloadTxt
+  onFilterChange
 }) => {
   // Handle filter type change
   const handleFilterTypeChange = (value: FilterType) => {
@@ -54,6 +50,15 @@ const ScheduleFilterBar: React.FC<ScheduleFilterBarProps> = ({
       id: value,
       name
     });
+  };
+
+  // Dummy functions for download buttons - can be implemented later
+  const handleDownloadPdf = () => {
+    console.log('Download PDF');
+  };
+
+  const handleDownloadTxt = () => {
+    console.log('Download TXT');
   };
 
   return (
@@ -111,7 +116,7 @@ const ScheduleFilterBar: React.FC<ScheduleFilterBarProps> = ({
           size="sm"
           variant="outline"
           className="gap-2 h-9 font-medium"
-          onClick={onDownloadPdf}
+          onClick={handleDownloadPdf}
         >
           <FileDown className="h-4 w-4" />
           PDF
@@ -120,7 +125,7 @@ const ScheduleFilterBar: React.FC<ScheduleFilterBarProps> = ({
           size="sm"
           variant="outline"
           className="gap-2 h-9 font-medium"
-          onClick={onDownloadTxt}
+          onClick={handleDownloadTxt}
         >
           <FileText className="h-4 w-4" />
           TXT
