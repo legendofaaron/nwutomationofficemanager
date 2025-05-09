@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -264,6 +264,6 @@ const ClientsView = React.memo(() => {
       </div>
     </DragDropProvider>
   );
-};
+});
 
 export default ClientsView;
