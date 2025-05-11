@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker, CaptionProps as DayPickerCaptionProps } from "react-day-picker";
+import { DayPicker, CaptionProps as DayPickerCaptionProps, DayPickerSingleProps, DayClickEventHandler } from "react-day-picker";
 import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
@@ -90,16 +90,22 @@ function Calendar({
         props.mode === "single" && 
         isDateObject(props.selected) && 
         isDateObject(calendarDate) && 
-        props.selected.toDateString() !== calendarDate.toDateString() && 
-        props.onSelect) {
-      props.onSelect(calendarDate);
+        props.selected.toDateString() !== calendarDate.toDateString()) {
+      if (typeof props.onSelect === 'function') {
+        // Fixed: Cast to appropriate handler type and provide necessary parameters
+        const handler = props.onSelect as (date: Date | undefined, selectedDay: any, activeModifiers: any, e: any) => void;
+        handler(calendarDate, null, {}, null);
+      }
     }
   }, [calendarDate, props]);
 
   // Update global calendar date when this calendar's selected date changes
-  const handleSelect = React.useCallback((date: Date | undefined) => {
-    if (date && props.onSelect) {
-      props.onSelect(date);
+  const handleSelect = React.useCallback((date: Date | undefined, selectedDay: any, activeModifiers: any, e: any) => {
+    if (date) {
+      // Pass all required arguments to the original onSelect if it exists
+      if (props.onSelect && typeof props.onSelect === 'function') {
+        props.onSelect(date, selectedDay, activeModifiers, e);
+      }
       
       // Always update global calendar date for single mode calendars
       if (props.mode === "single" && isDateObject(date)) {
@@ -188,7 +194,7 @@ function Calendar({
         },
       }}
       selected={props.selected}
-      onSelect={handleSelect}
+      onSelect={(date, selectedDay, activeModifiers, e) => handleSelect(date as Date | undefined, selectedDay, activeModifiers, e)}
       {...props}
     />
   );
