@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { DayPicker, CaptionProps as DayPickerCaptionProps, SelectSingleEventHandler, SelectRangeEventHandler, SelectMultipleEventHandler, DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
@@ -28,8 +29,11 @@ function Calendar({
       if (typeof props.onSelect === 'function' && props.mode === "single") {
         // We know this is a single select handler in this case
         const handler = props.onSelect as SelectSingleEventHandler;
-        // Create proper day modifier objects according to the DayPicker API
-        handler(calendarDate, { selected: true, today: calendarDate.toDateString() === new Date().toDateString() }, {}, new MouseEvent('click') as React.MouseEvent);
+        // Create proper day modifiers object according to the DayPicker API
+        const isToday = calendarDate.toDateString() === new Date().toDateString();
+        // Use a proper React MouseEvent instead of converting a MouseEvent
+        const dummyEvent = { currentTarget: document.createElement('div') } as React.MouseEvent;
+        handler(calendarDate, { selected: isToday }, {}, dummyEvent);
       }
     }
   }, [calendarDate, props]);
