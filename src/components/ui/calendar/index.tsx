@@ -29,11 +29,41 @@ function Calendar({
       if (typeof props.onSelect === 'function' && props.mode === "single") {
         // We know this is a single select handler in this case
         const handler = props.onSelect as SelectSingleEventHandler;
-        // Create proper day modifiers object according to the DayPicker API
+        // Create a proper dummy React MouseEvent with all required properties
+        const dummyEvent = {
+          currentTarget: document.createElement('div'),
+          altKey: false,
+          button: 0,
+          buttons: 0,
+          clientX: 0,
+          clientY: 0,
+          ctrlKey: false,
+          metaKey: false,
+          movementX: 0,
+          movementY: 0,
+          screenX: 0,
+          screenY: 0,
+          shiftKey: false,
+          pageX: 0,
+          pageY: 0,
+          // Add other required properties
+          preventDefault: () => {},
+          stopPropagation: () => {},
+          nativeEvent: new MouseEvent('click'),
+          isDefaultPrevented: () => false,
+          isPropagationStopped: () => false,
+          persist: () => {},
+          // And other MouseEvent properties...
+        } as React.MouseEvent;
+        
+        // Pass the correct modifier format
         const isToday = calendarDate.toDateString() === new Date().toDateString();
-        // Use a proper React MouseEvent instead of converting a MouseEvent
-        const dummyEvent = { currentTarget: document.createElement('div') } as React.MouseEvent;
-        handler(calendarDate, { selected: isToday }, {}, dummyEvent);
+        const modifiers = { selected: true };
+        if (isToday) {
+          modifiers['today'] = true;
+        }
+        
+        handler(calendarDate, modifiers, {}, dummyEvent);
       }
     }
   }, [calendarDate, props]);
