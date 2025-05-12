@@ -29,9 +29,26 @@ function Calendar({
       if (typeof props.onSelect === 'function' && props.mode === "single") {
         // We know this is a single select handler in this case
         const handler = props.onSelect as SelectSingleEventHandler;
-        // Create a proper dummy React MouseEvent with all required properties
+        
+        // Create a properly typed React MouseEvent with required properties
+        const syntheticEvent = new MouseEvent('click') as unknown;
         const dummyEvent = {
+          target: document.createElement('div'),
           currentTarget: document.createElement('div'),
+          bubbles: false,
+          cancelable: true,
+          defaultPrevented: false,
+          eventPhase: 0,
+          isTrusted: true,
+          preventDefault: () => {},
+          isDefaultPrevented: () => false,
+          stopPropagation: () => {},
+          isPropagationStopped: () => false,
+          persist: () => {},
+          timeStamp: Date.now(),
+          type: 'click',
+          nativeEvent: new MouseEvent('click'),
+          getModifierState: () => false,
           altKey: false,
           button: 0,
           buttons: 0,
@@ -41,28 +58,24 @@ function Calendar({
           metaKey: false,
           movementX: 0,
           movementY: 0,
+          pageX: 0,
+          pageY: 0,
           screenX: 0,
           screenY: 0,
           shiftKey: false,
-          pageX: 0,
-          pageY: 0,
-          // Add other required properties
-          preventDefault: () => {},
-          stopPropagation: () => {},
-          nativeEvent: new MouseEvent('click'),
-          isDefaultPrevented: () => false,
-          isPropagationStopped: () => false,
-          persist: () => {},
-          // And other MouseEvent properties...
-        } as React.MouseEvent;
+          relatedTarget: null,
+          detail: 0,
+          view: window,
+          which: 1
+        } as unknown as React.MouseEvent<Element, MouseEvent>;
         
-        // Pass the correct modifier format
-        const isToday = calendarDate.toDateString() === new Date().toDateString();
+        // Create modifiers object in the correct format (selected should be a property of the modifiers object)
         const modifiers = { selected: true };
-        if (isToday) {
+        if (calendarDate.toDateString() === new Date().toDateString()) {
           modifiers['today'] = true;
         }
         
+        // Call handler with correct arguments
         handler(calendarDate, modifiers, {}, dummyEvent);
       }
     }
