@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker, CaptionProps as DayPickerCaptionProps, DayPickerSingleProps, DayClickEventHandler } from "react-day-picker";
+import { DayPicker, CaptionProps as DayPickerCaptionProps, DayClickEventHandler } from "react-day-picker";
 import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
@@ -9,7 +9,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { useTheme } from "@/context/ThemeContext";
 import { useAppContext } from "@/context/AppContext";
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker>;
+// Define our own type for DayPicker props that takes into account the onSelect handler
+interface CalendarProps extends Omit<React.ComponentProps<typeof DayPicker>, 'onSelect'> {
+  onSelect?: (date: Date | undefined, selectedDay: any, activeModifiers: any, e: any) => void;
+}
 
 // Helper function to generate crew letter codes
 export const getCrewLetterCode = (index: number): string => {
@@ -93,7 +96,7 @@ function Calendar({
         props.selected.toDateString() !== calendarDate.toDateString()) {
       if (typeof props.onSelect === 'function') {
         // Fixed: Cast to appropriate handler type and provide necessary parameters
-        const handler = props.onSelect as (date: Date | undefined, selectedDay: any, activeModifiers: any, e: any) => void;
+        const handler = props.onSelect;
         handler(calendarDate, null, {}, null);
       }
     }
@@ -103,10 +106,8 @@ function Calendar({
   const handleSelect = React.useCallback((date: Date | undefined, selectedDay: any, activeModifiers: any, e: any) => {
     if (date) {
       // Pass all required arguments to the original onSelect if it exists
-      if ('onSelect' in props && typeof props.onSelect === 'function') {
-        // Safely cast the handler and call it with all required arguments
-        const handler = props.onSelect as (date: Date | undefined, selectedDay: any, activeModifiers: any, e: any) => void;
-        handler(date, selectedDay, activeModifiers, e);
+      if (typeof props.onSelect === 'function') {
+        props.onSelect(date, selectedDay, activeModifiers, e);
       }
       
       // Always update global calendar date for single mode calendars
@@ -115,6 +116,31 @@ function Calendar({
       }
     }
   }, [props, setCalendarDate]);
+  
+  // Create a compatible onSelect handler for the DayPicker
+  const dayPickerOnSelectHandler = React.useCallback((
+    date: Date | Date[] | { from: Date; to?: Date } | undefined,
+    selectedDay: any,
+    activeModifiers: any,
+    e: any
+  ) => {
+    // Handle single date selection
+    if (date instanceof Date) {
+      handleSelect(date, selectedDay, activeModifiers, e);
+    } 
+    // Handle multiple date selection (array of dates)
+    else if (Array.isArray(date) && date.length > 0) {
+      handleSelect(date[0], selectedDay, activeModifiers, e);
+    } 
+    // Handle date range selection (object with from/to)
+    else if (date && typeof date === 'object' && 'from' in date) {
+      handleSelect(date.from, selectedDay, activeModifiers, e);
+    } 
+    // Handle undefined date (clearing selection)
+    else if (date === undefined) {
+      handleSelect(undefined, selectedDay, activeModifiers, e);
+    }
+  }, [handleSelect]);
   
   return (
     <DayPicker
@@ -196,25 +222,8 @@ function Calendar({
         },
       }}
       selected={props.selected}
-      // Type the onSelect handler correctly to avoid type mismatches
-      onSelect={(date, selectedDay, activeModifiers, e) => {
-        // Cast the date to the correct type before passing it to our handler
-        if (date instanceof Date || date === undefined) {
-          handleSelect(date, selectedDay, activeModifiers, e);
-        } else if (Array.isArray(date)) {
-          // Handle multiple dates if needed
-          const firstDate = date[0];
-          if (firstDate instanceof Date) {
-            handleSelect(firstDate, selectedDay, activeModifiers, e);
-          }
-        } else if (date && typeof date === 'object' && 'from' in date) {
-          // Handle range selection if needed
-          const fromDate = date.from;
-          if (fromDate instanceof Date) {
-            handleSelect(fromDate, selectedDay, activeModifiers, e);
-          }
-        }
-      }}
+      // Use our compatible handler that properly handles the different date formats
+      onSelect={dayPickerOnSelectHandler}
       {...props}
     />
   );
