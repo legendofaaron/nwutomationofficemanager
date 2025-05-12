@@ -103,8 +103,10 @@ function Calendar({
   const handleSelect = React.useCallback((date: Date | undefined, selectedDay: any, activeModifiers: any, e: any) => {
     if (date) {
       // Pass all required arguments to the original onSelect if it exists
-      if (props.onSelect && typeof props.onSelect === 'function') {
-        props.onSelect(date, selectedDay, activeModifiers, e);
+      if ('onSelect' in props && typeof props.onSelect === 'function') {
+        // Safely cast the handler and call it with all required arguments
+        const handler = props.onSelect as (date: Date | undefined, selectedDay: any, activeModifiers: any, e: any) => void;
+        handler(date, selectedDay, activeModifiers, e);
       }
       
       // Always update global calendar date for single mode calendars
@@ -194,7 +196,25 @@ function Calendar({
         },
       }}
       selected={props.selected}
-      onSelect={(date, selectedDay, activeModifiers, e) => handleSelect(date as Date | undefined, selectedDay, activeModifiers, e)}
+      // Type the onSelect handler correctly to avoid type mismatches
+      onSelect={(date, selectedDay, activeModifiers, e) => {
+        // Cast the date to the correct type before passing it to our handler
+        if (date instanceof Date || date === undefined) {
+          handleSelect(date, selectedDay, activeModifiers, e);
+        } else if (Array.isArray(date)) {
+          // Handle multiple dates if needed
+          const firstDate = date[0];
+          if (firstDate instanceof Date) {
+            handleSelect(firstDate, selectedDay, activeModifiers, e);
+          }
+        } else if (date && typeof date === 'object' && 'from' in date) {
+          // Handle range selection if needed
+          const fromDate = date.from;
+          if (fromDate instanceof Date) {
+            handleSelect(fromDate, selectedDay, activeModifiers, e);
+          }
+        }
+      }}
       {...props}
     />
   );
