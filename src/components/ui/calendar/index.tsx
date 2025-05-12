@@ -29,18 +29,18 @@ function Calendar({
         // We know this is a single select handler in this case
         const handler = props.onSelect as SelectSingleEventHandler;
         // Create proper day modifier objects according to the DayPicker API
-        handler(calendarDate, { selected: true, today: calendarDate.toDateString() === new Date().toDateString() }, e => {});
+        handler(calendarDate, { selected: true, today: calendarDate.toDateString() === new Date().toDateString() }, {}, new MouseEvent('click') as React.MouseEvent);
       }
     }
   }, [calendarDate, props]);
 
   // Update global calendar date when this calendar's selected date changes
-  const handleSingleSelect = React.useCallback<SelectSingleEventHandler>((day, modifiers, activeModifiers) => {
+  const handleSingleSelect = React.useCallback<SelectSingleEventHandler>((day, modifiers, activeModifiers, e) => {
     if (day) {
       // Pass the date to the original onSelect if it exists and is for single mode
       if (typeof props.onSelect === 'function' && props.mode === "single") {
         const handler = props.onSelect as SelectSingleEventHandler;
-        handler(day, modifiers, activeModifiers);
+        handler(day, modifiers, activeModifiers, e);
       }
       
       // Always update global calendar date for single mode calendars
@@ -51,18 +51,18 @@ function Calendar({
   }, [props, setCalendarDate]);
 
   // Pass-through handler for range selection
-  const handleRangeSelect = React.useCallback<SelectRangeEventHandler>((range, selectedDay, activeModifiers) => {
+  const handleRangeSelect = React.useCallback<SelectRangeEventHandler>((range, selectedDay, activeModifiers, e) => {
     if (typeof props.onSelect === 'function' && props.mode === "range") {
       const handler = props.onSelect as SelectRangeEventHandler;
-      handler(range, selectedDay, activeModifiers);
+      handler(range, selectedDay, activeModifiers, e);
     }
   }, [props]);
 
   // Pass-through handler for multiple selection
-  const handleMultipleSelect = React.useCallback<SelectMultipleEventHandler>((dates, selectedDay, activeModifiers) => {
+  const handleMultipleSelect = React.useCallback<SelectMultipleEventHandler>((dates, selectedDay, activeModifiers, e) => {
     if (typeof props.onSelect === 'function' && props.mode === "multiple") {
       const handler = props.onSelect as SelectMultipleEventHandler;
-      handler(dates, selectedDay, activeModifiers);
+      handler(dates, selectedDay, activeModifiers, e);
     }
   }, [props]);
   
@@ -82,7 +82,6 @@ function Calendar({
     showOutsideDays,
     className: cn("p-3 pointer-events-auto", className),
     classNames: {
-      // ... keep existing code (classNames property)
       months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
       month: "space-y-4",
       caption: "flex justify-center pt-1 relative items-center",
@@ -127,13 +126,10 @@ function Calendar({
       ...classNames,
     },
     components: {
-      // Fixed the type issue by properly handling the DayPickerCaptionProps
       Caption: ({ displayMonth }: DayPickerCaptionProps) => {
-        // Create handlers for previous/next month navigation
         const handlePrevious = () => {
           const prevMonth = new Date(displayMonth);
           prevMonth.setMonth(prevMonth.getMonth() - 1);
-          // Check if onMonthChange prop exists on the DayPicker
           if (props.onMonthChange) {
             props.onMonthChange(prevMonth);
           }
@@ -142,7 +138,6 @@ function Calendar({
         const handleNext = () => {
           const nextMonth = new Date(displayMonth);
           nextMonth.setMonth(nextMonth.getMonth() + 1);
-          // Check if onMonthChange prop exists on the DayPicker
           if (props.onMonthChange) {
             props.onMonthChange(nextMonth);
           }
