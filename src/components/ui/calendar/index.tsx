@@ -31,7 +31,6 @@ function Calendar({
         const handler = props.onSelect as SelectSingleEventHandler;
         
         // Create a properly typed React MouseEvent with required properties
-        const syntheticEvent = new MouseEvent('click') as unknown;
         const dummyEvent = {
           target: document.createElement('div'),
           currentTarget: document.createElement('div'),
@@ -69,14 +68,15 @@ function Calendar({
           which: 1
         } as unknown as React.MouseEvent<Element, MouseEvent>;
         
-        // Create modifiers object in the correct format (selected should be a property of the modifiers object)
-        const modifiers = { selected: true };
+        // Create modifiers object in the correct format
+        const modifiers = {};
+        const activeModifiers = { selected: true };
         if (calendarDate.toDateString() === new Date().toDateString()) {
-          modifiers['today'] = true;
+          activeModifiers['today'] = true;
         }
         
-        // Call handler with correct arguments
-        handler(calendarDate, modifiers, {}, dummyEvent);
+        // Call handler with the date object as first parameter, modifiers as second parameter
+        handler(calendarDate, activeModifiers, modifiers, dummyEvent);
       }
     }
   }, [calendarDate, props]);
