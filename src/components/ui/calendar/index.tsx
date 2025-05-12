@@ -66,17 +66,17 @@ function Calendar({
           detail: 0,
           view: window,
           which: 1
-        } as unknown as React.MouseEvent<Element, MouseEvent>;
+        } as React.MouseEvent<Element, MouseEvent>;
         
-        // Create modifiers object in the correct format
+        // Create modifiers objects correctly
         const modifiers = {};
         const activeModifiers = { selected: true };
         if (calendarDate.toDateString() === new Date().toDateString()) {
           activeModifiers['today'] = true;
         }
         
-        // Call handler with the date object as first parameter, modifiers as second parameter
-        handler(calendarDate, activeModifiers, modifiers, dummyEvent);
+        // Call handler with the correct parameters in the right order
+        handler(calendarDate, modifiers, activeModifiers, dummyEvent);
       }
     }
   }, [calendarDate, props]);
