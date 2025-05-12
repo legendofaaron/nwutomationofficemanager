@@ -1,5 +1,6 @@
 
 import { DayClickEventHandler, SelectSingleEventHandler, SelectRangeEventHandler, SelectMultipleEventHandler } from "react-day-picker";
+import { DayPicker } from "react-day-picker";
 
 // Define our own type for DayPicker props that takes into account the onSelect handler
 // for different selection modes

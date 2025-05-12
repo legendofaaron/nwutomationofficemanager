@@ -29,7 +29,10 @@ function Calendar({
       if (typeof props.onSelect === 'function' && props.mode === "single") {
         // We know this is a single select handler in this case
         const handler = props.onSelect as SelectSingleEventHandler;
-        handler(calendarDate, { disabled: false, outside: false, today: calendarDate.toDateString() === new Date().toDateString() }, { disabled: false, outside: false, today: calendarDate.toDateString() === new Date().toDateString() }, new MouseEvent('click'));
+        handler(calendarDate, 
+          { disabled: false, outside: false, today: calendarDate.toDateString() === new Date().toDateString() }, 
+          { selected: true }, 
+          new MouseEvent('click'));
       }
     }
   }, [calendarDate, props]);
@@ -156,7 +159,7 @@ function Calendar({
           );
         },
       }}
-      onSelect={dayPickerOnSelectHandler}
+      onSelect={dayPickerOnSelectHandler as any}
       {...props}
     />
   );
