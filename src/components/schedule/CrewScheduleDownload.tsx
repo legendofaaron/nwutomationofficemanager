@@ -111,6 +111,11 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
     }
   };
 
+  // Handle date range selection for the calendar
+  const handleDateRangeSelect = (range: DateRange | undefined) => {
+    setDate(range);
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
@@ -173,7 +178,7 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
                   mode="range"
                   defaultMonth={date?.from}
                   selected={date}
-                  onSelect={setDate}
+                  onSelect={handleDateRangeSelect}
                   numberOfMonths={2}
                 />
               </PopoverContent>

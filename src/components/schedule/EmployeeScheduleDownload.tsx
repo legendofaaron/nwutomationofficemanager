@@ -89,6 +89,11 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
     }
   };
 
+  // Handle date range selection for the calendar
+  const handleDateRangeSelect = (range: DateRange | undefined) => {
+    setDate(range);
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
@@ -131,7 +136,7 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
                   mode="range"
                   defaultMonth={date?.from}
                   selected={date}
-                  onSelect={setDate}
+                  onSelect={handleDateRangeSelect}
                   numberOfMonths={2}
                 />
               </PopoverContent>

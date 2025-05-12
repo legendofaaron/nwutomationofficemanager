@@ -1,7 +1,14 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker, CaptionProps as DayPickerCaptionProps, DayClickEventHandler } from "react-day-picker";
+import { 
+  DayPicker, 
+  CaptionProps as DayPickerCaptionProps, 
+  DayClickEventHandler,
+  SelectSingleEventHandler,
+  SelectRangeEventHandler,
+  SelectMultipleEventHandler
+} from "react-day-picker";
 import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
@@ -10,8 +17,9 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAppContext } from "@/context/AppContext";
 
 // Define our own type for DayPicker props that takes into account the onSelect handler
+// for different selection modes
 interface CalendarProps extends Omit<React.ComponentProps<typeof DayPicker>, 'onSelect'> {
-  onSelect?: (date: Date | undefined, selectedDay: any, activeModifiers: any, e: any) => void;
+  onSelect?: SelectSingleEventHandler | SelectRangeEventHandler | SelectMultipleEventHandler;
 }
 
 // Helper function to generate crew letter codes
@@ -94,53 +102,45 @@ function Calendar({
         isDateObject(props.selected) && 
         isDateObject(calendarDate) && 
         props.selected.toDateString() !== calendarDate.toDateString()) {
-      if (typeof props.onSelect === 'function') {
-        // Fixed: Cast to appropriate handler type and provide necessary parameters
-        const handler = props.onSelect;
-        handler(calendarDate, null, {}, null);
+      if (typeof props.onSelect === 'function' && props.mode === "single") {
+        // We know this is a single select handler in this case
+        const handler = props.onSelect as SelectSingleEventHandler;
+        handler(calendarDate, undefined, undefined);
       }
     }
   }, [calendarDate, props]);
 
   // Update global calendar date when this calendar's selected date changes
-  const handleSelect = React.useCallback((date: Date | undefined, selectedDay: any, activeModifiers: any, e: any) => {
+  const handleSingleSelect = React.useCallback<SelectSingleEventHandler>((date) => {
     if (date) {
-      // Pass all required arguments to the original onSelect if it exists
-      if (typeof props.onSelect === 'function') {
-        props.onSelect(date, selectedDay, activeModifiers, e);
+      // Pass the date to the original onSelect if it exists and is for single mode
+      if (typeof props.onSelect === 'function' && props.mode === "single") {
+        const handler = props.onSelect as SelectSingleEventHandler;
+        handler(date, undefined, undefined);
       }
       
       // Always update global calendar date for single mode calendars
-      if (props.mode === "single" && isDateObject(date)) {
+      if (props.mode === "single") {
         setCalendarDate(date);
       }
     }
   }, [props, setCalendarDate]);
-  
-  // Create a compatible onSelect handler for the DayPicker
-  const dayPickerOnSelectHandler = React.useCallback((
-    date: Date | Date[] | { from: Date; to?: Date } | undefined,
-    selectedDay: any,
-    activeModifiers: any,
-    e: any
-  ) => {
-    // Handle single date selection
-    if (date instanceof Date) {
-      handleSelect(date, selectedDay, activeModifiers, e);
-    } 
-    // Handle multiple date selection (array of dates)
-    else if (Array.isArray(date) && date.length > 0) {
-      handleSelect(date[0], selectedDay, activeModifiers, e);
-    } 
-    // Handle date range selection (object with from/to)
-    else if (date && typeof date === 'object' && 'from' in date) {
-      handleSelect(date.from, selectedDay, activeModifiers, e);
-    } 
-    // Handle undefined date (clearing selection)
-    else if (date === undefined) {
-      handleSelect(undefined, selectedDay, activeModifiers, e);
+
+  // Pass-through handler for range selection
+  const handleRangeSelect = React.useCallback<SelectRangeEventHandler>((range) => {
+    if (typeof props.onSelect === 'function' && props.mode === "range") {
+      const handler = props.onSelect as SelectRangeEventHandler;
+      handler(range, undefined, undefined);
     }
-  }, [handleSelect]);
+  }, [props]);
+
+  // Pass-through handler for multiple selection
+  const handleMultipleSelect = React.useCallback<SelectMultipleEventHandler>((dates) => {
+    if (typeof props.onSelect === 'function' && props.mode === "multiple") {
+      const handler = props.onSelect as SelectMultipleEventHandler;
+      handler(dates, undefined, undefined);
+    }
+  }, [props]);
   
   return (
     <DayPicker
@@ -222,8 +222,14 @@ function Calendar({
         },
       }}
       selected={props.selected}
-      // Use our compatible handler that properly handles the different date formats
-      onSelect={dayPickerOnSelectHandler}
+      // Use the correct handler based on mode
+      onSelect={
+        props.mode === "range" 
+          ? handleRangeSelect 
+          : props.mode === "multiple" 
+            ? handleMultipleSelect 
+            : handleSingleSelect
+      }
       {...props}
     />
   );
