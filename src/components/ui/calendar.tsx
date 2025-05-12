@@ -105,42 +105,53 @@ function Calendar({
       if (typeof props.onSelect === 'function' && props.mode === "single") {
         // We know this is a single select handler in this case
         const handler = props.onSelect as SelectSingleEventHandler;
-        handler(calendarDate, undefined, undefined);
+        handler(calendarDate, { selected: true, disabled: false, outside: false, today: false }, { selected: true }, new MouseEvent('click'));
       }
     }
   }, [calendarDate, props]);
 
   // Update global calendar date when this calendar's selected date changes
-  const handleSingleSelect = React.useCallback<SelectSingleEventHandler>((date) => {
-    if (date) {
+  const handleSingleSelect = React.useCallback<SelectSingleEventHandler>((day, modifiers, activeModifiers, e) => {
+    if (day) {
       // Pass the date to the original onSelect if it exists and is for single mode
       if (typeof props.onSelect === 'function' && props.mode === "single") {
         const handler = props.onSelect as SelectSingleEventHandler;
-        handler(date, undefined, undefined);
+        handler(day, modifiers, activeModifiers, e);
       }
       
       // Always update global calendar date for single mode calendars
       if (props.mode === "single") {
-        setCalendarDate(date);
+        setCalendarDate(day);
       }
     }
   }, [props, setCalendarDate]);
 
   // Pass-through handler for range selection
-  const handleRangeSelect = React.useCallback<SelectRangeEventHandler>((range) => {
+  const handleRangeSelect = React.useCallback<SelectRangeEventHandler>((range, selectedDay, activeModifiers, e) => {
     if (typeof props.onSelect === 'function' && props.mode === "range") {
       const handler = props.onSelect as SelectRangeEventHandler;
-      handler(range, undefined, undefined);
+      handler(range, selectedDay, activeModifiers, e);
     }
   }, [props]);
 
   // Pass-through handler for multiple selection
-  const handleMultipleSelect = React.useCallback<SelectMultipleEventHandler>((dates) => {
+  const handleMultipleSelect = React.useCallback<SelectMultipleEventHandler>((dates, selectedDay, activeModifiers, e) => {
     if (typeof props.onSelect === 'function' && props.mode === "multiple") {
       const handler = props.onSelect as SelectMultipleEventHandler;
-      handler(dates, undefined, undefined);
+      handler(dates, selectedDay, activeModifiers, e);
     }
   }, [props]);
+  
+  // Generate the appropriate onSelect handler based on the mode
+  const dayPickerOnSelectHandler = React.useMemo(() => {
+    if (props.mode === "range") {
+      return handleRangeSelect;
+    } else if (props.mode === "multiple") {
+      return handleMultipleSelect;
+    } else {
+      return handleSingleSelect;
+    }
+  }, [handleSingleSelect, handleMultipleSelect, handleRangeSelect, props.mode]);
   
   return (
     <DayPicker
@@ -221,15 +232,7 @@ function Calendar({
           );
         },
       }}
-      selected={props.selected}
-      // Use the correct handler based on mode
-      onSelect={
-        props.mode === "range" 
-          ? handleRangeSelect 
-          : props.mode === "multiple" 
-            ? handleMultipleSelect 
-            : handleSingleSelect
-      }
+      onSelect={dayPickerOnSelectHandler}
       {...props}
     />
   );
