@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 interface UserAvatarProps {
   className?: string;
@@ -62,17 +63,19 @@ export function UserAvatar({
   
   if (showTooltip && user) {
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          {avatar}
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{user.user_metadata?.full_name || user.user_metadata?.username}</p>
-          {user.user_metadata?.username && (
-            <p className="text-xs text-muted-foreground">@{user.user_metadata?.username}</p>
-          )}
-        </TooltipContent>
-      </Tooltip>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {avatar}
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{user.user_metadata?.full_name || user.user_metadata?.username || 'User'}</p>
+            {user.user_metadata?.username && (
+              <p className="text-xs text-muted-foreground">@{user.user_metadata?.username}</p>
+            )}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
   

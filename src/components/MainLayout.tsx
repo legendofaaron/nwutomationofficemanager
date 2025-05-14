@@ -13,7 +13,7 @@ import TodoCalendarBubble from './TodoCalendarBubble';
 import { cn } from '@/lib/utils';
 import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from './Logo';
-import { LogOut, Menu, Sparkles, User, X } from 'lucide-react';
+import { LogOut, Menu, Sparkles, User, X, Settings as SettingsIcon } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -23,9 +23,20 @@ import { ProLayout } from './ProLayout';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { Button } from './ui/button';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { ViewMode } from '@/context/AppContext';
 import { DragDropProvider } from './schedule/DragDropContext';
 import '../components/schedule/dragAndDrop.css';
+import SystemSettings from './SystemSettings';
 
 const MainLayout = () => {
   const {
@@ -46,6 +57,7 @@ const MainLayout = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleDragStart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -74,6 +86,10 @@ const MainLayout = () => {
   const handleLogout = async () => {
     try {
       await signOut();
+      toast({
+        title: "Logged out successfully",
+        description: "You have been signed out of your account",
+      });
       navigate('/login');
     } catch (error) {
       toast({
@@ -82,6 +98,10 @@ const MainLayout = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutConfirm(true);
   };
 
   const navigateToProfile = () => {
@@ -123,7 +143,6 @@ const MainLayout = () => {
     }
   };
 
-  // This function specifically handles the AI assistant toggle
   const handleToggleAiAssistant = () => {
     setAiAssistantOpen(!aiAssistantOpen);
   };
@@ -177,24 +196,26 @@ const MainLayout = () => {
       
       <DropdownMenu>
         <DropdownMenuTrigger className="outline-none">
-          <UserAvatar className="h-8 w-8 transition-all hover:scale-105 cursor-pointer" />
+          <UserAvatar className="h-8 w-8 transition-all hover:scale-105 cursor-pointer" showTooltip />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel className="flex items-center gap-2">
             <UserAvatar className="h-7 w-7" />
             <div className="flex flex-col">
               <span className="font-medium">{user?.user_metadata?.full_name || 'User'}</span>
-              <span className="text-xs text-muted-foreground truncate">{user?.user_metadata?.username}</span>
+              <span className="text-xs text-muted-foreground truncate">@{user?.user_metadata?.username || 'user'}</span>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={navigateToProfile} className="cursor-pointer">
-            Profile
+            <User className="mr-2 h-4 w-4" />
+            <span>Profile</span>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleViewChange('settings')} className="cursor-pointer">
-            Settings
+            <SettingsIcon className="mr-2 h-4 w-4" />
+            <span>Settings</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500 dark:text-red-400">
+          <DropdownMenuItem onClick={confirmLogout} className="cursor-pointer text-red-500 dark:text-red-400">
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
           </DropdownMenuItem>
@@ -217,24 +238,26 @@ const MainLayout = () => {
                     <Logo onClick={() => setViewMode('welcome')} />
                     <DropdownMenu>
                       <DropdownMenuTrigger className="outline-none">
-                        <UserAvatar className="h-9 w-9 transition-all hover:scale-105 cursor-pointer" />
+                        <UserAvatar className="h-9 w-9 transition-all hover:scale-105 cursor-pointer" showTooltip />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56">
                         <DropdownMenuLabel className="flex items-center gap-2">
                           <UserAvatar className="h-7 w-7" />
                           <div className="flex flex-col">
                             <span className="font-medium">{user?.user_metadata?.full_name || 'User'}</span>
-                            <span className="text-xs text-muted-foreground truncate">@{user?.user_metadata?.username}</span>
+                            <span className="text-xs text-muted-foreground truncate">@{user?.user_metadata?.username || 'user'}</span>
                           </div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={navigateToProfile} className="cursor-pointer">
-                          Profile
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Profile</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setViewMode('settings')} className="cursor-pointer">
-                          Settings
+                          <SettingsIcon className="mr-2 h-4 w-4" />
+                          <span>Settings</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500 dark:text-red-400">
+                        <DropdownMenuItem onClick={confirmLogout} className="cursor-pointer text-red-500 dark:text-red-400">
                           <LogOut className="mr-2 h-4 w-4" />
                           <span>Log out</span>
                         </DropdownMenuItem>
@@ -243,6 +266,7 @@ const MainLayout = () => {
                   </div>
                   <AppSidebar />
                 </Sidebar>
+                
                 <div 
                   className="absolute -right-12 z-20" 
                   style={{ top: `${triggerPosition}px` }}
@@ -271,6 +295,7 @@ const MainLayout = () => {
                 {viewMode === 'office' && <OfficeManagerDashboard />}
                 {viewMode === 'spreadsheet' && <SpreadsheetViewer />}
                 {viewMode === 'welcome' && <WelcomeDashboard />}
+                {viewMode === 'settings' && <SystemSettings />}
                 {!viewMode && <WelcomeDashboard />}
               </div>
             </main>
@@ -294,6 +319,24 @@ const MainLayout = () => {
             
             {/* AI Assistant Panel */}
             <AiAssistant />
+            
+            {/* Logout Confirmation Dialog */}
+            <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to log out of your account? Any unsaved changes may be lost.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleLogout} className="bg-red-500 hover:bg-red-600 text-white">
+                    Log out
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </SidebarProvider>
       </DragDropProvider>
