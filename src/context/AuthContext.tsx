@@ -109,13 +109,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Add the signIn function implementation
   const signIn = async (email: string, password: string): Promise<void> => {
     try {
-      const { error } = await localAuth.signInWithPassword({
-        email,
+      // Updated to use signInWithUsername instead of signInWithPassword
+      const { data, error } = await localAuth.signInWithUsername({
+        username: email, // Using email as username
         password,
       });
       
       if (error) {
         throw error.message;
+      }
+      
+      if (!data.session) {
+        throw "Login failed: No session returned";
       }
     } catch (error) {
       console.error("Error signing in:", error);
