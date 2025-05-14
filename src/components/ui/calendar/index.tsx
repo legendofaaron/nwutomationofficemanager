@@ -67,7 +67,10 @@ export const Calendar = ({
         // Fix for error: Empty object {} is not assignable to type 'Date'
         if (calendarDate instanceof Date) {
           const singleSelectHandler = props.onSelect as SelectSingleEventHandler;
-          singleSelectHandler(calendarDate, {}, { selected: true }, dummyEvent);
+          // Create proper DayPickerProps with the selected date
+          const dayPickerProps = { selected: calendarDate };
+          // Pass empty modifiers object and proper dayPickerProps
+          singleSelectHandler(calendarDate, {}, dayPickerProps, dummyEvent);
         }
       }
     }
