@@ -1,5 +1,5 @@
 
+// Re-export the toast hooks from the main implementation
 import { useToast, toast } from "@/hooks/use-toast";
 
-// Re-export the hook and function 
 export { useToast, toast };

@@ -4,6 +4,7 @@ import React from 'react'
 import App from './App.tsx'
 import './index.css'
 import { initializeCapacitorPlugins } from './capacitorApp';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Initialize Capacitor plugins
 if (typeof window !== 'undefined') {
@@ -12,6 +13,8 @@ if (typeof window !== 'undefined') {
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
   </React.StrictMode>
 );
