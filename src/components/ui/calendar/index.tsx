@@ -59,15 +59,18 @@ export const Calendar = ({
           screenY: 0,
           shiftKey: false,
           detail: 0,
-          view: window as unknown as Window, // Cast to the expected Window type
+          view: window as unknown as Window,
           which: 1
         } as unknown as React.MouseEvent<Element, MouseEvent>;
         
-        // Create modifiers object in the correct format
+        // Pass the date as first arg, empty objects for the modifiers
         const calendarDate = globalCalendarSync.date;
         
-        // Pass the date as first arg, empty objects for the modifiers
-        handler(calendarDate, {}, { selected: true }, dummyEvent);
+        // Fix for error: Empty object {} is not assignable to type 'Date'
+        // Only call the handler if we have a valid Date object
+        if (calendarDate instanceof Date) {
+          handler(calendarDate, {}, { selected: true }, dummyEvent);
+        }
       }
     }
   }, [globalCalendarSync, props, id, mode]);
@@ -87,18 +90,47 @@ export const Calendar = ({
     }
   };
 
-  // Prepare DayPicker props based on mode
-  const dayPickerProps = {
-    ...props,
-    mode,
-    onSelect: handleSelect,
-    classNames,
-    components: {
-      ...components,
-      Caption: customCaption ? CustomCaption : components?.Caption
-    },
-    styles
+  // Create a type-safe version of the props based on the mode
+  const createDayPickerProps = () => {
+    // Base props that all modes share
+    const baseProps = {
+      ...props,
+      onSelect: handleSelect,
+      classNames,
+      styles,
+      components: {
+        ...components,
+        Caption: customCaption ? CustomCaption : components?.Caption
+      }
+    };
+
+    // Return specific props based on the current mode
+    if (mode === 'single') {
+      return {
+        ...baseProps,
+        mode: 'single' as const
+      };
+    } else if (mode === 'multiple') {
+      return {
+        ...baseProps,
+        mode: 'multiple' as const
+      };
+    } else if (mode === 'range') {
+      return {
+        ...baseProps,
+        mode: 'range' as const
+      };
+    }
+
+    // Default to single mode
+    return {
+      ...baseProps,
+      mode: 'single' as const
+    };
   };
+
+  // Get the correct props for the current mode
+  const dayPickerProps = createDayPickerProps();
 
   return (
     <div ref={ref} className="calendar-component" data-calendar={id || 'default'}>
