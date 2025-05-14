@@ -1,8 +1,7 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
-import AppSidebar from './AppSidebar';
 import DocumentViewer from './DocumentViewer';
 import DatabaseViewer from './DatabaseViewer';
 import KnowledgeBase from './KnowledgeBase';
@@ -12,34 +11,29 @@ import SpreadsheetViewer from './SpreadsheetViewer';
 import WelcomeDashboard from './WelcomeDashboard';
 import TodoCalendarBubble from './TodoCalendarBubble';
 import { cn } from '@/lib/utils';
-import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
-import { Logo } from './Logo';
-import { LogOut, Menu, Sparkles, User, X, Settings as SettingsIcon } from 'lucide-react';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { useTheme } from '@/context/ThemeContext';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { UserAvatar } from './UserAvatar';
-import { ProLayout } from './ProLayout';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
-import { Button } from './ui/button';
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import type { ViewMode } from '@/context/AppContext';
 import { DragDropProvider } from './schedule/DragDropContext';
 import '../components/schedule/dragAndDrop.css';
 import SystemSettings from './SystemSettings';
+import { useDrag } from '@/hooks/useDrag';
+import { useLogout } from '@/hooks/useLogout';
+import { MobileHeader } from './layout/MobileHeader';
+import { DesktopSidebar } from './layout/DesktopSidebar';
+import { SidebarTriggerButton } from './layout/SidebarTriggerButton';
+import { AiAssistantButton } from './layout/AiAssistantButton';
+import { LogoutDialog } from './layout/LogoutDialog';
+import type { ViewMode } from '@/context/AppContext';
 
+/**
+ * MainLayout Component
+ * 
+ * The main layout component that contains the application's structure including
+ * sidebar, main content area, and various UI elements.
+ */
 const MainLayout = () => {
+  // App context state
   const {
     viewMode,
     sidebarOpen,
@@ -48,77 +42,35 @@ const MainLayout = () => {
     setViewMode
   } = useAppContext();
 
-  const { user, signOut } = useAuth();
-  const [triggerPosition, setTriggerPosition] = useState(24); // Default position (top: 24)
-  const isDragging = useRef(false);
+  // Theme state
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const isSuperDark = resolvedTheme === 'superdark';
-  const navigate = useNavigate();
-  const { toast } = useToast();
+
+  // Mobile state
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const handleDragStart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    isDragging.current = true;
-    document.addEventListener('mousemove', handleDrag);
-    document.addEventListener('mouseup', handleDragEnd);
-  };
+  // Custom hooks
+  const { position: triggerPosition, handleDragStart } = useDrag(24);
+  const { showLogoutConfirm, setShowLogoutConfirm, confirmLogout, handleLogout } = useLogout();
 
-  const handleDrag = (e: MouseEvent) => {
-    if (isDragging.current) {
-      const sidebarElement = document.querySelector('.sidebar-container');
-      if (sidebarElement) {
-        const sidebarRect = sidebarElement.getBoundingClientRect();
-        const newPosition = Math.max(16, Math.min(e.clientY - sidebarRect.top, sidebarRect.height - 80));
-        setTriggerPosition(newPosition);
-      }
+  // Handle view mode change
+  const handleViewChange = useCallback((newView: ViewMode) => {
+    setViewMode(newView);
+    if (isMobile) {
+      setMobileMenuOpen(false);
     }
-  };
+  }, [isMobile, setViewMode]);
 
-  const handleDragEnd = () => {
-    isDragging.current = false;
-    document.removeEventListener('mousemove', handleDrag);
-    document.removeEventListener('mouseup', handleDragEnd);
-  };
+  // Toggle AI assistant
+  const handleToggleAiAssistant = useCallback(() => {
+    setAiAssistantOpen(!aiAssistantOpen);
+  }, [aiAssistantOpen, setAiAssistantOpen]);
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast({
-        title: "Logged out successfully",
-        description: "You have been signed out of your account",
-      });
-      navigate('/login');
-    } catch (error) {
-      toast({
-        title: "Logout failed",
-        description: "There was a problem logging out",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const confirmLogout = () => {
-    setShowLogoutConfirm(true);
-  };
-
-  const navigateToProfile = () => {
-    setViewMode('settings');
-    // Adding a small delay to ensure the settings component is mounted before trying to focus on the profile tab
-    setTimeout(() => {
-      const profileTab = document.querySelector('[value="profile"]');
-      if (profileTab) {
-        (profileTab as HTMLElement).click();
-      }
-    }, 100);
-  };
-
-  const handleCloseCalendars = (e: React.MouseEvent) => {
+  // Handle closing calendars when clicking outside
+  const handleCloseCalendars = useCallback((e: React.MouseEvent) => {
     // Only close non-calendar popovers when clicking on the main content area
-    // We don't use stopPropagation to allow normal click events to still work
     const target = e.target as HTMLElement;
     
     // Only close if we're clicking directly on the main content
@@ -135,213 +87,78 @@ const MainLayout = () => {
     document.dispatchEvent(new CustomEvent('closeAllPopovers', {
       detail: { exceptId: 'todo-calendar-bubble' }
     }));
-  };
+  }, []);
 
-  const handleViewChange = (newView: ViewMode) => {
-    setViewMode(newView);
-    if (isMobile) {
-      setMobileMenuOpen(false);
-    }
-  };
-
-  const handleToggleAiAssistant = () => {
-    setAiAssistantOpen(!aiAssistantOpen);
-  };
-
-  const sidebarButtonBg = isSuperDark 
-    ? 'bg-black border border-[#151515]' 
-    : isDark 
-      ? 'bg-[#0d0f13] border border-[#1a1e26]'
-      : 'bg-white border border-gray-200 shadow-sm';
-
-  const sidebarHoverBg = isSuperDark
-    ? 'hover:bg-[#0a0a0a]'
-    : isDark
-      ? 'hover:bg-[#171b24]'
-      : 'hover:bg-gray-50';
-
+  // Background style based on theme
   const mainBg = isSuperDark
     ? 'bg-black'
     : isDark
       ? 'bg-[#0a0c10]'
       : 'bg-gradient-to-br from-gray-50 to-gray-100 backdrop-blur-sm';
 
-  // Render mobile header
-  const renderMobileHeader = () => (
-    <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between p-2 sm:p-3 border-b bg-background border-border">
-      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetTrigger asChild>
-          <Button variant="ghost" size="sm" className="md:hidden flex items-center justify-center p-1.5">
-            <Menu className="h-5 w-5" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-[80%] p-0">
-          <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <Logo onClick={() => {
-                handleViewChange('welcome');
-                setMobileMenuOpen(false);
-              }} />
-              <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex-1 overflow-auto">
-              <AppSidebar />
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-      
-      <Logo small onClick={() => handleViewChange('welcome')} />
-      
-      <DropdownMenu>
-        <DropdownMenuTrigger className="outline-none">
-          <UserAvatar className="h-7 w-7 sm:h-8 sm:w-8 transition-all hover:scale-105 cursor-pointer" showTooltip />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel className="flex items-center gap-2">
-            <UserAvatar className="h-6 w-6 sm:h-7 sm:w-7" />
-            <div className="flex flex-col">
-              <span className="font-medium text-xs sm:text-sm">{user?.user_metadata?.full_name || 'User'}</span>
-              <span className="text-xs text-muted-foreground truncate">@{user?.user_metadata?.username || 'user'}</span>
-            </div>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={navigateToProfile} className="cursor-pointer text-xs sm:text-sm">
-            <User className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span>Profile</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleViewChange('settings')} className="cursor-pointer text-xs sm:text-sm">
-            <SettingsIcon className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span>Settings</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={confirmLogout} className="cursor-pointer text-red-500 dark:text-red-400 text-xs sm:text-sm">
-            <LogOut className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span>Log out</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
-
   return (
-    <ProLayout>
-      <DragDropProvider>
-        <SidebarProvider defaultOpen={!isMobile && sidebarOpen}>
-          <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gradient-to-br from-white to-gray-100'} flex w-full overflow-hidden`}>
-            {isMobile ? (
-              renderMobileHeader()
-            ) : (
-              <div className="relative sidebar-container">
-                <Sidebar className="shadow-md border-r border-gray-100 dark:border-gray-800">
-                  <div className="flex justify-between items-center p-3 sm:p-4">
-                    <Logo onClick={() => setViewMode('welcome')} />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger className="outline-none">
-                        <UserAvatar className="h-8 w-8 sm:h-9 sm:w-9 transition-all hover:scale-105 cursor-pointer" showTooltip />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48 sm:w-56">
-                        <DropdownMenuLabel className="flex items-center gap-2">
-                          <UserAvatar className="h-6 w-6 sm:h-7 sm:w-7" />
-                          <div className="flex flex-col">
-                            <span className="font-medium text-xs sm:text-sm">{user?.user_metadata?.full_name || 'User'}</span>
-                            <span className="text-xs text-muted-foreground truncate">@{user?.user_metadata?.username || 'user'}</span>
-                          </div>
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={navigateToProfile} className="cursor-pointer text-xs sm:text-sm">
-                          <User className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          <span>Profile</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setViewMode('settings')} className="cursor-pointer text-xs sm:text-sm">
-                          <SettingsIcon className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          <span>Settings</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={confirmLogout} className="cursor-pointer text-red-500 dark:text-red-400 text-xs sm:text-sm">
-                          <LogOut className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          <span>Log out</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  <AppSidebar />
-                </Sidebar>
-                
-                <div 
-                  className="absolute -right-12 z-20" 
-                  style={{ top: `${triggerPosition}px` }}
-                >
-                  <SidebarTrigger 
-                    className={`h-14 w-10 sm:h-16 sm:w-12 ${sidebarButtonBg} rounded-r-lg flex items-center justify-center ${sidebarHoverBg} transition-all group cursor-move`}
-                    onMouseDown={handleDragStart}
-                  >
-                    <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
-                      <Logo small />
-                    </div>
-                  </SidebarTrigger>
-                </div>
-              </div>
-            )}
-            
-            <main 
-              className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", 
-                isMobile ? "pt-11 sm:pt-14" : (sidebarOpen ? "ml-0" : "ml-0"))}
-              onClick={handleCloseCalendars}
-            >
-              <div className={`w-full ${mainBg} h-full rounded-md overflow-auto`}>
-                {viewMode === 'document' && <DocumentViewer />}
-                {viewMode === 'database' && <DatabaseViewer />}
-                {viewMode === 'knowledge' && <KnowledgeBase />}
-                {viewMode === 'office' && <OfficeManagerDashboard />}
-                {viewMode === 'spreadsheet' && <SpreadsheetViewer />}
-                {viewMode === 'welcome' && <WelcomeDashboard />}
-                {viewMode === 'settings' && <SystemSettings />}
-                {!viewMode && <WelcomeDashboard />}
-              </div>
-            </main>
-            
-            <TodoCalendarBubble />
-            
-            {/* AI Assistant Button with improved styling and fixed toggle behavior */}
-            <div className={`fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50`}>
-              <button 
-                onClick={handleToggleAiAssistant} 
-                className={`h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg ${isDark || isSuperDark ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'} 
-                relative flex items-center justify-center transition-colors text-white hover:shadow-xl hover:scale-105 active:scale-95 transition-transform duration-200`}
-                aria-label="Toggle AI Assistant"
-              >
-                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
-                {aiAssistantOpen && (
-                  <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-background animate-pulse"></span>
-                )}
-              </button>
+    <DragDropProvider>
+      <SidebarProvider defaultOpen={!isMobile && sidebarOpen}>
+        <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gradient-to-br from-white to-gray-100'} flex w-full overflow-hidden`}>
+          {isMobile ? (
+            <MobileHeader
+              mobileMenuOpen={mobileMenuOpen}
+              setMobileMenuOpen={setMobileMenuOpen}
+              handleViewChange={handleViewChange}
+              setViewMode={setViewMode}
+              confirmLogout={confirmLogout}
+            />
+          ) : (
+            <div className="relative sidebar-container">
+              <DesktopSidebar 
+                setViewMode={setViewMode}
+                confirmLogout={confirmLogout}
+              />
+              
+              <SidebarTriggerButton 
+                triggerPosition={triggerPosition}
+                onDragStart={handleDragStart}
+              />
             </div>
-            
-            {/* AI Assistant Panel */}
-            <AiAssistant />
-            
-            {/* Logout Confirmation Dialog */}
-            <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-              <AlertDialogContent className="max-w-[90%] sm:max-w-lg">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to log out of your account? Any unsaved changes may be lost.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-                  <AlertDialogCancel className="mb-2 sm:mb-0 mt-0">Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleLogout} className="bg-red-500 hover:bg-red-600 text-white">
-                    Log out
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </SidebarProvider>
-      </DragDropProvider>
-    </ProLayout>
+          )}
+          
+          <main 
+            className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", 
+              isMobile ? "pt-11 sm:pt-14" : (sidebarOpen ? "ml-0" : "ml-0"))}
+            onClick={handleCloseCalendars}
+          >
+            <div className={`w-full ${mainBg} h-full rounded-md overflow-auto`}>
+              {viewMode === 'document' && <DocumentViewer />}
+              {viewMode === 'database' && <DatabaseViewer />}
+              {viewMode === 'knowledge' && <KnowledgeBase />}
+              {viewMode === 'office' && <OfficeManagerDashboard />}
+              {viewMode === 'spreadsheet' && <SpreadsheetViewer />}
+              {viewMode === 'welcome' && <WelcomeDashboard />}
+              {viewMode === 'settings' && <SystemSettings />}
+              {!viewMode && <WelcomeDashboard />}
+            </div>
+          </main>
+          
+          <TodoCalendarBubble />
+          
+          {/* AI Assistant Button */}
+          <AiAssistantButton 
+            aiAssistantOpen={aiAssistantOpen} 
+            handleToggleAiAssistant={handleToggleAiAssistant} 
+          />
+          
+          {/* AI Assistant Panel */}
+          <AiAssistant />
+          
+          {/* Logout Confirmation Dialog */}
+          <LogoutDialog 
+            showLogoutConfirm={showLogoutConfirm}
+            setShowLogoutConfirm={setShowLogoutConfirm}
+            handleLogout={handleLogout}
+          />
+        </div>
+      </SidebarProvider>
+    </DragDropProvider>
   );
 };
 

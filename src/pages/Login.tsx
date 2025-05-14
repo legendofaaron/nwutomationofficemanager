@@ -1,130 +1,30 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { User, Lock, ArrowRight, AlertCircle, Shield, Sparkles } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { Logo } from '@/components/Logo';
-import { useAppContext } from '@/context/AppContext';
-import { localAuth } from '@/services/localAuth';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Shield } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/context/AuthContext';
-
-const formSchema = z.object({
-  username: z.string().min(3, { message: 'Username must be at least 3 characters' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-});
+import { useAppContext } from '@/context/AppContext';
+import { LoginHeader } from '@/components/auth/LoginHeader';
+import { LoginForm } from '@/components/auth/LoginForm';
+import { DemoLoginButton } from '@/components/auth/DemoLoginButton';
+import { useSessionValidator } from '@/hooks/useSessionValidator';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { branding } = useAppContext();
   const { setDemoMode } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
-  const [loginAttempts, setLoginAttempts] = useState(0);
-  const [isLocked, setIsLocked] = useState(false);
-
+  
   // Check if user is already logged in
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const { data } = await localAuth.getSession();
-        if (data.session) {
-          navigate('/dashboard');
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
-      }
-    };
-    
-    checkSession();
-  }, [navigate]);
+  useSessionValidator();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      username: '',
-      password: '',
-    },
-  });
-
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (isLocked) {
-      toast({
-        title: "Account locked",
-        description: "Too many failed attempts. Please try again later.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    setLoginError(null);
-    
-    try {
-      const { data, error } = await localAuth.signInWithUsername({
-        username: values.username,
-        password: values.password,
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      if (data.session) {
-        // Reset login attempts on successful login
-        setLoginAttempts(0);
-        navigate('/dashboard');
-      }
-    } catch (error) {
-      // Handle login errors
-      const authError = error as Error;
-      setLoginError(authError.message || 'Failed to sign in. Please check your credentials and try again.');
-      
-      // Increment failed login attempts
-      const newAttempts = loginAttempts + 1;
-      setLoginAttempts(newAttempts);
-      
-      // Lock account after 5 failed attempts
-      if (newAttempts >= 5) {
-        setIsLocked(true);
-        setTimeout(() => {
-          setIsLocked(false);
-          setLoginAttempts(0);
-        }, 60000); // 1 minute lockout
-        
-        toast({
-          title: "Account temporarily locked",
-          description: "Too many failed login attempts. Please try again in 1 minute.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Login failed",
-          description: authError.message || "Invalid username or password",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setIsLoading(false);
-    }
+  const handleLoginSuccess = () => {
+    navigate('/dashboard');
   };
 
   // Function to handle demo login
   const handleDemoLogin = () => {
-    toast({
-      title: "Demo Mode Active",
-      description: "You are browsing in demo mode. Data will not be saved.",
-    });
-    
     // Enable demo mode in the auth context
     setDemoMode(true);
     
@@ -135,13 +35,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-[#080a0c] dark:to-[#111418]">
       <div className="w-full max-w-md">
-        <div className="flex flex-col items-center justify-center mb-8">
-          <Logo />
-          <h1 className="text-2xl font-bold text-center mt-6">Welcome to Office Manager</h1>
-          <p className="mt-2 text-sm text-center text-gray-600 dark:text-gray-400">
-            Log in to continue to {branding.companyName}
-          </p>
-        </div>
+        <LoginHeader companyName={branding.companyName} />
         
         <Card className="shadow-lg border-opacity-50">
           <CardHeader className="space-y-1">
@@ -154,79 +48,7 @@ const Login = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {loginError && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{loginError}</AlertDescription>
-              </Alert>
-            )}
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                          <Input 
-                            placeholder="Enter your username" 
-                            className="pl-10" 
-                            autoComplete="username"
-                            disabled={isLocked || isLoading}
-                            {...field} 
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex justify-between items-center">
-                        <FormLabel>Password</FormLabel>
-                        <Link 
-                          to="/forgot-password" 
-                          className="text-xs text-primary hover:underline"
-                        >
-                          Forgot password?
-                        </Link>
-                      </div>
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                          <Input 
-                            placeholder="Enter your password" 
-                            type="password" 
-                            className="pl-10" 
-                            autoComplete="current-password"
-                            disabled={isLocked || isLoading}
-                            {...field} 
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={isLoading || isLocked}
-                >
-                  {isLoading ? "Authenticating..." : isLocked ? "Account Locked" : "Log In"}
-                  {!isLoading && !isLocked && <ArrowRight className="ml-1 h-4 w-4" />}
-                </Button>
-              </form>
-            </Form>
+            <LoginForm onSuccess={handleLoginSuccess} />
             
             <div className="mt-6 relative">
               <div className="absolute inset-0 flex items-center">
@@ -238,18 +60,7 @@ const Login = () => {
             </div>
             
             <div className="mt-6 pt-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full relative overflow-hidden group transition-all duration-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 dark:from-[#1A1F2C] dark:to-[#221F26] dark:hover:from-[#262B38] dark:hover:to-[#2E2B33] border-gray-300 dark:border-gray-700"
-                onClick={handleDemoLogin}
-              >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-transparent via-white/10 to-transparent shine-effect"></div>
-                <div className="flex items-center justify-center gap-2">
-                  <Sparkles className="h-4 w-4 text-[#33C3F0] dark:text-[#4284fd]" />
-                  <span className="text-gray-800 dark:text-gray-200">Try Demo Preview</span>
-                </div>
-              </Button>
+              <DemoLoginButton onDemoLogin={handleDemoLogin} />
             </div>
           </CardContent>
           <CardFooter className="flex justify-center border-t p-4">
