@@ -121,7 +121,9 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       e.dataTransfer.setDragImage(dragImage, 15, 15);
       
       setTimeout(() => {
-        document.body.removeChild(dragImage);
+        if (document.body.contains(dragImage)) {
+          document.body.removeChild(dragImage);
+        }
       }, 0);
     } catch (error) {
       // If custom drag image fails, fall back to default
@@ -189,8 +191,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       data-draggable-id={id}
       data-draggable-type={type}
     >
-      <style>
-        {`
+      <style jsx>{`
         .dragging-active {
           opacity: 0.6;
           transform: scale(0.98);
@@ -202,8 +203,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
           0%, 100% { background-color: transparent; }
           50% { background-color: rgba(var(--primary), 0.2); }
         }
-        `}
-      </style>
+      `}</style>
       {children}
     </div>
   );

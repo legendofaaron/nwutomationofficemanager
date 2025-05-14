@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useDragDrop } from './DragDropContext';
 import { DraggableItemType, DragItem } from './ScheduleTypes';
 
@@ -128,7 +128,7 @@ export function useDroppable({
   const [isOver, setIsOver] = useState(false);
   const [canAcceptCurrent, setCanAcceptCurrent] = useState(false);
   const { isDragging, draggedItem, registerDropTarget, unregisterDropTarget, setDragOverTarget } = useDragDrop();
-  const dragEnterCountRef = useState(0);
+  const dragEnterCountRef = useRef(0);
   
   // Register this drop area with the context
   useEffect(() => {
@@ -139,7 +139,7 @@ export function useDroppable({
     return () => {
       unregisterDropTarget(id);
     };
-  }, [id, acceptTypes.join(','), disabled, registerDropTarget, unregisterDropTarget]);
+  }, [id, acceptTypes, disabled, registerDropTarget, unregisterDropTarget]);
   
   // Check if this area can accept the currently dragged item
   useEffect(() => {
@@ -155,14 +155,16 @@ export function useDroppable({
     e.preventDefault();
     e.stopPropagation();
     
-    dragEnterCountRef[0]++;
+    dragEnterCountRef.current++;
     
-    if (dragEnterCountRef[0] === 1) {
+    if (dragEnterCountRef.current === 1) {
       setDragOverTarget(id);
       setIsOver(true);
       
-      // Add visual feedback for the drop target
-      e.currentTarget.classList.add('drag-over-active');
+      // Safely add visual feedback for the drop target
+      if (e.currentTarget) {
+        e.currentTarget.classList.add('drag-over-active');
+      }
       
       // Call custom handler
       if (onDragEnter) {
@@ -179,7 +181,9 @@ export function useDroppable({
     if (!disabled && canAcceptCurrent) {
       e.dataTransfer.dropEffect = 'move';
       // Optional: add a CSS class to highlight the drop target
-      e.currentTarget.classList.add('drag-over-active');
+      if (e.currentTarget) {
+        e.currentTarget.classList.add('drag-over-active');
+      }
     } else {
       e.dataTransfer.dropEffect = 'none';
     }
@@ -189,14 +193,16 @@ export function useDroppable({
     e.preventDefault();
     e.stopPropagation();
     
-    dragEnterCountRef[0]--;
+    dragEnterCountRef.current--;
     
-    if (dragEnterCountRef[0] === 0) {
+    if (dragEnterCountRef.current === 0) {
       setDragOverTarget(null);
       setIsOver(false);
       
-      // Remove visual feedback
-      e.currentTarget.classList.remove('drag-over-active');
+      // Safely remove visual feedback
+      if (e.currentTarget) {
+        e.currentTarget.classList.remove('drag-over-active');
+      }
       
       // Call custom handler
       if (onDragLeave) {
@@ -210,19 +216,22 @@ export function useDroppable({
     e.stopPropagation();
     
     // Reset state
-    dragEnterCountRef[0] = 0;
+    dragEnterCountRef.current = 0;
     setIsOver(false);
     setDragOverTarget(null);
     
-    // Remove visual feedback
-    e.currentTarget.classList.remove('drag-over-active');
-    
-    // Add visual feedback for the drop
-    const element = e.currentTarget;
-    element.classList.add('drop-highlight');
-    setTimeout(() => {
-      element.classList.remove('drop-highlight');
-    }, 500);
+    // Safely remove visual feedback
+    if (e.currentTarget) {
+      e.currentTarget.classList.remove('drag-over-active');
+      
+      // Add visual feedback for the drop
+      e.currentTarget.classList.add('drop-highlight');
+      setTimeout(() => {
+        if (e.currentTarget) {
+          e.currentTarget.classList.remove('drop-highlight');
+        }
+      }, 500);
+    }
     
     // Handle drop
     try {

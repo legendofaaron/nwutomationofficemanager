@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,11 +26,30 @@ const TodoCalendar = () => {
   const [newTodoText, setNewTodoText] = useState('');
   const [draggedTodo, setDraggedTodo] = useState<Todo | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const dragImageRef = useRef<HTMLDivElement | null>(null);
   const [todos, setTodos] = useState<Todo[]>([
     { id: '1', text: 'Team meeting', completed: false, date: new Date() },
     { id: '2', text: 'Review project proposal', completed: true, date: new Date() },
     { id: '3', text: 'Call with client', completed: false, date: new Date() },
   ]);
+
+  // Create drag image element on mount
+  useEffect(() => {
+    const dragImage = document.createElement('div');
+    dragImage.className = 'task-drag-preview';
+    dragImage.style.position = 'absolute';
+    dragImage.style.top = '-1000px';
+    dragImage.style.pointerEvents = 'none';
+    document.body.appendChild(dragImage);
+    
+    dragImageRef.current = dragImage;
+    
+    return () => {
+      if (dragImage && document.body.contains(dragImage)) {
+        document.body.removeChild(dragImage);
+      }
+    };
+  }, []);
 
   const todaysTodos = todos.filter(
     todo => todo.date.toDateString() === selectedDate.toDateString()
@@ -70,23 +89,31 @@ const TodoCalendar = () => {
   };
 
   // Enhanced drag and drop functionality
-  const handleDragStart = (todo: Todo, e: React.DragEvent) => {
+  const handleDragStart = (todo: Todo, e: React.DragEvent<HTMLDivElement>) => {
     setDraggedTodo(todo);
     setIsDragging(true);
     
     // Set drag effect and image
     e.dataTransfer.effectAllowed = "move";
     
-    // Create a custom drag preview element (optional)
-    const dragPreview = document.createElement('div');
-    dragPreview.innerHTML = `<div class="bg-primary text-white px-2 py-1 rounded text-xs">${todo.text}</div>`;
-    dragPreview.className = "fixed top-0 left-0 z-50 pointer-events-none";
-    document.body.appendChild(dragPreview);
+    // Use our ref for the drag image
+    if (dragImageRef.current) {
+      dragImageRef.current.textContent = todo.text;
+      dragImageRef.current.className = 'bg-primary text-white px-2 py-1 rounded text-xs';
+      document.body.appendChild(dragImageRef.current);
+      e.dataTransfer.setDragImage(dragImageRef.current, 10, 10);
+    }
     
-    // Hide the preview immediately (it's used just for initialization)
-    setTimeout(() => {
-      document.body.removeChild(dragPreview);
-    }, 0);
+    // Set data transfer
+    const stringifiedData = JSON.stringify({
+      id: todo.id,
+      text: todo.text,
+      type: 'todo',
+      originalData: todo
+    });
+    
+    e.dataTransfer.setData('application/json', stringifiedData);
+    e.dataTransfer.setData('text/plain', todo.text);
   };
 
   const handleDragEnd = () => {
@@ -115,6 +142,8 @@ const TodoCalendar = () => {
   // Custom day render to show task indicators and handle drops
   const customDayRender = (day: DayProps) => {
     const date = day.date;
+    if (!date) return null;
+    
     // Check if the current day is selected by comparing dates
     const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
     const taskCount = getTaskCountForDay(date);
@@ -131,9 +160,25 @@ const TodoCalendar = () => {
         onDragOver={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          // Add visual feedback (safely)
+          if (e.currentTarget) {
+            e.currentTarget.classList.add("bg-accent/30");
+          }
+        }}
+        onDragLeave={(e) => {
+          // Remove visual feedback (safely)
+          if (e.currentTarget) {
+            e.currentTarget.classList.remove("bg-accent/30");
+          }
         }}
         onDrop={(e) => {
           e.preventDefault();
+          
+          // Remove visual feedback (safely)
+          if (e.currentTarget) {
+            e.currentTarget.classList.remove("bg-accent/30");
+          }
+          
           if (draggedTodo) {
             const updatedTodos = todos.map(todo => 
               todo.id === draggedTodo.id 

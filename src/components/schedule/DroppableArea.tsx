@@ -1,7 +1,9 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useDragDrop } from './DragDropContext';
 import { DragItem, DraggableItemType } from './ScheduleTypes';
+import { toast } from '@/hooks/use-toast';
 
 interface DroppableAreaProps {
   id: string;
@@ -23,7 +25,7 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
   onDragLeave,
   onClick,
   className,
-  activeClassName,
+  activeClassName = 'drop-area-active',
   children
 }) => {
   const { isDragging, draggedItem, registerDropTarget, unregisterDropTarget } = useDragDrop();
@@ -52,11 +54,22 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
+    
+    // Safely add the active class to the current target if it exists
+    if (event.currentTarget && isDragging && draggedItem && acceptTypes.includes(draggedItem.type)) {
+      event.currentTarget.classList.add('drag-over');
+    }
   };
   
   const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
+    
+    // Safely remove the active class if the current target exists
+    if (event.currentTarget) {
+      event.currentTarget.classList.remove('drag-over');
+    }
+    
     setIsActive(false);
     if (onDragLeave) {
       onDragLeave(event);
@@ -68,26 +81,45 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
     event.stopPropagation();
     setIsActive(false);
     
+    // Safely remove the drag-over class if the current target exists
+    if (event.currentTarget) {
+      event.currentTarget.classList.remove('drag-over');
+    }
+    
     try {
       const itemData = event.dataTransfer.getData('application/json');
       if (itemData) {
         const item: DragItem = JSON.parse(itemData);
         if (acceptTypes.includes(item.type) && onDrop) {
           onDrop(item, event);
+          
+          // Add a highlight effect to indicate a successful drop
+          if (dropAreaRef.current) {
+            dropAreaRef.current.classList.add('drop-target-highlight');
+            setTimeout(() => {
+              if (dropAreaRef.current) {
+                dropAreaRef.current.classList.remove('drop-target-highlight');
+              }
+            }, 800);
+          }
         }
       }
     } catch (error) {
       console.error("Error processing dropped item:", error);
+      toast({
+        title: "Error",
+        description: "Could not process the dropped item.",
+        variant: "destructive"
+      });
     }
   };
 
-  // Fix the style tag
   return (
     <div
       ref={dropAreaRef}
       id={`droppable-${id}`}
       className={cn(
-        'drop-area',
+        'drop-area transition-colors',
         className,
         isActive && activeClassName
       )}
@@ -99,8 +131,7 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
       data-droppable-id={id}
       data-accept-types={acceptTypes.join(',')}
     >
-      <style>
-        {`
+      <style jsx>{`
         .drop-area-active {
           outline: 2px dashed hsl(var(--primary));
           background-color: rgba(var(--primary), 0.1);
@@ -112,8 +143,11 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
           0%, 100% { background-color: transparent; }
           50% { background-color: rgba(var(--primary), 0.2); }
         }
-        `}
-      </style>
+        .drag-over {
+          outline: 2px dashed hsl(var(--primary));
+          background-color: rgba(var(--primary), 0.1);
+        }
+      `}</style>
       {children}
     </div>
   );
