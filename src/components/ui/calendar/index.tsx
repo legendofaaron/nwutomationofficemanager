@@ -90,51 +90,63 @@ export const Calendar = ({
     }
   };
 
-  // Create a type-safe version of the props based on the mode
-  const createDayPickerProps = () => {
-    // Base props that all modes share
+  // Create type-safe props for each specific mode
+  const renderCalendar = () => {
+    // Base props common to all modes
     const baseProps = {
-      ...props,
-      onSelect: handleSelect,
       classNames,
       styles,
+      onSelect: handleSelect,
       components: {
         ...components,
         Caption: customCaption ? CustomCaption : components?.Caption
       }
     };
 
-    // Return specific props based on the current mode
-    if (mode === 'single') {
-      return {
-        ...baseProps,
-        mode: 'single' as const
-      };
-    } else if (mode === 'multiple') {
-      return {
-        ...baseProps,
-        mode: 'multiple' as const
-      };
-    } else if (mode === 'range') {
-      return {
-        ...baseProps,
-        mode: 'range' as const
-      };
+    // Render the appropriate DayPicker based on mode
+    switch (mode) {
+      case 'single':
+        return (
+          <DayPicker
+            {...props}
+            {...baseProps}
+            mode="single"
+            selected={props.selected as Date}
+          />
+        );
+      case 'multiple':
+        return (
+          <DayPicker
+            {...props}
+            {...baseProps}
+            mode="multiple"
+            selected={props.selected as Date[]}
+          />
+        );
+      case 'range':
+        return (
+          <DayPicker
+            {...props}
+            {...baseProps}
+            mode="range"
+            selected={props.selected as import('react-day-picker').DateRange}
+          />
+        );
+      default:
+        return (
+          <DayPicker
+            {...props}
+            {...baseProps}
+            mode="single"
+            selected={props.selected as Date}
+          />
+        );
     }
-
-    // Default to single mode
-    return {
-      ...baseProps,
-      mode: 'single' as const
-    };
   };
-
-  // Get the correct props for the current mode
-  const dayPickerProps = createDayPickerProps();
 
   return (
     <div ref={ref} className="calendar-component" data-calendar={id || 'default'}>
-      <DayPicker {...dayPickerProps} />
+      {renderCalendar()}
     </div>
   );
 };
