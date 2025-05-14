@@ -1,14 +1,17 @@
 
 // Helper function to generate crew letter codes
-export const getCrewLetterCode = (index: number): string => {
+export const getCrewLetterCode = (index: number | string): string => {
+  // Convert string to number if needed
+  const numericIndex = typeof index === 'string' ? parseInt(index) || 0 : index;
+  
   // For the first 26 crews, use A-Z
-  if (index < 26) {
-    return String.fromCharCode(65 + index); // A = 65 in ASCII
+  if (numericIndex < 26) {
+    return String.fromCharCode(65 + numericIndex); // A = 65 in ASCII
   } 
   
   // For crews beyond 26, use A2, B2, C2, etc.
-  const cycle = Math.floor(index / 26);
-  const letter = String.fromCharCode(65 + (index % 26));
+  const cycle = Math.floor(numericIndex / 26);
+  const letter = String.fromCharCode(65 + (numericIndex % 26));
   return `${letter}${cycle + 1}`;
 };
 

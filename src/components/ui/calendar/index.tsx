@@ -64,7 +64,7 @@ export function Calendar(props: CalendarProps) {
       <div className="p-2 border-t border-gray-200 dark:border-gray-800">
         <div className="flex justify-between items-center">
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            {crew && <span>Crew: {getCrewLetterCode(crew.name)}</span>}
+            {crew && <span>Crew: {getCrewLetterCode(crew.name ? parseInt(crew.name) : 0)}</span>}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400">
             {new Date().toLocaleDateString()}
@@ -84,13 +84,13 @@ export function Calendar(props: CalendarProps) {
         const rangeHandler = props.onSelect as SelectRangeEventHandler;
         if (rangeHandler && newDate.length === 2) {
           const range = { from: newDate[0], to: newDate[1] };
-          rangeHandler(range, { selected: [] }, { selected: range }, dummyEvent);
+          rangeHandler(range, { selected: [] }, { mode: 'range' }, dummyEvent);
         }
       } else if (isMultiple) {
         // Multiple date selection
         const multiHandler = props.onSelect as SelectMultipleEventHandler;
         if (multiHandler) {
-          multiHandler(newDate, { selected: [] }, { selected: newDate }, dummyEvent);
+          multiHandler(newDate, { selected: [] }, { mode: 'multiple' }, dummyEvent);
         }
       }
     } else if (newDate instanceof Date) {
@@ -103,7 +103,7 @@ export function Calendar(props: CalendarProps) {
       if (props.onSelect) {
         const singleSelectHandler = props.onSelect as SelectSingleEventHandler;
         const selectedModifiers = { selected: [newDate] };
-        singleSelectHandler(newDate, selectedModifiers, { selected: newDate }, dummyEvent);
+        singleSelectHandler(newDate, selectedModifiers, { mode: 'single' }, dummyEvent);
       }
     }
   }
@@ -114,14 +114,16 @@ export function Calendar(props: CalendarProps) {
   return (
     <DayPicker
       className="p-3 pointer-events-auto" 
-      mode={actualMode}
+      mode={actualMode as any}
       selected={date}
       onSelect={handleOnSelect}
       components={{
         Caption: (captionProps) => (
           <CustomCaption 
             {...captionProps} 
-            monthFormat={monthFormat} 
+            monthFormat={monthFormat}
+            onPreviousClick={captionProps.onPreviousClick}
+            onNextClick={captionProps.onNextClick}
           />
         ),
         Footer: CustomFooter

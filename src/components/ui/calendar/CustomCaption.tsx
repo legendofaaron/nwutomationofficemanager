@@ -8,7 +8,12 @@ import { buttonVariants } from "@/components/ui/button";
 import { useTheme } from "@/context/ThemeContext";
 
 // Custom caption component to show month and year with better styling
-export const CustomCaption = ({ displayMonth, onPreviousClick, onNextClick }: CustomCaptionProps) => {
+export const CustomCaption = ({ 
+  displayMonth, 
+  onPreviousClick, 
+  onNextClick,
+  monthFormat = 'MMMM yyyy'
+}: CustomCaptionProps) => {
   const { resolvedTheme } = useTheme();
   const isSuperDarkMode = resolvedTheme === 'superdark';
   
@@ -27,7 +32,7 @@ export const CustomCaption = ({ displayMonth, onPreviousClick, onNextClick }: Cu
       </button>
       
       <div className={cn("text-sm font-medium text-center", isSuperDarkMode && "text-gray-200")}>
-        {format(displayMonth, 'MMMM yyyy')}
+        {format(displayMonth, monthFormat || 'MMMM yyyy')}
       </div>
       
       <button
