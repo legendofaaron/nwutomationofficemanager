@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { DayPicker } from 'react-day-picker';
-import { SelectSingleEventHandler } from 'react-day-picker';
+import { SelectSingleEventHandler, SelectRangeEventHandler, SelectMultipleEventHandler } from 'react-day-picker';
 import { resolveProps } from './utils';
 import { CalendarProps } from './types';
 import { CustomCaption } from './CustomCaption';
@@ -22,8 +22,6 @@ export const Calendar = ({
   // Forward selected date changes to global state
   useEffect(() => {
     if (props.onSelect && globalCalendarSync.source !== id && globalCalendarSync.date) {
-      const handler = props.onSelect as SelectSingleEventHandler;
-      
       if (id && mode === 'single') {
         // Create a proper event object
         const dummyEvent = {
@@ -63,30 +61,40 @@ export const Calendar = ({
           which: 1
         } as unknown as React.MouseEvent<Element, MouseEvent>;
         
-        // Pass the date as first arg, empty objects for the modifiers
+        // Only call the handler if we have a valid Date object
         const calendarDate = globalCalendarSync.date;
         
         // Fix for error: Empty object {} is not assignable to type 'Date'
-        // Only call the handler if we have a valid Date object
         if (calendarDate instanceof Date) {
-          handler(calendarDate, {}, { selected: true }, dummyEvent);
+          const singleSelectHandler = props.onSelect as SelectSingleEventHandler;
+          singleSelectHandler(calendarDate, {}, { selected: true }, dummyEvent);
         }
       }
     }
   }, [globalCalendarSync, props, id, mode]);
 
-  const handleSelect: SelectSingleEventHandler = (date, modifiers, dayPickerProps, e) => {
-    if (props.onSelect && date && mode === 'single') {
+  const handleSelect = (value: Date | Date[] | import('react-day-picker').DateRange | undefined, 
+                        modifiers: any, dayPickerProps: any, e?: React.MouseEvent) => {
+    if (!props.onSelect) return;
+    
+    // Type-safe handling based on mode
+    if (mode === 'single' && value instanceof Date) {
       const singleSelectHandler = props.onSelect as SelectSingleEventHandler;
-      singleSelectHandler(date, modifiers, dayPickerProps, e);
+      singleSelectHandler(value, modifiers, dayPickerProps, e);
       
       // Synchronize with global state
-      if (id && date) {
+      if (id && value) {
         setGlobalCalendarSync({
-          date: date,
+          date: value,
           source: id
         });
       }
+    } else if (mode === 'multiple' && Array.isArray(value)) {
+      const multipleSelectHandler = props.onSelect as SelectMultipleEventHandler;
+      multipleSelectHandler(value, modifiers, dayPickerProps, e);
+    } else if (mode === 'range' && value && 'from' in value) {
+      const rangeSelectHandler = props.onSelect as SelectRangeEventHandler;
+      rangeSelectHandler(value, modifiers, dayPickerProps, e);
     }
   };
 
@@ -96,7 +104,6 @@ export const Calendar = ({
     const baseProps = {
       classNames,
       styles,
-      onSelect: handleSelect,
       components: {
         ...components,
         Caption: customCaption ? CustomCaption : components?.Caption
@@ -112,6 +119,9 @@ export const Calendar = ({
             {...baseProps}
             mode="single"
             selected={props.selected as Date}
+            onSelect={(day, modifiers, props, e) => 
+              handleSelect(day, modifiers, props, e)
+            }
           />
         );
       case 'multiple':
@@ -121,6 +131,9 @@ export const Calendar = ({
             {...baseProps}
             mode="multiple"
             selected={props.selected as Date[]}
+            onSelect={(days, modifiers, props, e) => 
+              handleSelect(days, modifiers, props, e)
+            }
           />
         );
       case 'range':
@@ -130,6 +143,9 @@ export const Calendar = ({
             {...baseProps}
             mode="range"
             selected={props.selected as import('react-day-picker').DateRange}
+            onSelect={(range, modifiers, props, e) => 
+              handleSelect(range, modifiers, props, e)
+            }
           />
         );
       default:
@@ -139,6 +155,9 @@ export const Calendar = ({
             {...baseProps}
             mode="single"
             selected={props.selected as Date}
+            onSelect={(day, modifiers, props, e) => 
+              handleSelect(day, modifiers, props, e)
+            }
           />
         );
     }
