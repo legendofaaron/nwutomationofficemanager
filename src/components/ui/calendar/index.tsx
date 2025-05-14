@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { DayPicker } from 'react-day-picker';
 import { SelectSingleEventHandler, SelectRangeEventHandler, SelectMultipleEventHandler } from 'react-day-picker';
@@ -68,9 +69,11 @@ export const Calendar = ({
           const singleSelectHandler = props.onSelect as SelectSingleEventHandler;
           // Create proper DayPickerProps with the selected date
           const dayPickerProps = { selected: calendarDate };
-          // Pass empty modifiers object and properly typed dayPickerProps
-          const emptyModifiers = {}; // Create empty object for modifiers
-          singleSelectHandler(calendarDate, emptyModifiers, dayPickerProps as any, dummyEvent);
+          // Create a properly typed empty modifiers object
+          // The type error was happening because we need to pass a proper object with the right structure
+          // that matches what react-day-picker expects for the modifiers parameter
+          const modifiers = { selected: [calendarDate] };
+          singleSelectHandler(calendarDate, modifiers, dayPickerProps as any, dummyEvent);
         }
       }
     }
