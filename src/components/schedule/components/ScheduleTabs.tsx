@@ -22,7 +22,7 @@ interface ScheduleTabsProps {
   onMoveTask: (taskId: string, newDate: Date) => void;
 }
 
-const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
+const ScheduleTabs: React.FC<ScheduleTabsProps> = React.memo(({
   viewMode,
   onViewModeChange,
   filteredTasks,
@@ -37,6 +37,14 @@ const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
   onAddNewTask,
   onMoveTask
 }) => {
+  // Filter icon based on active filter type
+  const FilterIcon = React.useMemo(() => {
+    if (activeFilter.type === 'employee') return User;
+    if (activeFilter.type === 'crew') return Users;
+    if (activeFilter.type === 'client') return Building2;
+    return null;
+  }, [activeFilter.type]);
+
   return (
     <Tabs value={viewMode} onValueChange={(v) => onViewModeChange(v as 'calendar' | 'list')} className="space-y-4">
       <div className="flex justify-between items-center">
@@ -52,11 +60,9 @@ const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
         </TabsList>
         
         <div className="text-sm text-muted-foreground">
-          {activeFilter.type !== 'all' && (
+          {activeFilter.type !== 'all' && FilterIcon && (
             <span className="flex items-center gap-1.5">
-              {activeFilter.type === 'employee' && <User className="h-3.5 w-3.5" />}
-              {activeFilter.type === 'crew' && <Users className="h-3.5 w-3.5" />}
-              {activeFilter.type === 'client' && <Building2 className="h-3.5 w-3.5" />}
+              <FilterIcon className="h-3.5 w-3.5" />
               Filtered by {activeFilter.type}: {activeFilter.name}
             </span>
           )}
@@ -88,6 +94,8 @@ const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
       </TabsContent>
     </Tabs>
   );
-};
+});
+
+ScheduleTabs.displayName = 'ScheduleTabs';
 
 export default ScheduleTabs;

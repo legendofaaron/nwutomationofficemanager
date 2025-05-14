@@ -1,5 +1,5 @@
 
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useMemo } from 'react';
 import { Task, Crew, DragItem } from '../ScheduleTypes';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -22,7 +22,7 @@ interface TaskCalendarViewProps {
   onEditTask?: (taskId: string) => void;
 }
 
-const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
+const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
   tasks,
   selectedDate,
   onSelectDate,
@@ -68,7 +68,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
     };
   }, []);
   
-  // Handle date selection with a single click
+  // Handle date selection with a single click - memoized
   const handleSelectDate = useCallback((date: Date | undefined) => {
     if (date) {
       // Update both local and global state with one call
@@ -78,7 +78,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
     }
   }, [onSelectDate, setDate]);
   
-  // Handle moving a task to a new date with toast notification
+  // Handle moving a task to a new date with toast notification - memoized
   const handleMoveTask = useCallback((taskId: string, date: Date) => {
     if (onMoveTask) {
       // Find the task to get its title
@@ -98,7 +98,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
     }
   }, [onMoveTask, tasks, setDate]);
 
-  // Handle dropping other item types (employee, crew, client)
+  // Handle dropping other item types (employee, crew, client) - memoized
   const handleItemDrop = useCallback((item: DragItem, date: Date) => {
     // Always update the selected date when an item is dropped
     setDate(date);
@@ -161,13 +161,22 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
     }
   }, [onSelectDate, setDate, onMoveTask, handleMoveTask, setCalendarDate]);
 
+  // Memoize dialog open state handler to prevent unnecessary re-renders
+  const handleOpenDownloadDialog = useCallback(() => {
+    setIsDownloadDialogOpen(true);
+  }, []);
+
+  const handleCloseDownloadDialog = useCallback(() => {
+    setIsDownloadDialogOpen(false);
+  }, []);
+
   return (
     <>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Schedule</h2>
         <Button 
           variant="outline" 
-          onClick={() => setIsDownloadDialogOpen(true)}
+          onClick={handleOpenDownloadDialog}
           className="flex items-center gap-2"
         >
           <Download className="h-4 w-4" />
@@ -197,13 +206,15 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
       {/* Fixed ScheduleDownloadDialog by passing all required props */}
       <ScheduleDownloadDialog
         isOpen={isDownloadDialogOpen}
-        onClose={() => setIsDownloadDialogOpen(false)}
+        onClose={handleCloseDownloadDialog}
         tasks={tasks}
         employees={[]} // Using empty array as placeholder
         crews={crews || []} // Using crews from props or empty array
       />
     </>
   );
-};
+});
+
+TaskCalendarView.displayName = 'TaskCalendarView';
 
 export default TaskCalendarView;

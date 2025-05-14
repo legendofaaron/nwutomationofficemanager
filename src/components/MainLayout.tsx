@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import DocumentViewer from './DocumentViewer';
@@ -44,8 +44,8 @@ const MainLayout = () => {
 
   // Theme state
   const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-  const isSuperDark = resolvedTheme === 'superdark';
+  const isDark = useMemo(() => resolvedTheme === 'dark', [resolvedTheme]);
+  const isSuperDark = useMemo(() => resolvedTheme === 'superdark', [resolvedTheme]);
 
   // Mobile state
   const isMobile = useIsMobile();
@@ -89,12 +89,14 @@ const MainLayout = () => {
     }));
   }, []);
 
-  // Background style based on theme
-  const mainBg = isSuperDark
-    ? 'bg-black'
-    : isDark
-      ? 'bg-[#0a0c10]'
-      : 'bg-gradient-to-br from-gray-50 to-gray-100 backdrop-blur-sm';
+  // Background style based on theme - memoized to prevent unnecessary recalculations
+  const mainBg = useMemo(() => {
+    return isSuperDark
+      ? 'bg-black'
+      : isDark
+        ? 'bg-[#0a0c10]'
+        : 'bg-gradient-to-br from-gray-50 to-gray-100 backdrop-blur-sm';
+  }, [isSuperDark, isDark]);
 
   return (
     <DragDropProvider>
@@ -162,4 +164,4 @@ const MainLayout = () => {
   );
 };
 
-export default MainLayout;
+export default React.memo(MainLayout);

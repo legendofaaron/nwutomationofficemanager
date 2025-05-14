@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,7 @@ interface CalendarCardProps {
   onItemDrop?: (item: DragItem, date: Date) => void;
 }
 
-const CalendarCard: React.FC<CalendarCardProps> = ({
+const CalendarCard: React.FC<CalendarCardProps> = React.memo(({
   tasks,
   selectedDate,
   onSelectDate,
@@ -66,16 +65,16 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
     };
   }, [isDragging]);
 
-  // Handle day selection with a single click
-  const handleDaySelect = (date: Date | undefined) => {
+  // Handle day selection with a single click - memoized
+  const handleDaySelect = React.useCallback((date: Date | undefined) => {
     if (date) {
       // Immediately update the selected date with a single click
       onSelectDate(date);
     }
-  };
+  }, [onSelectDate]);
 
-  // Handle dropping a task on a day with debounce to prevent duplicate drops
-  const handleDayDrop = (item: DragItem, date: Date) => {
+  // Handle dropping a task on a day with debounce to prevent duplicate drops - memoized
+  const handleDayDrop = React.useCallback((item: DragItem, date: Date) => {
     // Prevent duplicate drops (this fixes the multiple drag issue)
     const now = Date.now();
     if (now - lastDropTime < 500) {
@@ -109,16 +108,30 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
       // Update selected date to where the item was dropped
       onSelectDate(date);
     }
-  };
+  }, [onMoveTask, onItemDrop, onSelectDate, lastDropTime, setLastDropTime]);
 
-  // Handle month navigation
-  const handlePreviousMonth = () => {
+  // Handle month navigation - memoized
+  const handlePreviousMonth = React.useCallback(() => {
     setCurrentMonth(prevMonth => subMonths(prevMonth, 1));
-  };
+  }, []);
 
-  const handleNextMonth = () => {
+  const handleNextMonth = React.useCallback(() => {
     setCurrentMonth(prevMonth => addMonths(prevMonth, 1));
-  };
+  }, []);
+
+  // Memoize the month display format
+  const formattedMonth = useMemo(() => {
+    return format(currentMonth, 'MMMM yyyy');
+  }, [currentMonth]);
+
+  // Memoize the drop target event handlers
+  const handleDragEnter = useCallback((dropId: string) => {
+    setActiveDropTarget(dropId);
+  }, []);
+  
+  const handleDragLeave = useCallback(() => {
+    setActiveDropTarget(null);
+  }, []);
 
   return (
     <Card className="shadow-md border rounded-xl overflow-hidden">
@@ -140,7 +153,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
               ←
             </Button>
             <span className="text-sm font-medium">
-              {format(currentMonth, 'MMMM yyyy')}
+              {formattedMonth}
             </span>
             <Button 
               variant="outline" 
@@ -215,8 +228,8 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
                     hasTasks && "font-medium"
                   )}
                   activeClassName="bg-primary/20 dark:bg-primary/30 border-dashed border-2 border-primary scale-105"
-                  onDragEnter={() => setActiveDropTarget(droppableId)}
-                  onDragLeave={() => setActiveDropTarget(null)}
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
                   onClick={() => handleDaySelect(dayDate)}
                   data-date={dateAttr}
                 >
@@ -251,6 +264,8 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
       </CardContent>
     </Card>
   );
-};
+});
+
+CalendarCard.displayName = 'CalendarCard';
 
 export default CalendarCard;
