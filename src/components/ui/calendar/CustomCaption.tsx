@@ -1,16 +1,16 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPickerCaptionProps } from "react-day-picker";
+import { DayPickerProps, type CaptionProps } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
-export interface CustomCaptionProps extends DayPickerCaptionProps {
+export interface CustomCaptionProps extends CaptionProps {
   onMonthChange?: (month: Date) => void;
 }
 
 export function CustomCaption({ 
-  displayMonth,
+  displayMonth: month,
   id,
   onMonthChange 
 }: CustomCaptionProps) {
@@ -21,7 +21,7 @@ export function CustomCaption({
   
   // Calculate previous and next months
   const goToPreviousMonth = () => {
-    const previousMonth = new Date(displayMonth);
+    const previousMonth = new Date(month);
     previousMonth.setMonth(previousMonth.getMonth() - 1);
     if (onMonthChange) {
       onMonthChange(previousMonth);
@@ -29,7 +29,7 @@ export function CustomCaption({
   };
   
   const goToNextMonth = () => {
-    const nextMonth = new Date(displayMonth);
+    const nextMonth = new Date(month);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
     if (onMonthChange) {
       onMonthChange(nextMonth);
@@ -52,7 +52,7 @@ export function CustomCaption({
         </button>
       </div>
       <div className="text-sm font-medium">
-        {months.current[displayMonth.getMonth()]} {displayMonth.getFullYear()}
+        {months.current[month.getMonth()]} {month.getFullYear()}
       </div>
       <div className="space-x-1 flex items-center">
         <button

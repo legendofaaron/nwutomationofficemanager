@@ -194,11 +194,13 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
         />
       </div>
       
-      {/* Download Dialog */}
+      {/* Fixed ScheduleDownloadDialog by passing all required props */}
       <ScheduleDownloadDialog
         isOpen={isDownloadDialogOpen}
         onClose={() => setIsDownloadDialogOpen(false)}
         tasks={tasks}
+        employees={[]} // Using empty array as placeholder
+        crews={crews || []} // Using crews from props or empty array
       />
     </>
   );
