@@ -1,65 +1,70 @@
 
-import * as React from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { type CaptionProps, useNavigation } from "react-day-picker"
+import * as React from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { DayPickerCaptionProps } from "react-day-picker";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 
-import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
-
-interface CustomCaptionProps extends CaptionProps {
-  onMonthChange: (date: Date) => void;
+export interface CustomCaptionProps extends DayPickerCaptionProps {
+  onMonthChange?: (month: Date) => void;
 }
 
-export function CustomCaption(props: CustomCaptionProps) {
-  const { displayMonth, onMonthChange } = props;
-  const { goToMonth, nextMonth, previousMonth } = useNavigation();
-
-  // Format the month and year for display
-  const formattedMonth = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(displayMonth);
-
-  const handlePreviousClick = () => {
-    if (previousMonth) {
-      goToMonth(previousMonth);
+export function CustomCaption({ 
+  displayMonth,
+  id,
+  onMonthChange 
+}: CustomCaptionProps) {
+  const months = React.useRef([
+    "January", "February", "March", "April", "May", "June", 
+    "July", "August", "September", "October", "November", "December"
+  ]);
+  
+  // Calculate previous and next months
+  const goToPreviousMonth = () => {
+    const previousMonth = new Date(displayMonth);
+    previousMonth.setMonth(previousMonth.getMonth() - 1);
+    if (onMonthChange) {
       onMonthChange(previousMonth);
     }
   };
-
-  const handleNextClick = () => {
-    if (nextMonth) {
-      goToMonth(nextMonth);
+  
+  const goToNextMonth = () => {
+    const nextMonth = new Date(displayMonth);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    if (onMonthChange) {
       onMonthChange(nextMonth);
     }
   };
-
+  
   return (
     <div className="flex justify-center pt-1 relative items-center">
-      <div className="flex items-center justify-between w-full">
+      <div className="space-x-1 flex items-center">
         <button
-          onClick={handlePreviousClick}
-          disabled={!previousMonth}
+          onClick={goToPreviousMonth}
+          type="button"
+          aria-label="Go to previous month"
           className={cn(
             buttonVariants({ variant: "outline" }),
             "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute left-1"
           )}
         >
           <ChevronLeft className="h-4 w-4" />
-          <span className="sr-only">Previous month</span>
         </button>
-        
-        <div className="text-sm font-medium">
-          {formattedMonth}
-        </div>
-        
+      </div>
+      <div className="text-sm font-medium">
+        {months.current[displayMonth.getMonth()]} {displayMonth.getFullYear()}
+      </div>
+      <div className="space-x-1 flex items-center">
         <button
-          onClick={handleNextClick}
-          disabled={!nextMonth}
+          onClick={goToNextMonth}
+          type="button"
+          aria-label="Go to next month"
           className={cn(
             buttonVariants({ variant: "outline" }),
             "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute right-1"
           )}
         >
           <ChevronRight className="h-4 w-4" />
-          <span className="sr-only">Next month</span>
         </button>
       </div>
     </div>

@@ -1,59 +1,65 @@
 
-import { toast as sonnerToast } from "sonner";
-import { type ToastProps } from "@/components/ui/toast";
-import { useTheme } from "@/context/ThemeContext";
+import { toast as sonnerToast, type Toast as SonnerToast } from 'sonner';
 
-// Create our own useToast hook
-export const useToast = () => {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-  const isSuperDark = resolvedTheme === 'superdark';
-  
-  const toast = {
-    // Base toast method with styled toasts
-    toast(props: ToastProps) {
-      const styles = {
-        background: isSuperDark ? '#0A0A0A' : isDark ? '#0D1117' : 'white',
-        color: isSuperDark || isDark ? 'white' : '#1f2937',
-        border: `1px solid ${isSuperDark ? '#181818' : isDark ? '#1a1e26' : '#e5e7eb'}`,
-        borderRadius: '0.5rem',
-      };
-
-      return sonnerToast(props.title || "", {
-        description: props.description,
-        style: styles,
-        ...props,
-      });
-    },
-    
-    // Helper methods for different toast types
-    success(props: ToastProps) {
-      this.toast({ ...props, variant: "success" });
-    },
-    error(props: ToastProps) {
-      this.toast({ ...props, variant: "destructive" });
-    },
-    warning(props: ToastProps) {
-      this.toast({ ...props, variant: "warning" });
-    },
-    info(props: ToastProps) {
-      this.toast({ ...props, variant: "default" });
-    },
-  };
-
-  return toast;
+type ToastProps = SonnerToast & {
+  variant?: 'default' | 'destructive' | 'success';
+  title?: string;
+  description?: string;
 };
 
-// Export a standalone toast function for use outside of components
-export const toast = (props: ToastProps) => {
-  // Basic styling for standalone toast usage
-  const styles = {
-    borderRadius: '0.5rem',
+export const useToast = () => {
+  const toast = ({ variant = 'default', title, description, ...props }: ToastProps) => {
+    // Set the styling based on variant
+    const styling: Record<string, any> = {};
+    
+    if (variant === 'destructive') {
+      styling.className = 'bg-destructive text-destructive-foreground';
+      styling.icon = '⚠️';
+    } else if (variant === 'success') {
+      styling.className = 'bg-green-500 text-white';
+      styling.icon = '✓';
+    }
+    
+    // Construct the content
+    let content = '';
+    if (title) {
+      content = description ? `${title}\n${description}` : title;
+    } else if (description) {
+      content = description;
+    }
+    
+    return sonnerToast(content || '', {
+      ...styling,
+      ...props,
+    });
   };
+
+  return { toast };
+};
+
+// For direct usage without the hook
+export const toast = ({ variant = 'default', title, description, ...props }: ToastProps) => {
+  // Set the styling based on variant
+  const styling: Record<string, any> = {};
   
-  return sonnerToast(props.title || "", {
-    description: props.description,
-    style: styles,
+  if (variant === 'destructive') {
+    styling.className = 'bg-destructive text-destructive-foreground';
+    styling.icon = '⚠️';
+  } else if (variant === 'success') {
+    styling.className = 'bg-green-500 text-white';
+    styling.icon = '✓';
+  }
+  
+  // Construct the content
+  let content = '';
+  if (title) {
+    content = description ? `${title}\n${description}` : title;
+  } else if (description) {
+    content = description;
+  }
+  
+  return sonnerToast(content || '', {
+    ...styling,
     ...props,
   });
 };

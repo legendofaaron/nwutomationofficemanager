@@ -5,6 +5,6 @@ export type { CalendarProps } from './calendar/index';
 export { getCrewLetterCode } from './calendar/utils';
 export type { CalendarDayProps } from './calendar/types';
 
-// Import DateRange from react-day-picker directly
+// Import DateRange directly from react-day-picker
 import { DateRange } from 'react-day-picker';
 export type { DateRange };
