@@ -1,5 +1,5 @@
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { Task, Crew, DragItem } from '../ScheduleTypes';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -7,6 +7,9 @@ import CalendarCard from './CalendarCard';
 import TasksCard from './TasksCard';
 import { useCalendarSync } from '@/hooks/useCalendarSync';
 import { useAppContext } from '@/context/AppContext';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
+import ScheduleDownloadDialog from '../ScheduleDownloadDialog';
 
 interface TaskCalendarViewProps {
   tasks: Task[];
@@ -29,6 +32,9 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   onMoveTask,
   onEditTask
 }) => {
+  // State for download dialog
+  const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
+  
   // Get access to the global calendar date setter
   const { setCalendarDate } = useAppContext();
   
@@ -156,24 +162,45 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   }, [onSelectDate, setDate, onMoveTask, handleMoveTask, setCalendarDate]);
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <CalendarCard 
-        tasks={tasks}
-        selectedDate={date}
-        onSelectDate={handleSelectDate}
-        onMoveTask={handleMoveTask}
-        onItemDrop={handleItemDrop}
-      />
+    <>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Schedule</h2>
+        <Button 
+          variant="outline" 
+          onClick={() => setIsDownloadDialogOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <Download className="h-4 w-4" />
+          Download Schedule
+        </Button>
+      </div>
       
-      <TasksCard
+      <div className="grid gap-6 md:grid-cols-2">
+        <CalendarCard 
+          tasks={tasks}
+          selectedDate={date}
+          onSelectDate={handleSelectDate}
+          onMoveTask={handleMoveTask}
+          onItemDrop={handleItemDrop}
+        />
+        
+        <TasksCard
+          tasks={tasks}
+          selectedDate={date}
+          onToggleTaskCompletion={onToggleTaskCompletion}
+          crews={crews}
+          onAddNewTask={onAddNewTask}
+          onEditTask={onEditTask}
+        />
+      </div>
+      
+      {/* Download Dialog */}
+      <ScheduleDownloadDialog
+        isOpen={isDownloadDialogOpen}
+        onClose={() => setIsDownloadDialogOpen(false)}
         tasks={tasks}
-        selectedDate={date}
-        onToggleTaskCompletion={onToggleTaskCompletion}
-        crews={crews}
-        onAddNewTask={onAddNewTask}
-        onEditTask={onEditTask}
       />
-    </div>
+    </>
   );
 };
 

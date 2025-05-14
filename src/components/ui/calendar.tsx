@@ -1,5 +1,5 @@
 
 // Re-export components and utilities from calendar module
-export { Calendar } from './calendar/index';
+export { Calendar, type CalendarProps, type DateRange } from './calendar/index';
 export { getCrewLetterCode } from './calendar/utils';
-export type { CalendarProps } from './calendar/types';
+export type { CalendarDayProps } from './calendar/types';
