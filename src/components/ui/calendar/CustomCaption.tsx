@@ -1,7 +1,7 @@
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { CaptionProps, useDayPicker } from "react-day-picker"
+import { type CaptionProps, useNavigation } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
@@ -11,11 +11,11 @@ interface CustomCaptionProps extends CaptionProps {
 }
 
 export function CustomCaption(props: CustomCaptionProps) {
-  const { month, onMonthChange } = props;
-  const { nextMonth, previousMonth, goToMonth } = useDayPicker();
+  const { displayMonth, onMonthChange } = props;
+  const { goToMonth, nextMonth, previousMonth } = useNavigation();
 
   // Format the month and year for display
-  const formattedMonth = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(month);
+  const formattedMonth = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(displayMonth);
 
   const handlePreviousClick = () => {
     if (previousMonth) {

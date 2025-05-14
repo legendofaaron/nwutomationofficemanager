@@ -1,7 +1,7 @@
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { DayPicker, useDayPicker } from "react-day-picker"
+import { DayPicker } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
@@ -15,37 +15,22 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
-  const [month, setMonth] = React.useState<Date>(props.month || new Date())
+  const [currentMonth, setCurrentMonth] = React.useState<Date>(props.month || new Date())
   
   // Handle month change for custom navigation
   const handleMonthChange = (newMonth: Date) => {
-    setMonth(newMonth);
+    setCurrentMonth(newMonth);
     if (props.onMonthChange) {
       props.onMonthChange(newMonth);
     }
   };
   
-  // Handle date selection with the correct signature
-  const handleOnSelect = React.useCallback(
-    (day: Date | undefined, selectedDay: Date | undefined, activeModifiers: any, e: React.MouseEvent<Element, MouseEvent>) => {
-      if (props.selected === undefined) return;
-      if (!day) return;
-      
-      // Call the original onSelect if provided
-      if (props.onSelect) {
-        // @ts-ignore - We know this exists from the props even if types don't match
-        props.onSelect(day, selectedDay, activeModifiers, e);
-      }
-    },
-    [props]
-  );
-  
   return (
     <DayPicker
-      month={month}
-      onMonthChange={handleMonthChange}
+      month={currentMonth}
+      onMonthChange={setCurrentMonth}
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("p-3 pointer-events-auto", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
@@ -84,7 +69,6 @@ function Calendar({
         Caption: (captionProps) => <CustomCaption {...captionProps} onMonthChange={handleMonthChange} />,
         ...props.components
       }}
-      onSelect={handleOnSelect as any}
       {...props}
     />
   )

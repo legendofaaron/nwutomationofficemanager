@@ -1,19 +1,17 @@
 
 import * as React from "react";
-import { toast as sonnerToast, useToast as useSonnerToast } from "sonner";
+import { toast as sonnerToast } from "sonner";
 import { useTheme } from "@/context/ThemeContext";
 import type { ToastProps } from "@/components/ui/toast";
 
 // Enhanced toast function with automatic theme detection
-const useToast = () => {
+export const useToast = () => {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const isSuperDark = resolvedTheme === 'superdark';
   
   const toast = {
-    ...useSonnerToast(),
-    
-    // Override the default toast method with styled toasts
+    // Base toast method with styled toasts
     toast(props: ToastProps) {
       const styles = {
         background: isSuperDark ? '#0A0A0A' : isDark ? '#0D1117' : 'white',
@@ -48,7 +46,7 @@ const useToast = () => {
 };
 
 // Export a standalone toast function for use outside of components
-const toast = (props: ToastProps) => {
+export const toast = (props: ToastProps) => {
   // Basic styling for standalone toast usage
   const styles = {
     borderRadius: '0.5rem',
@@ -60,5 +58,3 @@ const toast = (props: ToastProps) => {
     ...props,
   });
 };
-
-export { toast, useToast };
