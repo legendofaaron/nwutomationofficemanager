@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { KeyIcon, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from '@/components/ui/use-toast';
 
 interface LoginFormProps {
   onSuccess: () => void;
@@ -14,43 +15,63 @@ const LoginForm: React.FC<LoginFormProps> = React.memo(({ onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const { signIn } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  }, []);
+
+  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+  }, []);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    
+    if (!email.trim() || !password.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter both email and password",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
       await signIn(email, password);
+      toast({
+        title: "Success",
+        description: "You have been successfully logged in",
+      });
       onSuccess();
     } catch (err) {
       console.error('Login failed:', err);
-      setError(typeof err === 'string' ? err : 'Invalid email or password');
+      toast({
+        title: "Login Failed",
+        description: typeof err === 'string' ? err : 'Invalid email or password',
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [email, password, signIn, onSuccess]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 p-2.5 rounded-md text-sm">
-          {error}
-        </div>
-      )}
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
           id="email"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={handleEmailChange}
           placeholder="name@example.com"
           required
           autoComplete="email"
           autoFocus
+          disabled={isLoading}
         />
       </div>
       <div className="space-y-2">
@@ -64,10 +85,11 @@ const LoginForm: React.FC<LoginFormProps> = React.memo(({ onSuccess }) => {
           id="password"
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={handlePasswordChange}
           placeholder="••••••••"
           required
           autoComplete="current-password"
+          disabled={isLoading}
         />
       </div>
       <Button
