@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import type {
   ToastActionElement,
@@ -12,6 +13,7 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  onOpenChange?: (open: boolean) => void
 }
 
 const actionTypes = {
@@ -105,7 +107,9 @@ export const reducer = (state: State, action: Action): State => {
           t.id === toastId || toastId === undefined
             ? {
                 ...t,
-                onOpenChange: false,
+                onOpenChange: (open) => {
+                  if (!open) dispatch({ type: actionTypes.DISMISS_TOAST, toastId: t.id })
+                },
               }
             : t
         ),
