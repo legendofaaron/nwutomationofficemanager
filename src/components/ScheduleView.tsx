@@ -42,7 +42,7 @@ export default () => {
     <TaskCalendarView 
       tasks={tasks}
       selectedDate={selectedDate || new Date()}
-      onSelectDate={(date) => setSelectedDate(date)}
+      onSelectDate={(date) => setSelectedDate(date as Date)}
       onToggleTaskCompletion={handleToggleTaskCompletion}
       crews={[]}
       onAddNewTask={handleAddNewTask}

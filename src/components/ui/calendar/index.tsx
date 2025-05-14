@@ -84,13 +84,13 @@ export function Calendar(props: CalendarProps) {
         const rangeHandler = props.onSelect as SelectRangeEventHandler;
         if (rangeHandler && newDate.length === 2) {
           const range = { from: newDate[0], to: newDate[1] };
-          rangeHandler(range, { selected: [] }, { mode: 'range' }, dummyEvent);
+          rangeHandler(range, dummyEvent);
         }
       } else if (isMultiple) {
         // Multiple date selection
         const multiHandler = props.onSelect as SelectMultipleEventHandler;
         if (multiHandler) {
-          multiHandler(newDate, { selected: [] }, { mode: 'multiple' }, dummyEvent);
+          multiHandler(newDate, dummyEvent);
         }
       }
     } else if (newDate instanceof Date) {
@@ -102,11 +102,10 @@ export function Calendar(props: CalendarProps) {
       // Also call the original onSelect handler if provided
       if (props.onSelect) {
         const singleSelectHandler = props.onSelect as SelectSingleEventHandler;
-        const selectedModifiers = { selected: [newDate] };
-        singleSelectHandler(newDate, selectedModifiers, { mode: 'single' }, dummyEvent);
+        singleSelectHandler(newDate, dummyEvent);
       }
     }
-  }
+  };
 
   // Determine the actual mode to use based on the isRange and isMultiple props
   const actualMode = isRange ? "range" : isMultiple ? "multiple" : "single";
@@ -122,8 +121,14 @@ export function Calendar(props: CalendarProps) {
           <CustomCaption 
             {...captionProps} 
             monthFormat={monthFormat}
-            onPreviousClick={captionProps.onPreviousClick}
-            onNextClick={captionProps.onNextClick}
+            onPreviousClick={() => captionProps.nav?.goToMonth(new Date(
+              captionProps.displayMonth.getFullYear(),
+              captionProps.displayMonth.getMonth() - 1
+            ))}
+            onNextClick={() => captionProps.nav?.goToMonth(new Date(
+              captionProps.displayMonth.getFullYear(),
+              captionProps.displayMonth.getMonth() + 1
+            ))}
           />
         ),
         Footer: CustomFooter
