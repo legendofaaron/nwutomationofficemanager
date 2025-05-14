@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { DayPicker } from 'react-day-picker';
 import { SelectSingleEventHandler, SelectRangeEventHandler, SelectMultipleEventHandler } from 'react-day-picker';
@@ -69,8 +68,9 @@ export const Calendar = ({
           const singleSelectHandler = props.onSelect as SelectSingleEventHandler;
           // Create proper DayPickerProps with the selected date
           const dayPickerProps = { selected: calendarDate };
-          // Pass empty modifiers object and proper dayPickerProps
-          singleSelectHandler(calendarDate, {}, dayPickerProps, dummyEvent);
+          // Pass empty modifiers object and properly typed dayPickerProps
+          const emptyModifiers = {}; // Create empty object for modifiers
+          singleSelectHandler(calendarDate, emptyModifiers, dayPickerProps as any, dummyEvent);
         }
       }
     }
