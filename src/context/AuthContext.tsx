@@ -10,7 +10,7 @@ interface AuthContextType {
   isDemoMode: boolean;
   hasActiveSubscription: boolean;
   checkSubscription: () => Promise<boolean>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (username: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshUser: () => void;
   setDemoMode: (isDemoMode: boolean) => void;
@@ -107,11 +107,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [checkSubscription]);
 
   // Add the signIn function implementation
-  const signIn = async (email: string, password: string): Promise<void> => {
+  const signIn = async (username: string, password: string): Promise<void> => {
     try {
       // Updated to use signInWithUsername instead of signInWithPassword
       const { data, error } = await localAuth.signInWithUsername({
-        username: email, // Using email as username
+        username, // Using username directly
         password,
       });
       

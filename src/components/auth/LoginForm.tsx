@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { KeyIcon, Loader2 } from 'lucide-react';
+import { KeyIcon, Loader2, AtSign } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 
@@ -12,13 +12,13 @@ interface LoginFormProps {
 }
 
 const LoginForm: React.FC<LoginFormProps> = React.memo(({ onSuccess }) => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
 
-  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
+  const handleUsernameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value);
   }, []);
 
   const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,10 +28,10 @@ const LoginForm: React.FC<LoginFormProps> = React.memo(({ onSuccess }) => {
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email.trim() || !password.trim()) {
+    if (!username.trim() || !password.trim()) {
       toast({
         title: "Validation Error",
-        description: "Please enter both email and password",
+        description: "Please enter both username and password",
         variant: "destructive",
       });
       return;
@@ -40,7 +40,7 @@ const LoginForm: React.FC<LoginFormProps> = React.memo(({ onSuccess }) => {
     setIsLoading(true);
 
     try {
-      await signIn(email, password);
+      await signIn(username, password);
       toast({
         title: "Success",
         description: "You have been successfully logged in",
@@ -50,29 +50,32 @@ const LoginForm: React.FC<LoginFormProps> = React.memo(({ onSuccess }) => {
       console.error('Login failed:', err);
       toast({
         title: "Login Failed",
-        description: typeof err === 'string' ? err : 'Invalid email or password',
+        description: typeof err === 'string' ? err : 'Invalid username or password',
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  }, [email, password, signIn, onSuccess]);
+  }, [username, password, signIn, onSuccess]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={handleEmailChange}
-          placeholder="name@example.com"
-          required
-          autoComplete="email"
-          autoFocus
-          disabled={isLoading}
-        />
+        <Label htmlFor="username">Username</Label>
+        <div className="relative">
+          <AtSign className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+          <Input
+            id="username"
+            value={username}
+            onChange={handleUsernameChange}
+            placeholder="Enter your username"
+            required
+            autoComplete="username"
+            autoFocus
+            disabled={isLoading}
+            className="pl-10"
+          />
+        </div>
       </div>
       <div className="space-y-2">
         <div className="flex justify-between">
@@ -81,16 +84,20 @@ const LoginForm: React.FC<LoginFormProps> = React.memo(({ onSuccess }) => {
             Forgot Password?
           </a>
         </div>
-        <Input
-          id="password"
-          type="password"
-          value={password}
-          onChange={handlePasswordChange}
-          placeholder="••••••••"
-          required
-          autoComplete="current-password"
-          disabled={isLoading}
-        />
+        <div className="relative">
+          <KeyIcon className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={handlePasswordChange}
+            placeholder="••••••••"
+            required
+            autoComplete="current-password"
+            disabled={isLoading}
+            className="pl-10"
+          />
+        </div>
       </div>
       <Button
         type="submit"

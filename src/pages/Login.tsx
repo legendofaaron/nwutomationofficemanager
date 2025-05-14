@@ -44,7 +44,7 @@ const Login = () => {
               <CardTitle>Secure Login</CardTitle>
             </div>
             <CardDescription className="text-center">
-              Enter your credentials to access your account
+              Enter your username and password to access your account
             </CardDescription>
           </CardHeader>
           <CardContent>
