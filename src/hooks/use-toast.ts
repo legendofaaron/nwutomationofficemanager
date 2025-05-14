@@ -1,175 +1,63 @@
 
-import { toast as sonnerToast } from "sonner"
+import { toast as sonnerToast, useToast as useSonnerToast } from "sonner";
+import { type ToastProps } from "@/components/ui/toast";
+import { useTheme } from "@/context/ThemeContext";
 
-const TOAST_LIMIT = 5
-const TOAST_REMOVE_DELAY = 1000000
+// Enhanced toast function with automatic theme detection
+const useToast = () => {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  const isSuperDark = resolvedTheme === 'superdark';
+  
+  const toast = {
+    ...useSonnerToast(),
+    
+    // Override the default toast method with styled toasts
+    toast(props: ToastProps) {
+      const styles = {
+        background: isSuperDark ? '#0A0A0A' : isDark ? '#0D1117' : 'white',
+        color: isSuperDark || isDark ? 'white' : '#1f2937',
+        border: `1px solid ${isSuperDark ? '#181818' : isDark ? '#1a1e26' : '#e5e7eb'}`,
+        borderRadius: '0.5rem',
+      };
 
-type ToasterToastProps = React.ComponentProps<typeof sonnerToast>
+      return sonnerToast(props.title, {
+        description: props.description,
+        style: styles,
+        ...props,
+      });
+    },
+    
+    // Helper methods for different toast types
+    success(props: ToastProps) {
+      this.toast({ ...props, variant: "success" });
+    },
+    error(props: ToastProps) {
+      this.toast({ ...props, variant: "destructive" });
+    },
+    warning(props: ToastProps) {
+      this.toast({ ...props, variant: "warning" });
+    },
+    info(props: ToastProps) {
+      this.toast({ ...props, variant: "default" });
+    },
+  };
 
-interface ToastActionElement {
-  altText: string
-  action: React.ReactNode
-}
+  return toast;
+};
 
-export type ToastProps = {
-  title?: React.ReactNode
-  description?: React.ReactNode
-  variant?: "default" | "destructive" | "success"
-  duration?: number
-  action?: ToastActionElement
-}
+// Export a standalone toast function for use outside of components
+const toast = (props: ToastProps) => {
+  // Basic styling for standalone toast usage
+  const styles = {
+    borderRadius: '0.5rem',
+  };
+  
+  return sonnerToast(props.title, {
+    description: props.description,
+    style: styles,
+    ...props,
+  });
+};
 
-const actionTypes = {
-  ADD_TOAST: "ADD_TOAST",
-  UPDATE_TOAST: "UPDATE_TOAST",
-  DISMISS_TOAST: "DISMISS_TOAST",
-  REMOVE_TOAST: "REMOVE_TOAST",
-} as const
-
-let count = 0
-
-function genId() {
-  count = (count + 1) % Number.MAX_VALUE
-  return count.toString()
-}
-
-type ActionType = typeof actionTypes
-
-type Action =
-  | {
-      type: ActionType["ADD_TOAST"]
-      toast: ToasterToast
-    }
-  | {
-      type: ActionType["UPDATE_TOAST"]
-      toast: Partial<ToasterToast>
-    }
-  | {
-      type: ActionType["DISMISS_TOAST"]
-      toastId?: string
-    }
-  | {
-      type: ActionType["REMOVE_TOAST"]
-      toastId?: string
-    }
-
-interface State {
-  toasts: ToasterToast[]
-}
-
-export interface ToasterToast extends ToastProps {
-  id: string
-  title?: React.ReactNode
-  description?: React.ReactNode
-  action?: ToastActionElement
-  variant?: "default" | "destructive" | "success"
-}
-
-const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
-
-const reducer = (state: State, action: Action): State => {
-  switch (action.type) {
-    case actionTypes.ADD_TOAST:
-      return {
-        ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
-      }
-
-    case actionTypes.UPDATE_TOAST:
-      return {
-        ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === action.toast.id ? { ...t, ...action.toast } : t
-        ),
-      }
-
-    case actionTypes.DISMISS_TOAST: {
-      const { toastId } = action
-
-      if (toastId) {
-        const timeout = toastTimeouts.get(toastId)
-        if (timeout) clearTimeout(timeout)
-
-        toastTimeouts.set(
-          toastId,
-          setTimeout(() => {
-            toastTimeouts.delete(toastId)
-            dispatch({
-              type: actionTypes.REMOVE_TOAST,
-              toastId,
-            })
-          }, TOAST_REMOVE_DELAY)
-        )
-      }
-
-      return {
-        ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === toastId || toastId === undefined
-            ? {
-                ...t,
-                open: false,
-              }
-            : t
-        ),
-      }
-    }
-
-    case actionTypes.REMOVE_TOAST:
-      if (action.toastId === undefined) {
-        return {
-          ...state,
-          toasts: [],
-        }
-      }
-      return {
-        ...state,
-        toasts: state.toasts.filter((t) => t.id !== action.toastId),
-      }
-  }
-}
-
-const listeners: ((state: State) => void)[] = []
-
-let memoryState: State = { toasts: [] }
-
-function dispatch(action: Action) {
-  memoryState = reducer(memoryState, action)
-  listeners.forEach((listener) => {
-    listener(memoryState)
-  })
-}
-
-interface Toast extends Omit<ToasterToast, "id"> {}
-
-function toast({ variant = "default", ...props }: Toast) {
-  // Fix: Properly access sonnerToast methods
-  if (variant === "destructive") {
-    return sonnerToast.error(props.title, {
-      description: props.description,
-      duration: props.duration,
-      action: props.action?.action,
-    });
-  } else if (variant === "success") {
-    return sonnerToast.success(props.title, {
-      description: props.description,
-      duration: props.duration,
-      action: props.action?.action,
-    });
-  } else {
-    return sonnerToast(props.title, {
-      description: props.description,
-      duration: props.duration,
-      action: props.action?.action,
-    });
-  }
-}
-
-function useToast() {
-  return {
-    toast,
-    dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
-  }
-}
-
-export { useToast, toast }
+export { toast, useToast };

@@ -19,9 +19,13 @@ const OfficeManagerDashboard = () => {
   const isDark = resolvedTheme === 'dark';
   const isSuperDark = resolvedTheme === 'superdark';
   
+  // Enhanced styling variables
   const borderColor = isSuperDark ? 'border-[#151515]' : isDark ? 'border-[#1a1e26]' : 'border-gray-200';
   const bgColor = isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-white';
   const headerBgColor = isSuperDark ? 'bg-black' : isDark ? 'bg-[#0f1419]' : 'bg-[#F8F9FA]';
+  const contentBgColor = isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-[#F9FAFB]';
+  const tabActiveClass = isSuperDark ? 'bg-[#151515] text-white' : isDark ? 'bg-[#1a1e26] text-white' : 'bg-blue-600 text-white';
+  const tabHoverClass = isSuperDark ? 'hover:bg-[#111] hover:text-gray-300' : isDark ? 'hover:bg-[#161b22] hover:text-gray-300' : 'hover:bg-blue-50 hover:text-blue-700';
 
   const handleTipMe = () => {
     window.open('https://paypal.me/aaronthelegend', '_blank');
@@ -35,7 +39,7 @@ const OfficeManagerDashboard = () => {
     <>
       <PaymentVerifier />
       <div className="h-full flex flex-col">
-        <div className={`flex items-center justify-between p-4 ${headerBgColor} border-b ${borderColor} shadow-sm`}>
+        <div className={`flex items-center justify-between p-4 md:p-5 ${headerBgColor} border-b ${borderColor} shadow-sm`}>
           <div className="flex items-center gap-3">
             <Logo small />
             <div className="font-medium text-xl">Office Manager</div>
@@ -62,66 +66,72 @@ const OfficeManagerDashboard = () => {
           </div>
         </div>
 
-        <div className={`p-3 border-b ${bgColor} ${borderColor} shadow-sm`}>
-          <div className="flex items-center gap-3 flex-wrap">
+        <div className={`p-3 md:p-4 border-b ${bgColor} ${borderColor} shadow-sm`}>
+          <div className="flex items-center gap-2 md:gap-3 flex-wrap">
             <Button 
               variant={activeTab === 'employees' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-2 rounded-md ${activeTab === 'employees' ? '' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`} 
+              className={`gap-2 rounded-md transition-colors ${activeTab === 'employees' ? tabActiveClass : tabHoverClass}`} 
               onClick={() => setActiveTab('employees')}
             >
               <Users className="h-4 w-4" />
-              Employees
+              <span className="hidden sm:inline">Employees</span>
+              <span className="sm:hidden">Emp</span>
             </Button>
             <Button 
               variant={activeTab === 'clients' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-2 rounded-md ${activeTab === 'clients' ? '' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+              className={`gap-2 rounded-md transition-colors ${activeTab === 'clients' ? tabActiveClass : tabHoverClass}`}
               onClick={() => setActiveTab('clients')}
             >
               <Briefcase className="h-4 w-4" />
-              Clients
+              <span className="hidden sm:inline">Clients</span>
+              <span className="sm:hidden">Cli</span>
             </Button>
             <Button 
               variant={activeTab === 'schedule' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-2 rounded-md ${activeTab === 'schedule' ? '' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+              className={`gap-2 rounded-md transition-colors ${activeTab === 'schedule' ? tabActiveClass : tabHoverClass}`}
               onClick={() => setActiveTab('schedule')}
             >
               <Calendar className="h-4 w-4" />
-              Schedule
+              <span className="hidden sm:inline">Schedule</span>
+              <span className="sm:hidden">Sch</span>
             </Button>
             <Button 
               variant={activeTab === 'invoices' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-2 rounded-md ${activeTab === 'invoices' ? '' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+              className={`gap-2 rounded-md transition-colors ${activeTab === 'invoices' ? tabActiveClass : tabHoverClass}`}
               onClick={() => setActiveTab('invoices')}
             >
               <Receipt className="h-4 w-4" />
-              Invoices
+              <span className="hidden sm:inline">Invoices</span>
+              <span className="sm:hidden">Inv</span>
             </Button>
             <Button 
               variant={activeTab === 'bookings' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-2 rounded-md ${activeTab === 'bookings' ? '' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+              className={`gap-2 rounded-md transition-colors ${activeTab === 'bookings' ? tabActiveClass : tabHoverClass}`}
               onClick={() => setActiveTab('bookings')}
             >
               <BookOpen className="h-4 w-4" />
-              Bookings
+              <span className="hidden sm:inline">Bookings</span>
+              <span className="sm:hidden">Book</span>
             </Button>
             <Button 
               variant={activeTab === 'settings' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-2 rounded-md ${activeTab === 'settings' ? '' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+              className={`gap-2 rounded-md transition-colors ${activeTab === 'settings' ? tabActiveClass : tabHoverClass}`}
               onClick={() => setActiveTab('settings')}
             >
               <Settings className="h-4 w-4" />
-              Settings
+              <span className="hidden sm:inline">Settings</span>
+              <span className="sm:hidden">Set</span>
             </Button>
           </div>
         </div>
 
-        <div className={`flex-1 overflow-auto p-5 ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-[#F9FAFB]'}`}>
+        <div className={`flex-1 overflow-auto p-4 md:p-6 ${contentBgColor} animate-fade-in`}>
           {activeTab === 'employees' && <EmployeesView />}
           {activeTab === 'clients' && <ClientsView />}
           {activeTab === 'schedule' && <ScheduleView />}
