@@ -10,6 +10,7 @@ interface AuthContextType {
   isDemoMode: boolean;
   hasActiveSubscription: boolean;
   checkSubscription: () => Promise<boolean>;
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshUser: () => void;
   setDemoMode: (isDemoMode: boolean) => void;
@@ -104,6 +105,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       checkSubscription();
     }
   }, [checkSubscription]);
+
+  // Add the signIn function implementation
+  const signIn = async (email: string, password: string): Promise<void> => {
+    try {
+      const { error } = await localAuth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        throw error.message;
+      }
+    } catch (error) {
+      console.error("Error signing in:", error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     // Set up the auth state listener first for better security
@@ -226,6 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isDemoMode,
       hasActiveSubscription,
       checkSubscription,
+      signIn,
       signOut, 
       refreshUser,
       setDemoMode,

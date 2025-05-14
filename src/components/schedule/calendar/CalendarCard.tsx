@@ -125,7 +125,9 @@ const CalendarCard: React.FC<CalendarCardProps> = React.memo(({
   }, [currentMonth]);
 
   // Memoize the drop target event handlers
-  const handleDragEnter = useCallback((dropId: string) => {
+  const handleDragEnter = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    // Extract the dropId from the current target's data attribute
+    const dropId = event.currentTarget.getAttribute('data-droppable-id') || '';
     setActiveDropTarget(dropId);
   }, []);
   
