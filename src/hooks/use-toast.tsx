@@ -2,7 +2,14 @@
 import * as React from "react";
 import { toast as sonnerToast } from "sonner";
 import { useTheme } from "@/context/ThemeContext";
-import type { ToastProps } from "@/components/ui/toast";
+
+export interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: "default" | "destructive" | "success" | "warning";
+  title?: string;
+  description?: string;
+  action?: React.ReactNode;
+  duration?: number;
+}
 
 // Enhanced toast function with automatic theme detection
 export const useToast = () => {

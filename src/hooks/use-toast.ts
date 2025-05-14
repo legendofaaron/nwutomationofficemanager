@@ -1,10 +1,13 @@
 
-import { toast as sonnerToast, type Toast as SonnerToastType } from 'sonner';
+import { toast as sonnerToast } from 'sonner';
 
-type ToastProps = SonnerToastType & {
-  variant?: 'default' | 'destructive' | 'success';
+type ToastProps = {
+  variant?: 'default' | 'destructive' | 'success' | 'warning';
   title?: string;
   description?: string;
+  duration?: number;
+  action?: React.ReactNode;
+  [key: string]: any; // Allow for additional sonner toast properties
 };
 
 export const useToast = () => {
@@ -18,6 +21,9 @@ export const useToast = () => {
     } else if (variant === 'success') {
       styling.className = 'bg-green-500 text-white';
       styling.icon = '✓';
+    } else if (variant === 'warning') {
+      styling.className = 'bg-yellow-500 text-white';
+      styling.icon = '⚠️';
     }
     
     // Construct the content
@@ -48,6 +54,9 @@ export const toast = ({ variant = 'default', title, description, ...props }: Toa
   } else if (variant === 'success') {
     styling.className = 'bg-green-500 text-white';
     styling.icon = '✓';
+  } else if (variant === 'warning') {
+    styling.className = 'bg-yellow-500 text-white';
+    styling.icon = '⚠️';
   }
   
   // Construct the content
