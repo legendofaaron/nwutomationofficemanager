@@ -38,10 +38,10 @@ export function Calendar(props: CalendarProps) {
   } = props;
   
   const calendarDate = date || new Date();
-  const dateRef = useRef<Date>(calendarDate);
+  const dateRef = useRef<Date>(calendarDate instanceof Date ? calendarDate : new Date());
   
   useEffect(() => {
-    if (date) {
+    if (date && date instanceof Date) {
       dateRef.current = date;
     }
   }, [date]);
@@ -77,7 +77,7 @@ export function Calendar(props: CalendarProps) {
   const handleOnSelect = (newDate: Date | Date[] | undefined) => {
     if (!onDateChange || !newDate) return;
     
-    // Determine the type of selection
+    // Determine the type of selection based on the shape of the data
     if (Array.isArray(newDate)) {
       if (isRange) {
         // Range selection (start and end date)
@@ -94,24 +94,27 @@ export function Calendar(props: CalendarProps) {
         }
       }
     } else if (newDate instanceof Date) {
-      // Single date selection
+      // Single date selection - immediately call onDateChange to update UI
+      if (onDateChange) {
+        onDateChange(newDate);
+      }
+      
+      // Also call the original onSelect handler if provided
       if (props.onSelect) {
         const singleSelectHandler = props.onSelect as SelectSingleEventHandler;
-        // Create proper DayPickerProps with the selected date
-        const dayPickerProps = { selected: newDate };
-        // Instead of passing modifiers as the second parameter (which is causing the type error),
-        // let's create a proper DayPicker.Modifiers object
-        const modifiers = { selected: [newDate] };
-        // Use the correct parameter order for singleSelectHandler
-        singleSelectHandler(newDate, { selected: [] }, dayPickerProps, dummyEvent);
+        const selectedModifiers = { selected: [newDate] };
+        singleSelectHandler(newDate, selectedModifiers, { selected: newDate }, dummyEvent);
       }
     }
   }
 
+  // Determine the actual mode to use based on the isRange and isMultiple props
+  const actualMode = isRange ? "range" : isMultiple ? "multiple" : "single";
+
   return (
     <DayPicker
-      className="p-3" 
-      mode={isRange ? "range" : isMultiple ? "multiple" : "single"}
+      className="p-3 pointer-events-auto" 
+      mode={actualMode}
       selected={date}
       onSelect={handleOnSelect}
       components={{

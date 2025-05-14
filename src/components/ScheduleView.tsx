@@ -1,5 +1,6 @@
 
 import React from 'react';
-import ScheduleView from './schedule/ScheduleView';
+import TaskCalendarView from './schedule/calendar/TaskCalendarView';
 
-export default () => <ScheduleView />;
+// This component is just a wrapper for TaskCalendarView
+export default () => <TaskCalendarView />;
