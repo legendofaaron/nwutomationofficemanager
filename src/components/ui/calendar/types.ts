@@ -8,6 +8,8 @@ export interface CalendarProps extends Omit<React.ComponentProps<typeof DayPicke
   onSelect?: SelectSingleEventHandler | SelectRangeEventHandler | SelectMultipleEventHandler;
   mode?: "single" | "multiple" | "range";
   selected?: Date | Date[] | DateRange | undefined;
+  id?: string;
+  customCaption?: boolean;
 }
 
 // Define a custom caption props interface that includes the navigation handlers

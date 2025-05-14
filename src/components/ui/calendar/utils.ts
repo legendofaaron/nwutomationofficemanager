@@ -16,3 +16,13 @@ export const getCrewLetterCode = (index: number): string => {
 export const isDateObject = (value: any): value is Date => {
   return value instanceof Date;
 };
+
+// Helper function to resolve props for DayPicker
+export const resolveProps = (props: any) => {
+  // Extract and prepare class names, components, and styles from props
+  const classNames = props.classNames || {};
+  const components = props.components || {};
+  const styles = props.styles || {};
+  
+  return { classNames, components, styles };
+};

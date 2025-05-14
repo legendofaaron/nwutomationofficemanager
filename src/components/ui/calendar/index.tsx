@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef } from 'react';
-import { DayPicker, useDayPicker } from 'react-day-picker';
+import { DayPicker } from 'react-day-picker';
 import { SelectSingleEventHandler } from 'react-day-picker';
 import { resolveProps } from './utils';
 import { CalendarProps } from './types';
@@ -8,8 +8,11 @@ import { CustomCaption } from './CustomCaption';
 import { useAppContext } from '@/context/AppContext';
 
 export const Calendar = ({
+  mode = 'single',
+  id,
+  customCaption = false,
   ...props
-}: CalendarProps) => {
+}: CalendarProps & { id?: string, customCaption?: boolean }) => {
   const ref = useRef<HTMLDivElement>(null);
   const { globalCalendarSync, setGlobalCalendarSync } = useAppContext();
   
@@ -18,10 +21,10 @@ export const Calendar = ({
   
   // Forward selected date changes to global state
   useEffect(() => {
-    if (props.onSelect && globalCalendarSync.source !== props.id && globalCalendarSync.date) {
+    if (props.onSelect && globalCalendarSync.source !== id && globalCalendarSync.date) {
       const handler = props.onSelect as SelectSingleEventHandler;
       
-      if (props.id) {
+      if (id && mode === 'single') {
         // Create a proper event object
         const dummyEvent = {
           target: ref.current as HTMLDivElement,
@@ -62,44 +65,44 @@ export const Calendar = ({
         
         // Create modifiers object in the correct format
         const calendarDate = globalCalendarSync.date;
-        const modifiers = {};
-        const activeModifiers = { selected: true };
-        if (calendarDate.toDateString() === new Date().toDateString()) {
-          activeModifiers['today'] = true;
-        }
         
-        // Call handler with the date object as first parameter, modifiers as second parameter
-        handler(calendarDate, modifiers, activeModifiers, dummyEvent);
+        // Pass the date as first arg, empty objects for the modifiers
+        handler(calendarDate, {}, { selected: true }, dummyEvent);
       }
     }
-  }, [globalCalendarSync, props]);
+  }, [globalCalendarSync, props, id, mode]);
 
   const handleSelect: SelectSingleEventHandler = (date, modifiers, dayPickerProps, e) => {
-    if (props.onSelect && date) {
-      props.onSelect(date, modifiers, dayPickerProps, e);
+    if (props.onSelect && date && mode === 'single') {
+      const singleSelectHandler = props.onSelect as SelectSingleEventHandler;
+      singleSelectHandler(date, modifiers, dayPickerProps, e);
       
       // Synchronize with global state
-      if (props.id && date) {
+      if (id && date) {
         setGlobalCalendarSync({
-          date: date as Date,
-          source: props.id
+          date: date,
+          source: id
         });
       }
     }
   };
 
+  // Prepare DayPicker props based on mode
+  const dayPickerProps = {
+    ...props,
+    mode,
+    onSelect: handleSelect,
+    classNames,
+    components: {
+      ...components,
+      Caption: customCaption ? CustomCaption : components?.Caption
+    },
+    styles
+  };
+
   return (
-    <div ref={ref} className="calendar-component" data-calendar={props.id || 'default'}>
-      <DayPicker
-        {...props}
-        onSelect={handleSelect}
-        classNames={classNames}
-        components={{
-          ...components,
-          Caption: props.customCaption ? CustomCaption : components?.Caption
-        }}
-        styles={styles}
-      />
+    <div ref={ref} className="calendar-component" data-calendar={id || 'default'}>
+      <DayPicker {...dayPickerProps} />
     </div>
   );
 };

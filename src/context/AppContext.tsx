@@ -31,6 +31,12 @@ interface AssistantConfig {
   purpose?: string;
 }
 
+// Define GlobalCalendarSync interface for calendar state synchronization
+export interface GlobalCalendarSync {
+  date: Date | null;
+  source: string | null;
+}
+
 // Define the context interface
 interface AppContextType {
   todos: Todo[];
@@ -45,6 +51,10 @@ interface AppContextType {
   setClients: React.Dispatch<React.SetStateAction<Client[]>>;
   clientLocations: ClientLocation[];
   setClientLocations: React.Dispatch<React.SetStateAction<ClientLocation[]>>;
+  
+  // Calendar sync state for global calendar coordination
+  globalCalendarSync: GlobalCalendarSync;
+  setGlobalCalendarSync: React.Dispatch<React.SetStateAction<GlobalCalendarSync>>;
   
   // Additional properties needed by components
   viewMode: ViewMode;
@@ -194,6 +204,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   
   const [calendarDate, setCalendarDate] = useState<Date>(new Date());
   
+  // Add global calendar sync state
+  const [globalCalendarSync, setGlobalCalendarSync] = useState<GlobalCalendarSync>({
+    date: null,
+    source: null
+  });
+  
   // Provide employees, crews, clients and locations from mock data
   const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
   const [crews, setCrews] = useState<Crew[]>(mockCrews);
@@ -222,6 +238,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setTodos,
     calendarDate,
     setCalendarDate,
+    globalCalendarSync,
+    setGlobalCalendarSync,
     employees,
     setEmployees,
     crews,
