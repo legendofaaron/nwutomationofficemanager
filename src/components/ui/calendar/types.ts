@@ -28,8 +28,5 @@ export interface CustomCaptionProps {
   onPreviousClick: () => void;
   onNextClick: () => void;
   monthFormat?: string;
-  nav?: {
-    goToMonth: (date: Date) => void;
-  };
   displayIndex?: number;
 }

@@ -84,12 +84,14 @@ export function Calendar(props: CalendarProps) {
         const rangeHandler = props.onSelect as SelectRangeEventHandler;
         if (rangeHandler && newDate.length === 2) {
           const range = { from: newDate[0], to: newDate[1] };
+          // With react-day-picker v8, the handler expects only 2 arguments
           rangeHandler(range, dummyEvent);
         }
       } else if (isMultiple) {
         // Multiple date selection
         const multiHandler = props.onSelect as SelectMultipleEventHandler;
         if (multiHandler) {
+          // With react-day-picker v8, the handler expects only 2 arguments
           multiHandler(newDate, dummyEvent);
         }
       }
@@ -102,6 +104,7 @@ export function Calendar(props: CalendarProps) {
       // Also call the original onSelect handler if provided
       if (props.onSelect) {
         const singleSelectHandler = props.onSelect as SelectSingleEventHandler;
+        // With react-day-picker v8, the handler expects only 2 arguments
         singleSelectHandler(newDate, dummyEvent);
       }
     }
@@ -121,14 +124,30 @@ export function Calendar(props: CalendarProps) {
           <CustomCaption 
             {...captionProps} 
             monthFormat={monthFormat}
-            onPreviousClick={() => captionProps.nav?.goToMonth(new Date(
-              captionProps.displayMonth.getFullYear(),
-              captionProps.displayMonth.getMonth() - 1
-            ))}
-            onNextClick={() => captionProps.nav?.goToMonth(new Date(
-              captionProps.displayMonth.getFullYear(),
-              captionProps.displayMonth.getMonth() + 1
-            ))}
+            onPreviousClick={() => {
+              if (captionProps.displayMonth) {
+                const prevMonth = new Date(
+                  captionProps.displayMonth.getFullYear(),
+                  captionProps.displayMonth.getMonth() - 1
+                );
+                // Use DayPicker's built-in navigation instead of accessing nav directly
+                if (typeof otherProps.onMonthChange === 'function') {
+                  otherProps.onMonthChange(prevMonth);
+                }
+              }
+            }}
+            onNextClick={() => {
+              if (captionProps.displayMonth) {
+                const nextMonth = new Date(
+                  captionProps.displayMonth.getFullYear(),
+                  captionProps.displayMonth.getMonth() + 1
+                );
+                // Use DayPicker's built-in navigation instead of accessing nav directly
+                if (typeof otherProps.onMonthChange === 'function') {
+                  otherProps.onMonthChange(nextMonth);
+                }
+              }
+            }}
           />
         ),
         Footer: CustomFooter
