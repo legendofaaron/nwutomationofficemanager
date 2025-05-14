@@ -1,7 +1,6 @@
-
 import React, { useEffect, useCallback, useState, useMemo } from 'react';
 import { Task, Crew, DragItem } from '../ScheduleTypes';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import CalendarCard from './CalendarCard';
 import TasksCard from './TasksCard';
@@ -92,8 +91,9 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
       setDate(date);
       
       // Show success message
-      toast.success(`Task rescheduled to ${format(date, 'MMMM d')}`, {
-        description: taskTitle
+      toast({
+        title: "Task rescheduled",
+        description: `${taskTitle} moved to ${format(date, 'MMMM d')}`
       });
     }
   }, [onMoveTask, tasks, setDate]);
@@ -113,17 +113,18 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
       const taskTitle = `Meeting with ${employeeName}`;
       
       // Show temporary feedback toast while we're creating the task
-      toast.info(`Employee dropped on ${format(date, 'MMMM d')}`, {
-        description: `Creating task for ${employeeName}`,
-        duration: 2000
+      toast({
+        title: "Item dropped",
+        description: `Employee dropped on ${format(date, 'MMMM d')}`
       });
       
       // Create an employee-related task simulation
       if (onMoveTask) {
         // Existing simulation code...
         setTimeout(() => {
-          toast.success(`Task created for ${employeeName}`, {
-            description: `Scheduled for ${format(date, 'MMMM d')}`,
+          toast({
+            title: "Task created",
+            description: `Scheduled for ${employeeName} on ${format(date, 'MMMM d')}`
           });
         }, 500);
       }
@@ -135,23 +136,25 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
       const taskTitle = `Team activity with ${crewName}`;
       
       // Show temporary feedback toast
-      toast.info(`Crew dropped on ${format(date, 'MMMM d')}`, {
-        description: `Creating task for ${crewName} crew`,
-        duration: 2000
+      toast({
+        title: "Item dropped",
+        description: `Crew dropped on ${format(date, 'MMMM d')}`
       });
       
       // Create a crew-related task simulation
       if (onMoveTask) {
         // Existing simulation code...
         setTimeout(() => {
-          toast.success(`Team task created for ${crewName}`, {
-            description: `Scheduled for ${format(date, 'MMMM d')}`,
+          toast({
+            title: "Team task created",
+            description: `Scheduled for ${crewName} on ${format(date, 'MMMM d')}`
           });
         }, 500);
       }
     } else if (item.type === 'client') {
-      toast.info(`Client dropped on ${format(date, 'MMMM d')}`, {
-        description: `${item.data.name || 'Client'} - Create a new task for this client?`
+      toast({
+        title: "Client dropped",
+        description: `${item.data.name || 'Client'} dropped on ${format(date, 'MMMM d')}`
       });
     } else if (item.type === 'task') {
       // If we're dropping a task, use the move task handler
@@ -203,13 +206,12 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
         />
       </div>
       
-      {/* Fixed ScheduleDownloadDialog by passing all required props */}
       <ScheduleDownloadDialog
         isOpen={isDownloadDialogOpen}
         onClose={handleCloseDownloadDialog}
         tasks={tasks}
-        employees={[]} // Using empty array as placeholder
-        crews={crews || []} // Using crews from props or empty array
+        employees={[]} // Pass empty array for now as placeholder
+        crews={crews || []}
       />
     </>
   );

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { CalendarIcon, Download, FileText, FileDown } from 'lucide-react';
+import { CalendarIcon, FileText, FileDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { Task } from './ScheduleTypes';
 import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 interface EmployeeScheduleDownloadProps {
   employeeId: string;
@@ -49,7 +49,11 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
     const filteredTasks = getFilteredTasks();
     
     if (filteredTasks.length === 0) {
-      toast.error("No scheduled tasks in the selected date range");
+      toast({
+        title: "Error",
+        description: "No scheduled tasks in the selected date range",
+        variant: "destructive"
+      });
       return;
     }
     
@@ -59,11 +63,18 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
         id: employeeId,
         name: employeeName
       });
-      toast.success(`Schedule for ${employeeName} downloaded as PDF`);
+      toast({
+        title: "Success",
+        description: `Schedule for ${employeeName} downloaded as PDF`
+      });
       if (onClose) onClose();
     } catch (error) {
       console.error("Error downloading PDF:", error);
-      toast.error("Failed to download schedule as PDF");
+      toast({
+        title: "Error",
+        description: "Failed to download schedule as PDF",
+        variant: "destructive"
+      });
     }
   };
 
@@ -71,7 +82,11 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
     const filteredTasks = getFilteredTasks();
     
     if (filteredTasks.length === 0) {
-      toast.error("No scheduled tasks in the selected date range");
+      toast({
+        title: "Error",
+        description: "No scheduled tasks in the selected date range",
+        variant: "destructive"
+      });
       return;
     }
     
@@ -81,11 +96,18 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
         id: employeeId,
         name: employeeName
       });
-      toast.success(`Schedule for ${employeeName} downloaded as TXT`);
+      toast({
+        title: "Success",
+        description: `Schedule for ${employeeName} downloaded as TXT`
+      });
       if (onClose) onClose();
     } catch (error) {
       console.error("Error downloading TXT:", error);
-      toast.error("Failed to download schedule as TXT");
+      toast({
+        title: "Error",
+        description: "Failed to download schedule as TXT",
+        variant: "destructive"
+      });
     }
   };
 

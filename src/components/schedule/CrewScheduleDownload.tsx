@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Crew, Task } from './ScheduleTypes';
 import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 interface CrewScheduleDownloadProps {
   crews: Crew[];
@@ -59,14 +59,22 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
 
   const handleDownloadPdf = () => {
     if (!selectedCrew) {
-      toast.error("Please select a crew first");
+      toast({
+        title: "Error",
+        description: "Please select a crew first", 
+        variant: "destructive"
+      });
       return;
     }
     
     const filteredTasks = getFilteredTasks();
     
     if (filteredTasks.length === 0) {
-      toast.error("No scheduled tasks in the selected date range");
+      toast({
+        title: "Error",
+        description: "No scheduled tasks in the selected date range",
+        variant: "destructive"
+      });
       return;
     }
     
@@ -76,24 +84,39 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
         id: selectedCrew,
         name: getCrewNameById(selectedCrew)
       });
-      toast.success(`Schedule for ${getCrewNameById(selectedCrew)} downloaded as PDF`);
+      toast({
+        title: "Success",
+        description: `Schedule for ${getCrewNameById(selectedCrew)} downloaded as PDF`
+      });
       if (onClose) onClose();
     } catch (error) {
       console.error("Error downloading PDF:", error);
-      toast.error("Failed to download schedule as PDF");
+      toast({
+        title: "Error",
+        description: "Failed to download schedule as PDF",
+        variant: "destructive"
+      });
     }
   };
 
   const handleDownloadTxt = () => {
     if (!selectedCrew) {
-      toast.error("Please select a crew first");
+      toast({
+        title: "Error",
+        description: "Please select a crew first",
+        variant: "destructive"
+      });
       return;
     }
     
     const filteredTasks = getFilteredTasks();
     
     if (filteredTasks.length === 0) {
-      toast.error("No scheduled tasks in the selected date range");
+      toast({
+        title: "Error",
+        description: "No scheduled tasks in the selected date range",
+        variant: "destructive" 
+      });
       return;
     }
     
@@ -103,11 +126,18 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
         id: selectedCrew,
         name: getCrewNameById(selectedCrew)
       });
-      toast.success(`Schedule for ${getCrewNameById(selectedCrew)} downloaded as TXT`);
+      toast({
+        title: "Success",
+        description: `Schedule for ${getCrewNameById(selectedCrew)} downloaded as TXT`
+      });
       if (onClose) onClose();
     } catch (error) {
       console.error("Error downloading TXT:", error);
-      toast.error("Failed to download schedule as TXT");
+      toast({
+        title: "Error",
+        description: "Failed to download schedule as TXT",
+        variant: "destructive"
+      });
     }
   };
 

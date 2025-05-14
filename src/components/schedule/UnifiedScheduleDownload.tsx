@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { CalendarIcon, Download, FileText, FileDown, User, Users } from 'lucide-react';
+import { CalendarIcon, FileText, FileDown, User, Users } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -18,7 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Employee, Crew, Task } from './ScheduleTypes';
 import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 interface UnifiedScheduleDownloadProps {
   employees: Employee[];
@@ -107,18 +107,18 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       
       if (!selectedEmployeeId) {
         toast({
-          variant: "destructive",
-          title: "No employee selected",
-          description: "Please select an employee first"
+          title: "Error",
+          description: "Please select an employee first",
+          variant: "destructive"
         });
         return;
       }
       
       if (filteredTasks.length === 0) {
         toast({
-          variant: "destructive",
-          title: "No tasks found",
-          description: "No scheduled tasks for this employee in the selected date range"
+          title: "Error",
+          description: "No scheduled tasks for this employee in the selected date range",
+          variant: "destructive"
         });
         return;
       }
@@ -130,16 +130,16 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
           name: getEmployeeNameById(selectedEmployeeId)
         });
         toast({
-          title: "Schedule downloaded",
+          title: "Success",
           description: `Schedule for ${getEmployeeNameById(selectedEmployeeId)} downloaded as PDF`
         });
         if (onClose) onClose();
       } catch (error) {
         console.error("Error downloading PDF:", error);
         toast({
-          variant: "destructive",
-          title: "Download failed",
-          description: "Failed to download schedule as PDF"
+          title: "Error",
+          description: "Failed to download schedule as PDF",
+          variant: "destructive"
         });
       }
     } else {
@@ -147,18 +147,18 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       
       if (!selectedCrewId) {
         toast({
-          variant: "destructive",
-          title: "No crew selected",
-          description: "Please select a crew first"
+          title: "Error",
+          description: "Please select a crew first",
+          variant: "destructive"
         });
         return;
       }
       
       if (filteredTasks.length === 0) {
         toast({
-          variant: "destructive",
-          title: "No tasks found",
-          description: "No scheduled tasks for this crew in the selected date range"
+          title: "Error",
+          description: "No scheduled tasks for this crew in the selected date range",
+          variant: "destructive"
         });
         return;
       }
@@ -170,16 +170,16 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
           name: getCrewNameById(selectedCrewId)
         });
         toast({
-          title: "Schedule downloaded",
+          title: "Success",
           description: `Schedule for ${getCrewNameById(selectedCrewId)} downloaded as PDF`
         });
         if (onClose) onClose();
       } catch (error) {
         console.error("Error downloading PDF:", error);
         toast({
-          variant: "destructive",
-          title: "Download failed",
-          description: "Failed to download schedule as PDF"
+          title: "Error",
+          description: "Failed to download schedule as PDF",
+          variant: "destructive"
         });
       }
     }
@@ -191,18 +191,18 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       
       if (!selectedEmployeeId) {
         toast({
-          variant: "destructive",
-          title: "No employee selected",
-          description: "Please select an employee first"
+          title: "Error",
+          description: "Please select an employee first",
+          variant: "destructive"
         });
         return;
       }
       
       if (filteredTasks.length === 0) {
         toast({
-          variant: "destructive",
-          title: "No tasks found",
-          description: "No scheduled tasks for this employee in the selected date range"
+          title: "Error",
+          description: "No scheduled tasks for this employee in the selected date range",
+          variant: "destructive"
         });
         return;
       }
@@ -214,16 +214,16 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
           name: getEmployeeNameById(selectedEmployeeId)
         });
         toast({
-          title: "Schedule downloaded",
+          title: "Success",
           description: `Schedule for ${getEmployeeNameById(selectedEmployeeId)} downloaded as TXT`
         });
         if (onClose) onClose();
       } catch (error) {
         console.error("Error downloading TXT:", error);
         toast({
-          variant: "destructive",
-          title: "Download failed",
-          description: "Failed to download schedule as TXT"
+          title: "Error",
+          description: "Failed to download schedule as TXT",
+          variant: "destructive"
         });
       }
     } else {
@@ -231,18 +231,18 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       
       if (!selectedCrewId) {
         toast({
-          variant: "destructive",
-          title: "No crew selected",
-          description: "Please select a crew first"
+          title: "Error",
+          description: "Please select a crew first",
+          variant: "destructive"
         });
         return;
       }
       
       if (filteredTasks.length === 0) {
         toast({
-          variant: "destructive",
-          title: "No tasks found",
-          description: "No scheduled tasks for this crew in the selected date range"
+          title: "Error",
+          description: "No scheduled tasks for this crew in the selected date range",
+          variant: "destructive"
         });
         return;
       }
@@ -254,16 +254,16 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
           name: getCrewNameById(selectedCrewId)
         });
         toast({
-          title: "Schedule downloaded",
+          title: "Success",
           description: `Schedule for ${getCrewNameById(selectedCrewId)} downloaded as TXT`
         });
         if (onClose) onClose();
       } catch (error) {
         console.error("Error downloading TXT:", error);
         toast({
-          variant: "destructive",
-          title: "Download failed",
-          description: "Failed to download schedule as TXT"
+          title: "Error",
+          description: "Failed to download schedule as TXT",
+          variant: "destructive"
         });
       }
     }
