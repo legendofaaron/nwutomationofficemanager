@@ -2,176 +2,128 @@
 import React, { useEffect, useRef } from 'react';
 import { DayPicker } from 'react-day-picker';
 import { SelectSingleEventHandler, SelectRangeEventHandler, SelectMultipleEventHandler } from 'react-day-picker';
-import { resolveProps } from './utils';
-import { CalendarProps } from './types';
 import { CustomCaption } from './CustomCaption';
-import { useAppContext } from '@/context/AppContext';
+import type { CalendarProps } from './types';
+import { getCrewLetterCode } from './utils';
 
-export const Calendar = ({
-  mode = 'single',
-  id,
-  customCaption = false,
-  ...props
-}: CalendarProps & { id?: string, customCaption?: boolean }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const { globalCalendarSync, setGlobalCalendarSync } = useAppContext();
+// Create a dummy synthetic event object for the day picker
+const dummyEvent = {
+  target: {} as Element,
+  type: 'click',
+  nativeEvent: {} as MouseEvent,
+  preventDefault: () => {},
+  stopPropagation: () => {},
+  isDefaultPrevented: () => false,
+  isPropagationStopped: () => false,
+  persist: () => {},
+  currentTarget: {} as EventTarget & Element,
+  bubbles: false,
+  cancelable: false,
+  eventPhase: 0,
+  isTrusted: false,
+  timeStamp: Date.now(),
+  defaultPrevented: false,
+  returnValue: true
+};
+
+export function Calendar(props: CalendarProps) {
+  const { 
+    crew,
+    date, 
+    onDateChange,
+    isRange = false,
+    isMultiple = false,
+    monthFormat = 'MMM yyyy', 
+    ...otherProps 
+  } = props;
   
-  // Extract props from react-day-picker  
-  const { classNames, components, styles } = resolveProps(props);
+  const calendarDate = date || new Date();
+  const dateRef = useRef<Date>(calendarDate);
   
-  // Forward selected date changes to global state
   useEffect(() => {
-    if (props.onSelect && globalCalendarSync.source !== id && globalCalendarSync.date) {
-      if (id && mode === 'single') {
-        // Create a proper event object
-        const dummyEvent = {
-          target: ref.current as HTMLDivElement,
-          currentTarget: ref.current as HTMLDivElement,
-          bubbles: false,
-          cancelable: true,
-          defaultPrevented: false,
-          eventPhase: 0,
-          isTrusted: true,
-          preventDefault: () => {},
-          isDefaultPrevented: () => false,
-          stopPropagation: () => {},
-          isPropagationStopped: () => false,
-          stopImmediatePropagation: () => {},
-          persist: () => {},
-          timeStamp: Date.now(),
-          type: 'click',
-          nativeEvent: {} as MouseEvent,
-          altKey: false,
-          button: 0,
-          buttons: 0,
-          clientX: 0,
-          clientY: 0,
-          ctrlKey: false,
-          metaKey: false,
-          movementX: 0,
-          movementY: 0,
-          pageX: 0,
-          pageY: 0,
-          relatedTarget: null,
-          screenX: 0,
-          screenY: 0,
-          shiftKey: false,
-          detail: 0,
-          view: window as unknown as Window,
-          which: 1
-        } as unknown as React.MouseEvent<Element, MouseEvent>;
-        
-        // Only call the handler if we have a valid Date object
-        const calendarDate = globalCalendarSync.date;
-        
-        // Fix for error: Empty object {} is not assignable to type 'Date'
-        if (calendarDate instanceof Date) {
-          const singleSelectHandler = props.onSelect as SelectSingleEventHandler;
-          // Create proper DayPickerProps with the selected date
-          const dayPickerProps = { selected: calendarDate };
-          // Create a properly typed empty modifiers object
-          // The type error was happening because we need to pass a proper object with the right structure
-          // that matches what react-day-picker expects for the modifiers parameter
-          const modifiers = { selected: [calendarDate] };
-          singleSelectHandler(calendarDate, modifiers, dayPickerProps as any, dummyEvent);
+    if (date) {
+      dateRef.current = date;
+    }
+  }, [date]);
+  
+  // Update month when crew changes to ensure proper navigation
+  useEffect(() => {
+    if (crew && crew.startDate) {
+      const crewStartDate = new Date(crew.startDate);
+      if (crewStartDate && !isNaN(crewStartDate.getTime())) {
+        dateRef.current = crewStartDate;
+        if (onDateChange) {
+          onDateChange(crewStartDate);
         }
       }
     }
-  }, [globalCalendarSync, props, id, mode]);
+  }, [crew, onDateChange]);
+  
+  const CustomFooter = () => {
+    return (
+      <div className="p-2 border-t border-gray-200 dark:border-gray-800">
+        <div className="flex justify-between items-center">
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            {crew && <span>Crew: {getCrewLetterCode(crew.name)}</span>}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            {new Date().toLocaleDateString()}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
-  const handleSelect = (value: Date | Date[] | import('react-day-picker').DateRange | undefined, 
-                        modifiers: any, dayPickerProps: any, e?: React.MouseEvent) => {
-    if (!props.onSelect) return;
+  const handleOnSelect = (newDate: Date | Date[] | undefined) => {
+    if (!onDateChange || !newDate) return;
     
-    // Type-safe handling based on mode
-    if (mode === 'single' && value instanceof Date) {
-      const singleSelectHandler = props.onSelect as SelectSingleEventHandler;
-      singleSelectHandler(value, modifiers, dayPickerProps, e);
-      
-      // Synchronize with global state
-      if (id && value) {
-        setGlobalCalendarSync({
-          date: value,
-          source: id
-        });
+    // Determine the type of selection
+    if (Array.isArray(newDate)) {
+      if (isRange) {
+        // Range selection (start and end date)
+        const rangeHandler = props.onSelect as SelectRangeEventHandler;
+        if (rangeHandler && newDate.length === 2) {
+          const range = { from: newDate[0], to: newDate[1] };
+          rangeHandler(range, { selected: [] }, { selected: range }, dummyEvent);
+        }
+      } else if (isMultiple) {
+        // Multiple date selection
+        const multiHandler = props.onSelect as SelectMultipleEventHandler;
+        if (multiHandler) {
+          multiHandler(newDate, { selected: [] }, { selected: newDate }, dummyEvent);
+        }
       }
-    } else if (mode === 'multiple' && Array.isArray(value)) {
-      const multipleSelectHandler = props.onSelect as SelectMultipleEventHandler;
-      multipleSelectHandler(value, modifiers, dayPickerProps, e);
-    } else if (mode === 'range' && value && 'from' in value) {
-      const rangeSelectHandler = props.onSelect as SelectRangeEventHandler;
-      rangeSelectHandler(value, modifiers, dayPickerProps, e);
-    }
-  };
-
-  // Create type-safe props for each specific mode
-  const renderCalendar = () => {
-    // Base props common to all modes
-    const baseProps = {
-      classNames,
-      styles,
-      components: {
-        ...components,
-        Caption: customCaption ? CustomCaption : components?.Caption
+    } else if (newDate instanceof Date) {
+      // Single date selection
+      if (props.onSelect) {
+        const singleSelectHandler = props.onSelect as SelectSingleEventHandler;
+        // Create proper DayPickerProps with the selected date
+        const dayPickerProps = { selected: newDate };
+        // Instead of passing modifiers as the second parameter (which is causing the type error),
+        // let's create a proper DayPicker.Modifiers object
+        const modifiers = { selected: [newDate] };
+        // Use the correct parameter order for singleSelectHandler
+        singleSelectHandler(newDate, { selected: [] }, dayPickerProps, dummyEvent);
       }
-    };
-
-    // Render the appropriate DayPicker based on mode
-    switch (mode) {
-      case 'single':
-        return (
-          <DayPicker
-            {...props}
-            {...baseProps}
-            mode="single"
-            selected={props.selected as Date}
-            onSelect={(day, modifiers, props, e) => 
-              handleSelect(day, modifiers, props, e)
-            }
-          />
-        );
-      case 'multiple':
-        return (
-          <DayPicker
-            {...props}
-            {...baseProps}
-            mode="multiple"
-            selected={props.selected as Date[]}
-            onSelect={(days, modifiers, props, e) => 
-              handleSelect(days, modifiers, props, e)
-            }
-          />
-        );
-      case 'range':
-        return (
-          <DayPicker
-            {...props}
-            {...baseProps}
-            mode="range"
-            selected={props.selected as import('react-day-picker').DateRange}
-            onSelect={(range, modifiers, props, e) => 
-              handleSelect(range, modifiers, props, e)
-            }
-          />
-        );
-      default:
-        return (
-          <DayPicker
-            {...props}
-            {...baseProps}
-            mode="single"
-            selected={props.selected as Date}
-            onSelect={(day, modifiers, props, e) => 
-              handleSelect(day, modifiers, props, e)
-            }
-          />
-        );
     }
-  };
+  }
 
   return (
-    <div ref={ref} className="calendar-component" data-calendar={id || 'default'}>
-      {renderCalendar()}
-    </div>
+    <DayPicker
+      className="p-3" 
+      mode={isRange ? "range" : isMultiple ? "multiple" : "single"}
+      selected={date}
+      onSelect={handleOnSelect}
+      components={{
+        Caption: (captionProps) => (
+          <CustomCaption 
+            {...captionProps} 
+            monthFormat={monthFormat} 
+          />
+        ),
+        Footer: CustomFooter
+      }}
+      {...otherProps}
+    />
   );
-};
+}

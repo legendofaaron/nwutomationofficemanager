@@ -8,7 +8,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { User, Lock, ArrowRight, AlertCircle, Shield, Presentation, Sparkles } from 'lucide-react';
+import { User, Lock, ArrowRight, AlertCircle, Shield, Sparkles } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/Logo';
 import { useAppContext } from '@/context/AppContext';
@@ -228,11 +228,16 @@ const Login = () => {
               </form>
             </Form>
             
-            <div className="mt-6">
-              <Separator className="my-4">
-                <span className="px-2 text-xs text-gray-500">OR</span>
-              </Separator>
-              
+            <div className="mt-6 relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gray-300 dark:border-gray-700"></span>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="px-2 bg-card text-muted-foreground">OR</span>
+              </div>
+            </div>
+            
+            <div className="mt-6 pt-2">
               <Button 
                 type="button" 
                 variant="outline" 
