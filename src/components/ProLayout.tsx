@@ -25,6 +25,15 @@ const FontLoader: React.FC = () => {
     fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap';
     document.head.appendChild(fontLink);
 
+    // Add viewport meta tag to ensure proper mobile rendering
+    const existingViewport = document.querySelector('meta[name="viewport"]');
+    if (!existingViewport) {
+      const viewport = document.createElement('meta');
+      viewport.name = 'viewport';
+      viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      document.head.appendChild(viewport);
+    }
+
     // Cleanup function to remove the links when component unmounts
     return () => {
       document.head.removeChild(preconnectGoogle);

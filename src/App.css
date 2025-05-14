@@ -119,9 +119,9 @@ button, a, input, select, textarea {
   input[type="submit"], 
   input[type="reset"], 
   input[type="button"] {
-    min-height: 44px;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
+    min-height: 40px;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
   }
   
   /* Improve form input touch targets */
@@ -129,7 +129,7 @@ button, a, input, select, textarea {
   select, 
   textarea {
     font-size: 16px !important; /* Prevent zoom on focus in iOS */
-    min-height: 44px;
+    min-height: 40px;
   }
   
   /* Reduce font sizes for better readability */
@@ -155,5 +155,28 @@ button, a, input, select, textarea {
   .space-y-2 {
     margin-top: 0.625rem !important;
     margin-bottom: 0.625rem !important;
+  }
+  
+  /* Ensure dropdown menus stay on screen */
+  .dropdown-menu, 
+  .popover-content, 
+  [role="tooltip"], 
+  [role="dialog"] {
+    max-width: 95vw !important;
+    max-height: 80vh !important;
+  }
+  
+  /* Ensure proper button spacing in mobile forms */
+  .btn-group, 
+  .inline-flex {
+    gap: 0.5rem !important;
+  }
+  
+  /* Prevent long text from overflowing */
+  td, th, p, div, span, a {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
   }
 }

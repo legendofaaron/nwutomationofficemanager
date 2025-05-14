@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
@@ -167,10 +168,10 @@ const MainLayout = () => {
 
   // Render mobile header
   const renderMobileHeader = () => (
-    <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between p-3 border-b bg-background border-border">
+    <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between p-2 sm:p-3 border-b bg-background border-border">
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden">
+          <Button variant="ghost" size="sm" className="md:hidden flex items-center justify-center p-1.5">
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
@@ -181,7 +182,7 @@ const MainLayout = () => {
                 handleViewChange('welcome');
                 setMobileMenuOpen(false);
               }} />
-              <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -196,27 +197,27 @@ const MainLayout = () => {
       
       <DropdownMenu>
         <DropdownMenuTrigger className="outline-none">
-          <UserAvatar className="h-8 w-8 transition-all hover:scale-105 cursor-pointer" showTooltip />
+          <UserAvatar className="h-7 w-7 sm:h-8 sm:w-8 transition-all hover:scale-105 cursor-pointer" showTooltip />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel className="flex items-center gap-2">
-            <UserAvatar className="h-7 w-7" />
+            <UserAvatar className="h-6 w-6 sm:h-7 sm:w-7" />
             <div className="flex flex-col">
-              <span className="font-medium">{user?.user_metadata?.full_name || 'User'}</span>
+              <span className="font-medium text-xs sm:text-sm">{user?.user_metadata?.full_name || 'User'}</span>
               <span className="text-xs text-muted-foreground truncate">@{user?.user_metadata?.username || 'user'}</span>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={navigateToProfile} className="cursor-pointer">
-            <User className="mr-2 h-4 w-4" />
+          <DropdownMenuItem onClick={navigateToProfile} className="cursor-pointer text-xs sm:text-sm">
+            <User className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>Profile</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleViewChange('settings')} className="cursor-pointer">
-            <SettingsIcon className="mr-2 h-4 w-4" />
+          <DropdownMenuItem onClick={() => handleViewChange('settings')} className="cursor-pointer text-xs sm:text-sm">
+            <SettingsIcon className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>Settings</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={confirmLogout} className="cursor-pointer text-red-500 dark:text-red-400">
-            <LogOut className="mr-2 h-4 w-4" />
+          <DropdownMenuItem onClick={confirmLogout} className="cursor-pointer text-red-500 dark:text-red-400 text-xs sm:text-sm">
+            <LogOut className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>Log out</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -234,31 +235,31 @@ const MainLayout = () => {
             ) : (
               <div className="relative sidebar-container">
                 <Sidebar className="shadow-md border-r border-gray-100 dark:border-gray-800">
-                  <div className="flex justify-between items-center p-4">
+                  <div className="flex justify-between items-center p-3 sm:p-4">
                     <Logo onClick={() => setViewMode('welcome')} />
                     <DropdownMenu>
                       <DropdownMenuTrigger className="outline-none">
-                        <UserAvatar className="h-9 w-9 transition-all hover:scale-105 cursor-pointer" showTooltip />
+                        <UserAvatar className="h-8 w-8 sm:h-9 sm:w-9 transition-all hover:scale-105 cursor-pointer" showTooltip />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuContent align="end" className="w-48 sm:w-56">
                         <DropdownMenuLabel className="flex items-center gap-2">
-                          <UserAvatar className="h-7 w-7" />
+                          <UserAvatar className="h-6 w-6 sm:h-7 sm:w-7" />
                           <div className="flex flex-col">
-                            <span className="font-medium">{user?.user_metadata?.full_name || 'User'}</span>
+                            <span className="font-medium text-xs sm:text-sm">{user?.user_metadata?.full_name || 'User'}</span>
                             <span className="text-xs text-muted-foreground truncate">@{user?.user_metadata?.username || 'user'}</span>
                           </div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={navigateToProfile} className="cursor-pointer">
-                          <User className="mr-2 h-4 w-4" />
+                        <DropdownMenuItem onClick={navigateToProfile} className="cursor-pointer text-xs sm:text-sm">
+                          <User className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           <span>Profile</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setViewMode('settings')} className="cursor-pointer">
-                          <SettingsIcon className="mr-2 h-4 w-4" />
+                        <DropdownMenuItem onClick={() => setViewMode('settings')} className="cursor-pointer text-xs sm:text-sm">
+                          <SettingsIcon className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           <span>Settings</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={confirmLogout} className="cursor-pointer text-red-500 dark:text-red-400">
-                          <LogOut className="mr-2 h-4 w-4" />
+                        <DropdownMenuItem onClick={confirmLogout} className="cursor-pointer text-red-500 dark:text-red-400 text-xs sm:text-sm">
+                          <LogOut className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           <span>Log out</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -272,7 +273,7 @@ const MainLayout = () => {
                   style={{ top: `${triggerPosition}px` }}
                 >
                   <SidebarTrigger 
-                    className={`h-16 w-12 ${sidebarButtonBg} rounded-r-lg flex items-center justify-center ${sidebarHoverBg} transition-all group cursor-move`}
+                    className={`h-14 w-10 sm:h-16 sm:w-12 ${sidebarButtonBg} rounded-r-lg flex items-center justify-center ${sidebarHoverBg} transition-all group cursor-move`}
                     onMouseDown={handleDragStart}
                   >
                     <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
@@ -285,7 +286,7 @@ const MainLayout = () => {
             
             <main 
               className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", 
-                isMobile ? "pt-14" : (sidebarOpen ? "ml-0" : "ml-0"))}
+                isMobile ? "pt-11 sm:pt-14" : (sidebarOpen ? "ml-0" : "ml-0"))}
               onClick={handleCloseCalendars}
             >
               <div className={`w-full ${mainBg} h-full rounded-md overflow-auto`}>
@@ -303,14 +304,14 @@ const MainLayout = () => {
             <TodoCalendarBubble />
             
             {/* AI Assistant Button with improved styling and fixed toggle behavior */}
-            <div className={`fixed bottom-6 right-6 z-50 ${isMobile ? 'mb-4' : ''}`}>
+            <div className={`fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50`}>
               <button 
                 onClick={handleToggleAiAssistant} 
-                className={`h-14 w-14 rounded-full shadow-lg ${isDark || isSuperDark ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'} 
+                className={`h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg ${isDark || isSuperDark ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'} 
                 relative flex items-center justify-center transition-colors text-white hover:shadow-xl hover:scale-105 active:scale-95 transition-transform duration-200`}
                 aria-label="Toggle AI Assistant"
               >
-                <Sparkles className="h-6 w-6" />
+                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
                 {aiAssistantOpen && (
                   <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-background animate-pulse"></span>
                 )}
@@ -322,15 +323,15 @@ const MainLayout = () => {
             
             {/* Logout Confirmation Dialog */}
             <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-              <AlertDialogContent>
+              <AlertDialogContent className="max-w-[90%] sm:max-w-lg">
                 <AlertDialogHeader>
                   <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
                   <AlertDialogDescription>
                     Are you sure you want to log out of your account? Any unsaved changes may be lost.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+                  <AlertDialogCancel className="mb-2 sm:mb-0 mt-0">Cancel</AlertDialogCancel>
                   <AlertDialogAction onClick={handleLogout} className="bg-red-500 hover:bg-red-600 text-white">
                     Log out
                   </AlertDialogAction>

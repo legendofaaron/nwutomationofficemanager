@@ -14,54 +14,41 @@ export interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
 // Enhanced toast function with automatic theme detection
 export const useToast = () => {
   const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
-  const isSuperDark = resolvedTheme === 'superdark';
-  
-  const toast = {
-    // Base toast method with styled toasts
-    toast(props: ToastProps) {
-      const styles = {
-        background: isSuperDark ? '#0A0A0A' : isDark ? '#0D1117' : 'white',
-        color: isSuperDark || isDark ? 'white' : '#1f2937',
-        border: `1px solid ${isSuperDark ? '#181818' : isDark ? '#1a1e26' : '#e5e7eb'}`,
-        borderRadius: '0.5rem',
-      };
 
-      return sonnerToast(props.title || "", {
-        description: props.description,
-        style: styles,
-        ...props,
-      });
-    },
-    
-    // Helper methods for different toast types
-    success(props: ToastProps) {
-      this.toast({ ...props, variant: "success" });
-    },
-    error(props: ToastProps) {
-      this.toast({ ...props, variant: "destructive" });
-    },
-    warning(props: ToastProps) {
-      this.toast({ ...props, variant: "warning" });
-    },
-    info(props: ToastProps) {
-      this.toast({ ...props, variant: "default" });
-    },
-  };
+  const toast = React.useMemo(
+    () => ({
+      toast: ({ variant = "default", title, description, ...props }: ToastProps) => {
+        // Configure styling based on variant
+        const styling: any = {};
+        
+        // Add theme-specific styling
+        if (resolvedTheme === "dark" || resolvedTheme === "superdark") {
+          styling.style = { backgroundColor: "#1e2030", color: "#e2e8f0" };
+        }
+
+        if (variant === "destructive") {
+          styling.className = `${resolvedTheme === "dark" || resolvedTheme === "superdark" ? "bg-red-900" : "bg-red-500"} text-white`;
+          styling.icon = "✖";
+        } else if (variant === "success") {
+          styling.className = `${resolvedTheme === "dark" || resolvedTheme === "superdark" ? "bg-green-900" : "bg-green-500"} text-white`;
+          styling.icon = "✓";
+        } else if (variant === "warning") {
+          styling.className = `${resolvedTheme === "dark" || resolvedTheme === "superdark" ? "bg-yellow-900" : "bg-yellow-500"} text-white`;
+          styling.icon = "⚠️";
+        }
+        
+        // Return the toast
+        return sonnerToast(title, {
+          description,
+          ...styling,
+          ...props,
+        });
+      },
+    }),
+    [resolvedTheme]
+  );
 
   return toast;
 };
 
-// Export a standalone toast function for use outside of components
-export const toast = (props: ToastProps) => {
-  // Basic styling for standalone toast usage
-  const styles = {
-    borderRadius: '0.5rem',
-  };
-  
-  return sonnerToast(props.title || "", {
-    description: props.description,
-    style: styles,
-    ...props,
-  });
-};
+export { sonnerToast as toast };

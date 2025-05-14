@@ -12,12 +12,14 @@ import ClientsView from './ClientsView';
 import { useTheme } from '@/context/ThemeContext';
 import { Separator } from '@/components/ui/separator';
 import { PaymentVerifier } from './payment/PaymentVerifier';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const OfficeManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState<'employees' | 'clients' | 'schedule' | 'invoices' | 'bookings' | 'settings'>('employees');
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const isSuperDark = resolvedTheme === 'superdark';
+  const isMobile = useIsMobile();
   
   // Enhanced styling variables
   const borderColor = isSuperDark ? 'border-[#151515]' : isDark ? 'border-[#1a1e26]' : 'border-gray-200';
@@ -39,12 +41,12 @@ const OfficeManagerDashboard = () => {
     <>
       <PaymentVerifier />
       <div className="h-full flex flex-col">
-        <div className={`flex items-center justify-between p-4 md:p-5 ${headerBgColor} border-b ${borderColor} shadow-sm`}>
-          <div className="flex items-center gap-3">
+        <div className={`flex items-center justify-between p-3 md:p-4 lg:p-5 ${headerBgColor} border-b ${borderColor} shadow-sm`}>
+          <div className="flex items-center gap-2 md:gap-3">
             <Logo small />
-            <div className="font-medium text-xl">Office Manager</div>
+            <div className="font-medium text-lg md:text-xl">Office Manager</div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -66,12 +68,12 @@ const OfficeManagerDashboard = () => {
           </div>
         </div>
 
-        <div className={`p-3 md:p-4 border-b ${bgColor} ${borderColor} shadow-sm`}>
-          <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+        <div className={`p-2 md:p-3 lg:p-4 border-b ${bgColor} ${borderColor} shadow-sm overflow-x-auto`}>
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 flex-nowrap min-w-max">
             <Button 
               variant={activeTab === 'employees' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-2 rounded-md transition-colors ${activeTab === 'employees' ? tabActiveClass : tabHoverClass}`} 
+              className={`gap-1 md:gap-2 rounded-md transition-colors ${activeTab === 'employees' ? tabActiveClass : tabHoverClass}`} 
               onClick={() => setActiveTab('employees')}
             >
               <Users className="h-4 w-4" />
@@ -81,7 +83,7 @@ const OfficeManagerDashboard = () => {
             <Button 
               variant={activeTab === 'clients' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-2 rounded-md transition-colors ${activeTab === 'clients' ? tabActiveClass : tabHoverClass}`}
+              className={`gap-1 md:gap-2 rounded-md transition-colors ${activeTab === 'clients' ? tabActiveClass : tabHoverClass}`}
               onClick={() => setActiveTab('clients')}
             >
               <Briefcase className="h-4 w-4" />
@@ -91,7 +93,7 @@ const OfficeManagerDashboard = () => {
             <Button 
               variant={activeTab === 'schedule' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-2 rounded-md transition-colors ${activeTab === 'schedule' ? tabActiveClass : tabHoverClass}`}
+              className={`gap-1 md:gap-2 rounded-md transition-colors ${activeTab === 'schedule' ? tabActiveClass : tabHoverClass}`}
               onClick={() => setActiveTab('schedule')}
             >
               <Calendar className="h-4 w-4" />
@@ -101,7 +103,7 @@ const OfficeManagerDashboard = () => {
             <Button 
               variant={activeTab === 'invoices' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-2 rounded-md transition-colors ${activeTab === 'invoices' ? tabActiveClass : tabHoverClass}`}
+              className={`gap-1 md:gap-2 rounded-md transition-colors ${activeTab === 'invoices' ? tabActiveClass : tabHoverClass}`}
               onClick={() => setActiveTab('invoices')}
             >
               <Receipt className="h-4 w-4" />
@@ -111,7 +113,7 @@ const OfficeManagerDashboard = () => {
             <Button 
               variant={activeTab === 'bookings' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-2 rounded-md transition-colors ${activeTab === 'bookings' ? tabActiveClass : tabHoverClass}`}
+              className={`gap-1 md:gap-2 rounded-md transition-colors ${activeTab === 'bookings' ? tabActiveClass : tabHoverClass}`}
               onClick={() => setActiveTab('bookings')}
             >
               <BookOpen className="h-4 w-4" />
@@ -121,7 +123,7 @@ const OfficeManagerDashboard = () => {
             <Button 
               variant={activeTab === 'settings' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-2 rounded-md transition-colors ${activeTab === 'settings' ? tabActiveClass : tabHoverClass}`}
+              className={`gap-1 md:gap-2 rounded-md transition-colors ${activeTab === 'settings' ? tabActiveClass : tabHoverClass}`}
               onClick={() => setActiveTab('settings')}
             >
               <Settings className="h-4 w-4" />
@@ -131,7 +133,7 @@ const OfficeManagerDashboard = () => {
           </div>
         </div>
 
-        <div className={`flex-1 overflow-auto p-4 md:p-6 ${contentBgColor} animate-fade-in`}>
+        <div className={`flex-1 overflow-auto p-2 md:p-4 lg:p-6 ${contentBgColor} animate-fade-in`}>
           {activeTab === 'employees' && <EmployeesView />}
           {activeTab === 'clients' && <ClientsView />}
           {activeTab === 'schedule' && <ScheduleView />}

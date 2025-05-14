@@ -12,12 +12,12 @@ type ToastProps = {
 
 export const useToast = () => {
   const toast = ({ variant = 'default', title, description, ...props }: ToastProps) => {
-    // Set the styling based on variant
-    const styling: Record<string, any> = {};
+    // Configure styling based on variant
+    const styling: any = {};
     
     if (variant === 'destructive') {
-      styling.className = 'bg-destructive text-destructive-foreground';
-      styling.icon = '⚠️';
+      styling.className = 'bg-red-500 text-white';
+      styling.icon = '✖';
     } else if (variant === 'success') {
       styling.className = 'bg-green-500 text-white';
       styling.icon = '✓';
@@ -27,14 +27,8 @@ export const useToast = () => {
     }
     
     // Construct the content
-    let content = '';
-    if (title) {
-      content = description ? `${title}\n${description}` : title;
-    } else if (description) {
-      content = description;
-    }
-    
-    return sonnerToast(content || '', {
+    return sonnerToast(title, {
+      description,
       ...styling,
       ...props,
     });
@@ -43,14 +37,14 @@ export const useToast = () => {
   return { toast };
 };
 
-// For direct usage without the hook
+// Default export for direct import
 export const toast = ({ variant = 'default', title, description, ...props }: ToastProps) => {
-  // Set the styling based on variant
-  const styling: Record<string, any> = {};
+  // Configure styling based on variant
+  const styling: any = {};
   
   if (variant === 'destructive') {
-    styling.className = 'bg-destructive text-destructive-foreground';
-    styling.icon = '⚠️';
+    styling.className = 'bg-red-500 text-white';
+    styling.icon = '✖';
   } else if (variant === 'success') {
     styling.className = 'bg-green-500 text-white';
     styling.icon = '✓';
@@ -60,14 +54,8 @@ export const toast = ({ variant = 'default', title, description, ...props }: Toa
   }
   
   // Construct the content
-  let content = '';
-  if (title) {
-    content = description ? `${title}\n${description}` : title;
-  } else if (description) {
-    content = description;
-  }
-  
-  return sonnerToast(content || '', {
+  return sonnerToast(title, {
+    description,
     ...styling,
     ...props,
   });
