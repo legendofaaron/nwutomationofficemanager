@@ -131,7 +131,8 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
       data-droppable-id={id}
       data-accept-types={acceptTypes.join(',')}
     >
-      <style jsx>{`
+      <style>
+        {`
         .drop-area-active {
           outline: 2px dashed hsl(var(--primary));
           background-color: rgba(var(--primary), 0.1);
@@ -147,7 +148,8 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
           outline: 2px dashed hsl(var(--primary));
           background-color: rgba(var(--primary), 0.1);
         }
-      `}</style>
+        `}
+      </style>
       {children}
     </div>
   );
