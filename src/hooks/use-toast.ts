@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import { ToastActionElement, ToastProps } from "@/components/ui/toast"
@@ -12,6 +13,8 @@ export type ToasterToast = {
   action?: ToastActionElement
   variant?: "default" | "destructive" | "success" | "warning"
   duration?: number
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const actionTypes = {
