@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { localAuth, LocalSession, LocalUser } from '@/services/localAuth';
@@ -8,6 +9,7 @@ interface AuthContextType {
   user: LocalUser | null;
   isLoading: boolean;
   isDemoMode: boolean;
+  isLoggedIn: boolean; // Added the missing property
   hasActiveSubscription: boolean;
   checkSubscription: () => Promise<boolean>;
   signIn: (username: string, password: string) => Promise<void>;
@@ -35,6 +37,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const { toast } = useToast();
   const hasShownSignInToast = useRef(false);
+  
+  // Derive isLoggedIn from user or demoMode
+  const isLoggedIn = !!user || isDemoMode;
 
   // Function to check if user has an active subscription
   const checkSubscription = useCallback(async (): Promise<boolean> => {
@@ -150,9 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         hasShownSignInToast.current = true;
         setTimeout(() => {
           toast({
-            title: "Signed in successfully",
             description: `Welcome${currentSession?.user?.user_metadata?.username ? ', ' + currentSession.user.user_metadata.username : ''}!`,
-            duration: 3000,
           });
         }, 0);
       } else if (event === 'SIGNED_OUT') {
@@ -160,9 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         hasShownSignInToast.current = false;
         setTimeout(() => {
           toast({
-            title: "Signed out",
             description: "You have been signed out successfully.",
-            duration: 3000,
           });
         }, 0);
       }
@@ -181,9 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         hasShownSignInToast.current = true;
         setTimeout(() => {
           toast({
-            title: "Signed in successfully",
             description: `Welcome${initialSession?.user?.user_metadata?.username ? ', ' + initialSession.user.user_metadata.username : ''}!`,
-            duration: 3000,
           });
         }, 0);
       }
@@ -218,7 +217,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Error signing out:", error);
       toast({
-        title: "Sign out failed",
         description: "There was a problem signing out. Please try again.",
         variant: "destructive",
       });
@@ -247,6 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user, 
       isLoading, 
       isDemoMode,
+      isLoggedIn, // Added the missing property
       hasActiveSubscription,
       checkSubscription,
       signIn,

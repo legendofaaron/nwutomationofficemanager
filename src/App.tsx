@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -9,7 +10,7 @@ import Payment from './pages/Payment';
 import Pricing from './pages/Pricing';
 import Settings from './pages/Settings';
 import SchedulePage from './pages/SchedulePage';
-import { Toaster } from '@/components/ui/toaster';
+import { Toast } from '@/components/ui/toast';
 
 // Import the CalendarSyncProvider
 import { CalendarSyncProvider } from './context/CalendarSyncContext';
@@ -38,7 +39,7 @@ function App() {
     <BrowserRouter>
       <AppProvider>
         <CalendarSyncProvider>
-          <Toaster />
+          <Toast />
           <AuthProvider>
             <Routes>
               <Route path="/login" element={<Login />} />

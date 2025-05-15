@@ -32,4 +32,4 @@ function Toast({ position = "bottom-right", className }: ToastConfig) {
   )
 }
 
-export { Toast, useToast, toast, type ToasterToast };
+export { Toast, useToast, toast, type ToasterToast, type ToastActionElement, type ToastProps };
