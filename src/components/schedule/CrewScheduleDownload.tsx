@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
@@ -264,22 +265,22 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex flex-col sm:flex-row gap-2 w-full">
         <Button 
           variant="outline" 
-          className="w-full gap-2" 
+          className="w-full gap-2 bg-neutral-900 text-white hover:bg-neutral-800 border-neutral-700" 
           onClick={handleDownloadTxt}
           disabled={!selectedCrew}
         >
-          <FileText className="h-4 w-4" />
+          <FileText className="h-5 w-5" />
           Download as TXT
         </Button>
         <Button 
-          className="w-full gap-2 ml-2" 
+          className="w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white" 
           onClick={handleDownloadPdf}
           disabled={!selectedCrew}
         >
-          <FileDown className="h-4 w-4" />
+          <FileDown className="h-5 w-5" />
           Download as PDF
         </Button>
       </CardFooter>
