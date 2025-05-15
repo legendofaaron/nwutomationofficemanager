@@ -65,20 +65,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       }
     } else if (variant === 'premium') {
       enhancedClassName = cn(className, "shadow-md relative overflow-hidden");
-      
-      // Add premium shine effect if it's a premium button
-      return (
-        <Comp
-          className={cn(buttonVariants({ variant, size, className: enhancedClassName }))}
-          ref={ref}
-          {...props}
-        >
-          {props.children}
-          <span className="absolute inset-0 overflow-hidden rounded-md">
-            <span className="shine-effect"></span>
-          </span>
-        </Comp>
-      );
     }
     
     return (
