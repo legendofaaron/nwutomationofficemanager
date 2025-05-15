@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -9,7 +10,7 @@ import { format, addMonths, subMonths } from 'date-fns';
 import { DayProps } from 'react-day-picker';
 import DroppableArea from '../DroppableArea';
 import { useDragDrop } from '../DragDropContext';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { useAppContext } from '@/context/AppContext';
 
 interface CalendarCardProps {
@@ -28,7 +29,7 @@ const CalendarCard: React.FC<CalendarCardProps> = React.memo(({
   onItemDrop,
 }) => {
   const [currentMonth, setCurrentMonth] = useState<Date>(selectedDate || new Date());
-  const { isDragging } = useDragDrop();
+  const { isDragging, draggedItem } = useDragDrop();
   const [activeDropTarget, setActiveDropTarget] = useState<string | null>(null);
   const [lastDropTime, setLastDropTime] = useState<number>(0);
   const { calendarDate } = useAppContext();
@@ -66,7 +67,7 @@ const CalendarCard: React.FC<CalendarCardProps> = React.memo(({
   }, [isDragging]);
 
   // Handle day selection with a single click - memoized
-  const handleDaySelect = React.useCallback((date: Date | undefined) => {
+  const handleDaySelect = useCallback((date: Date | undefined) => {
     if (date) {
       // Immediately update the selected date with a single click
       onSelectDate(date);
@@ -74,7 +75,7 @@ const CalendarCard: React.FC<CalendarCardProps> = React.memo(({
   }, [onSelectDate]);
 
   // Handle dropping a task on a day with debounce to prevent duplicate drops - memoized
-  const handleDayDrop = React.useCallback((item: DragItem, date: Date) => {
+  const handleDayDrop = useCallback((item: DragItem, date: Date) => {
     // Prevent duplicate drops (this fixes the multiple drag issue)
     const now = Date.now();
     if (now - lastDropTime < 500) {
@@ -99,23 +100,27 @@ const CalendarCard: React.FC<CalendarCardProps> = React.memo(({
       
       // Show a toast notification for successful drop
       const taskTitle = item.data.title || 'Task';
-      toast.success(`Task "${taskTitle}" moved to ${format(date, 'MMMM d')}`, {
+      toast({
+        title: "Task moved",
+        description: `"${taskTitle}" moved to ${format(date, 'MMMM d')}`,
+        variant: "success",
         duration: 3000,
       });
-    } else if (onItemDrop && (item.type === 'employee' || item.type === 'crew' || item.type === 'client')) {
-      // Pass non-task item drops to the parent handler
+    } else if (onItemDrop) {
+      // Handle non-task items (employee, crew, client)
       onItemDrop(item, date);
+      
       // Update selected date to where the item was dropped
       onSelectDate(date);
     }
-  }, [onMoveTask, onItemDrop, onSelectDate, lastDropTime, setLastDropTime]);
+  }, [onMoveTask, onItemDrop, onSelectDate, lastDropTime]);
 
   // Handle month navigation - memoized
-  const handlePreviousMonth = React.useCallback(() => {
+  const handlePreviousMonth = useCallback(() => {
     setCurrentMonth(prevMonth => subMonths(prevMonth, 1));
   }, []);
 
-  const handleNextMonth = React.useCallback(() => {
+  const handleNextMonth = useCallback(() => {
     setCurrentMonth(prevMonth => addMonths(prevMonth, 1));
   }, []);
 
@@ -221,7 +226,7 @@ const CalendarCard: React.FC<CalendarCardProps> = React.memo(({
                 <DroppableArea
                   id={droppableId}
                   acceptTypes={['task', 'employee', 'crew', 'client']}
-                  onDrop={(item, event) => handleDayDrop(item, dayDate)}
+                  onDrop={(item) => handleDayDrop(item, dayDate)}
                   className={cn(
                     "calendar-day-cell relative h-full w-full flex items-center justify-center rounded-md transition-colors", 
                     isSelected && "selected-day bg-primary/10",

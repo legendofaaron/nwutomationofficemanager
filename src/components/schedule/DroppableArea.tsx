@@ -8,7 +8,7 @@ import { toast } from '@/hooks/use-toast';
 interface DroppableAreaProps {
   id: string;
   acceptTypes: DraggableItemType[];
-  onDrop?: (item: DragItem, event: React.DragEvent<HTMLDivElement>) => void;
+  onDrop?: (item: DragItem, event?: React.DragEvent<HTMLDivElement>) => void;
   onDragEnter?: (event: React.DragEvent<HTMLDivElement>) => void;
   onDragLeave?: (event: React.DragEvent<HTMLDivElement>) => void;
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
@@ -31,6 +31,7 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
   const { isDragging, draggedItem, registerDropTarget, unregisterDropTarget } = useDragDrop();
   const [isActive, setIsActive] = useState(false);
   const dropAreaRef = useRef<HTMLDivElement>(null);
+  const dragEnterCountRef = useRef<number>(0);
   
   useEffect(() => {
     registerDropTarget(id, acceptTypes);
@@ -43,10 +44,18 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
     event.preventDefault();
     event.stopPropagation();
     
+    // Increment counter to handle nested elements
+    dragEnterCountRef.current += 1;
+    
     if (isDragging && draggedItem && acceptTypes.includes(draggedItem.type)) {
       setIsActive(true);
       if (onDragEnter) {
         onDragEnter(event);
+      }
+      
+      // Add visual feedback immediately
+      if (event.currentTarget) {
+        event.currentTarget.classList.add('drag-over');
       }
     }
   };
@@ -58,6 +67,7 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
     // Safely add the active class to the current target if it exists
     if (event.currentTarget && isDragging && draggedItem && acceptTypes.includes(draggedItem.type)) {
       event.currentTarget.classList.add('drag-over');
+      event.dataTransfer.dropEffect = 'move';
     }
   };
   
@@ -65,20 +75,29 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
     event.preventDefault();
     event.stopPropagation();
     
-    // Safely remove the active class if the current target exists
-    if (event.currentTarget) {
-      event.currentTarget.classList.remove('drag-over');
-    }
+    // Decrement counter
+    dragEnterCountRef.current -= 1;
     
-    setIsActive(false);
-    if (onDragLeave) {
-      onDragLeave(event);
+    // Only remove classes and call handlers when we've left the outermost element
+    if (dragEnterCountRef.current === 0) {
+      // Safely remove the active class if the current target exists
+      if (event.currentTarget) {
+        event.currentTarget.classList.remove('drag-over');
+      }
+      
+      setIsActive(false);
+      if (onDragLeave) {
+        onDragLeave(event);
+      }
     }
   };
   
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
+    
+    // Reset drag counter
+    dragEnterCountRef.current = 0;
     setIsActive(false);
     
     // Safely remove the drag-over class if the current target exists
@@ -87,21 +106,31 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
     }
     
     try {
-      const itemData = event.dataTransfer.getData('application/json');
+      // First try to get the data as JSON
+      let itemData = event.dataTransfer.getData('application/json');
+      let item: DragItem | null = null;
+      
       if (itemData) {
-        const item: DragItem = JSON.parse(itemData);
-        if (acceptTypes.includes(item.type) && onDrop) {
-          onDrop(item, event);
-          
-          // Add a highlight effect to indicate a successful drop
-          if (dropAreaRef.current) {
-            dropAreaRef.current.classList.add('drop-target-highlight');
-            setTimeout(() => {
-              if (dropAreaRef.current) {
-                dropAreaRef.current.classList.remove('drop-target-highlight');
-              }
-            }, 800);
-          }
+        item = JSON.parse(itemData);
+      } else {
+        // Fallback for browsers or cases where JSON data isn't available
+        const id = event.dataTransfer.getData('text/plain');
+        if (id && draggedItem && draggedItem.id === id) {
+          item = draggedItem;
+        }
+      }
+      
+      if (item && acceptTypes.includes(item.type) && onDrop) {
+        onDrop(item, event);
+        
+        // Add a highlight effect to indicate a successful drop
+        if (dropAreaRef.current) {
+          dropAreaRef.current.classList.add('drop-target-highlight');
+          setTimeout(() => {
+            if (dropAreaRef.current) {
+              dropAreaRef.current.classList.remove('drop-target-highlight');
+            }
+          }, 800);
         }
       }
     } catch (error) {
@@ -131,8 +160,7 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
       data-droppable-id={id}
       data-accept-types={acceptTypes.join(',')}
     >
-      <style>
-        {`
+      <style jsx>{`
         .drop-area-active {
           outline: 2px dashed hsl(var(--primary));
           background-color: rgba(var(--primary), 0.1);
@@ -148,8 +176,7 @@ const DroppableArea: React.FC<DroppableAreaProps> = ({
           outline: 2px dashed hsl(var(--primary));
           background-color: rgba(var(--primary), 0.1);
         }
-        `}
-      </style>
+      `}</style>
       {children}
     </div>
   );

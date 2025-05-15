@@ -31,7 +31,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
   children,
   containerId
 }) => {
-  const { startDrag, endDrag, isDragging, draggedItem, lastDragOperation } = useDragDrop();
+  const { startDrag, endDrag, isDragging, draggedItem } = useDragDrop();
   const [isDraggingThis, setIsDraggingThis] = useState(false);
   const itemRef = useRef<HTMLDivElement>(null);
   const dragStartTimeRef = useRef<number>(0);
@@ -84,11 +84,8 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     
     // Set data transfer with improved reliability
     e.dataTransfer.effectAllowed = 'move';
-    const stringifiedData = JSON.stringify(item);
-    e.dataTransfer.setData('application/json', stringifiedData);
-    
-    // Set a fallback data format for better cross-browser compatibility
-    e.dataTransfer.setData('text/plain', stringifiedData);
+    e.dataTransfer.setData('text/plain', id); // Set a simple ID as fallback
+    e.dataTransfer.setData('application/json', JSON.stringify(item));
     
     // Create a custom drag image with preview of content
     try {
@@ -116,6 +113,10 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       </div>`;
       
       document.body.appendChild(dragImage);
+      dragImage.style.position = 'absolute';
+      dragImage.style.top = '-1000px';
+      dragImage.style.left = '0';
+      dragImage.style.pointerEvents = 'none';
       
       // Position the drag image relative to the mouse
       e.dataTransfer.setDragImage(dragImage, 15, 15);
@@ -124,7 +125,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
         if (document.body.contains(dragImage)) {
           document.body.removeChild(dragImage);
         }
-      }, 0);
+      }, 100);
     } catch (error) {
       // If custom drag image fails, fall back to default
       console.warn('Failed to set custom drag image:', error);
@@ -191,8 +192,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       data-draggable-id={id}
       data-draggable-type={type}
     >
-      <style>
-        {`
+      <style jsx>{`
         .dragging-active {
           opacity: 0.6;
           transform: scale(0.98);
@@ -204,8 +204,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
           0%, 100% { background-color: transparent; }
           50% { background-color: rgba(var(--primary), 0.2); }
         }
-        `}
-      </style>
+      `}</style>
       {children}
     </div>
   );

@@ -29,12 +29,15 @@ export function useCalendarSync(initialDate?: Date, syncMode: 'bidirectional' | 
   // Function to update both local and global state
   const updateDate = useCallback((newDate: Date | undefined) => {
     if (newDate) {
+      // Create a fresh date object to avoid reference issues
+      const freshDate = new Date(newDate);
+      
       // Always update local date
-      setLocalDate(new Date(newDate));
+      setLocalDate(freshDate);
       
       // Only update global date if in bidirectional mode
       if (syncMode === 'bidirectional') {
-        setCalendarDate(new Date(newDate));
+        setCalendarDate(freshDate);
       }
     }
   }, [setCalendarDate, syncMode]);

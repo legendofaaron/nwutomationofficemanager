@@ -1,3 +1,4 @@
+
 import React, { useEffect, useCallback, useState, useMemo } from 'react';
 import { Task, Crew, DragItem } from '../ScheduleTypes';
 import { toast } from '@/hooks/use-toast';
@@ -60,10 +61,16 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
       e.preventDefault();
     };
     
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+    };
+    
     document.addEventListener('dragover', handleDragOver);
+    document.addEventListener('drop', handleDrop);
     
     return () => {
       document.removeEventListener('dragover', handleDragOver);
+      document.removeEventListener('drop', handleDrop);
     };
   }, []);
   
@@ -74,8 +81,10 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
       setDate(date);
       // Let the parent component know about the change
       onSelectDate(date);
+      // Also update global context
+      setCalendarDate(date);
     }
-  }, [onSelectDate, setDate]);
+  }, [onSelectDate, setDate, setCalendarDate]);
   
   // Handle moving a task to a new date with toast notification - memoized
   const handleMoveTask = useCallback((taskId: string, date: Date) => {
@@ -89,14 +98,16 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
       
       // Update both local and global date
       setDate(date);
+      setCalendarDate(date);
       
       // Show success message
       toast({
         title: "Task rescheduled",
-        description: `${taskTitle} moved to ${format(date, 'MMMM d')}`
+        description: `${taskTitle} moved to ${format(date, 'MMMM d')}`,
+        variant: "success"
       });
     }
-  }, [onMoveTask, tasks, setDate]);
+  }, [onMoveTask, tasks, setDate, setCalendarDate]);
 
   // Handle dropping other item types (employee, crew, client) - memoized
   const handleItemDrop = useCallback((item: DragItem, date: Date) => {
@@ -109,60 +120,51 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
       // Get employee name from data
       const employeeName = item.data?.name || 'Employee';
       
-      // Create task title
-      const taskTitle = `Meeting with ${employeeName}`;
-      
-      // Show temporary feedback toast while we're creating the task
+      // Show feedback toast
       toast({
-        title: "Item dropped",
-        description: `Employee dropped on ${format(date, 'MMMM d')}`
+        title: "Employee scheduled",
+        description: `${employeeName} scheduled for ${format(date, 'MMMM d')}`,
+        variant: "success"
       });
       
-      // Create an employee-related task simulation
-      if (onMoveTask) {
-        // Existing simulation code...
-        setTimeout(() => {
-          toast({
-            title: "Task created",
-            description: `Scheduled for ${employeeName} on ${format(date, 'MMMM d')}`
-          });
-        }, 500);
-      }
+      // Automatic task creation could be implemented here
+      // For now, just show feedback and let the user create a task manually
+      setTimeout(() => {
+        onAddNewTask();
+      }, 100);
     } else if (item.type === 'crew') {
       // Get crew name from data
       const crewName = item.data?.name || 'Crew';
       
-      // Create task title
-      const taskTitle = `Team activity with ${crewName}`;
-      
-      // Show temporary feedback toast
+      // Show feedback toast
       toast({
-        title: "Item dropped",
-        description: `Crew dropped on ${format(date, 'MMMM d')}`
+        title: "Crew scheduled",
+        description: `${crewName} scheduled for ${format(date, 'MMMM d')}`,
+        variant: "success"
       });
       
-      // Create a crew-related task simulation
-      if (onMoveTask) {
-        // Existing simulation code...
-        setTimeout(() => {
-          toast({
-            title: "Team task created",
-            description: `Scheduled for ${crewName} on ${format(date, 'MMMM d')}`
-          });
-        }, 500);
-      }
+      // Automatic task creation could be implemented here
+      // For now, just show feedback and let the user create a task manually
+      setTimeout(() => {
+        onAddNewTask();
+      }, 100);
     } else if (item.type === 'client') {
       toast({
-        title: "Client dropped",
-        description: `${item.data.name || 'Client'} dropped on ${format(date, 'MMMM d')}`
+        title: "Client scheduled",
+        description: `${item.data.name || 'Client'} scheduled for ${format(date, 'MMMM d')}`,
+        variant: "success"
       });
+      
+      setTimeout(() => {
+        onAddNewTask();
+      }, 100);
     } else if (item.type === 'task') {
       // If we're dropping a task, use the move task handler
       if (onMoveTask && item.id) {
         handleMoveTask(item.id, date);
       }
     }
-  }, [onSelectDate, setDate, onMoveTask, handleMoveTask, setCalendarDate]);
+  }, [onSelectDate, setDate, onMoveTask, handleMoveTask, setCalendarDate, onAddNewTask]);
 
   // Memoize dialog open state handler to prevent unnecessary re-renders
   const handleOpenDownloadDialog = useCallback(() => {
