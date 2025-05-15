@@ -41,10 +41,10 @@ const Login = () => {
           <CardHeader className="space-y-1">
             <div className="flex items-center justify-center space-x-2">
               <Shield className="h-5 w-5 text-primary" />
-              <CardTitle>Welcome to Schedule Builder</CardTitle>
+              <CardTitle>Secure Login</CardTitle>
             </div>
             <CardDescription className="text-center">
-              Sign in to create and manage your schedules with our drag-and-drop interface
+              Enter your username and password to access your account
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -75,7 +75,7 @@ const Login = () => {
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
             <Shield className="inline h-3 w-3 mr-1" /> 
-            Schedule Builder - Create beautiful schedules with ease
+            Offline mode enabled - Your data is stored locally
           </p>
         </div>
       </div>

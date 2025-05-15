@@ -1,78 +1,93 @@
 
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { AppProvider } from './context/AppContext';
-import Dashboard from './pages/Dashboard';
+import React from 'react';
+import { Toaster } from '@/components/ui/toaster';
+import { AppProvider } from '@/context/AppContext';
+import MainLayout from '@/components/MainLayout';
+import { ThemeProvider } from '@/context/ThemeContext';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import SetupAssistant from './pages/SetupAssistant';
+import NotFound from './pages/NotFound';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import Production from './pages/Production';
 import Payment from './pages/Payment';
-import Pricing from './pages/Pricing';
-import Settings from './pages/Settings';
-import SchedulePage from './pages/SchedulePage';
-import { Toast } from '@/components/ui/toast';
+import { LoadingScreen } from './components/LoadingScreen';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
-// Import the CalendarSyncProvider
-import { CalendarSyncProvider } from './context/CalendarSyncContext';
-
-function App() {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate loading delay
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
-  }, []);
-
-  function PrivateRoute({ children }: { children: JSX.Element }) {
-    const { isLoggedIn } = useAuth();
-    
-    if (loading) {
-      return <div>Loading...</div>; // Or a more sophisticated loading indicator
-    }
-
-    return isLoggedIn ? children : <Navigate to="/login" />;
+// Protected route component with enhanced security
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session, isLoading, isDemoMode } = useAuth();
+  const location = useLocation();
+  
+  if (isLoading) {
+    return <LoadingScreen />;
   }
+  
+  // Allow access if user is authenticated or in demo mode
+  if (session || isDemoMode) {
+    return <>{children}</>;
+  }
+  
+  return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+};
 
+// Public route that redirects authenticated users
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session, isLoading, isDemoMode } = useAuth();
+  const location = useLocation();
+  const from = location.state?.from || '/dashboard';
+  
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+  
+  return (session || isDemoMode) ? <Navigate to={from} replace /> : <>{children}</>;
+};
+
+const AppRoutes = () => {
   return (
-    <BrowserRouter>
-      <AppProvider>
-        <CalendarSyncProvider>
-          <Toast />
-          <AuthProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/" element={<Navigate to="/dashboard" />} />
-              
-              <Route path="/dashboard" element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              } />
-              <Route path="/payment" element={
-                <PrivateRoute>
-                  <Payment />
-                </PrivateRoute>
-              } />
-              <Route path="/settings" element={
-                <PrivateRoute>
-                  <Settings />
-                </PrivateRoute>
-              } />
-              <Route path="/schedule" element={
-                <PrivateRoute>
-                  <SchedulePage />
-                </PrivateRoute>
-              } />
-            </Routes>
-          </AuthProvider>
-        </CalendarSyncProvider>
-      </AppProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <Routes>
+        {/* Authentication Routes */}
+        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
+        <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+        <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
+        <Route path="/payment" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
+        
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={<ProtectedRoute><MainLayout /></ProtectedRoute>} />
+        <Route path="/setup-assistant" element={<ProtectedRoute><SetupAssistant /></ProtectedRoute>} />
+        <Route path="/production" element={<ProtectedRoute><Production /></ProtectedRoute>} />
+        
+        {/* Home page - redirect based on authentication */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        
+        {/* 404 Route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </ErrorBoundary>
   );
-}
+};
+
+const App = () => {
+  return (
+    <ErrorBoundary>
+      <BrowserRouter>
+        <ThemeProvider>
+          <AuthProvider>
+            <AppProvider>
+              <Toaster />
+              <AppRoutes />
+            </AppProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
+  );
+};
 
 export default App;

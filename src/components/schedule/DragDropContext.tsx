@@ -1,10 +1,8 @@
 
-import React, { createContext, useContext, useState, useCallback, useRef, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, ReactNode } from 'react';
 import { DraggableItemType, DragItem, DragStartEventData, DragEndEventData } from './ScheduleTypes';
-import { useCalendarSync } from '@/context/CalendarSyncContext';
-import { toast } from '@/hooks/use-toast';
 
-// Enhanced context type with improved drag and drop tracking
+// Define the context type
 interface DragDropContextType {
   isDragging: boolean;
   draggedItem: DragItem | null;
@@ -15,7 +13,7 @@ interface DragDropContextType {
   registerDropTarget: (id: string, acceptTypes: DraggableItemType[]) => void;
   unregisterDropTarget: (id: string) => void;
   setDragOverTarget: (id: string | null) => void;
-  lastDragOperation: { timestamp: number; sourceId: string; targetId: string | null; itemType: string } | null;
+  lastDragOperation: { timestamp: number; sourceId: string; targetId: string | null } | null;
 }
 
 // Create context with default values
@@ -32,7 +30,7 @@ const DragDropContext = createContext<DragDropContextType>({
   lastDragOperation: null,
 });
 
-// Provider component with enhanced drag feedback
+// Provider component
 interface DragDropProviderProps {
   children: ReactNode;
 }
@@ -42,22 +40,7 @@ export const DragDropProvider: React.FC<DragDropProviderProps> = ({ children }) 
   const [draggedItem, setDraggedItem] = useState<DragItem | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
   const [dropTargets, setDropTargets] = useState<Record<string, DraggableItemType[]>>({});
-  const [lastDragOperation, setLastDragOperation] = useState<{ timestamp: number; sourceId: string; targetId: string | null; itemType: string } | null>(null);
-  
-  // Get calendar sync context safely
-  let calendarSyncContextValue;
-  try {
-    calendarSyncContextValue = useCalendarSync();
-  } catch (error) {
-    // If context is not available yet, provide fallback values
-    calendarSyncContextValue = {
-      setDraggingItem: () => {},
-      setLastDragOperation: () => {}
-    };
-    console.warn('CalendarSync context not available in DragDropProvider');
-  }
-  
-  const { setDraggingItem, setLastDragOperation: setGlobalDragOperation } = calendarSyncContextValue;
+  const [lastDragOperation, setLastDragOperation] = useState<{ timestamp: number; sourceId: string; targetId: string | null } | null>(null);
   
   // Use refs to prevent stale closures in drag event handlers
   const isDraggingRef = useRef(isDragging);
@@ -66,39 +49,7 @@ export const DragDropProvider: React.FC<DragDropProviderProps> = ({ children }) 
   const draggedItemRef = useRef(draggedItem);
   draggedItemRef.current = draggedItem;
   
-  // Sync dragging state with global calendar context
-  useEffect(() => {
-    if (!setDraggingItem) return;
-    
-    if (draggedItem) {
-      setDraggingItem({
-        type: draggedItem.type,
-        id: draggedItem.id,
-        data: draggedItem.data
-      });
-    } else {
-      setDraggingItem(null);
-    }
-  }, [draggedItem, setDraggingItem]);
-  
-  // Add global event listeners for improved drag and drop reliability
-  useEffect(() => {
-    const handleGlobalDragEnd = () => {
-      if (isDraggingRef.current) {
-        endDrag(false);
-      }
-    };
-    
-    document.addEventListener('dragend', handleGlobalDragEnd);
-    document.addEventListener('mouseup', handleGlobalDragEnd);
-    
-    return () => {
-      document.removeEventListener('dragend', handleGlobalDragEnd);
-      document.removeEventListener('mouseup', handleGlobalDragEnd);
-    };
-  }, []);
-  
-  // Start drag operation with enhanced visual feedback
+  // Start drag operation
   const startDrag = useCallback((data: DragStartEventData) => {
     // Prevent duplicate drag events
     if (isDraggingRef.current && draggedItemRef.current?.id === data.item.id) {
@@ -109,84 +60,24 @@ export const DragDropProvider: React.FC<DragDropProviderProps> = ({ children }) 
     setDraggedItem(data.item);
     
     // Set the drag source for deduplication
-    const dragOperation = {
+    setLastDragOperation({
       timestamp: Date.now(),
       sourceId: data.item.id,
-      targetId: null,
-      itemType: data.item.type
-    };
+      targetId: null
+    });
     
-    setLastDragOperation(dragOperation);
-    
-    if (setGlobalDragOperation) {
-      setGlobalDragOperation({
-        itemType: data.item.type,
-        itemId: data.item.id,
-        sourceId: data.item.sourceContainerId || '',
-        targetDate: null,
-        timestamp: Date.now()
-      });
-    }
-    
-    // Add global event listeners that might be needed
+    // Optional: Add global event listeners that might be needed
     document.body.classList.add('dragging');
-    
-    // Create ghost drag image if needed
-    if (data.node && !data.customDragImage) {
-      try {
-        const rect = data.node.getBoundingClientRect();
-        const ghostEl = document.createElement('div');
-        ghostEl.style.position = 'absolute';
-        ghostEl.style.top = '-1000px';
-        ghostEl.style.opacity = '0';
-        ghostEl.innerHTML = `<div class="drag-ghost ${data.item.type}-ghost">${data.item.data?.title || data.item.data?.name || 'Item'}</div>`;
-        document.body.appendChild(ghostEl);
-        
-        setTimeout(() => {
-          if (document.body.contains(ghostEl)) {
-            document.body.removeChild(ghostEl);
-          }
-        }, 100);
-      } catch (err) {
-        console.warn('Error creating drag ghost:', err);
-      }
-    }
-    
-    // Enhanced visual feedback
-    if (data.node) {
-      data.node.classList.add('dragging');
-    }
-  }, [setGlobalDragOperation]);
+  }, []);
   
-  // End drag operation with improved cleanup
+  // End drag operation
   const endDrag = useCallback((dropped: boolean, dropTarget?: string) => {
     // If dropped successfully, update the last drag operation
     if (dropped && dropTarget && draggedItemRef.current) {
-      const dragOperation = {
+      setLastDragOperation({
         timestamp: Date.now(),
         sourceId: draggedItemRef.current.id,
-        targetId: dropTarget,
-        itemType: draggedItemRef.current.type
-      };
-      
-      setLastDragOperation(dragOperation);
-      
-      if (setGlobalDragOperation) {
-        setGlobalDragOperation({
-          itemType: draggedItemRef.current.type,
-          itemId: draggedItemRef.current.id,
-          sourceId: draggedItemRef.current.sourceContainerId || '',
-          targetDate: null,
-          timestamp: Date.now()
-        });
-      }
-      
-      // Visual feedback for successful drop
-      toast({
-        title: "Item moved",
-        description: `${draggedItemRef.current.type.charAt(0).toUpperCase() + draggedItemRef.current.type.slice(1)} was moved successfully`,
-        variant: "default",
-        duration: 2000
+        targetId: dropTarget
       });
     }
     
@@ -196,21 +87,7 @@ export const DragDropProvider: React.FC<DragDropProviderProps> = ({ children }) 
     
     // Clean up any global state
     document.body.classList.remove('dragging');
-    
-    // Remove any active drag classes from elements
-    document.querySelectorAll('.dragging').forEach(el => {
-      el.classList.remove('dragging');
-    });
-    
-    document.querySelectorAll('.drag-over').forEach(el => {
-      el.classList.remove('drag-over');
-    });
-    
-    // Clear global dragging state
-    if (setDraggingItem) {
-      setDraggingItem(null);
-    }
-  }, [setGlobalDragOperation, setDraggingItem]);
+  }, []);
   
   // Register a drop target
   const registerDropTarget = useCallback((id: string, acceptTypes: DraggableItemType[]) => {

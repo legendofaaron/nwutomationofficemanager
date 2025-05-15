@@ -6,7 +6,6 @@ import { DayPicker, type DayPickerProps } from "react-day-picker"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import { CustomCaption } from "./CustomCaption"
-import { useCalendarSync } from "@/context/CalendarSyncContext"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
@@ -17,49 +16,6 @@ function Calendar({
   ...props
 }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = React.useState<Date>(props.month || new Date())
-  const [uniqueId] = React.useState(`calendar-${Math.random().toString(36).substr(2, 9)}`)
-  
-  // Define properly typed fallback values that match the actual context functions
-  let calendarSyncData = {
-    registerCalendar: (id: string, onDateChange: (date: Date) => void) => {},
-    unregisterCalendar: (id: string) => {},
-    globalDate: null as Date | null,
-    setGlobalDate: (date: Date) => {},
-    lastDragOperation: null as any,
-    setLastDragOperation: (operation: any) => {},
-    draggingItem: null as any,
-    setDraggingItem: (item: any) => {}
-  };
-  
-  try {
-    calendarSyncData = useCalendarSync();
-  } catch (error) {
-    console.warn('CalendarSync context not available in Calendar component');
-  }
-  
-  const { registerCalendar, unregisterCalendar, globalDate } = calendarSyncData;
-  
-  // Register with global calendar sync
-  React.useEffect(() => {
-    if (registerCalendar && unregisterCalendar) {
-      registerCalendar(uniqueId, (date) => {
-        if (date && (!props.month || date.getMonth() !== props.month.getMonth())) {
-          setCurrentMonth(date);
-        }
-      });
-      
-      return () => {
-        unregisterCalendar(uniqueId);
-      };
-    }
-  }, [uniqueId, registerCalendar, unregisterCalendar, props.month]);
-  
-  // Sync with global date
-  React.useEffect(() => {
-    if (globalDate && (!currentMonth || globalDate.getMonth() !== currentMonth.getMonth())) {
-      setCurrentMonth(new Date(globalDate));
-    }
-  }, [globalDate, currentMonth]);
   
   // Handle month change for custom navigation
   const handleMonthChange = (newMonth: Date) => {
@@ -92,7 +48,7 @@ function Calendar({
         head_cell:
           "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
         row: "flex w-full mt-2",
-        cell: "relative h-9 w-9 text-center text-sm p-0 [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
         day: cn(
           buttonVariants({ variant: "ghost" }),
           "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
@@ -110,29 +66,7 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        Caption: (captionProps) => {
-          // Safely extract the properties we need
-          const { displayMonth } = captionProps;
-          
-          // Calculate next and previous months
-          const nextMonth = new Date(new Date(displayMonth).setMonth(displayMonth.getMonth() + 1));
-          const previousMonth = new Date(new Date(displayMonth).setMonth(displayMonth.getMonth() - 1));
-          
-          return (
-            <CustomCaption 
-              displayMonth={displayMonth}
-              onMonthChange={handleMonthChange}
-              goToMonth={(date: Date) => {
-                if (props.onMonthChange) {
-                  props.onMonthChange(date);
-                }
-                setCurrentMonth(date);
-              }}
-              nextMonth={nextMonth}
-              previousMonth={previousMonth}
-            />
-          );
-        },
+        Caption: (captionProps) => <CustomCaption {...captionProps} onMonthChange={handleMonthChange} />,
         ...props.components
       }}
       {...props}
