@@ -1,5 +1,6 @@
-import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Shield } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -8,19 +9,27 @@ import { useAppContext } from '@/context/AppContext';
 import { LoginHeader } from '@/components/auth/LoginHeader';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { DemoLoginButton } from '@/components/auth/DemoLoginButton';
-import { useSessionValidator } from '@/hooks/useSessionValidator';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { branding } = useAppContext();
-  const { setDemoMode } = useAuth();
+  const { setDemoMode, session } = useAuth();
+  const [isRedirecting, setIsRedirecting] = useState(false);
   
   // Check if user is already logged in and redirect to dashboard
-  // We need to use '/dashboard' as the redirect here
-  useSessionValidator('/dashboard');
+  useEffect(() => {
+    // Prevent redirect loops by using a flag
+    if (session && !isRedirecting) {
+      setIsRedirecting(true);
+      const returnTo = location.state?.returnTo || '/dashboard';
+      navigate(returnTo, { replace: true });
+    }
+  }, [session, navigate, location, isRedirecting]);
 
   const handleLoginSuccess = () => {
-    navigate('/dashboard');
+    const returnTo = location.state?.returnTo || '/dashboard';
+    navigate(returnTo, { replace: true });
   };
 
   // Function to handle demo login
@@ -29,8 +38,13 @@ const Login = () => {
     setDemoMode(true);
     
     // Navigate to dashboard with demo mode enabled
-    navigate('/dashboard');
+    navigate('/dashboard', { replace: true });
   };
+
+  // If already authenticated, don't render login form
+  if (session) {
+    return <div className="flex items-center justify-center h-screen">Redirecting...</div>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-[#080a0c] dark:to-[#111418]">

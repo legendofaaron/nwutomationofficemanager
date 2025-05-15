@@ -16,6 +16,7 @@ import Payment from './pages/Payment';
 import { LoadingScreen } from './components/LoadingScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
+import Index from './pages/Index';
 
 // Protected route component with enhanced security
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -63,8 +64,8 @@ const AppRoutes = () => {
         <Route path="/setup-assistant" element={<ProtectedRoute><SetupAssistant /></ProtectedRoute>} />
         <Route path="/production" element={<ProtectedRoute><Production /></ProtectedRoute>} />
         
-        {/* Home page - redirect based on authentication */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* Home page - Initial auth check */}
+        <Route path="/" element={<Index />} />
         
         {/* 404 Route */}
         <Route path="*" element={<NotFound />} />
