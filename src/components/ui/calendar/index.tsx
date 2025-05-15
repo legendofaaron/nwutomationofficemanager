@@ -18,19 +18,35 @@ function Calendar({
 }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = React.useState<Date>(props.month || new Date())
   const [uniqueId] = React.useState(`calendar-${Math.random().toString(36).substr(2, 9)}`)
-  const { registerCalendar, unregisterCalendar, globalDate } = useCalendarSync()
+  
+  // Try to use the calendar sync context, but provide fallbacks if not available
+  let calendarSyncData = { 
+    registerCalendar: () => {}, 
+    unregisterCalendar: () => {},
+    globalDate: null
+  };
+  
+  try {
+    calendarSyncData = useCalendarSync();
+  } catch (error) {
+    console.warn('CalendarSync context not available in Calendar component');
+  }
+  
+  const { registerCalendar, unregisterCalendar, globalDate } = calendarSyncData;
   
   // Register with global calendar sync
   React.useEffect(() => {
-    registerCalendar(uniqueId, (date) => {
-      if (date && (!props.month || date.getMonth() !== props.month.getMonth())) {
-        setCurrentMonth(date);
-      }
-    });
-    
-    return () => {
-      unregisterCalendar(uniqueId);
-    };
+    if (registerCalendar && unregisterCalendar) {
+      registerCalendar(uniqueId, (date) => {
+        if (date && (!props.month || date.getMonth() !== props.month.getMonth())) {
+          setCurrentMonth(date);
+        }
+      });
+      
+      return () => {
+        unregisterCalendar(uniqueId);
+      };
+    }
   }, [uniqueId, registerCalendar, unregisterCalendar, props.month]);
   
   // Sync with global date
@@ -90,19 +106,22 @@ function Calendar({
       }}
       components={{
         Caption: (captionProps) => {
-          // Explicitly extract the properties we need for our CustomCaption
+          // Safely extract the properties we need
           const { displayMonth } = captionProps;
           
-          // Now we can safely create our CustomCaption with the correct props
           return (
             <CustomCaption 
               {...captionProps}
               displayMonth={displayMonth}
               onMonthChange={handleMonthChange}
-              // These functions come from the DayPicker internals
-              goToMonth={(date: Date) => captionProps.goToMonth(date)}
-              nextMonth={captionProps.displayedMonth?.nextMonth}
-              previousMonth={captionProps.displayedMonth?.previousMonth}
+              // These need to be properly typed
+              goToMonth={(date: Date) => {
+                if (captionProps.onMonthChange) {
+                  captionProps.onMonthChange(date);
+                }
+              }}
+              nextMonth={captionProps.displayMonth ? new Date(new Date(captionProps.displayMonth).setMonth(captionProps.displayMonth.getMonth() + 1)) : undefined}
+              previousMonth={captionProps.displayMonth ? new Date(new Date(captionProps.displayMonth).setMonth(captionProps.displayMonth.getMonth() - 1)) : undefined}
             />
           );
         },

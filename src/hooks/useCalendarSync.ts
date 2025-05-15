@@ -9,7 +9,21 @@ import { useCalendarSync as useCalendarSyncContext } from '@/context/CalendarSyn
  * @returns Object with synchronized date state and setter function
  */
 export function useCalendarSync(initialDate?: Date, syncMode: 'bidirectional' | 'readonly' = 'bidirectional') {
-  const { globalDate, setGlobalDate, registerCalendar, unregisterCalendar } = useCalendarSyncContext();
+  // Try to get the CalendarSyncContext, but provide fallback values if it's not available
+  let contextValue = {
+    globalDate: null,
+    setGlobalDate: () => {},
+    registerCalendar: () => {},
+    unregisterCalendar: () => {}
+  };
+  
+  try {
+    contextValue = useCalendarSyncContext();
+  } catch (error) {
+    console.warn('CalendarSync context not available in useCalendarSync hook. Using fallback values.');
+  }
+  
+  const { globalDate, setGlobalDate, registerCalendar, unregisterCalendar } = contextValue;
   const calendarId = useId();
   
   // Initialize with global date if available, fallback to provided initialDate or current date
@@ -19,13 +33,16 @@ export function useCalendarSync(initialDate?: Date, syncMode: 'bidirectional' | 
   
   // Register this calendar instance
   useEffect(() => {
-    registerCalendar(calendarId, (date) => {
-      setLocalDate(new Date(date));
-    });
-    
-    return () => {
-      unregisterCalendar(calendarId);
-    };
+    // Only register if the context is available
+    if (registerCalendar && unregisterCalendar) {
+      registerCalendar(calendarId, (date) => {
+        setLocalDate(new Date(date));
+      });
+      
+      return () => {
+        unregisterCalendar(calendarId);
+      };
+    }
   }, [calendarId, registerCalendar, unregisterCalendar]);
   
   // Sync from global to local - immediately respond to changes in global date
@@ -44,8 +61,8 @@ export function useCalendarSync(initialDate?: Date, syncMode: 'bidirectional' | 
       // Always update local date
       setLocalDate(freshDate);
       
-      // Only update global date if in bidirectional mode
-      if (syncMode === 'bidirectional') {
+      // Only update global date if in bidirectional mode and context is available
+      if (syncMode === 'bidirectional' && setGlobalDate) {
         setGlobalDate(freshDate);
       }
     }
