@@ -33,17 +33,19 @@ const WelcomeDashboard = () => {
       ? 'bg-gradient-to-br from-[#0a0f1a] to-[#111827]' 
       : 'bg-gradient-to-br from-gray-50 to-blue-50/40';
   
+  // Enhanced card styling with better shadows and hover effects
   const cardBgClass = isSuperDark
-    ? 'bg-[#090909] border-[#151515] shadow-superdark hover:shadow-superdark-md transition-shadow'
+    ? 'bg-[#090909] border-[#151515] shadow-superdark hover:shadow-superdark-md transition-all duration-300'
     : isDark
-      ? 'bg-[#0d1117] border-[#1a1e26] shadow-md hover:shadow-lg transition-shadow'
-      : 'bg-white/95 backdrop-blur-sm shadow-elegant hover-lift transition-all';
+      ? 'bg-[#0d1117] border-[#1a1e26] shadow-md hover:shadow-lg transition-all duration-300'
+      : 'bg-white/95 backdrop-blur-sm shadow-elegant hover:shadow-card-hover transition-all duration-300';
   
+  // Enhanced button styling with gradients for better visual hierarchy
   const buttonClass = isSuperDark
     ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-superdark-sm'
     : isDark
-      ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-md'
-      : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm';
+      ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-md'
+      : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-sm';
 
   const outlineButtonClass = isSuperDark
     ? 'border-[#202020] bg-black hover:bg-[#0a0a0a] text-white'
@@ -61,13 +63,13 @@ const WelcomeDashboard = () => {
 
   return (
     <ScrollArea className="h-full">
-      <div className={`mx-auto px-3 md:px-6 pt-4 md:pt-6 pb-6 md:pb-8 max-w-5xl ${bgClass} min-h-full`}>
-        <div className="flex justify-center mb-4 md:mb-6 animate-fade-in">
-          <Logo className="w-12 md:w-16 h-12 md:h-16 drop-shadow-md" />
+      <div className={`mx-auto px-4 md:px-6 pt-5 md:pt-6 pb-6 md:pb-8 max-w-5xl ${bgClass} min-h-full`}>
+        <div className="flex justify-center mb-5 md:mb-6 animate-fade-in">
+          <Logo className="w-12 md:w-16 h-12 md:h-16 drop-shadow-lg" />
         </div>
         
-        <div className="text-center mb-6 md:mb-10 animate-fade-in" style={{animationDelay: '100ms'}}>
-          <h1 className="text-xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2 md:mb-3 tracking-tight">
+        <div className="text-center mb-7 md:mb-10 animate-fade-in" style={{animationDelay: '100ms'}}>
+          <h1 className="text-xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-3 md:mb-4 tracking-tight">
             Welcome to Office Manager
           </h1>
           <p className="text-xs md:text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto px-2">
@@ -78,17 +80,17 @@ const WelcomeDashboard = () => {
 
         {/* Intelligent Assistant Card - Enhanced with border accent and improved shadow */}
         <Card className={`mb-6 md:mb-10 transition-all ${cardBgClass} animate-fade-in border-l-blue-600`} style={{animationDelay: '200ms', borderLeftWidth: '4px'}}>
-          <CardContent className={`py-5 md:py-8 px-3 md:px-8`}>
+          <CardContent className={`py-5 md:py-8 px-4 md:px-8`}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
-              <div className="space-y-2 md:space-y-4">
+              <div className="space-y-2.5 md:space-y-4">
                 <div className="flex items-center">
-                  <div className="p-2 md:p-2.5 rounded-full bg-blue-100 dark:bg-blue-900/30 mr-3 md:mr-3.5 shadow-sm">
+                  <div className="p-2.5 md:p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 mr-3.5 md:mr-4 shadow-sm">
                     <MessageSquare className="h-4 w-4 md:h-6 md:w-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <h2 className="text-lg md:text-2xl font-medium text-gray-800 dark:text-white">Intelligent Assistant</h2>
                 </div>
                 
-                <p className="text-xs md:text-base text-gray-600 dark:text-gray-300">
+                <p className="text-xs md:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
                   Our intelligent assistant can help you draft documents, organize schedules, 
                   manage your knowledge base, and provide insights for your office operations—all 
                   while keeping your data secure on your local system.
@@ -112,11 +114,11 @@ const WelcomeDashboard = () => {
             <h2 className="text-base md:text-xl font-medium text-gray-800 dark:text-gray-200">Explore Features</h2>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-5 lg:gap-6">
-            <Card className={`${cardBgClass} transition-all animate-fade-in`} style={{animationDelay: '300ms'}}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 lg:gap-6">
+            <Card className={`${cardBgClass} transition-all animate-fade-in hover:-translate-y-1`} style={{animationDelay: '300ms'}}>
               <CardHeader className="pb-2">
                 <div className="flex items-center mb-2">
-                  <div className="p-2 md:p-2.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 mr-2.5 md:mr-3.5">
+                  <div className="p-2 md:p-2.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 mr-2.5 md:mr-3.5 shadow-sm">
                     <BookOpenText className="h-4 w-4 md:h-5 md:w-5 text-indigo-600 dark:text-indigo-400" />
                   </div>
                   <CardTitle className="text-sm md:text-lg text-gray-800 dark:text-white">Documents</CardTitle>
@@ -125,7 +127,7 @@ const WelcomeDashboard = () => {
                   Create, edit and manage your documents with intelligent assistance
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-2">
+              <CardContent className="pt-3">
                 <Button 
                   variant="outline" 
                   className={`w-full justify-between text-xs md:text-sm ${outlineButtonClass} rounded-md`}
@@ -137,10 +139,10 @@ const WelcomeDashboard = () => {
               </CardContent>
             </Card>
             
-            <Card className={`${cardBgClass} transition-all animate-fade-in`} style={{animationDelay: '400ms'}}>
+            <Card className={`${cardBgClass} transition-all animate-fade-in hover:-translate-y-1`} style={{animationDelay: '400ms'}}>
               <CardHeader className="pb-2">
                 <div className="flex items-center mb-2">
-                  <div className="p-2 md:p-2.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 mr-2.5 md:mr-3.5">
+                  <div className="p-2 md:p-2.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 mr-2.5 md:mr-3.5 shadow-sm">
                     <BookOpenText className="h-4 w-4 md:h-5 md:w-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <CardTitle className="text-sm md:text-lg text-gray-800 dark:text-white">Knowledge Base</CardTitle>
@@ -149,7 +151,7 @@ const WelcomeDashboard = () => {
                   Organize and access your company's information efficiently
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-2">
+              <CardContent className="pt-3">
                 <Button 
                   variant="outline" 
                   className={`w-full justify-between text-xs md:text-sm ${outlineButtonClass} rounded-md`}
@@ -161,10 +163,10 @@ const WelcomeDashboard = () => {
               </CardContent>
             </Card>
             
-            <Card className={`${cardBgClass} transition-all animate-fade-in sm:col-span-2 md:col-span-1`} style={{animationDelay: '500ms'}}>
+            <Card className={`${cardBgClass} transition-all animate-fade-in sm:col-span-2 md:col-span-1 hover:-translate-y-1`} style={{animationDelay: '500ms'}}>
               <CardHeader className="pb-2">
                 <div className="flex items-center mb-2">
-                  <div className="p-2 md:p-2.5 rounded-full bg-amber-100 dark:bg-amber-900/30 mr-2.5 md:mr-3.5">
+                  <div className="p-2 md:p-2.5 rounded-full bg-amber-100 dark:bg-amber-900/30 mr-2.5 md:mr-3.5 shadow-sm">
                     <Building2 className="h-4 w-4 md:h-5 md:w-5 text-amber-600 dark:text-amber-400" />
                   </div>
                   <CardTitle className="text-sm md:text-lg text-gray-800 dark:text-white">Office Manager</CardTitle>
@@ -173,7 +175,7 @@ const WelcomeDashboard = () => {
                   Streamline operations, schedules, and productivity tracking
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-2">
+              <CardContent className="pt-3">
                 <Button 
                   variant="outline" 
                   className={`w-full justify-between text-xs md:text-sm ${outlineButtonClass} rounded-md`}
@@ -193,7 +195,7 @@ const WelcomeDashboard = () => {
         
         {/* Contact for Source Code and Tip Developer Section - More subtle and elegant */}
         <div className="mt-8 md:mt-12 text-center animate-fade-in" style={{animationDelay: '700ms'}}>
-          <Card className={`max-w-xl mx-auto ${cardBgClass} border-t border-t-gray-200 dark:border-t-gray-700`}>
+          <Card className={`max-w-xl mx-auto ${cardBgClass} border-t border-t-gray-200 dark:border-t-gray-700/50`}>
             <CardContent className="pt-4 md:pt-6 pb-4 md:pb-5">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <Mail className="h-4 w-4 md:h-5 md:w-5 text-gray-500 dark:text-gray-400" />
@@ -217,7 +219,7 @@ const WelcomeDashboard = () => {
                   size="sm"
                   className="text-xs border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/20 transition-colors"
                 >
-                  <Heart className="h-3 w-3 md:h-3.5 md:w-3.5 mr-1.5 text-gray-500" /> Support Development
+                  <Heart className="h-3 w-3 md:h-3.5 md:w-3.5 mr-1.5 text-pink-500" /> Support Development
                 </Button>
               </div>
             </CardContent>
