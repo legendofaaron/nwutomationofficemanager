@@ -123,9 +123,10 @@ function Calendar({
               displayMonth={displayMonth}
               onMonthChange={handleMonthChange}
               goToMonth={(date: Date) => {
-                if (captionProps.goToMonth) {
-                  captionProps.goToMonth(date);
+                if (props.onMonthChange) {
+                  props.onMonthChange(date);
                 }
+                setCurrentMonth(date);
               }}
               nextMonth={nextMonth}
               previousMonth={previousMonth}

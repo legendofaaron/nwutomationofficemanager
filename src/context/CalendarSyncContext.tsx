@@ -1,112 +1,106 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAppContext } from './AppContext';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-interface CalendarSyncContextType {
-  globalDate: Date;
-  setGlobalDate: (date: Date) => void;
-  lastDragOperation: {
-    itemType: string;
-    itemId: string;
-    sourceId: string;
-    targetDate: Date | null;
-    timestamp: number;
-  } | null;
-  setLastDragOperation: (operation: {
-    itemType: string;
-    itemId: string;
-    sourceId: string;
-    targetDate: Date | null;
-    timestamp: number;
-  } | null) => void;
-  draggingItem: {
-    type: string;
-    id: string;
-    data: any;
-  } | null;
-  setDraggingItem: (item: {
-    type: string;
-    id: string;
-    data: any;
-  } | null) => void;
-  registerCalendar: (id: string, onDateChange: (date: Date) => void) => void;
-  unregisterCalendar: (id: string) => void;
+// Type definitions for the context
+interface CalendarCallbacks {
+  [id: string]: (date: Date) => void;
 }
 
-const CalendarSyncContext = createContext<CalendarSyncContextType | undefined>(undefined);
+interface DragOperation {
+  itemType: string;
+  itemId: string;
+  sourceId: string;
+  targetDate: Date | null;
+  timestamp: number;
+}
 
-export const CalendarSyncProvider: React.FC<{children: ReactNode}> = ({ children }) => {
-  const { calendarDate, setCalendarDate } = useAppContext();
-  const [globalDate, setGlobalDateInternal] = useState<Date>(calendarDate || new Date());
-  const [lastDragOperation, setLastDragOperation] = useState<{
-    itemType: string;
-    itemId: string;
-    sourceId: string;
-    targetDate: Date | null;
-    timestamp: number;
-  } | null>(null);
-  const [draggingItem, setDraggingItem] = useState<{
-    type: string;
-    id: string;
-    data: any;
-  } | null>(null);
-  
-  const [registeredCalendars, setRegisteredCalendars] = useState<{
-    [key: string]: (date: Date) => void
-  }>({});
-  
-  // Sync with app context
-  useEffect(() => {
-    if (calendarDate && calendarDate.toDateString() !== globalDate.toDateString()) {
-      setGlobalDateInternal(calendarDate);
-    }
-  }, [calendarDate, globalDate]);
-  
-  const setGlobalDate = (date: Date) => {
-    setGlobalDateInternal(date);
-    setCalendarDate(date);
-    
-    // Notify all registered calendars
-    Object.values(registeredCalendars).forEach(callback => {
-      callback(date);
-    });
-  };
-  
+interface CalendarSyncContextType {
+  globalDate: Date | null;
+  setGlobalDate: (date: Date) => void;
+  registerCalendar: (id: string, onDateChange: (date: Date) => void) => void;
+  unregisterCalendar: (id: string) => void;
+  lastDragOperation: DragOperation | null;
+  setLastDragOperation: (operation: DragOperation) => void;
+  draggingItem: any | null;
+  setDraggingItem: (item: any) => void;
+}
+
+// Create context with defaults
+const CalendarSyncContext = createContext<CalendarSyncContextType>({
+  globalDate: null,
+  setGlobalDate: () => {},
+  registerCalendar: () => {},
+  unregisterCalendar: () => {},
+  lastDragOperation: null,
+  setLastDragOperation: () => {},
+  draggingItem: null,
+  setDraggingItem: () => {}
+});
+
+export interface CalendarSyncProviderProps {
+  children: ReactNode;
+  initialDate?: Date;
+}
+
+export const CalendarSyncProvider: React.FC<CalendarSyncProviderProps> = ({ children, initialDate }) => {
+  const [globalDate, setGlobalDateState] = useState<Date | null>(initialDate || new Date());
+  const [callbacks, setCallbacks] = useState<CalendarCallbacks>({});
+  const [lastDragOperation, setLastDragOperation] = useState<DragOperation | null>(null);
+  const [draggingItem, setDraggingItem] = useState<any | null>(null);
+
+  // Register a calendar to receive date change notifications
   const registerCalendar = (id: string, onDateChange: (date: Date) => void) => {
-    setRegisteredCalendars(prev => ({
-      ...prev,
-      [id]: onDateChange
-    }));
+    setCallbacks(prev => ({ ...prev, [id]: onDateChange }));
   };
-  
+
+  // Unregister a calendar
   const unregisterCalendar = (id: string) => {
-    setRegisteredCalendars(prev => {
-      const newCalendars = { ...prev };
-      delete newCalendars[id];
-      return newCalendars;
+    setCallbacks(prev => {
+      const newCallbacks = { ...prev };
+      delete newCallbacks[id];
+      return newCallbacks;
     });
   };
-  
+
+  // Set global date and notify all registered calendars
+  const setGlobalDate = (date: Date) => {
+    setGlobalDateState(date);
+    
+    // Notify all registered calendars about the date change
+    Object.values(callbacks).forEach(callback => {
+      try {
+        callback(date);
+      } catch (error) {
+        console.error("Error notifying calendar about date change:", error);
+      }
+    });
+  };
+
   return (
     <CalendarSyncContext.Provider value={{
       globalDate,
       setGlobalDate,
+      registerCalendar,
+      unregisterCalendar,
       lastDragOperation,
       setLastDragOperation,
       draggingItem,
-      setDraggingItem,
-      registerCalendar,
-      unregisterCalendar
+      setDraggingItem
     }}>
       {children}
     </CalendarSyncContext.Provider>
   );
 };
 
+// Custom hook for using the calendar sync context
 export const useCalendarSync = () => {
   const context = useContext(CalendarSyncContext);
-  if (!context) {
-    throw new Error('useCalendarSync must be used within a CalendarSyncProvider');
+  
+  if (context === undefined) {
+    throw new Error("useCalendarSync must be used within a CalendarSyncProvider");
   }
+  
   return context;
 };
+
+export default CalendarSyncProvider;

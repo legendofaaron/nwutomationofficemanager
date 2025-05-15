@@ -1,6 +1,5 @@
 
-import { CaptionProps } from "react-day-picker";
-import { DayPickerProps } from "react-day-picker";
+import { CaptionProps, DayPickerProps } from "react-day-picker";
 
 export interface CalendarDayProps {
   date: Date;
@@ -8,6 +7,7 @@ export interface CalendarDayProps {
   disabled?: boolean;
 }
 
+// Enhanced CustomCaptionProps to have all needed properties
 export interface CustomCaptionProps {
   displayMonth: Date;
   onMonthChange?: (date: Date) => void;

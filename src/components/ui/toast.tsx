@@ -3,23 +3,33 @@ import * as React from "react"
 import * as SonnerToast from "sonner"
 
 import { cn } from "@/lib/utils"
+import { useToast, toast, type ToastProps, type ToastActionElement, type ToasterToast } from "@/hooks/use-toast"
 
-export interface ToastActionElement {
-  altText: string;
-  action: React.ReactNode;
+interface ToastPosition {
+  position?: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "top-center" | "bottom-center";
 }
 
-export interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "destructive" | "success" | "warning";
-  title?: string;
-  description?: string;
-  action?: React.ReactNode;
+interface ToastConfig extends ToastPosition {
+  className?: string;
 }
 
-const Toast = SonnerToast.Toaster;
-
-function useToast() {
-  return SonnerToast.toast;
+function Toast({ position = "bottom-right", className }: ToastConfig) {
+  return (
+    <SonnerToast.Toaster 
+      position={position}
+      toastOptions={{
+        classNames: {
+          toast: cn(
+            "group toast border-border",
+            className
+          ),
+          description: "text-muted-foreground",
+          actionButton: "bg-primary text-primary-foreground",
+          cancelButton: "border-muted bg-background"
+        }
+      }}
+    />
+  )
 }
 
-export { Toast, useToast };
+export { Toast, useToast, toast, type ToasterToast };
