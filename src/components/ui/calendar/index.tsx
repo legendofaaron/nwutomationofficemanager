@@ -119,14 +119,15 @@ function Calendar({
               {...captionProps}
               displayMonth={displayMonth}
               onMonthChange={handleMonthChange}
-              // Pass these properly typed props
+              // Pass next and previous month explicitly
               goToMonth={(date: Date) => {
-                if (captionProps.goToMonth) {
-                  captionProps.goToMonth(date);
+                // DayPicker has internal navigation methods we can use
+                if (captionProps.onMonthChange) {
+                  captionProps.onMonthChange(date);
                 }
               }}
-              nextMonth={captionProps.nextMonth}
-              previousMonth={captionProps.previousMonth}
+              nextMonth={new Date(new Date(displayMonth).setMonth(displayMonth.getMonth() + 1))}
+              previousMonth={new Date(new Date(displayMonth).setMonth(displayMonth.getMonth() - 1))}
             />
           );
         },
