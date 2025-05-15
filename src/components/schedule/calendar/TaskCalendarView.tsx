@@ -40,10 +40,10 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
   const { setCalendarDate } = useAppContext();
   
   // Get employees from useScheduleState
-  const { employees } = useScheduleState();
+  const { employees, handleAddNewTask } = useScheduleState();
   
   // Use the enhanced calendar sync hook
-  const { date, setDate } = useCalendarSync(selectedDate);
+  const { date, setDate, createEventOnDate } = useCalendarSync(selectedDate);
   
   // Sync local prop with hook's state
   useEffect(() => {
@@ -113,7 +113,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
     }
   }, [onMoveTask, tasks, setDate, setCalendarDate]);
 
-  // Handle dropping other item types (employee, crew, client) - memoized
+  // Handle dropping other item types (employee, crew, client) - direct creation
   const handleItemDrop = useCallback((item: DragItem, date: Date) => {
     // Always update the selected date when an item is dropped
     setDate(date);
@@ -124,21 +124,44 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
       // Get employee name from data
       const employeeName = item.data?.name || 'Employee';
       
+      // Create task directly without showing dialog
+      const newTask = {
+        id: `task-${Date.now()}`,
+        title: `${employeeName} Task`,
+        date: date,
+        completed: false,
+        assignedTo: item.id,
+        startTime: '09:00',
+        endTime: '10:00'
+      };
+      
+      // Add the new task using the schedule state handler
+      handleAddNewTask(newTask);
+      
       // Show feedback toast
       toast({
         title: "Employee scheduled",
         description: `${employeeName} scheduled for ${format(date, 'MMMM d')}`,
         variant: "success"
       });
-      
-      // Automatic task creation could be implemented here
-      // For now, just show feedback and let the user create a task manually
-      setTimeout(() => {
-        onAddNewTask();
-      }, 100);
     } else if (item.type === 'crew') {
       // Get crew name from data
       const crewName = item.data?.name || 'Crew';
+      
+      // Create task directly without showing dialog
+      const newTask = {
+        id: `task-${Date.now()}`,
+        title: `${crewName} Assignment`,
+        date: date,
+        completed: false,
+        crewId: item.id,
+        crewName: crewName,
+        startTime: '09:00',
+        endTime: '10:00'
+      };
+      
+      // Add the new task using the schedule state handler
+      handleAddNewTask(newTask);
       
       // Show feedback toast
       toast({
@@ -146,12 +169,6 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
         description: `${crewName} scheduled for ${format(date, 'MMMM d')}`,
         variant: "success"
       });
-      
-      // Automatic task creation could be implemented here
-      // For now, just show feedback and let the user create a task manually
-      setTimeout(() => {
-        onAddNewTask();
-      }, 100);
     } else if (item.type === 'client') {
       toast({
         title: "Client scheduled",
@@ -168,7 +185,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
         handleMoveTask(item.id, date);
       }
     }
-  }, [onSelectDate, setDate, onMoveTask, handleMoveTask, setCalendarDate, onAddNewTask]);
+  }, [onSelectDate, setDate, onMoveTask, handleMoveTask, setCalendarDate, onAddNewTask, handleAddNewTask]);
 
   // Memoize dialog open state handler to prevent unnecessary re-renders
   const handleOpenDownloadDialog = useCallback(() => {
@@ -200,6 +217,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
           onSelectDate={handleSelectDate}
           onMoveTask={handleMoveTask}
           onItemDrop={handleItemDrop}
+          isDirectDrop={true}
         />
         
         <TasksCard

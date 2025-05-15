@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Task, Crew, Employee, Client, ClientLocation, ScheduleFilter } from '@/components/schedule/ScheduleTypes';
 import { generateMockTasks, generateMockEmployees, generateMockCrews, generateMockClients, generateMockClientLocations } from '@/components/schedule/MockScheduleData';
 import { useAppContext } from '@/context/AppContext';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { useCalendarSync } from '@/hooks/useCalendarSync';
 
 export const useScheduleState = () => {
@@ -128,7 +128,11 @@ export const useScheduleState = () => {
         )
       );
       
-      toast.success("Task updated in all calendars");
+      toast({
+        title: "Task updated",
+        description: "Task updated in all calendars",
+        variant: "success"
+      });
     }
     
     // Update the selected date to match the task's new date
@@ -176,7 +180,11 @@ export const useScheduleState = () => {
         )
       );
       
-      toast.success("Task updated in all calendars");
+      toast({
+        title: "Task updated",
+        description: "Task updated in all calendars",
+        variant: "success"
+      });
     }
     
     // If the date was changed, update the selected date
@@ -186,21 +194,30 @@ export const useScheduleState = () => {
     }
   }, [todos, setTodos, setSelectedDate, setCalendarDate]);
 
-  const handleAddNewTask = useCallback(() => {
+  // Added support for creating a task with preset data
+  const handleAddNewTask = useCallback((taskData?: Partial<Task>) => {
     // Create a new task template
     const newTask: Task = {
       id: `task-${Date.now()}`,
-      title: 'New Task',
-      date: selectedDate,
-      completed: false,
-      startTime: '09:00',
-      endTime: '10:00'
+      title: taskData?.title || 'New Task',
+      date: taskData?.date || selectedDate,
+      completed: taskData?.completed || false,
+      startTime: taskData?.startTime || '09:00',
+      endTime: taskData?.endTime || '10:00',
+      assignedTo: taskData?.assignedTo,
+      crewId: taskData?.crewId,
+      crewName: taskData?.crewName,
+      location: taskData?.location
     };
     
-    // Add to tasks and open editor
+    // Add to tasks
     setTasks(prevTasks => [...prevTasks, newTask]);
-    setEditingTask(newTask);
-    setIsEditDialogOpen(true);
+    
+    if (!taskData) {
+      // Only open editor if we don't have preset data
+      setEditingTask(newTask);
+      setIsEditDialogOpen(true);
+    }
     
     // Also add to global todos
     setTodos(prevTodos => [...prevTodos, {
@@ -209,8 +226,14 @@ export const useScheduleState = () => {
       completed: newTask.completed,
       date: newTask.date,
       startTime: newTask.startTime,
-      endTime: newTask.endTime
+      endTime: newTask.endTime,
+      assignedTo: newTask.assignedTo,
+      crewId: newTask.crewId,
+      crewName: newTask.crewName,
+      location: newTask.location
     }]);
+    
+    return newTask;
   }, [selectedDate, setTodos]);
 
   // Handle date change (sync with global date using the enhanced hook)

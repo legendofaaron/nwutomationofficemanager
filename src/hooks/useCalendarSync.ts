@@ -42,9 +42,19 @@ export function useCalendarSync(initialDate?: Date, syncMode: 'bidirectional' | 
     }
   }, [setCalendarDate, syncMode]);
   
+  // Add a direct access function to quickly create events
+  const createEventOnDate = useCallback((date: Date, eventData: any) => {
+    // Update the selected date
+    updateDate(date);
+    
+    // Return the date and event data for further processing
+    return { date, eventData };
+  }, [updateDate]);
+  
   return {
     date: localDate,
-    setDate: updateDate
+    setDate: updateDate,
+    createEventOnDate
   };
 }
 

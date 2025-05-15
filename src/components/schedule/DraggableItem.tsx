@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useDragDrop } from './DragDropContext';
@@ -16,6 +15,7 @@ interface DraggableItemProps {
   dragActiveClassName?: string;
   children: React.ReactNode;
   containerId?: string;
+  directDrop?: boolean;
 }
 
 export const DraggableItem: React.FC<DraggableItemProps> = ({
@@ -29,7 +29,8 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
   className,
   dragActiveClassName = 'dragging opacity-50',
   children,
-  containerId
+  containerId,
+  directDrop = true
 }) => {
   const { startDrag, endDrag, isDragging, draggedItem } = useDragDrop();
   const [isDraggingThis, setIsDraggingThis] = useState(false);
@@ -78,7 +79,8 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       data: {
         ...data,
         id,
-        type
+        type,
+        directDrop // Add the directDrop property for recipients
       }
     };
     
@@ -191,6 +193,7 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       )}
       data-draggable-id={id}
       data-draggable-type={type}
+      data-direct-drop={directDrop ? "true" : "false"}
     >
       <style>
         {`
