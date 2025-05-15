@@ -1,13 +1,9 @@
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { CaptionProps } from "react-day-picker"
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
-
-interface CustomCaptionProps extends CaptionProps {
-  onMonthChange?: (date: Date) => void
-}
+import type { CustomCaptionProps } from "./types"
 
 export function CustomCaption({ 
   displayMonth, 
