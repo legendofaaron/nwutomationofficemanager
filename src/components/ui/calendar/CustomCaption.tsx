@@ -1,51 +1,36 @@
 
-import * as React from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { format } from "date-fns"
-import type { CustomCaptionProps } from "./types"
+import React from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { CustomCaptionProps } from "./types";
 
-export function CustomCaption({ 
-  displayMonth, 
+export function CustomCaption({
+  displayMonth,
   onMonthChange,
   goToMonth,
   nextMonth,
-  previousMonth
+  previousMonth,
 }: CustomCaptionProps) {
-  // Handle month navigation
-  const handlePreviousClick = () => {
-    if (previousMonth) {
-      goToMonth(previousMonth);
-      if (onMonthChange) onMonthChange(previousMonth);
-    }
-  };
-
-  const handleNextClick = () => {
-    if (nextMonth) {
-      goToMonth(nextMonth);
-      if (onMonthChange) onMonthChange(nextMonth);
-    }
-  };
-
   return (
-    <div className="flex w-full justify-between items-center px-2">
+    <div className="flex items-center justify-between px-2">
       <Button
-        variant="outline"
-        className="h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100 rounded-full"
+        variant="ghost"
+        className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+        onClick={() => previousMonth && (goToMonth ? goToMonth(previousMonth) : onMonthChange?.(previousMonth))}
         disabled={!previousMonth}
-        onClick={handlePreviousClick}
       >
         <ChevronLeft className="h-4 w-4" />
         <span className="sr-only">Previous month</span>
       </Button>
       <span className="text-sm font-medium">
-        {format(displayMonth, 'MMMM yyyy')}
+        {format(displayMonth, "MMMM yyyy")}
       </span>
       <Button
-        variant="outline"
-        className="h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100 rounded-full"
+        variant="ghost"
+        className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+        onClick={() => nextMonth && (goToMonth ? goToMonth(nextMonth) : onMonthChange?.(nextMonth))}
         disabled={!nextMonth}
-        onClick={handleNextClick}
       >
         <ChevronRight className="h-4 w-4" />
         <span className="sr-only">Next month</span>

@@ -17,7 +17,7 @@ export interface CalendarDayProps {
 }
 
 // Extended props for the custom caption component
-export interface CustomCaptionProps extends Partial<CaptionProps> {
+export interface CustomCaptionProps {
   displayMonth: Date;
   onMonthChange?: (date: Date) => void;
   goToMonth?: (date: Date) => void;

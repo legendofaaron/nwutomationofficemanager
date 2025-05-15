@@ -114,20 +114,21 @@ function Calendar({
           // Safely extract the properties we need
           const { displayMonth } = captionProps;
           
+          // Calculate next and previous months
+          const nextMonth = new Date(new Date(displayMonth).setMonth(displayMonth.getMonth() + 1));
+          const previousMonth = new Date(new Date(displayMonth).setMonth(displayMonth.getMonth() - 1));
+          
           return (
             <CustomCaption 
-              {...captionProps}
               displayMonth={displayMonth}
               onMonthChange={handleMonthChange}
-              // Pass next and previous month explicitly
               goToMonth={(date: Date) => {
-                // DayPicker has internal navigation methods we can use
                 if (captionProps.onMonthChange) {
                   captionProps.onMonthChange(date);
                 }
               }}
-              nextMonth={new Date(new Date(displayMonth).setMonth(displayMonth.getMonth() + 1))}
-              previousMonth={new Date(new Date(displayMonth).setMonth(displayMonth.getMonth() - 1))}
+              nextMonth={nextMonth}
+              previousMonth={previousMonth}
             />
           );
         },
