@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
@@ -178,6 +179,11 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
     setDate(range);
   };
 
+  // Handle toggle switch change
+  const handleToggleChange = (checked: boolean) => {
+    setUseAllDates(checked);
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
@@ -211,7 +217,7 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
             <Switch 
               id="useAllDates" 
               checked={useAllDates} 
-              onCheckedChange={setUseAllDates} 
+              onCheckedChange={handleToggleChange} 
             />
             <Label htmlFor="useAllDates">Download complete crew schedule</Label>
           </div>

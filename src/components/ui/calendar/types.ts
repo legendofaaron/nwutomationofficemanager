@@ -1,6 +1,4 @@
 
-import { CaptionProps } from "react-day-picker";
-
 // Types for the task dots that can be shown on calendar days
 export interface TaskDot {
   color: string;
