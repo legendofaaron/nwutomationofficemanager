@@ -19,6 +19,7 @@ import { Crew, Task } from './ScheduleTypes';
 import { downloadScheduleAsPdf, downloadScheduleAsTxt, filterTasksByDateRange } from '@/utils/downloadUtils';
 import { toast } from '@/hooks/use-toast';
 import { useAppContext } from '@/context/AppContext';
+import { useCalendarSync } from '@/hooks/useCalendarSync';
 
 interface CrewScheduleDownloadProps {
   crews: Crew[];
@@ -28,8 +29,11 @@ interface CrewScheduleDownloadProps {
 }
 
 const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: CrewScheduleDownloadProps) => {
+  // Use the synchronized calendar date as the initial date
+  const { date: syncedDate } = useCalendarSync();
+  
   const [date, setDate] = useState<DateRange | undefined>({
-    from: new Date(),
+    from: syncedDate || new Date(),
     to: undefined,
   });
   

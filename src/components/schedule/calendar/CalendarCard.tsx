@@ -38,7 +38,6 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
   });
   
   // Custom day rendering to show task indicators
-  // Fix the function signature to match CalendarDayProps and deal with children
   const renderDayWithTasks = useCallback((props: CalendarDayProps) => {
     const { date } = props;
     const dateKey = date.toDateString();
