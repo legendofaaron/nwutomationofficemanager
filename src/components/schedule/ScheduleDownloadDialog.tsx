@@ -14,7 +14,6 @@ import EmployeeScheduleDownload from './EmployeeScheduleDownload';
 import CrewScheduleDownload from './CrewScheduleDownload';
 import UnifiedScheduleDownload from './UnifiedScheduleDownload';
 import { useAppContext } from '@/context/AppContext';
-import { useCalendarSync } from '@/hooks/useCalendarSync';
 
 interface ScheduleDownloadDialogProps {
   isOpen: boolean;
@@ -37,9 +36,8 @@ const ScheduleDownloadDialog: React.FC<ScheduleDownloadDialogProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<string>(selectedEmployeeId ? 'employee' : selectedCrewId ? 'crew' : 'unified');
   
-  // Get the global context to access todos and use calendar sync
+  // Get the global context to access todos
   const { todos } = useAppContext();
-  const { date: syncedDate } = useCalendarSync();
   
   // Convert todos to Task format and combine with provided tasks
   const allTasks = [...tasks];
@@ -57,7 +55,7 @@ const ScheduleDownloadDialog: React.FC<ScheduleDownloadDialogProps> = ({
       id: todo.id,
       title: todo.text,
       description: '',
-      date: todo.date || syncedDate || new Date(),
+      date: todo.date || new Date(),
       completed: todo.completed || false,
       assignedTo: todo.assignedTo,
       crew: todo.crewMembers,
@@ -74,7 +72,7 @@ const ScheduleDownloadDialog: React.FC<ScheduleDownloadDialogProps> = ({
         allTasks.push(todoTask);
       }
     });
-  }, [todos, syncedDate]);
+  }, [todos]);
   
   // Close dialog handler
   const handleClose = () => {
