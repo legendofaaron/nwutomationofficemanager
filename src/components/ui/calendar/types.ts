@@ -18,9 +18,8 @@ export interface CalendarDayProps {
 
 // Extended props for the custom caption component
 export interface CustomCaptionProps extends CaptionProps {
-  onPreviousClick: () => void;
-  onNextClick: () => void;
-  monthFormat?: string;
-  displayIndex?: number;
   onMonthChange?: (date: Date) => void;
+  goToMonth: (date: Date) => void;
+  nextMonth: Date | undefined;
+  previousMonth: Date | undefined;
 }
