@@ -9,12 +9,16 @@ import { useCalendarSync as useCalendarSyncContext } from '@/context/CalendarSyn
  * @returns Object with synchronized date state and setter function
  */
 export function useCalendarSync(initialDate?: Date, syncMode: 'bidirectional' | 'readonly' = 'bidirectional') {
-  // Try to get the CalendarSyncContext, but provide fallback values if it's not available
+  // Define properly typed fallback values that match the actual context functions
   let contextValue = {
-    globalDate: null,
-    setGlobalDate: () => {},
-    registerCalendar: () => {},
-    unregisterCalendar: () => {}
+    globalDate: null as Date | null,
+    setGlobalDate: (date: Date) => {},
+    registerCalendar: (id: string, onDateChange: (date: Date) => void) => {},
+    unregisterCalendar: (id: string) => {},
+    lastDragOperation: null as any,
+    setLastDragOperation: (operation: any) => {},
+    draggingItem: null as any,
+    setDraggingItem: (item: any) => {}
   };
   
   try {
@@ -33,7 +37,6 @@ export function useCalendarSync(initialDate?: Date, syncMode: 'bidirectional' | 
   
   // Register this calendar instance
   useEffect(() => {
-    // Only register if the context is available
     if (registerCalendar && unregisterCalendar) {
       registerCalendar(calendarId, (date) => {
         setLocalDate(new Date(date));

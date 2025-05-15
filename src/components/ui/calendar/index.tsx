@@ -19,11 +19,16 @@ function Calendar({
   const [currentMonth, setCurrentMonth] = React.useState<Date>(props.month || new Date())
   const [uniqueId] = React.useState(`calendar-${Math.random().toString(36).substr(2, 9)}`)
   
-  // Try to use the calendar sync context, but provide fallbacks if not available
-  let calendarSyncData = { 
-    registerCalendar: () => {}, 
-    unregisterCalendar: () => {},
-    globalDate: null
+  // Define properly typed fallback values that match the actual context functions
+  let calendarSyncData = {
+    registerCalendar: (id: string, onDateChange: (date: Date) => void) => {},
+    unregisterCalendar: (id: string) => {},
+    globalDate: null as Date | null,
+    setGlobalDate: (date: Date) => {},
+    lastDragOperation: null as any,
+    setLastDragOperation: (operation: any) => {},
+    draggingItem: null as any,
+    setDraggingItem: (item: any) => {}
   };
   
   try {
@@ -114,14 +119,14 @@ function Calendar({
               {...captionProps}
               displayMonth={displayMonth}
               onMonthChange={handleMonthChange}
-              // These need to be properly typed
+              // Pass these properly typed props
               goToMonth={(date: Date) => {
-                if (captionProps.onMonthChange) {
-                  captionProps.onMonthChange(date);
+                if (captionProps.goToMonth) {
+                  captionProps.goToMonth(date);
                 }
               }}
-              nextMonth={captionProps.displayMonth ? new Date(new Date(captionProps.displayMonth).setMonth(captionProps.displayMonth.getMonth() + 1)) : undefined}
-              previousMonth={captionProps.displayMonth ? new Date(new Date(captionProps.displayMonth).setMonth(captionProps.displayMonth.getMonth() - 1)) : undefined}
+              nextMonth={captionProps.nextMonth}
+              previousMonth={captionProps.previousMonth}
             />
           );
         },
