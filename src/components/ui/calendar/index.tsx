@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker, type DayPickerProps } from "react-day-picker"
@@ -92,6 +93,9 @@ function Calendar({
           <CustomCaption 
             {...captionProps} 
             onMonthChange={handleMonthChange}
+            goToMonth={captionProps.goToMonth}
+            nextMonth={captionProps.nextMonth}
+            previousMonth={captionProps.previousMonth}
           />
         ),
         ...props.components
