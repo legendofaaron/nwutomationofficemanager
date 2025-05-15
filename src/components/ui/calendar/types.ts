@@ -1,5 +1,5 @@
 
-import { CaptionProps } from "react-day-picker";
+import { CaptionProps as DayPickerCaptionProps } from "react-day-picker";
 
 // Types for the task dots that can be shown on calendar days
 export interface TaskDot {
@@ -18,7 +18,7 @@ export interface CalendarDayProps {
 }
 
 // Extended props for the custom caption component
-export interface CustomCaptionProps extends CaptionProps {
+export interface CustomCaptionProps extends DayPickerCaptionProps {
   onPreviousClick: () => void;
   onNextClick: () => void;
   monthFormat?: string;

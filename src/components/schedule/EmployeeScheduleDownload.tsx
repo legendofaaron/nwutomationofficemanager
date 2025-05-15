@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { CalendarIcon, FileText, FileDown } from 'lucide-react';
+import { FileText, FileDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -12,6 +12,8 @@ import { Task } from './ScheduleTypes';
 import { downloadScheduleAsPdf, downloadScheduleAsTxt, filterTasksByDateRange } from '@/utils/downloadUtils';
 import { toast } from '@/hooks/use-toast';
 import { useAppContext } from '@/context/AppContext';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface EmployeeScheduleDownloadProps {
   employeeId: string;
@@ -25,6 +27,7 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
     from: new Date(),
     to: undefined,
   });
+  const [useAllDates, setUseAllDates] = useState<boolean>(false);
   
   // Use the global app context to get additional tasks
   const { todos } = useAppContext();
@@ -57,8 +60,7 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
 
   // Filter tasks for this employee and within selected date range
   const getFilteredTasks = (): Task[] => {
-    if (!date?.from) return [];
-    
+    // Get tasks assigned to this employee
     const employeeTasks = allTasks.filter(task => {
       // Check if task is assigned to this employee
       const isAssignedToEmployee = task.assignedTo === employeeName;
@@ -69,8 +71,13 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
       return (isAssignedToEmployee || isInAssignedCrew);
     });
     
-    // Filter by date range
-    return filterTasksByDateRange(employeeTasks, date.from, date.to);
+    // If using all dates, return all employee tasks
+    if (useAllDates) {
+      return employeeTasks;
+    }
+    
+    // Filter by date range if date filter is enabled
+    return filterTasksByDateRange(employeeTasks, date?.from, date?.to);
   };
 
   const handleDownloadPdf = () => {
@@ -79,7 +86,7 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
     if (filteredTasks.length === 0) {
       toast({
         title: "No tasks found",
-        description: "No scheduled tasks in the selected date range",
+        description: "No scheduled tasks found for this employee",
         variant: "destructive"
       });
       return;
@@ -113,7 +120,7 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
     if (filteredTasks.length === 0) {
       toast({
         title: "No tasks found",
-        description: "No scheduled tasks in the selected date range",
+        description: "No scheduled tasks found for this employee",
         variant: "destructive"
       });
       return;
@@ -146,62 +153,78 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
     setDate(range);
   };
 
+  // Handle toggle switch change
+  const handleToggleChange = (checked: boolean) => {
+    setUseAllDates(checked);
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-medium">Download Schedule</CardTitle>
         <CardDescription>
-          Download {employeeName}'s schedule for a specific date range
+          Download {employeeName}'s schedule
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-2">
-          <div className="flex flex-col">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="date"
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date?.from ? (
-                    date.to ? (
-                      <>
-                        {format(date.from, "LLL dd, y")} -{" "}
-                        {format(date.to, "LLL dd, y")}
-                      </>
-                    ) : (
-                      format(date.from, "LLL dd, y")
-                    )
-                  ) : (
-                    <span>Pick a date range</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={date?.from}
-                  selected={date}
-                  onSelect={handleDateRangeSelect}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+        <div className="flex items-center space-x-2 mb-4">
+          <Switch 
+            id="useAllDates" 
+            checked={useAllDates} 
+            onCheckedChange={handleToggleChange} 
+          />
+          <Label htmlFor="useAllDates">Download complete employee schedule</Label>
         </div>
+
+        {!useAllDates && (
+          <div className="grid gap-2">
+            <div className="flex flex-col">
+              <label className="text-sm font-medium mb-1">Select Date Range</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="date"
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !date && "text-muted-foreground"
+                    )}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    {date?.from ? (
+                      date.to ? (
+                        <>
+                          {format(date.from, "LLL dd, y")} -{" "}
+                          {format(date.to, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(date.from, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>Pick a date range</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={date?.from}
+                    selected={date}
+                    onSelect={handleDateRangeSelect}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+        )}
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button 
           variant="outline" 
           className="w-full gap-2" 
           onClick={handleDownloadTxt}
-          disabled={!date?.from}
         >
           <FileText className="h-4 w-4" />
           Download as TXT
@@ -209,7 +232,6 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
         <Button 
           className="w-full gap-2 ml-2" 
           onClick={handleDownloadPdf}
-          disabled={!date?.from}
         >
           <FileDown className="h-4 w-4" />
           Download as PDF

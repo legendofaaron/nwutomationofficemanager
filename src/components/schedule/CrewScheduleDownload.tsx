@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';

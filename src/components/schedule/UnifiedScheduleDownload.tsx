@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { CalendarIcon, FileText, FileDown, User, Users, Calendar } from 'lucide-react';
+import { FileText, FileDown, User, Users, Calendar } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -16,6 +16,8 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Employee, Crew, Task } from './ScheduleTypes';
 import { downloadScheduleAsPdf, downloadScheduleAsTxt, filterTasksByDateRange } from '@/utils/downloadUtils';
 import { toast } from '@/hooks/use-toast';
@@ -48,6 +50,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
   const [activeTab, setActiveTab] = useState<'employee' | 'crew' | 'all'>(defaultTab);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | undefined>(defaultSelectedEmployeeId);
   const [selectedCrewId, setSelectedCrewId] = useState<string | undefined>(defaultSelectedCrewId);
+  const [useAllDates, setUseAllDates] = useState<boolean>(false);
   
   // Use the global app context to get additional tasks
   const { todos } = useAppContext();
@@ -93,7 +96,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
 
   // Filter tasks for employee and within selected date range
   const getFilteredEmployeeTasks = (): Task[] => {
-    if (!date?.from || !selectedEmployeeId) return [];
+    if (!selectedEmployeeId) return [];
     
     const employeeName = getEmployeeNameById(selectedEmployeeId);
     
@@ -107,22 +110,37 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       return (isAssignedToEmployee || isInAssignedCrew);
     });
     
+    // If using all dates, return all employee tasks
+    if (useAllDates) {
+      return employeeTasks;
+    }
+    
     // Filter by date range
-    return filterTasksByDateRange(employeeTasks, date.from, date.to);
+    return filterTasksByDateRange(employeeTasks, date?.from, date?.to);
   };
   
   // Filter tasks for selected crew and within selected date range
   const getFilteredCrewTasks = (): Task[] => {
-    if (!date?.from || !selectedCrewId) return [];
+    if (!selectedCrewId) return [];
     
     const crewTasks = allTasks.filter(task => task.crewId === selectedCrewId);
     
+    // If using all dates, return all crew tasks
+    if (useAllDates) {
+      return crewTasks;
+    }
+    
     // Filter by date range
-    return filterTasksByDateRange(crewTasks, date.from, date.to);
+    return filterTasksByDateRange(crewTasks, date?.from, date?.to);
   };
 
   // Get all tasks within selected date range
   const getAllTasks = (): Task[] => {
+    // If using all dates, return all tasks
+    if (useAllDates) {
+      return allTasks;
+    }
+    
     if (!date?.from) return [];
     return filterTasksByDateRange(allTasks, date.from, date.to);
   };
@@ -143,7 +161,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       if (filteredTasks.length === 0) {
         toast({
           title: "No tasks found",
-          description: "No scheduled tasks for this employee in the selected date range",
+          description: "No scheduled tasks for this employee",
           variant: "destructive"
         });
         return;
@@ -184,7 +202,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       if (filteredTasks.length === 0) {
         toast({
           title: "No tasks found",
-          description: "No scheduled tasks for this crew in the selected date range",
+          description: "No scheduled tasks for this crew",
           variant: "destructive"
         });
         return;
@@ -216,7 +234,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       if (allFilteredTasks.length === 0) {
         toast({
           title: "No tasks found",
-          description: "No scheduled tasks in the selected date range",
+          description: "No scheduled tasks found",
           variant: "destructive"
         });
         return;
@@ -260,7 +278,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       if (filteredTasks.length === 0) {
         toast({
           title: "No tasks found",
-          description: "No scheduled tasks for this employee in the selected date range",
+          description: "No scheduled tasks for this employee",
           variant: "destructive"
         });
         return;
@@ -301,7 +319,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       if (filteredTasks.length === 0) {
         toast({
           title: "No tasks found",
-          description: "No scheduled tasks for this crew in the selected date range",
+          description: "No scheduled tasks for this crew",
           variant: "destructive"
         });
         return;
@@ -333,7 +351,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       if (allFilteredTasks.length === 0) {
         toast({
           title: "No tasks found",
-          description: "No scheduled tasks in the selected date range",
+          description: "No scheduled tasks found",
           variant: "destructive"
         });
         return;
@@ -359,6 +377,11 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
         });
       }
     }
+  };
+
+  // Handle toggle switch change
+  const handleToggleChange = (checked: boolean) => {
+    setUseAllDates(checked);
   };
 
   return (
@@ -435,47 +458,58 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
           </TabsContent>
         </Tabs>
 
-        <div className="grid gap-2">
-          <label className="text-sm font-medium">Select Date Range</label>
-          <div className="flex flex-col">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="date"
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date?.from ? (
-                    date.to ? (
-                      <>
-                        {format(date.from, "LLL dd, y")} -{" "}
-                        {format(date.to, "LLL dd, y")}
-                      </>
-                    ) : (
-                      format(date.from, "LLL dd, y")
-                    )
-                  ) : (
-                    <span>Pick a date range</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <CalendarComponent
-                  initialFocus
-                  mode="range"
-                  defaultMonth={date?.from}
-                  selected={date}
-                  onSelect={setDate}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+        <div className="flex items-center space-x-2">
+          <Switch 
+            id="useAllDates" 
+            checked={useAllDates} 
+            onCheckedChange={handleToggleChange} 
+          />
+          <Label htmlFor="useAllDates">Download complete schedule</Label>
         </div>
+
+        {!useAllDates && (
+          <div className="grid gap-2">
+            <label className="text-sm font-medium">Select Date Range</label>
+            <div className="flex flex-col">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="date"
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !date && "text-muted-foreground"
+                    )}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    {date?.from ? (
+                      date.to ? (
+                        <>
+                          {format(date.from, "LLL dd, y")} -{" "}
+                          {format(date.to, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(date.from, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>Pick a date range</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    initialFocus
+                    mode="range"
+                    defaultMonth={date?.from}
+                    selected={date}
+                    onSelect={setDate}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+        )}
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button 
@@ -483,8 +517,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
           className="w-full gap-2" 
           onClick={handleDownloadTxt}
           disabled={(activeTab === 'employee' && !selectedEmployeeId) || 
-                   (activeTab === 'crew' && !selectedCrewId) || 
-                   !date?.from}
+                   (activeTab === 'crew' && !selectedCrewId)}
         >
           <FileText className="h-4 w-4" />
           Download as TXT
@@ -493,8 +526,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
           className="w-full gap-2 ml-2" 
           onClick={handleDownloadPdf}
           disabled={(activeTab === 'employee' && !selectedEmployeeId) || 
-                   (activeTab === 'crew' && !selectedCrewId) || 
-                   !date?.from}
+                   (activeTab === 'crew' && !selectedCrewId)}
         >
           <FileDown className="h-4 w-4" />
           Download as PDF
