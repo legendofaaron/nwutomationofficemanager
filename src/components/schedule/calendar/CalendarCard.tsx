@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import DroppableArea from '../DroppableArea';
 import { toast } from '@/hooks/use-toast';
+import { CalendarDayProps } from '@/components/ui/calendar';
 
 interface CalendarCardProps {
   tasks: Task[];
@@ -37,8 +38,9 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
   });
   
   // Custom day rendering to show task indicators
-  const renderDayWithTasks = useCallback((day: React.ReactNode, props: any) => {
-    const date = props.date as Date;
+  // Fix the function signature to match CalendarDayProps
+  const renderDayWithTasks = useCallback((props: CalendarDayProps) => {
+    const { date, children } = props;
     const dateKey = date.toDateString();
     const dayTasks = tasksMap.get(dateKey) || [];
     
@@ -57,7 +59,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
         activeClassName="bg-primary/10 outline-dashed outline-2 outline-primary/50"
       >
         <div className="flex flex-col items-center">
-          {props.children}
+          {children}
           {dayTasks.length > 0 && (
             <div className="absolute bottom-1 flex justify-center space-x-0.5 mt-0.5">
               {dayTasks.length <= 3 ? (
