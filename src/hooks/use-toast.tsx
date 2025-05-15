@@ -11,6 +11,9 @@ export interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
   duration?: number;
 }
 
+// Re-export the ToasterToast type from the original toast implementation
+export type { ToasterToast } from "./use-toast";
+
 // Enhanced toast function with automatic theme detection
 export const useToast = () => {
   const { resolvedTheme } = useTheme();
