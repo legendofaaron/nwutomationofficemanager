@@ -192,7 +192,8 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       data-draggable-id={id}
       data-draggable-type={type}
     >
-      <style jsx>{`
+      <style>
+        {`
         .dragging-active {
           opacity: 0.6;
           transform: scale(0.98);
@@ -204,7 +205,8 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
           0%, 100% { background-color: transparent; }
           50% { background-color: rgba(var(--primary), 0.2); }
         }
-      `}</style>
+        `}
+      </style>
       {children}
     </div>
   );
