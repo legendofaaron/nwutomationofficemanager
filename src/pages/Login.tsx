@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -16,8 +15,9 @@ const Login = () => {
   const { branding } = useAppContext();
   const { setDemoMode } = useAuth();
   
-  // Check if user is already logged in
-  useSessionValidator();
+  // Check if user is already logged in and redirect to dashboard
+  // We need to use '/dashboard' as the redirect here
+  useSessionValidator('/dashboard');
 
   const handleLoginSuccess = () => {
     navigate('/dashboard');
