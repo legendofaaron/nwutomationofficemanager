@@ -1,4 +1,3 @@
-
 import * as React from "react"
 
 import { ToastActionElement, ToastProps } from "@/components/ui/toast"
@@ -27,7 +26,7 @@ const actionTypes = {
 let count = 0
 
 function genId() {
-  count = (count + 1) % Number.MAX_SAFE_INTEGER
+  count = (count + 1) % Number.MAX_VALUE
   return count.toString()
 }
 
@@ -40,7 +39,7 @@ type Action =
     }
   | {
       type: ActionType["UPDATE_TOAST"]
-      toast: Partial<ToasterToast> & { id: string }
+      toast: Partial<ToasterToast>
     }
   | {
       type: ActionType["DISMISS_TOAST"]
@@ -139,34 +138,30 @@ function dispatch(action: Action) {
   })
 }
 
-type Toast = Omit<ToasterToast, "id">
+type Toast = Omit<ToasterToast, "id"> & {
+  id?: string
+}
 
-function toast({ ...props }: Toast) {
-  const id = genId()
-
-  const update = (props: Toast) =>
-    dispatch({
-      type: "UPDATE_TOAST",
-      toast: { ...props, id },
-    })
-  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+function toast({ id = "", ...props }: Toast) {
+  const toastId = id || genId()
 
   dispatch({
     type: "ADD_TOAST",
     toast: {
+      id: toastId,
       ...props,
-      id,
       open: true,
-      onOpenChange: (open: boolean) => {
-        if (!open) dismiss()
-      },
     },
   })
 
   return {
-    id: id,
-    dismiss,
-    update,
+    id: toastId,
+    dismiss: () => dispatch({ type: "DISMISS_TOAST", toastId }),
+    update: (props: ToasterToast) =>
+      dispatch({
+        type: "UPDATE_TOAST",
+        toast: { ...props, id: toastId },
+      }),
   }
 }
 

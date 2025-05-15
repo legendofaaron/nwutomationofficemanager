@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { CalendarIcon, FileText, FileDown, User, Users } from 'lucide-react';
+import { CalendarIcon, FileText, FileDown, User, Users, Calendar } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -28,7 +28,7 @@ interface UnifiedScheduleDownloadProps {
   onClose?: () => void;
   defaultSelectedEmployeeId?: string;
   defaultSelectedCrewId?: string;
-  defaultTab?: 'employee' | 'crew';
+  defaultTab?: 'employee' | 'crew' | 'all';
 }
 
 const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
@@ -45,7 +45,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
     to: undefined,
   });
   
-  const [activeTab, setActiveTab] = useState<'employee' | 'crew'>(defaultTab);
+  const [activeTab, setActiveTab] = useState<'employee' | 'crew' | 'all'>(defaultTab);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | undefined>(defaultSelectedEmployeeId);
   const [selectedCrewId, setSelectedCrewId] = useState<string | undefined>(defaultSelectedCrewId);
   
@@ -121,6 +121,12 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
     return filterTasksByDateRange(crewTasks, date.from, date.to);
   };
 
+  // Get all tasks within selected date range
+  const getAllTasks = (): Task[] => {
+    if (!date?.from) return [];
+    return filterTasksByDateRange(allTasks, date.from, date.to);
+  };
+
   const handleDownloadPdf = () => {
     if (activeTab === 'employee') {
       const filteredTasks = getFilteredEmployeeTasks();
@@ -163,7 +169,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
           variant: "destructive"
         });
       }
-    } else {
+    } else if (activeTab === 'crew') {
       const filteredTasks = getFilteredCrewTasks();
       
       if (!selectedCrewId) {
@@ -193,6 +199,37 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
         toast({
           title: "Success",
           description: `Schedule for ${getCrewNameById(selectedCrewId)} downloaded as PDF`,
+          variant: "success"
+        });
+        if (onClose) onClose();
+      } catch (error) {
+        console.error("Error downloading PDF:", error);
+        toast({
+          title: "Error",
+          description: "Failed to download schedule as PDF",
+          variant: "destructive"
+        });
+      }
+    } else if (activeTab === 'all') {
+      const allFilteredTasks = getAllTasks();
+      
+      if (allFilteredTasks.length === 0) {
+        toast({
+          title: "No tasks found",
+          description: "No scheduled tasks in the selected date range",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      try {
+        downloadScheduleAsPdf(allFilteredTasks, {
+          type: 'all',
+          name: 'Complete Schedule'
+        });
+        toast({
+          title: "Success",
+          description: "Complete schedule downloaded as PDF",
           variant: "success"
         });
         if (onClose) onClose();
@@ -249,7 +286,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
           variant: "destructive"
         });
       }
-    } else {
+    } else if (activeTab === 'crew') {
       const filteredTasks = getFilteredCrewTasks();
       
       if (!selectedCrewId) {
@@ -290,6 +327,37 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
           variant: "destructive"
         });
       }
+    } else if (activeTab === 'all') {
+      const allFilteredTasks = getAllTasks();
+      
+      if (allFilteredTasks.length === 0) {
+        toast({
+          title: "No tasks found",
+          description: "No scheduled tasks in the selected date range",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      try {
+        downloadScheduleAsTxt(allFilteredTasks, {
+          type: 'all',
+          name: 'Complete Schedule'
+        });
+        toast({
+          title: "Success",
+          description: "Complete schedule downloaded as TXT",
+          variant: "success"
+        });
+        if (onClose) onClose();
+      } catch (error) {
+        console.error("Error downloading TXT:", error);
+        toast({
+          title: "Error",
+          description: "Failed to download schedule as TXT",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -298,12 +366,12 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-medium">Download Schedule</CardTitle>
         <CardDescription>
-          Download schedule for an employee or crew
+          Download schedule for an employee, crew, or the complete schedule
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'employee' | 'crew')}>
-          <TabsList className="grid grid-cols-2 mb-4">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'employee' | 'crew' | 'all')}>
+          <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="employee" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               Employee
@@ -311,6 +379,10 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
             <TabsTrigger value="crew" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Crew
+            </TabsTrigger>
+            <TabsTrigger value="all" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              All
             </TabsTrigger>
           </TabsList>
           
@@ -355,6 +427,12 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
               </Select>
             </div>
           </TabsContent>
+          
+          <TabsContent value="all" className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              Download a complete schedule for all employees and crews.
+            </div>
+          </TabsContent>
         </Tabs>
 
         <div className="grid gap-2">
@@ -386,7 +464,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
+                <CalendarComponent
                   initialFocus
                   mode="range"
                   defaultMonth={date?.from}
@@ -404,8 +482,8 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
           variant="outline" 
           className="w-full gap-2" 
           onClick={handleDownloadTxt}
-          disabled={(!selectedEmployeeId && activeTab === 'employee') || 
-                   (!selectedCrewId && activeTab === 'crew') || 
+          disabled={(activeTab === 'employee' && !selectedEmployeeId) || 
+                   (activeTab === 'crew' && !selectedCrewId) || 
                    !date?.from}
         >
           <FileText className="h-4 w-4" />
@@ -414,8 +492,8 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
         <Button 
           className="w-full gap-2 ml-2" 
           onClick={handleDownloadPdf}
-          disabled={(!selectedEmployeeId && activeTab === 'employee') || 
-                   (!selectedCrewId && activeTab === 'crew') || 
+          disabled={(activeTab === 'employee' && !selectedEmployeeId) || 
+                   (activeTab === 'crew' && !selectedCrewId) || 
                    !date?.from}
         >
           <FileDown className="h-4 w-4" />

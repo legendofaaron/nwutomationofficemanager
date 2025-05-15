@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Users } from 'lucide-react';
+import { User, Users, Calendar } from 'lucide-react';
 import { Employee, Crew, Task } from './ScheduleTypes';
 import EmployeeScheduleDownload from './EmployeeScheduleDownload';
 import CrewScheduleDownload from './CrewScheduleDownload';
@@ -85,15 +85,15 @@ const ScheduleDownloadDialog: React.FC<ScheduleDownloadDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Download Schedule</DialogTitle>
           <DialogDescription>
-            Download schedules for employees or crews
+            Download schedules for employees, crews, or the complete schedule
           </DialogDescription>
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="unified" className="flex items-center gap-1">
-              <Users className="h-3.5 w-3.5" />
-              Any
+              <Calendar className="h-3.5 w-3.5" />
+              All
             </TabsTrigger>
             <TabsTrigger value="employee" className="flex items-center gap-1">
               <User className="h-3.5 w-3.5" />
@@ -113,7 +113,7 @@ const ScheduleDownloadDialog: React.FC<ScheduleDownloadDialogProps> = ({
               onClose={handleClose}
               defaultSelectedEmployeeId={selectedEmployeeId}
               defaultSelectedCrewId={selectedCrewId} 
-              defaultTab={selectedEmployeeId ? 'employee' : 'crew'}
+              defaultTab={selectedEmployeeId ? 'employee' : selectedCrewId ? 'crew' : 'all'}
             />
           </TabsContent>
           
