@@ -9,8 +9,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { Task } from './ScheduleTypes';
-import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
+import { downloadScheduleAsPdf, downloadScheduleAsTxt, filterTasksByDateRange } from '@/utils/downloadUtils';
 import { toast } from '@/hooks/use-toast';
+import { useAppContext } from '@/context/AppContext';
 
 interface EmployeeScheduleDownloadProps {
   employeeId: string;
@@ -24,25 +25,52 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
     from: new Date(),
     to: undefined,
   });
+  
+  // Use the global app context to get additional tasks
+  const { todos } = useAppContext();
+
+  // Convert todos to tasks format if they're assigned to this employee
+  const todoTasks: Task[] = todos
+    .filter(todo => todo.assignedTo === employeeName)
+    .map(todo => ({
+      id: todo.id,
+      title: todo.text,
+      description: '',
+      date: todo.date || new Date(),
+      completed: todo.completed || false,
+      assignedTo: todo.assignedTo,
+      crew: todo.crewMembers,
+      crewId: todo.crewId,
+      crewName: todo.crewName,
+      startTime: todo.startTime || '09:00',
+      endTime: todo.endTime || '10:00',
+      location: todo.location
+    }));
+
+  // Combine provided tasks with todo tasks, avoiding duplicates
+  const allTasks = [...tasks];
+  todoTasks.forEach(todoTask => {
+    if (!allTasks.some(t => t.id === todoTask.id)) {
+      allTasks.push(todoTask);
+    }
+  });
 
   // Filter tasks for this employee and within selected date range
   const getFilteredTasks = (): Task[] => {
     if (!date?.from) return [];
     
-    return tasks.filter(task => {
+    const employeeTasks = allTasks.filter(task => {
       // Check if task is assigned to this employee
       const isAssignedToEmployee = task.assignedTo === employeeName;
       
       // Check if employee is part of a crew assigned to this task
       const isInAssignedCrew = task.crew?.includes(employeeName) || false;
       
-      // Check if task date is within the selected range
-      const taskDate = new Date(task.date);
-      const isInDateRange = date.from && taskDate >= date.from && 
-                            (!date.to || taskDate <= date.to);
-      
-      return (isAssignedToEmployee || isInAssignedCrew) && isInDateRange;
+      return (isAssignedToEmployee || isInAssignedCrew);
     });
+    
+    // Filter by date range
+    return filterTasksByDateRange(employeeTasks, date.from, date.to);
   };
 
   const handleDownloadPdf = () => {
@@ -50,7 +78,7 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
     
     if (filteredTasks.length === 0) {
       toast({
-        title: "Error",
+        title: "No tasks found",
         description: "No scheduled tasks in the selected date range",
         variant: "destructive"
       });
@@ -65,7 +93,8 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
       });
       toast({
         title: "Success",
-        description: `Schedule for ${employeeName} downloaded as PDF`
+        description: `Schedule for ${employeeName} downloaded as PDF`,
+        variant: "success"
       });
       if (onClose) onClose();
     } catch (error) {
@@ -83,7 +112,7 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
     
     if (filteredTasks.length === 0) {
       toast({
-        title: "Error",
+        title: "No tasks found",
         description: "No scheduled tasks in the selected date range",
         variant: "destructive"
       });
@@ -98,7 +127,8 @@ const EmployeeScheduleDownload = ({ employeeId, employeeName, tasks = [], onClos
       });
       toast({
         title: "Success",
-        description: `Schedule for ${employeeName} downloaded as TXT`
+        description: `Schedule for ${employeeName} downloaded as TXT`,
+        variant: "success"
       });
       if (onClose) onClose();
     } catch (error) {

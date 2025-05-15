@@ -10,6 +10,7 @@ import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import ScheduleDownloadDialog from '../ScheduleDownloadDialog';
+import { useScheduleState } from '@/hooks/useScheduleState';
 
 interface TaskCalendarViewProps {
   tasks: Task[];
@@ -35,8 +36,11 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
   // State for download dialog
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
   
-  // Get access to the global calendar date setter
+  // Get access to the global calendar date setter and employees data
   const { setCalendarDate } = useAppContext();
+  
+  // Get employees from useScheduleState
+  const { employees } = useScheduleState();
   
   // Use the enhanced calendar sync hook
   const { date, setDate } = useCalendarSync(selectedDate);
@@ -212,7 +216,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
         isOpen={isDownloadDialogOpen}
         onClose={handleCloseDownloadDialog}
         tasks={tasks}
-        employees={[]} // Pass empty array for now as placeholder
+        employees={employees || []}
         crews={crews || []}
       />
     </>

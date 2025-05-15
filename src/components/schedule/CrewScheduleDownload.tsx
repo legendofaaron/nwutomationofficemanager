@@ -16,8 +16,9 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Crew, Task } from './ScheduleTypes';
-import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
+import { downloadScheduleAsPdf, downloadScheduleAsTxt, filterTasksByDateRange } from '@/utils/downloadUtils';
 import { toast } from '@/hooks/use-toast';
+import { useAppContext } from '@/context/AppContext';
 
 interface CrewScheduleDownloadProps {
   crews: Crew[];
@@ -34,21 +35,43 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
   
   const [selectedCrew, setSelectedCrew] = useState<string | null>(selectedCrewId || null);
   
+  // Use the global app context to get additional tasks
+  const { todos } = useAppContext();
+
+  // Convert todos to tasks format if they're assigned to selected crew
+  const todoTasks: Task[] = todos
+    .filter(todo => todo.crewId === selectedCrew)
+    .map(todo => ({
+      id: todo.id,
+      title: todo.text,
+      description: '',
+      date: todo.date || new Date(),
+      completed: todo.completed || false,
+      assignedTo: todo.assignedTo,
+      crew: todo.crewMembers,
+      crewId: todo.crewId,
+      crewName: todo.crewName,
+      startTime: todo.startTime || '09:00',
+      endTime: todo.endTime || '10:00',
+      location: todo.location
+    }));
+
+  // Combine provided tasks with todo tasks, avoiding duplicates
+  const allTasks = [...tasks];
+  todoTasks.forEach(todoTask => {
+    if (!allTasks.some(t => t.id === todoTask.id)) {
+      allTasks.push(todoTask);
+    }
+  });
+  
   // Filter tasks for selected crew and within selected date range
   const getFilteredTasks = (): Task[] => {
     if (!date?.from || !selectedCrew) return [];
     
-    return tasks.filter(task => {
-      // Check if task is assigned to this crew
-      const isAssignedToCrew = task.crewId === selectedCrew;
-      
-      // Check if task date is within the selected range
-      const taskDate = new Date(task.date);
-      const isInDateRange = date.from && taskDate >= date.from && 
-                            (!date.to || taskDate <= date.to);
-      
-      return isAssignedToCrew && isInDateRange;
-    });
+    const crewTasks = allTasks.filter(task => task.crewId === selectedCrew);
+    
+    // Filter by date range
+    return filterTasksByDateRange(crewTasks, date.from, date.to);
   };
   
   // Get crew name by ID
@@ -71,7 +94,7 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
     
     if (filteredTasks.length === 0) {
       toast({
-        title: "Error",
+        title: "No tasks found",
         description: "No scheduled tasks in the selected date range",
         variant: "destructive"
       });
@@ -86,7 +109,8 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
       });
       toast({
         title: "Success",
-        description: `Schedule for ${getCrewNameById(selectedCrew)} downloaded as PDF`
+        description: `Schedule for ${getCrewNameById(selectedCrew)} downloaded as PDF`,
+        variant: "success"
       });
       if (onClose) onClose();
     } catch (error) {
@@ -113,7 +137,7 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
     
     if (filteredTasks.length === 0) {
       toast({
-        title: "Error",
+        title: "No tasks found",
         description: "No scheduled tasks in the selected date range",
         variant: "destructive" 
       });
@@ -128,7 +152,8 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
       });
       toast({
         title: "Success",
-        description: `Schedule for ${getCrewNameById(selectedCrew)} downloaded as TXT`
+        description: `Schedule for ${getCrewNameById(selectedCrew)} downloaded as TXT`,
+        variant: "success"
       });
       if (onClose) onClose();
     } catch (error) {

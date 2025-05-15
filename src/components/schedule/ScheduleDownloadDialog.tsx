@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import { Employee, Crew, Task } from './ScheduleTypes';
 import EmployeeScheduleDownload from './EmployeeScheduleDownload';
 import CrewScheduleDownload from './CrewScheduleDownload';
 import UnifiedScheduleDownload from './UnifiedScheduleDownload';
+import { useAppContext } from '@/context/AppContext';
 
 interface ScheduleDownloadDialogProps {
   isOpen: boolean;
@@ -35,12 +36,43 @@ const ScheduleDownloadDialog: React.FC<ScheduleDownloadDialogProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<string>(selectedEmployeeId ? 'employee' : selectedCrewId ? 'crew' : 'unified');
   
+  // Get the global context to access todos
+  const { todos } = useAppContext();
+  
+  // Convert todos to Task format and combine with provided tasks
+  const allTasks = [...tasks];
+  
   // Get employee name by ID
   const getEmployeeNameById = (employeeId?: string): string => {
     if (!employeeId) return "";
     const employee = employees.find(e => e.id === employeeId);
     return employee ? employee.name : "Unknown Employee";
   };
+  
+  useEffect(() => {
+    // Convert todos to tasks format
+    const todoTasks: Task[] = todos.map(todo => ({
+      id: todo.id,
+      title: todo.text,
+      description: '',
+      date: todo.date || new Date(),
+      completed: todo.completed || false,
+      assignedTo: todo.assignedTo,
+      crew: todo.crewMembers,
+      crewId: todo.crewId,
+      crewName: todo.crewName,
+      startTime: todo.startTime || '09:00',
+      endTime: todo.endTime || '10:00',
+      location: todo.location
+    }));
+    
+    // Add todo tasks to allTasks, avoiding duplicates
+    todoTasks.forEach(todoTask => {
+      if (!allTasks.some(t => t.id === todoTask.id)) {
+        allTasks.push(todoTask);
+      }
+    });
+  }, [todos]);
   
   // Close dialog handler
   const handleClose = () => {
@@ -77,7 +109,7 @@ const ScheduleDownloadDialog: React.FC<ScheduleDownloadDialogProps> = ({
             <UnifiedScheduleDownload
               employees={employees}
               crews={crews}
-              tasks={tasks}
+              tasks={allTasks}
               onClose={handleClose}
               defaultSelectedEmployeeId={selectedEmployeeId}
               defaultSelectedCrewId={selectedCrewId} 
@@ -90,7 +122,7 @@ const ScheduleDownloadDialog: React.FC<ScheduleDownloadDialogProps> = ({
               <EmployeeScheduleDownload
                 employeeId={selectedEmployeeId}
                 employeeName={getEmployeeNameById(selectedEmployeeId)}
-                tasks={tasks}
+                tasks={allTasks}
                 onClose={handleClose}
               />
             ) : (
@@ -103,7 +135,7 @@ const ScheduleDownloadDialog: React.FC<ScheduleDownloadDialogProps> = ({
           <TabsContent value="crew">
             <CrewScheduleDownload
               crews={crews}
-              tasks={tasks}
+              tasks={allTasks}
               selectedCrewId={selectedCrewId}
               onClose={handleClose}
             />

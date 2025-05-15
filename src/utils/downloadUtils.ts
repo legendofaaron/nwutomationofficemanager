@@ -193,6 +193,11 @@ export const generateSchedulePDF = (tasks: Task[], filter?: ScheduleFilter): jsP
 
 // Function to download text file
 export const downloadScheduleAsTxt = (tasks: Task[], filter?: ScheduleFilter): void => {
+  if (!tasks || tasks.length === 0) {
+    console.error('No tasks provided for download');
+    return;
+  }
+
   const text = generateScheduleText(tasks, filter);
   const blob = new Blob([text], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
@@ -215,6 +220,11 @@ export const downloadScheduleAsTxt = (tasks: Task[], filter?: ScheduleFilter): v
 
 // Function to download PDF file
 export const downloadScheduleAsPdf = (tasks: Task[], filter?: ScheduleFilter): void => {
+  if (!tasks || tasks.length === 0) {
+    console.error('No tasks provided for download');
+    return;
+  }
+
   const pdf = generateSchedulePDF(tasks, filter);
   
   // Create filename with current date and filter info
@@ -263,4 +273,3 @@ export const formatDateRange = (startDate?: Date, endDate?: Date): string => {
   
   return format(startDate, 'MMMM dd, yyyy');
 };
-

@@ -17,8 +17,9 @@ import {
 } from "@/components/ui/select";
 import { cn } from '@/lib/utils';
 import { Employee, Crew, Task } from './ScheduleTypes';
-import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
+import { downloadScheduleAsPdf, downloadScheduleAsTxt, filterTasksByDateRange } from '@/utils/downloadUtils';
 import { toast } from '@/hooks/use-toast';
+import { useAppContext } from '@/context/AppContext';
 
 interface UnifiedScheduleDownloadProps {
   employees: Employee[];
@@ -48,6 +49,34 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | undefined>(defaultSelectedEmployeeId);
   const [selectedCrewId, setSelectedCrewId] = useState<string | undefined>(defaultSelectedCrewId);
   
+  // Use the global app context to get additional tasks
+  const { todos } = useAppContext();
+
+  // Convert todos to tasks format
+  const todoTasks: Task[] = todos
+    .map(todo => ({
+      id: todo.id,
+      title: todo.text,
+      description: '',
+      date: todo.date || new Date(),
+      completed: todo.completed || false,
+      assignedTo: todo.assignedTo,
+      crew: todo.crewMembers,
+      crewId: todo.crewId,
+      crewName: todo.crewName,
+      startTime: todo.startTime || '09:00',
+      endTime: todo.endTime || '10:00',
+      location: todo.location
+    }));
+
+  // Combine provided tasks with todo tasks, avoiding duplicates
+  const allTasks = [...tasks];
+  todoTasks.forEach(todoTask => {
+    if (!allTasks.some(t => t.id === todoTask.id)) {
+      allTasks.push(todoTask);
+    }
+  });
+  
   // Get employee name by ID
   const getEmployeeNameById = (employeeId?: string): string => {
     if (!employeeId) return "";
@@ -68,37 +97,28 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
     
     const employeeName = getEmployeeNameById(selectedEmployeeId);
     
-    return tasks.filter(task => {
+    const employeeTasks = allTasks.filter(task => {
       // Check if task is assigned to this employee
       const isAssignedToEmployee = task.assignedTo === employeeName;
       
       // Check if employee is part of a crew assigned to this task
       const isInAssignedCrew = task.crew?.includes(employeeName) || false;
       
-      // Check if task date is within the selected range
-      const taskDate = new Date(task.date);
-      const isInDateRange = date.from && taskDate >= date.from && 
-                            (!date.to || taskDate <= date.to);
-      
-      return (isAssignedToEmployee || isInAssignedCrew) && isInDateRange;
+      return (isAssignedToEmployee || isInAssignedCrew);
     });
+    
+    // Filter by date range
+    return filterTasksByDateRange(employeeTasks, date.from, date.to);
   };
   
   // Filter tasks for selected crew and within selected date range
   const getFilteredCrewTasks = (): Task[] => {
     if (!date?.from || !selectedCrewId) return [];
     
-    return tasks.filter(task => {
-      // Check if task is assigned to this crew
-      const isAssignedToCrew = task.crewId === selectedCrewId;
-      
-      // Check if task date is within the selected range
-      const taskDate = new Date(task.date);
-      const isInDateRange = date.from && taskDate >= date.from && 
-                            (!date.to || taskDate <= date.to);
-      
-      return isAssignedToCrew && isInDateRange;
-    });
+    const crewTasks = allTasks.filter(task => task.crewId === selectedCrewId);
+    
+    // Filter by date range
+    return filterTasksByDateRange(crewTasks, date.from, date.to);
   };
 
   const handleDownloadPdf = () => {
@@ -116,7 +136,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       
       if (filteredTasks.length === 0) {
         toast({
-          title: "Error",
+          title: "No tasks found",
           description: "No scheduled tasks for this employee in the selected date range",
           variant: "destructive"
         });
@@ -131,7 +151,8 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
         });
         toast({
           title: "Success",
-          description: `Schedule for ${getEmployeeNameById(selectedEmployeeId)} downloaded as PDF`
+          description: `Schedule for ${getEmployeeNameById(selectedEmployeeId)} downloaded as PDF`,
+          variant: "success"
         });
         if (onClose) onClose();
       } catch (error) {
@@ -156,7 +177,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       
       if (filteredTasks.length === 0) {
         toast({
-          title: "Error",
+          title: "No tasks found",
           description: "No scheduled tasks for this crew in the selected date range",
           variant: "destructive"
         });
@@ -171,7 +192,8 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
         });
         toast({
           title: "Success",
-          description: `Schedule for ${getCrewNameById(selectedCrewId)} downloaded as PDF`
+          description: `Schedule for ${getCrewNameById(selectedCrewId)} downloaded as PDF`,
+          variant: "success"
         });
         if (onClose) onClose();
       } catch (error) {
@@ -200,7 +222,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       
       if (filteredTasks.length === 0) {
         toast({
-          title: "Error",
+          title: "No tasks found",
           description: "No scheduled tasks for this employee in the selected date range",
           variant: "destructive"
         });
@@ -215,7 +237,8 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
         });
         toast({
           title: "Success",
-          description: `Schedule for ${getEmployeeNameById(selectedEmployeeId)} downloaded as TXT`
+          description: `Schedule for ${getEmployeeNameById(selectedEmployeeId)} downloaded as TXT`,
+          variant: "success"
         });
         if (onClose) onClose();
       } catch (error) {
@@ -240,7 +263,7 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
       
       if (filteredTasks.length === 0) {
         toast({
-          title: "Error",
+          title: "No tasks found",
           description: "No scheduled tasks for this crew in the selected date range",
           variant: "destructive"
         });
@@ -255,7 +278,8 @@ const UnifiedScheduleDownload: React.FC<UnifiedScheduleDownloadProps> = ({
         });
         toast({
           title: "Success",
-          description: `Schedule for ${getCrewNameById(selectedCrewId)} downloaded as TXT`
+          description: `Schedule for ${getCrewNameById(selectedCrewId)} downloaded as TXT`,
+          variant: "success"
         });
         if (onClose) onClose();
       } catch (error) {
