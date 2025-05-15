@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -88,9 +87,10 @@ export function SimpleScheduler() {
   };
   
   // Custom day renderer to show task indicators and handle drops
-  const renderDay = (day: Date, isSelected: boolean) => {
+  const renderDay = (date: Date, dayProps: React.HTMLAttributes<HTMLDivElement>) => {
+    const isSelected = dayProps['aria-selected'];
     const taskCount = tasks.filter(task => 
-      task.date.toDateString() === day.toDateString()
+      task.date.toDateString() === date.toDateString()
     ).length;
     
     return (
@@ -99,9 +99,9 @@ export function SimpleScheduler() {
           isSelected ? "font-bold" : ""
         }`}
         onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => handleDrop(day, e)}
+        onDrop={(e) => handleDrop(date, e)}
       >
-        {day.getDate()}
+        {date.getDate()}
         {taskCount > 0 && (
           <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
             {taskCount}
@@ -124,7 +124,7 @@ export function SimpleScheduler() {
             onSelect={(date) => date && setSelectedDate(date)}
             className="rounded-md border"
             components={{
-              Day: ({ date, selected }) => renderDay(date, !!selected)
+              Day: ({ date, ...dayProps }) => renderDay(date, dayProps)
             }}
           />
         </CardContent>

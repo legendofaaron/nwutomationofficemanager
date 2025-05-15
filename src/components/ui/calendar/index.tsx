@@ -123,8 +123,8 @@ function Calendar({
               displayMonth={displayMonth}
               onMonthChange={handleMonthChange}
               goToMonth={(date: Date) => {
-                if (captionProps.onMonthChange) {
-                  captionProps.onMonthChange(date);
+                if (captionProps.goToMonth) {
+                  captionProps.goToMonth(date);
                 }
               }}
               nextMonth={nextMonth}
