@@ -8,7 +8,7 @@ export interface Task {
   assignedTo?: string;
   crew?: string[];
   crewId?: string;
-  crewName?: string; // Adding this missing property
+  crewName?: string;
   startTime?: string;
   endTime?: string;
   location?: string;
@@ -30,7 +30,7 @@ export interface Crew {
   id: string;
   name: string;
   members: string[];
-  lead?: string; // Adding this field to match usage in MockScheduleData
+  lead?: string;
 }
 
 export interface Client {
@@ -53,7 +53,7 @@ export interface ClientLocation {
   state?: string;
   zipCode?: string;
   isPrimary?: boolean;
-  notes?: string; // Adding this field to match usage in MockScheduleData
+  notes?: string;
 }
 
 export interface TaskFormData {
@@ -65,6 +65,28 @@ export interface TaskFormData {
   location: string;
   clientId: string;
   clientLocationId: string;
+}
+
+export interface Invoice {
+  id: string;
+  clientId: string;
+  clientName?: string;
+  amount: number;
+  issueDate: Date;
+  dueDate: Date;
+  status: 'draft' | 'sent' | 'paid' | 'overdue';
+  reference?: string;
+}
+
+export interface Booking {
+  id: string;
+  resourceId: string;
+  resourceName?: string;
+  title: string;
+  date: Date;
+  startTime: string;
+  endTime: string;
+  bookedBy?: string;
 }
 
 export type LocationType = 'custom' | 'client';
@@ -86,8 +108,8 @@ export interface ScheduleFilter {
   name?: string;
 }
 
-// Enhanced DragDrop Types
-export type DraggableItemType = 'task' | 'employee' | 'crew' | 'client' | 'location';
+// Enhanced DragDrop Types with more supported item types
+export type DraggableItemType = 'task' | 'employee' | 'crew' | 'client' | 'location' | 'invoice' | 'booking' | 'event';
 
 export interface DragItem {
   id: string;
@@ -107,6 +129,7 @@ export interface DragStartEventData {
   node: HTMLElement;
   clientX: number;
   clientY: number;
+  customDragImage?: boolean;
 }
 
 export interface DragEndEventData {
@@ -115,7 +138,6 @@ export interface DragEndEventData {
   dropTarget?: string;
 }
 
-// Add missing interfaces for files that are using them
 export interface DatabaseTable {
   id: string;
   name: string;
