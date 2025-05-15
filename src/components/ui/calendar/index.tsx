@@ -89,15 +89,23 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        Caption: (captionProps) => (
-          <CustomCaption 
-            {...captionProps} 
-            onMonthChange={handleMonthChange}
-            goToMonth={captionProps.goToMonth}
-            nextMonth={captionProps.nextMonth}
-            previousMonth={captionProps.previousMonth}
-          />
-        ),
+        Caption: (captionProps) => {
+          // Explicitly extract the properties we need for our CustomCaption
+          const { displayMonth } = captionProps;
+          
+          // Now we can safely create our CustomCaption with the correct props
+          return (
+            <CustomCaption 
+              {...captionProps}
+              displayMonth={displayMonth}
+              onMonthChange={handleMonthChange}
+              // These functions come from the DayPicker internals
+              goToMonth={(date: Date) => captionProps.goToMonth(date)}
+              nextMonth={captionProps.displayedMonth?.nextMonth}
+              previousMonth={captionProps.displayedMonth?.previousMonth}
+            />
+          );
+        },
         ...props.components
       }}
       {...props}
