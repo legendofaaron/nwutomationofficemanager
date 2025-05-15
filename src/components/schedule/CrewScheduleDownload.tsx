@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
@@ -19,6 +18,8 @@ import { Crew, Task } from './ScheduleTypes';
 import { downloadScheduleAsPdf, downloadScheduleAsTxt, filterTasksByDateRange } from '@/utils/downloadUtils';
 import { toast } from '@/hooks/use-toast';
 import { useAppContext } from '@/context/AppContext';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface CrewScheduleDownloadProps {
   crews: Crew[];
@@ -34,6 +35,7 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
   });
   
   const [selectedCrew, setSelectedCrew] = useState<string | null>(selectedCrewId || null);
+  const [useAllDates, setUseAllDates] = useState<boolean>(true);
   
   // Use the global app context to get additional tasks
   const { todos } = useAppContext();
@@ -64,14 +66,19 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
     }
   });
   
-  // Filter tasks for selected crew and within selected date range
+  // Filter tasks for selected crew and within selected date range if date filtering is enabled
   const getFilteredTasks = (): Task[] => {
-    if (!date?.from || !selectedCrew) return [];
+    if (!selectedCrew) return [];
     
     const crewTasks = allTasks.filter(task => task.crewId === selectedCrew);
     
-    // Filter by date range
-    return filterTasksByDateRange(crewTasks, date.from, date.to);
+    // If using all dates, return all tasks for the crew
+    if (useAllDates) {
+      return crewTasks;
+    }
+    
+    // Otherwise, filter by date range
+    return filterTasksByDateRange(crewTasks, date?.from, date?.to);
   };
   
   // Get crew name by ID
@@ -95,7 +102,7 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
     if (filteredTasks.length === 0) {
       toast({
         title: "No tasks found",
-        description: "No scheduled tasks in the selected date range",
+        description: "No scheduled tasks found for this crew",
         variant: "destructive"
       });
       return;
@@ -138,7 +145,7 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
     if (filteredTasks.length === 0) {
       toast({
         title: "No tasks found",
-        description: "No scheduled tasks in the selected date range",
+        description: "No scheduled tasks found for this crew",
         variant: "destructive" 
       });
       return;
@@ -176,7 +183,7 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-medium">Download Crew Schedule</CardTitle>
         <CardDescription>
-          Download a crew's schedule for a specific date range
+          Download a crew's complete schedule
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -200,45 +207,56 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
             </Select>
           </div>
           
-          <div>
-            <label className="text-sm font-medium mb-1 block">Select Date Range</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="date"
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date?.from ? (
-                    date.to ? (
-                      <>
-                        {format(date.from, "LLL dd, y")} -{" "}
-                        {format(date.to, "LLL dd, y")}
-                      </>
-                    ) : (
-                      format(date.from, "LLL dd, y")
-                    )
-                  ) : (
-                    <span>Pick a date range</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={date?.from}
-                  selected={date}
-                  onSelect={handleDateRangeSelect}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="useAllDates" 
+              checked={useAllDates} 
+              onCheckedChange={setUseAllDates} 
+            />
+            <Label htmlFor="useAllDates">Download complete crew schedule</Label>
           </div>
+          
+          {!useAllDates && (
+            <div>
+              <label className="text-sm font-medium mb-1 block">Select Date Range</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="date"
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date?.from ? (
+                      date.to ? (
+                        <>
+                          {format(date.from, "LLL dd, y")} -{" "}
+                          {format(date.to, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(date.from, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>Pick a date range</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={date?.from}
+                    selected={date}
+                    onSelect={handleDateRangeSelect}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
@@ -246,7 +264,7 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
           variant="outline" 
           className="w-full gap-2" 
           onClick={handleDownloadTxt}
-          disabled={!selectedCrew || !date?.from}
+          disabled={!selectedCrew}
         >
           <FileText className="h-4 w-4" />
           Download as TXT
@@ -254,7 +272,7 @@ const CrewScheduleDownload = ({ crews, tasks = [], selectedCrewId, onClose }: Cr
         <Button 
           className="w-full gap-2 ml-2" 
           onClick={handleDownloadPdf}
-          disabled={!selectedCrew || !date?.from}
+          disabled={!selectedCrew}
         >
           <FileDown className="h-4 w-4" />
           Download as PDF

@@ -14,6 +14,7 @@ export interface CalendarDayProps {
   disabled?: boolean;
   inMonth?: boolean;
   tasks?: TaskDot[];
+  children?: React.ReactNode;
 }
 
 // Extended props for the custom caption component
