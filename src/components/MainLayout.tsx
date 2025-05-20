@@ -111,7 +111,10 @@ const MainLayout = () => {
               confirmLogout={confirmLogout}
             />
           ) : (
-            <div className="relative sidebar-container">
+            <div 
+              className="relative sidebar-container" 
+              onMouseLeave={() => !isMobile && document.querySelector('.sidebar-container')?.contains(document.activeElement) === false && useSidebar().setOpen(false)}
+            >
               <DesktopSidebar 
                 setViewMode={setViewMode}
                 confirmLogout={confirmLogout}

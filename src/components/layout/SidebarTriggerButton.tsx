@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from '@/components/Logo';
 import { useTheme } from '@/context/ThemeContext';
