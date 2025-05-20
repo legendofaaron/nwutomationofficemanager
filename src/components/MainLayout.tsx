@@ -11,7 +11,7 @@ import SpreadsheetViewer from './SpreadsheetViewer';
 import WelcomeDashboard from './WelcomeDashboard';
 import TodoCalendarBubble from './TodoCalendarBubble';
 import { cn } from '@/lib/utils';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DragDropProvider } from './schedule/DragDropContext';
@@ -54,6 +54,7 @@ const MainLayout = () => {
   // Custom hooks
   const { position: triggerPosition, handleDragStart } = useDrag(24);
   const { showLogoutConfirm, setShowLogoutConfirm, confirmLogout, handleLogout } = useLogout();
+  const { setOpen: setSidebarOpen } = useSidebar();
 
   // Handle view mode change
   const handleViewChange = useCallback((newView: ViewMode) => {
@@ -89,6 +90,13 @@ const MainLayout = () => {
     }));
   }, []);
 
+  // Handle sidebar close on mouse leave
+  const handleSidebarMouseLeave = useCallback(() => {
+    if (!isMobile && document.querySelector('.sidebar-container')?.contains(document.activeElement) === false) {
+      setSidebarOpen(false);
+    }
+  }, [isMobile, setSidebarOpen]);
+
   // Background style based on theme - memoized to prevent unnecessary recalculations
   const mainBg = useMemo(() => {
     return isSuperDark
@@ -113,7 +121,7 @@ const MainLayout = () => {
           ) : (
             <div 
               className="relative sidebar-container" 
-              onMouseLeave={() => !isMobile && document.querySelector('.sidebar-container')?.contains(document.activeElement) === false && useSidebar().setOpen(false)}
+              onMouseLeave={handleSidebarMouseLeave}
             >
               <DesktopSidebar 
                 setViewMode={setViewMode}
