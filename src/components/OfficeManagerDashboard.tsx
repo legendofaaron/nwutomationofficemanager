@@ -32,7 +32,7 @@ const OfficeManagerDashboard: React.FC = () => {
             <span>Employees</span>
           </TabsTrigger>
           <TabsTrigger value="bookings" className="flex flex-col items-center py-2 px-4 text-xs sm:text-sm sm:flex-row sm:gap-2">
-            <Building className="h-4 w-4" />
+            <ClipboardList className="h-4 w-4" />
             <span>Bookings</span>
           </TabsTrigger>
           <TabsTrigger value="invoices" className="flex flex-col items-center py-2 px-4 text-xs sm:text-sm sm:flex-row sm:gap-2">

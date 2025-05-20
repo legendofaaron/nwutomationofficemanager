@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -240,9 +241,9 @@ const TodoCalendar = () => {
   };
 
   return (
-    <div className="fixed top-4 right-4 w-80 z-50">
+    <div className="fixed top-20 right-4 sm:top-24 sm:right-6 w-80 z-50">
       <Card className="shadow-lg bg-background border-2">
-        <Collapsible open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+        <Collapsible defaultOpen={true}>
           <CardHeader className="p-3 bg-card">
             <div className="flex justify-between items-center">
               <CardTitle className="text-base flex items-center">
@@ -251,7 +252,7 @@ const TodoCalendar = () => {
               </CardTitle>
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
-                  {isCalendarOpen ? (
+                  {true ? (
                     <ChevronUp className="h-4 w-4" />
                   ) : (
                     <ChevronDown className="h-4 w-4" />
