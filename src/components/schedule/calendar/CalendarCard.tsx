@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -74,11 +73,11 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
         }}
         className={cn(
           "relative flex flex-col items-center justify-center w-full h-full transition-colors duration-150",
-          isBeingDraggedOver && isDragging && "bg-primary/20 outline-dashed outline-2 outline-primary"
+          isBeingDraggedOver && isDragging && "bg-[#555555]/40 outline-dashed outline-2 outline-[#AAAAAA]"
         )}
-        activeClassName="outline-dashed outline-2 outline-primary/50"
+        activeClassName="outline-dashed outline-2 outline-[#AAAAAA]/50"
       >
-        <div className="flex flex-col items-center text-white">
+        <div className="flex flex-col items-center text-[#CCCCCC]">
           {children}
           {dayTasks.length > 0 && (
             <div className="absolute bottom-1 flex justify-center space-x-0.5 mt-0.5">
@@ -86,14 +85,14 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
                 dayTasks.map((_, idx) => (
                   <div 
                     key={idx} 
-                    className="w-1 h-1 bg-primary rounded-full"
+                    className="w-1 h-1 bg-[#AAAAAA] rounded-full"
                   />
                 ))
               ) : (
                 <>
-                  <div className="w-1 h-1 bg-primary rounded-full" />
-                  <div className="w-1 h-1 bg-primary rounded-full" />
-                  <div className="w-1 h-1 bg-primary rounded-full" />
+                  <div className="w-1 h-1 bg-[#AAAAAA] rounded-full" />
+                  <div className="w-1 h-1 bg-[#AAAAAA] rounded-full" />
+                  <div className="w-1 h-1 bg-[#AAAAAA] rounded-full" />
                 </>
               )}
             </div>
@@ -111,23 +110,23 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
   }, [isDragging]);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between py-4">
+    <Card className="bg-[#222222] border-[#444444]">
+      <CardHeader className="flex flex-row items-center justify-between py-4 bg-[#333333] border-b border-[#444444]">
         <div className="flex items-center space-x-2">
-          <CalendarIcon className="h-5 w-5 text-primary" />
-          <div className="text-lg font-medium text-white">Calendar</div>
+          <CalendarIcon className="h-5 w-5 text-[#AAAAAA]" />
+          <div className="text-lg font-medium text-[#CCCCCC]">Calendar</div>
         </div>
-        <div className="text-sm text-white">
+        <div className="text-sm text-[#AAAAAA]">
           {format(selectedDate, 'MMMM yyyy')}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-1">
         <div className="p-1">
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={onSelectDate}
-            className="rounded-md border pointer-events-auto text-white"
+            className="rounded-md border border-[#444444] pointer-events-auto"
             components={{
               Day: renderDayWithTasks
             }}

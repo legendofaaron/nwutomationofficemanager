@@ -27,13 +27,13 @@ export function CustomCaption({ displayMonth, decreaseMonth, increaseMonth, onMo
         }}
         className={cn(
           buttonVariants({ variant: "outline", size: "icon" }),
-          "h-7 w-7 bg-transparent p-0 opacity-75 hover:opacity-100 text-white border-white/20"
+          "h-7 w-7 bg-[#444444] p-0 opacity-75 hover:opacity-100 text-[#CCCCCC] border-[#555555]"
         )}
         aria-label="Previous month"
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
-      <h2 className="text-center text-sm font-medium text-white">
+      <h2 className="text-center text-sm font-medium text-[#CCCCCC]">
         {formattedMonth}
       </h2>
       <button
@@ -43,7 +43,7 @@ export function CustomCaption({ displayMonth, decreaseMonth, increaseMonth, onMo
         }}
         className={cn(
           buttonVariants({ variant: "outline", size: "icon" }),
-          "h-7 w-7 bg-transparent p-0 opacity-75 hover:opacity-100 text-white border-white/20"
+          "h-7 w-7 bg-[#444444] p-0 opacity-75 hover:opacity-100 text-[#CCCCCC] border-[#555555]"
         )}
         aria-label="Next month"
       >
