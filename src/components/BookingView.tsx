@@ -288,6 +288,51 @@ const BookingView = () => {
               selected={selectedDate}
               onSelect={(date) => date && setSelectedDate(date)}
               className={cn("rounded-md border", "pointer-events-auto")}
+              components={{
+                Day: ({ date, ...props }) => (
+                  <div
+                    className="w-full h-full"
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      // Add visual feedback when dragging over
+                      e.currentTarget.classList.add("bg-primary/20", "outline-dashed", "outline-2", "outline-primary");
+                    }}
+                    onDragLeave={(e) => {
+                      // Remove visual feedback
+                      e.currentTarget.classList.remove("bg-primary/20", "outline-dashed", "outline-2", "outline-primary");
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      e.currentTarget.classList.remove("bg-primary/20", "outline-dashed", "outline-2", "outline-primary");
+                      
+                      // Handle booking drops
+                      try {
+                        const data = e.dataTransfer.getData("application/json");
+                        if (data) {
+                          const item = JSON.parse(data);
+                          if (item.type === 'booking' && item.originalData) {
+                            // Update booking date and reset time
+                            const updatedBookings = bookings.map(booking => 
+                              booking.id === item.originalData.id 
+                                ? { ...booking, date } 
+                                : booking
+                            );
+                            setBookings(updatedBookings);
+                            setSelectedDate(date);
+                            toast.success(`Rescheduled "${item.originalData.title}" to ${format(date, 'MMM d, yyyy')}`);
+                          }
+                        }
+                      } catch (error) {
+                        console.error("Error handling drop:", error);
+                      }
+                    }}
+                  >
+                    {props.children}
+                  </div>
+                )
+              }}
             />
           </CardContent>
         </Card>

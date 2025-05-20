@@ -1,5 +1,5 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { DragItem, Task } from '../ScheduleTypes';
@@ -8,6 +8,8 @@ import { CalendarIcon } from 'lucide-react';
 import DroppableArea from '../DroppableArea';
 import { toast } from '@/hooks/use-toast';
 import { CalendarDayProps } from '@/components/ui/calendar';
+import { useDragDrop } from '../DragDropContext';
+import { cn } from '@/lib/utils';
 
 interface CalendarCardProps {
   tasks: Task[];
@@ -29,6 +31,12 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
   // Map tasks to their dates for visualization
   const tasksMap = new Map<string, Task[]>();
   
+  // Add the drag state from context
+  const { isDragging, draggedItem } = useDragDrop();
+  
+  // State to track which day is currently being dragged over
+  const [dragOverDay, setDragOverDay] = useState<string | null>(null);
+  
   tasks.forEach(task => {
     const dateKey = task.date.toDateString();
     if (!tasksMap.has(dateKey)) {
@@ -37,26 +45,38 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
     tasksMap.get(dateKey)!.push(task);
   });
   
-  // Custom day rendering to show task indicators
-  // Fix the function signature to match CalendarDayProps
+  // Custom day rendering to show task indicators and handle drag highlighting
   const renderDayWithTasks = useCallback((props: CalendarDayProps) => {
     const { date, children } = props;
     const dateKey = date.toDateString();
     const dayTasks = tasksMap.get(dateKey) || [];
+    const isBeingDraggedOver = dateKey === dragOverDay;
     
     return (
       <DroppableArea
         id={`calendar-day-${format(date, 'yyyy-MM-dd')}`}
-        acceptTypes={['task', 'employee', 'crew', 'client']}
-        onDrop={(item) => {
+        acceptTypes={['task', 'employee', 'crew', 'client', 'booking', 'todo']}
+        onDragEnter={(e) => {
+          setDragOverDay(dateKey);
+        }}
+        onDragLeave={(e) => {
+          if (dateKey === dragOverDay) {
+            setDragOverDay(null);
+          }
+        }}
+        onDrop={(item, e) => {
+          setDragOverDay(null);
           if (onItemDrop) {
             onItemDrop(item, date);
           } else if (item.type === 'task' && onMoveTask && item.id) {
             onMoveTask(item.id, date);
           }
         }}
-        className="relative flex flex-col items-center justify-center w-full h-full"
-        activeClassName="bg-primary/10 outline-dashed outline-2 outline-primary/50"
+        className={cn(
+          "relative flex flex-col items-center justify-center w-full h-full transition-colors duration-150",
+          isBeingDraggedOver && isDragging && "bg-primary/20 outline-dashed outline-2 outline-primary"
+        )}
+        activeClassName="outline-dashed outline-2 outline-primary/50"
       >
         <div className="flex flex-col items-center">
           {children}
@@ -81,7 +101,14 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
         </div>
       </DroppableArea>
     );
-  }, [onMoveTask, onItemDrop, tasksMap]);
+  }, [onMoveTask, onItemDrop, tasksMap, dragOverDay, isDragging]);
+
+  // Reset drag highlight when dragging stops
+  useEffect(() => {
+    if (!isDragging) {
+      setDragOverDay(null);
+    }
+  }, [isDragging]);
 
   return (
     <Card>

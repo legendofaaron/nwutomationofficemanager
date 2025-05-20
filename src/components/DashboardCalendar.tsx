@@ -335,7 +335,7 @@ const DashboardCalendar = () => {
       <div 
         className={cn(
           "relative w-full h-full flex items-center justify-center",
-          isDragging && "cursor-copy drop-shadow-sm border-2 border-dashed border-primary/50",
+          isDragging && "cursor-copy drop-shadow-sm",
           "hover:bg-accent/10 transition-colors cursor-pointer"
         )}
         onClick={() => {
@@ -352,15 +352,15 @@ const DashboardCalendar = () => {
           e.preventDefault();
           e.stopPropagation();
           // Add visual feedback
-          e.currentTarget.classList.add("bg-accent/30", "border-primary");
+          e.currentTarget.classList.add("bg-primary/20", "outline-dashed", "outline-2", "outline-primary");
         }}
         onDragLeave={(e) => {
           // Remove visual feedback
-          e.currentTarget.classList.remove("bg-accent/30", "border-primary");
+          e.currentTarget.classList.remove("bg-primary/20", "outline-dashed", "outline-2", "outline-primary");
         }}
         onDrop={(e) => {
           e.preventDefault();
-          e.currentTarget.classList.remove("bg-accent/30", "border-primary");
+          e.currentTarget.classList.remove("bg-primary/20", "outline-dashed", "outline-2", "outline-primary");
 
           // Handle todo drops
           if (draggedTodo) {

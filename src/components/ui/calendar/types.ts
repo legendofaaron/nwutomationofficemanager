@@ -15,6 +15,7 @@ export interface CalendarDayProps {
   inMonth?: boolean;
   tasks?: TaskDot[];
   children?: React.ReactNode;
+  dragHighlight?: boolean; // Added this prop for drag highlight state
 }
 
 // Extended props for the custom caption component
