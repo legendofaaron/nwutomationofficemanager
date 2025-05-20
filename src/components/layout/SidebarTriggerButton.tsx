@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from '@/components/Logo';
 import { useTheme } from '@/context/ThemeContext';
+import { useSidebar } from '@/components/ui/sidebar';
 
 interface SidebarTriggerButtonProps {
   triggerPosition: number;

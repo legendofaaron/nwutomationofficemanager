@@ -5,19 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronDown, ChevronUp, Plus, ListTodo, Calendar as CalendarIcon, Download } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, ListTodo, Calendar as CalendarIcon } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { type DayProps } from 'react-day-picker';
 import { toast } from 'sonner';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { downloadScheduleAsTxt, downloadScheduleAsPdf } from '@/utils/downloadUtils';
 
 interface Todo {
   id: string;
@@ -99,22 +92,6 @@ const TodoCalendar = () => {
   const deleteTodo = (id: string) => {
     setTodos(todos.filter(todo => todo.id !== id));
     toast?.success("Task removed");
-  };
-
-  // Handle schedule downloads
-  const handleDownloadSchedule = (format: 'txt' | 'pdf') => {
-    try {
-      if (format === 'txt') {
-        downloadScheduleAsTxt(todos);
-        toast.success("Schedule downloaded as text file");
-      } else {
-        downloadScheduleAsPdf(todos);
-        toast.success("Schedule downloaded as PDF");
-      }
-    } catch (error) {
-      console.error("Error downloading schedule:", error);
-      toast.error("Failed to download schedule");
-    }
   };
 
   // Enhanced drag and drop functionality
@@ -263,7 +240,7 @@ const TodoCalendar = () => {
   };
 
   return (
-    <div className="w-80">
+    <div className="fixed top-20 sm:top-24 right-4 sm:right-6 z-40 w-80">
       <Card className="shadow-lg bg-background border-2 rounded-lg border-border">
         <Collapsible defaultOpen={true}>
           <CardHeader className="p-3 bg-card">
@@ -272,33 +249,15 @@ const TodoCalendar = () => {
                 <CalendarIcon className="h-4 w-4 mr-2" />
                 Calendar & Tasks
               </CardTitle>
-              <div className="flex items-center space-x-1">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7">
-                      <Download className="h-4 w-4" />
-                      <span className="sr-only">Download schedule</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleDownloadSchedule('txt')}>
-                      Download as Text
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDownloadSchedule('pdf')}>
-                      Download as PDF
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
-                    {true ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
+                  {true ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
             </div>
           </CardHeader>
           
