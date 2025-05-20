@@ -69,12 +69,12 @@ function Calendar({
         day_range_end: "day-range-end",
         day_selected:
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-accent text-accent-foreground",
+        day_today: "bg-accent text-white", // Make today text white
         day_outside:
           "day-outside text-white opacity-50 aria-selected:bg-accent/50 aria-selected:text-white aria-selected:opacity-30",
-        day_disabled: "text-muted-foreground opacity-50",
+        day_disabled: "text-white opacity-30", // Make disabled days white but with opacity
         day_range_middle:
-          "aria-selected:bg-accent aria-selected:text-accent-foreground",
+          "aria-selected:bg-accent aria-selected:text-white", // Make range middle text white
         day_hidden: "invisible",
         ...classNames,
       }}
