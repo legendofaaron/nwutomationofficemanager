@@ -11,7 +11,7 @@ import SpreadsheetViewer from './SpreadsheetViewer';
 import WelcomeDashboard from './WelcomeDashboard';
 import TodoCalendarBubble from './TodoCalendarBubble';
 import { cn } from '@/lib/utils';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DragDropProvider } from './schedule/DragDropContext';

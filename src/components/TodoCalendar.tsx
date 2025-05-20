@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { type DayProps } from 'react-day-picker';
 import { toast } from 'sonner';
-import { downloadScheduleAsPdf, downloadScheduleAsText } from '@/utils/downloadUtils';
+import { downloadScheduleAsPdf, downloadScheduleAsTxt } from '@/utils/downloadUtils';
 
 interface Todo {
   id: string;
@@ -128,9 +128,9 @@ const TodoCalendar = () => {
       const tasks = convertTodosToTasks(todos);
       
       if (format === 'pdf') {
-        downloadScheduleAsPdf(tasks, [], []);
+        downloadScheduleAsPdf(tasks);
       } else {
-        downloadScheduleAsText(tasks, [], []);
+        downloadScheduleAsTxt(tasks);
       }
       toast.success(`Schedule downloaded as ${format.toUpperCase()}`);
     } catch (error) {
