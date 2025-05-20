@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -241,8 +240,8 @@ const TodoCalendar = () => {
   };
 
   return (
-    <div className="fixed top-20 right-4 sm:top-24 sm:right-6 w-80 z-50">
-      <Card className="shadow-lg bg-background border-2">
+    <div className="fixed top-14 right-0 z-40 w-80">
+      <Card className="shadow-lg bg-background border-2 rounded-t-none border-t-0">
         <Collapsible defaultOpen={true}>
           <CardHeader className="p-3 bg-card">
             <div className="flex justify-between items-center">

@@ -47,6 +47,13 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
+/* Calendar button styling */
+.calendar-button {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
 /* Improved scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
