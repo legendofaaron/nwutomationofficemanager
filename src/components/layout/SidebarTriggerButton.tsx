@@ -34,10 +34,6 @@ export const SidebarTriggerButton: React.FC<SidebarTriggerButtonProps> = ({
     setOpen(true);
   };
 
-  const handleMouseLeave = () => {
-    // We don't need to handle this here as it's now managed in the parent component
-  };
-
   return (
     <div 
       className="absolute -right-7 z-20" 
