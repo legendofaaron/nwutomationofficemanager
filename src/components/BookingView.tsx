@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { useTheme } from '@/context/ThemeContext';
 import { Badge } from '@/components/ui/badge';
 import { CalendarDayProps } from '@/components/ui/calendar';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Booking {
   id: string;
@@ -25,6 +27,8 @@ interface Booking {
   startTime: string;
   endTime: string;
   bookedBy: string;
+  description?: string;
+  type?: 'booking' | 'task';
 }
 
 interface Resource {
@@ -59,7 +63,8 @@ const BookingView = () => {
       date: new Date(),
       startTime: '09:00',
       endTime: '10:00',
-      bookedBy: 'John Smith'
+      bookedBy: 'John Smith',
+      type: 'booking'
     },
     {
       id: '2',
@@ -69,7 +74,20 @@ const BookingView = () => {
       date: new Date(),
       startTime: '14:00',
       endTime: '15:00',
-      bookedBy: 'Sarah Johnson'
+      bookedBy: 'Sarah Johnson',
+      type: 'booking'
+    },
+    {
+      id: '3',
+      title: 'Prepare Quarterly Report',
+      date: new Date(),
+      startTime: '11:00',
+      endTime: '12:30',
+      bookedBy: 'Michael Brown',
+      resourceId: '',
+      resourceName: '',
+      type: 'task',
+      description: 'Compile sales data and create presentation slides'
     },
   ]);
 
@@ -78,44 +96,59 @@ const BookingView = () => {
     title: '',
     startTime: '',
     endTime: '',
-    bookedBy: ''
+    bookedBy: '',
+    description: '',
+    type: 'booking' as 'booking' | 'task'
   });
 
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
-  const [filterType, setFilterType] = useState<'all' | 'room' | 'equipment'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'room' | 'equipment' | 'task' | 'booking'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const isSuperDark = resolvedTheme === 'superdark';
 
   const handleAddBooking = () => {
-    if (newBooking.resourceId && newBooking.title && newBooking.startTime && newBooking.endTime && newBooking.bookedBy) {
-      const selectedResource = resources.find(resource => resource.id === newBooking.resourceId);
+    if (newBooking.title && newBooking.startTime && newBooking.endTime && newBooking.bookedBy) {
       
-      if (selectedResource) {
-        const booking: Booking = {
-          id: Date.now().toString(),
-          resourceId: newBooking.resourceId,
-          resourceName: selectedResource.name,
-          title: newBooking.title,
-          date: selectedDate,
-          startTime: newBooking.startTime,
-          endTime: newBooking.endTime,
-          bookedBy: newBooking.bookedBy
-        };
-        
-        setBookings([...bookings, booking]);
-        setNewBooking({
-          resourceId: '',
-          title: '',
-          startTime: '',
-          endTime: '',
-          bookedBy: ''
-        });
-        
-        setIsBookingDialogOpen(false);
-        toast.success("Booking created successfully!");
+      let booking: Booking = {
+        id: Date.now().toString(),
+        title: newBooking.title,
+        date: selectedDate,
+        startTime: newBooking.startTime,
+        endTime: newBooking.endTime,
+        bookedBy: newBooking.bookedBy,
+        resourceId: '',
+        resourceName: '',
+        description: newBooking.description,
+        type: newBooking.type
+      };
+      
+      // If it's a resource booking, get the resource details
+      if (newBooking.type === 'booking' && newBooking.resourceId) {
+        const selectedResource = resources.find(resource => resource.id === newBooking.resourceId);
+        if (selectedResource) {
+          booking.resourceId = newBooking.resourceId;
+          booking.resourceName = selectedResource.name;
+        } else {
+          toast.error("Selected resource not found");
+          return;
+        }
       }
+      
+      setBookings([...bookings, booking]);
+      setNewBooking({
+        resourceId: '',
+        title: '',
+        startTime: '',
+        endTime: '',
+        bookedBy: '',
+        description: '',
+        type: 'booking'
+      });
+      
+      setIsBookingDialogOpen(false);
+      toast.success(`${newBooking.type === 'booking' ? 'Booking' : 'Task'} created successfully!`);
     } else {
       toast.error("Please fill in all required fields");
     }
@@ -130,7 +163,7 @@ const BookingView = () => {
     // Set data transfer object with booking details
     e.dataTransfer.setData("application/json", JSON.stringify({
       id: booking.id,
-      text: `${booking.title} (${booking.resourceName})`,
+      text: `${booking.title} (${booking.type === 'booking' ? booking.resourceName : 'Task'})`,
       type: 'booking',
       originalData: booking
     }));
@@ -159,9 +192,33 @@ const BookingView = () => {
     toast.info(`Drag ${booking.title} to calendar to reschedule`, { duration: 2000 });
   };
 
-  const selectedDateBookings = bookings.filter(
-    booking => booking.date.toDateString() === selectedDate.toDateString()
-  );
+  // Filter bookings based on selected date and type
+  const getFilteredBookings = useCallback(() => {
+    let filtered = bookings.filter(
+      booking => booking.date.toDateString() === selectedDate.toDateString()
+    );
+    
+    if (filterType !== 'all') {
+      if (filterType === 'room' || filterType === 'equipment') {
+        filtered = filtered.filter(booking => {
+          const resource = resources.find(r => r.id === booking.resourceId);
+          return resource && resource.type === filterType;
+        });
+      } else {
+        // Filter by booking type (task or booking)
+        filtered = filtered.filter(booking => booking.type === filterType);
+      }
+    }
+    
+    return filtered;
+  }, [bookings, selectedDate, filterType]);
+
+  const selectedDateBookings = getFilteredBookings();
+  
+  // Count bookings/tasks for a specific date
+  const getBookingCountForDate = (date: Date): number => {
+    return bookings.filter(booking => booking.date.toDateString() === date.toDateString()).length;
+  };
 
   const filteredResources = filterType === 'all' 
     ? resources 
@@ -178,45 +235,67 @@ const BookingView = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <h2 className="text-2xl font-semibold">Resource Bookings</h2>
+        <h2 className="text-2xl font-semibold">Resource Bookings & Tasks</h2>
         <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2 shadow-sm">
               <Plus className="h-4 w-4" />
-              New Booking
+              New Booking/Task
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Create New Booking</DialogTitle>
+              <DialogTitle>Create New {newBooking.type === 'booking' ? 'Booking' : 'Task'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-4">
+              {/* Booking Type Selection */}
               <div className="space-y-2">
-                <Label htmlFor="resource">Select Resource</Label>
-                <Select
-                  value={newBooking.resourceId}
-                  onValueChange={(value) => setNewBooking({ ...newBooking, resourceId: value })}
+                <Label>Select Type</Label>
+                <Select 
+                  value={newBooking.type} 
+                  onValueChange={(value: 'booking' | 'task') => 
+                    setNewBooking({ ...newBooking, type: value })
+                  }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a resource" />
+                    <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {resources.map((resource) => (
-                      <SelectItem key={resource.id} value={resource.id}>
-                        {resource.name}{resource.capacity ? ` (Capacity: ${resource.capacity})` : ''}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="booking">Resource Booking</SelectItem>
+                    <SelectItem value="task">Task</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
+              {/* Resource Selection (only for bookings) */}
+              {newBooking.type === 'booking' && (
+                <div className="space-y-2">
+                  <Label htmlFor="resource">Select Resource</Label>
+                  <Select
+                    value={newBooking.resourceId}
+                    onValueChange={(value) => setNewBooking({ ...newBooking, resourceId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a resource" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {resources.map((resource) => (
+                        <SelectItem key={resource.id} value={resource.id}>
+                          {resource.name}{resource.capacity ? ` (Capacity: ${resource.capacity})` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
               <div className="space-y-2">
-                <Label htmlFor="title">Booking Title</Label>
+                <Label htmlFor="title">Title</Label>
                 <Input
                   id="title"
                   value={newBooking.title}
                   onChange={(e) => setNewBooking({ ...newBooking, title: e.target.value })}
-                  placeholder="Enter booking purpose"
+                  placeholder="Enter title"
                 />
               </div>
               
@@ -249,7 +328,7 @@ const BookingView = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="bookedBy">Booked By</Label>
+                <Label htmlFor="bookedBy">Assigned To</Label>
                 <Select
                   value={newBooking.bookedBy}
                   onValueChange={(value) => setNewBooking({ ...newBooking, bookedBy: value })}
@@ -267,8 +346,21 @@ const BookingView = () => {
                 </Select>
               </div>
               
+              {/* Description field for tasks */}
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Add details"
+                  value={newBooking.description}
+                  onChange={(e) => setNewBooking({ ...newBooking, description: e.target.value })}
+                  className="resize-none"
+                  rows={3}
+                />
+              </div>
+              
               <Button onClick={handleAddBooking} className="w-full">
-                Create Booking
+                Create {newBooking.type === 'booking' ? 'Booking' : 'Task'}
               </Button>
             </div>
           </DialogContent>
@@ -290,49 +382,65 @@ const BookingView = () => {
               onSelect={(date) => date && setSelectedDate(date)}
               className={cn("rounded-md border", "pointer-events-auto")}
               components={{
-                Day: ({ date, children, ...props }: CalendarDayProps) => (
-                  <div
-                    className="w-full h-full"
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      // Add visual feedback when dragging over
-                      e.currentTarget.classList.add("bg-primary/20", "outline-dashed", "outline-2", "outline-primary");
-                    }}
-                    onDragLeave={(e) => {
-                      // Remove visual feedback
-                      e.currentTarget.classList.remove("bg-primary/20", "outline-dashed", "outline-2", "outline-primary");
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      e.currentTarget.classList.remove("bg-primary/20", "outline-dashed", "outline-2", "outline-primary");
-                      
-                      // Handle booking drops
-                      try {
-                        const data = e.dataTransfer.getData("application/json");
-                        if (data) {
-                          const item = JSON.parse(data);
-                          if (item.type === 'booking' && item.originalData) {
-                            // Update booking date and reset time
-                            const updatedBookings = bookings.map(booking => 
-                              booking.id === item.originalData.id 
-                                ? { ...booking, date } 
-                                : booking
-                            );
-                            setBookings(updatedBookings);
-                            setSelectedDate(date);
-                            toast.success(`Rescheduled "${item.originalData.title}" to ${format(date, 'MMM d, yyyy')}`);
+                Day: ({ date, children, ...props }: CalendarDayProps) => {
+                  const bookingCount = getBookingCountForDate(date);
+                  const hasBookings = bookingCount > 0;
+                  
+                  return (
+                    <div
+                      className={cn(
+                        "w-full h-full relative cursor-pointer",
+                        hasBookings && "font-medium"
+                      )}
+                      onClick={() => setSelectedDate(date)}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Add visual feedback when dragging over
+                        e.currentTarget.classList.add("bg-primary/20", "outline-dashed", "outline-2", "outline-primary");
+                      }}
+                      onDragLeave={(e) => {
+                        // Remove visual feedback
+                        e.currentTarget.classList.remove("bg-primary/20", "outline-dashed", "outline-2", "outline-primary");
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.currentTarget.classList.remove("bg-primary/20", "outline-dashed", "outline-2", "outline-primary");
+                        
+                        // Handle booking drops
+                        try {
+                          const data = e.dataTransfer.getData("application/json");
+                          if (data) {
+                            const item = JSON.parse(data);
+                            if (item.type === 'booking' && item.originalData) {
+                              // Update booking date and reset time
+                              const updatedBookings = bookings.map(booking => 
+                                booking.id === item.originalData.id 
+                                  ? { ...booking, date } 
+                                  : booking
+                              );
+                              setBookings(updatedBookings);
+                              setSelectedDate(date);
+                              toast.success(`Rescheduled "${item.originalData.title}" to ${format(date, 'MMM d, yyyy')}`);
+                            }
                           }
+                        } catch (error) {
+                          console.error("Error handling drop:", error);
                         }
-                      } catch (error) {
-                        console.error("Error handling drop:", error);
-                      }
-                    }}
-                  >
-                    {children}
-                  </div>
-                )
+                      }}
+                    >
+                      {children}
+                      
+                      {/* Display indicators for bookings/tasks */}
+                      {hasBookings && (
+                        <div className="absolute bottom-0 left-0 right-0 flex justify-center">
+                          <Badge className="h-1.5 w-1.5 p-0 rounded-full bg-primary" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
               }}
             />
           </CardContent>
@@ -342,13 +450,28 @@ const BookingView = () => {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-blue-500" />
-              Bookings for {format(selectedDate, 'MMMM d, yyyy')}
+              Calendar Items for {format(selectedDate, 'MMMM d, yyyy')}
             </CardTitle>
-            {selectedDateBookings.length > 0 && (
+            <div className="flex items-center gap-2">
               <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
-                {selectedDateBookings.length} {selectedDateBookings.length === 1 ? 'booking' : 'bookings'}
+                {selectedDateBookings.length} {selectedDateBookings.length === 1 ? 'item' : 'items'}
               </Badge>
-            )}
+              <Select 
+                value={filterType} 
+                onValueChange={(value: any) => setFilterType(value)}
+              >
+                <SelectTrigger className="w-[120px] h-8 text-xs">
+                  <SelectValue placeholder="Filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Items</SelectItem>
+                  <SelectItem value="booking">Bookings</SelectItem>
+                  <SelectItem value="task">Tasks</SelectItem>
+                  <SelectItem value="room">Rooms</SelectItem>
+                  <SelectItem value="equipment">Equipment</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
             {selectedDateBookings.length > 0 ? (
@@ -357,9 +480,9 @@ const BookingView = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Title</TableHead>
-                      <TableHead>Resource</TableHead>
+                      <TableHead>Type</TableHead>
                       <TableHead>Time</TableHead>
-                      <TableHead>Booked By</TableHead>
+                      <TableHead>Assigned To</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -367,12 +490,26 @@ const BookingView = () => {
                     {selectedDateBookings.map((booking) => (
                       <TableRow 
                         key={booking.id}
-                        className="hover:bg-accent/10 cursor-grab"
+                        className={cn(
+                          "hover:bg-accent/10 cursor-grab",
+                          booking.type === 'task' ? "bg-sky-50/50 dark:bg-sky-950/20" : ""
+                        )}
                         draggable={true}
                         onDragStart={(e) => handleBookingDragStart(booking, e)}
                       >
-                        <TableCell className="font-medium">{booking.title}</TableCell>
-                        <TableCell>{booking.resourceName}</TableCell>
+                        <TableCell className="font-medium">
+                          {booking.title}
+                          {booking.description && (
+                            <p className="text-xs text-muted-foreground mt-1 truncate max-w-[200px]">
+                              {booking.description}
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={booking.type === 'booking' ? 'outline' : 'secondary'}>
+                            {booking.type === 'booking' ? booking.resourceName || 'Booking' : 'Task'}
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           <span className="flex items-center gap-1 text-sm">
                             <Clock className="h-3.5 w-3.5 text-gray-500" />
@@ -389,6 +526,14 @@ const BookingView = () => {
                             >
                               <CalendarIcon className="h-3.5 w-3.5" />
                               <span className="sr-only">Reschedule</span>
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0"
+                            >
+                              <Edit className="h-3.5 w-3.5" />
+                              <span className="sr-only">Edit</span>
                             </Button>
                             <Button 
                               variant="destructive" 
@@ -409,14 +554,14 @@ const BookingView = () => {
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No bookings for this date</p>
+                <p>No items for this date</p>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   className="mt-4"
                   onClick={() => setIsBookingDialogOpen(true)}
                 >
-                  Add Booking
+                  Add Item
                 </Button>
               </div>
             )}
@@ -444,6 +589,8 @@ const BookingView = () => {
                 <SelectItem value="all">All Resources</SelectItem>
                 <SelectItem value="room">Rooms Only</SelectItem>
                 <SelectItem value="equipment">Equipment Only</SelectItem>
+                <SelectItem value="booking">Bookings Only</SelectItem>
+                <SelectItem value="task">Tasks Only</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -478,7 +625,7 @@ const BookingView = () => {
                     size="sm"
                     className="h-8"
                     onClick={() => {
-                      setNewBooking({...newBooking, resourceId: resource.id});
+                      setNewBooking({...newBooking, resourceId: resource.id, type: 'booking'});
                       setIsBookingDialogOpen(true);
                     }}
                   >
