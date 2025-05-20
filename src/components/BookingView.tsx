@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/context/ThemeContext';
 import { Badge } from '@/components/ui/badge';
+import { CalendarDayProps } from '@/components/ui/calendar';
 
 interface Booking {
   id: string;
@@ -289,7 +290,7 @@ const BookingView = () => {
               onSelect={(date) => date && setSelectedDate(date)}
               className={cn("rounded-md border", "pointer-events-auto")}
               components={{
-                Day: ({ date, ...props }) => (
+                Day: ({ date, children, ...props }: CalendarDayProps) => (
                   <div
                     className="w-full h-full"
                     onDragOver={(e) => {
@@ -329,7 +330,7 @@ const BookingView = () => {
                       }
                     }}
                   >
-                    {props.children}
+                    {children}
                   </div>
                 )
               }}
