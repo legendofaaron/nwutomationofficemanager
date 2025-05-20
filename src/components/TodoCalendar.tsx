@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -191,6 +190,28 @@ const TodoCalendar = () => {
             setSelectedDate(date);
             toast?.success(`Task moved to ${format(date, 'MMM d, yyyy')}`);
           }
+          
+          // Add support for other dragged items from dashboard
+          try {
+            const data = e.dataTransfer.getData("application/json");
+            if (data) {
+              const item = JSON.parse(data);
+              if (item.type === 'booking' || item.type === 'employee' || item.type === 'crew' || item.type === 'todo') {
+                const newTodo: Todo = {
+                  id: Date.now().toString(),
+                  text: item.text || "New task",
+                  completed: false,
+                  date: date,
+                  assignedTo: item.originalData?.assignedTo || item.originalData?.name,
+                };
+                
+                setTodos([...todos, newTodo]);
+                toast?.success(`Item added to calendar on ${format(date, 'MMM d, yyyy')}`);
+              }
+            }
+          } catch (error) {
+            console.error("Error processing drop:", error);
+          }
         }}
       >
         <div className={cn(
@@ -239,7 +260,7 @@ const TodoCalendar = () => {
                 mode="single"
                 selected={selectedDate}
                 onSelect={handleDateChange}
-                className={cn("rounded-md border bg-card shadow-sm", "pointer-events-auto")}
+                className={cn("rounded-md border bg-[#2A2A2A] shadow-sm", "pointer-events-auto")}
                 components={{
                   Day: customDayRender
                 }}

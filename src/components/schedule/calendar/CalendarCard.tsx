@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -25,7 +26,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
   onSelectDate,
   onMoveTask,
   onItemDrop,
-  isDirectDrop = true // Enable direct drop by default
+  isDirectDrop = true
 }) => {
   // Map tasks to their dates for visualization
   const tasksMap = new Map<string, Task[]>();
@@ -73,11 +74,11 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
         }}
         className={cn(
           "relative flex flex-col items-center justify-center w-full h-full transition-colors duration-150",
-          isBeingDraggedOver && isDragging && "bg-[#555555]/40 outline-dashed outline-2 outline-[#AAAAAA]"
+          isBeingDraggedOver && isDragging && "bg-[#4A4A4A]/40 outline-dashed outline-2 outline-[#BBBBBB]"
         )}
-        activeClassName="outline-dashed outline-2 outline-[#AAAAAA]/50"
+        activeClassName="outline-dashed outline-2 outline-[#BBBBBB]/50"
       >
-        <div className="flex flex-col items-center text-[#CCCCCC]">
+        <div className="flex flex-col items-center text-[#DDDDDD]">
           {children}
           {dayTasks.length > 0 && (
             <div className="absolute bottom-1 flex justify-center space-x-0.5 mt-0.5">
@@ -85,14 +86,14 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
                 dayTasks.map((_, idx) => (
                   <div 
                     key={idx} 
-                    className="w-1 h-1 bg-[#AAAAAA] rounded-full"
+                    className="w-1 h-1 bg-[#BBBBBB] rounded-full"
                   />
                 ))
               ) : (
                 <>
-                  <div className="w-1 h-1 bg-[#AAAAAA] rounded-full" />
-                  <div className="w-1 h-1 bg-[#AAAAAA] rounded-full" />
-                  <div className="w-1 h-1 bg-[#AAAAAA] rounded-full" />
+                  <div className="w-1 h-1 bg-[#BBBBBB] rounded-full" />
+                  <div className="w-1 h-1 bg-[#BBBBBB] rounded-full" />
+                  <div className="w-1 h-1 bg-[#BBBBBB] rounded-full" />
                 </>
               )}
             </div>
@@ -113,10 +114,10 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
     <Card className="bg-[#222222] border-[#444444]">
       <CardHeader className="flex flex-row items-center justify-between py-4 bg-[#333333] border-b border-[#444444]">
         <div className="flex items-center space-x-2">
-          <CalendarIcon className="h-5 w-5 text-[#AAAAAA]" />
-          <div className="text-lg font-medium text-[#CCCCCC]">Calendar</div>
+          <CalendarIcon className="h-5 w-5 text-[#BBBBBB]" />
+          <div className="text-lg font-medium text-[#DDDDDD]">Calendar</div>
         </div>
-        <div className="text-sm text-[#AAAAAA]">
+        <div className="text-sm text-[#BBBBBB]">
           {format(selectedDate, 'MMMM yyyy')}
         </div>
       </CardHeader>
