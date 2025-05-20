@@ -115,9 +115,9 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
       <CardHeader className="flex flex-row items-center justify-between py-4">
         <div className="flex items-center space-x-2">
           <CalendarIcon className="h-5 w-5 text-primary" />
-          <div className="text-lg font-medium">Calendar</div>
+          <div className="text-lg font-medium text-white">Calendar</div>
         </div>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-white">
           {format(selectedDate, 'MMMM yyyy')}
         </div>
       </CardHeader>
@@ -127,7 +127,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
             mode="single"
             selected={selectedDate}
             onSelect={onSelectDate}
-            className="rounded-md border pointer-events-auto"
+            className="rounded-md border pointer-events-auto text-white"
             components={{
               Day: renderDayWithTasks
             }}
