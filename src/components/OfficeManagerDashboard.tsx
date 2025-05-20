@@ -74,7 +74,10 @@ const OfficeManagerDashboard = () => {
             <Button 
               variant={activeTab === 'employees' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-1 md:gap-2 rounded-md transition-colors ${activeTab === 'employees' ? tabActiveClass : tabHoverClass}`} 
+              className={cn(
+                "gap-1 md:gap-2 rounded-md transition-colors flex items-center", 
+                activeTab === 'employees' ? tabActiveClass : tabHoverClass
+              )} 
               onClick={() => setActiveTab('employees')}
             >
               <Users className="h-4 w-4" />
@@ -84,7 +87,10 @@ const OfficeManagerDashboard = () => {
             <Button 
               variant={activeTab === 'clients' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-1 md:gap-2 rounded-md transition-colors ${activeTab === 'clients' ? tabActiveClass : tabHoverClass}`}
+              className={cn(
+                "gap-1 md:gap-2 rounded-md transition-colors flex items-center",
+                activeTab === 'clients' ? tabActiveClass : tabHoverClass
+              )}
               onClick={() => setActiveTab('clients')}
             >
               <Briefcase className="h-4 w-4" />
@@ -97,9 +103,9 @@ const OfficeManagerDashboard = () => {
               variant={activeTab === 'schedule' ? 'default' : 'ghost'} 
               size="sm" 
               className={cn(
-                "gap-1 md:gap-2 rounded-md transition-all duration-300",
+                "gap-1 md:gap-2 rounded-md transition-all duration-300 flex items-center",
                 activeTab === 'schedule' 
-                  ? `${tabActiveClass} shadow-md scale-105` 
+                  ? `${tabActiveClass} shadow-lg scale-105 border border-blue-400/30` 
                   : `${tabHoverClass} hover:scale-105`,
                 "relative overflow-hidden"
               )}
@@ -110,7 +116,7 @@ const OfficeManagerDashboard = () => {
                 isDark 
                   ? "from-blue-600/30 to-purple-600/30" 
                   : "from-blue-400/30 to-purple-400/30",
-                activeTab === 'schedule' ? "opacity-40" : "opacity-0 group-hover:opacity-20"
+                activeTab === 'schedule' ? "opacity-40" : "opacity-0 hover:opacity-20"
               )} />
               <Calendar className={cn(
                 "h-4 w-4 transition-all",
@@ -126,7 +132,10 @@ const OfficeManagerDashboard = () => {
             <Button 
               variant={activeTab === 'invoices' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-1 md:gap-2 rounded-md transition-colors ${activeTab === 'invoices' ? tabActiveClass : tabHoverClass}`}
+              className={cn(
+                "gap-1 md:gap-2 rounded-md transition-colors flex items-center",
+                activeTab === 'invoices' ? tabActiveClass : tabHoverClass
+              )}
               onClick={() => setActiveTab('invoices')}
             >
               <Receipt className="h-4 w-4" />
@@ -136,7 +145,10 @@ const OfficeManagerDashboard = () => {
             <Button 
               variant={activeTab === 'bookings' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-1 md:gap-2 rounded-md transition-colors ${activeTab === 'bookings' ? tabActiveClass : tabHoverClass}`}
+              className={cn(
+                "gap-1 md:gap-2 rounded-md transition-colors flex items-center",
+                activeTab === 'bookings' ? tabActiveClass : tabHoverClass
+              )}
               onClick={() => setActiveTab('bookings')}
             >
               <BookOpen className="h-4 w-4" />
@@ -146,7 +158,10 @@ const OfficeManagerDashboard = () => {
             <Button 
               variant={activeTab === 'settings' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-1 md:gap-2 rounded-md transition-colors ${activeTab === 'settings' ? tabActiveClass : tabHoverClass}`}
+              className={cn(
+                "gap-1 md:gap-2 rounded-md transition-colors flex items-center",
+                activeTab === 'settings' ? tabActiveClass : tabHoverClass
+              )}
               onClick={() => setActiveTab('settings')}
             >
               <Settings className="h-4 w-4" />

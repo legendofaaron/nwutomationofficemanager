@@ -8,9 +8,10 @@ import TasksCard from './TasksCard';
 import { useCalendarSync } from '@/hooks/useCalendarSync';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Calendar, Plus } from 'lucide-react';
 import ScheduleDownloadDialog from '../ScheduleDownloadDialog';
 import { useScheduleState } from '@/hooks/useScheduleState';
+import { cn } from '@/lib/utils';
 
 interface TaskCalendarViewProps {
   tasks: Task[];
@@ -196,38 +197,110 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
     setIsDownloadDialogOpen(false);
   }, []);
 
+  const pendingTasks = useMemo(() => {
+    return tasks.filter(task => !task.completed && 
+      task.date.toDateString() === selectedDate.toDateString()).length;
+  }, [tasks, selectedDate]);
+
+  const completedTasks = useMemo(() => {
+    return tasks.filter(task => task.completed && 
+      task.date.toDateString() === selectedDate.toDateString()).length;
+  }, [tasks, selectedDate]);
+
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Schedule</h2>
-        <Button 
-          variant="outline" 
-          onClick={handleOpenDownloadDialog}
-          className="flex items-center gap-2"
-        >
-          <Download className="h-4 w-4" />
-          Download Schedule
-        </Button>
-      </div>
-      
-      <div className="grid gap-6 md:grid-cols-2">
-        <CalendarCard 
-          tasks={tasks}
-          selectedDate={date}
-          onSelectDate={handleSelectDate}
-          onMoveTask={handleMoveTask}
-          onItemDrop={handleItemDrop}
-          isDirectDrop={true}
-        />
+      <div className="flex flex-col space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Schedule</h2>
+          <Button 
+            variant="outline" 
+            onClick={handleOpenDownloadDialog}
+            className="flex items-center gap-2 bg-black/10 dark:bg-white/5 hover:bg-black/20 dark:hover:bg-white/10 transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            Download Schedule
+          </Button>
+        </div>
         
-        <TasksCard
-          tasks={tasks}
-          selectedDate={date}
-          onToggleTaskCompletion={onToggleTaskCompletion}
-          crews={crews}
-          onAddNewTask={onAddNewTask}
-          onEditTask={onEditTask}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div className="lg:col-span-3 space-y-6">
+            <div className="bg-black/5 dark:bg-[#0D1117]/80 rounded-xl overflow-hidden border border-gray-200 dark:border-[#1a1e26] shadow-sm">
+              <div className="p-4 border-b border-gray-200 dark:border-[#1a1e26] flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-blue-500" />
+                  <h3 className="font-medium">Calendar</h3>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {format(date, 'MMMM yyyy')}
+                </div>
+              </div>
+              <div className="p-4">
+                <CalendarCard 
+                  tasks={tasks}
+                  selectedDate={date}
+                  onSelectDate={handleSelectDate}
+                  onMoveTask={handleMoveTask}
+                  onItemDrop={handleItemDrop}
+                  isDirectDrop={true}
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-black/5 dark:bg-[#0D1117]/80 rounded-xl overflow-hidden border border-gray-200 dark:border-[#1a1e26] shadow-sm">
+              <div className="p-4 border-b border-gray-200 dark:border-[#1a1e26] flex items-center justify-between">
+                <div className="flex items-center">
+                  <h3 className="font-medium flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {format(date, 'MMMM d, yyyy')}
+                  </h3>
+                </div>
+                <Button 
+                  onClick={onAddNewTask} 
+                  variant="ghost" 
+                  size="sm"
+                  className="h-8 w-8 p-0 rounded-full bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span className="sr-only">Add task</span>
+                </Button>
+              </div>
+              
+              <div className="p-4">
+                <div className="flex gap-3 mb-4">
+                  <div className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium",
+                    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                  )}>
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                    {pendingTasks} Pending
+                  </div>
+                  
+                  <div className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium",
+                    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                  )}>
+                    <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                    {completedTasks} Completed
+                  </div>
+                </div>
+                
+                <TasksCard
+                  tasks={tasks}
+                  selectedDate={date}
+                  onToggleTaskCompletion={onToggleTaskCompletion}
+                  crews={crews}
+                  onAddNewTask={onAddNewTask}
+                  onEditTask={onEditTask}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       
       <ScheduleDownloadDialog

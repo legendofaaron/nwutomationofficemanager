@@ -1,51 +1,105 @@
 
-import React from 'react';
-import TaskCalendarView from './schedule/calendar/TaskCalendarView';
-import { useCalendarSync } from '@/hooks/useCalendarSync';
-import { useAppContext } from '@/context/AppContext';
+import React, { useCallback } from 'react';
+import { useScheduleState } from '@/hooks/useScheduleState';
+import ScheduleHeader from './schedule/components/ScheduleHeader';
+import ScheduleTabs from './schedule/components/ScheduleTabs';
+import TaskEditDialogWrapper from './schedule/components/TaskEditDialogWrapper';
+import { useTheme } from '@/context/ThemeContext';
+import { cn } from '@/lib/utils';
 
-// This component is a wrapper for TaskCalendarView with necessary props
-export default () => {
-  // Get tasks from app context
-  const { todos } = useAppContext();
+/**
+ * ScheduleView Component
+ * 
+ * A comprehensive schedule management component that allows users to view, filter,
+ * and manage tasks in both calendar and list views.
+ */
+const ScheduleView: React.FC = () => {
+  // Use the custom hook to manage all schedule state and actions
+  const {
+    viewMode,
+    setViewMode,
+    filteredTasks,
+    selectedDate,
+    editingTask,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    activeFilter,
+    setActiveFilter,
+    crews,
+    employees,
+    clients,
+    clientLocations,
+    handleToggleTaskCompletion,
+    handleMoveTask,
+    handleEditTask,
+    handleSaveTaskChanges,
+    handleAddNewTask,
+    handleDateChange
+  } = useScheduleState();
+
+  // Get theme information for styling
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  const isSuperDark = resolvedTheme === 'superdark';
+
+  // Memoize the handlers to prevent unnecessary re-renders
+  const memoizedToggleCompletion = useCallback(handleToggleTaskCompletion, [handleToggleTaskCompletion]);
+  const memoizedMoveTask = useCallback(handleMoveTask, [handleMoveTask]);
+  const memoizedEditTask = useCallback(handleEditTask, [handleEditTask]);
+  const memoizedSaveChanges = useCallback(handleSaveTaskChanges, [handleSaveTaskChanges]);
+  const memoizedAddNewTask = useCallback(handleAddNewTask, [handleAddNewTask]);
+  const memoizedDateChange = useCallback(handleDateChange, [handleDateChange]);
+  const memoizedSetViewMode = useCallback(setViewMode, [setViewMode]);
+  const memoizedSetActiveFilter = useCallback(setActiveFilter, [setActiveFilter]);
   
-  // Use the calendar sync hook to get and set dates
-  const { date: selectedDate, setDate: setSelectedDate } = useCalendarSync();
-  
-  // Convert todos to the format expected by TaskCalendarView
-  const tasks = todos.map(todo => ({
-    id: todo.id,
-    title: todo.text,
-    description: '',
-    date: todo.date || new Date(),
-    completed: todo.completed || false,
-    startTime: todo.startTime || '09:00',
-    endTime: todo.endTime || '10:00',
-    crew: todo.crewMembers || [],
-    crewId: todo.crewId,
-    crewName: todo.crewName,
-    location: todo.location
-  }));
-  
-  // Empty handler for toggling task completion
-  const handleToggleTaskCompletion = (taskId: string) => {
-    // This would normally update the task's completed status
-    console.log(`Toggle task completion: ${taskId}`);
-  };
-  
-  // Empty handler for adding a new task
-  const handleAddNewTask = () => {
-    console.log('Add new task');
-  };
-  
+  // Dynamic styling based on theme
+  const containerClass = cn(
+    "space-y-6",
+    isDark ? "text-gray-100" : "text-gray-900",
+    isSuperDark ? "bg-black" : isDark ? "bg-[#0D1117]" : "bg-white"
+  );
+
   return (
-    <TaskCalendarView 
-      tasks={tasks}
-      selectedDate={selectedDate || new Date()}
-      onSelectDate={(date) => setSelectedDate(date as Date)}
-      onToggleTaskCompletion={handleToggleTaskCompletion}
-      crews={[]}
-      onAddNewTask={handleAddNewTask}
-    />
+    <div className={containerClass}>
+      {/* Header with title and filters */}
+      <ScheduleHeader
+        employees={employees}
+        crews={crews}
+        clients={clients}
+        currentFilter={activeFilter}
+        onFilterChange={memoizedSetActiveFilter}
+      />
+      
+      {/* Tabs for switching between calendar and list views */}
+      <ScheduleTabs
+        viewMode={viewMode}
+        onViewModeChange={memoizedSetViewMode}
+        filteredTasks={filteredTasks}
+        selectedDate={selectedDate}
+        onSelectDate={memoizedDateChange}
+        onToggleTaskCompletion={memoizedToggleCompletion}
+        onEditTask={memoizedEditTask}
+        crews={crews}
+        clients={clients}
+        clientLocations={clientLocations}
+        activeFilter={activeFilter}
+        onAddNewTask={memoizedAddNewTask}
+        onMoveTask={memoizedMoveTask}
+      />
+      
+      {/* Task edit dialog */}
+      <TaskEditDialogWrapper
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        task={editingTask}
+        crews={crews}
+        employees={employees}
+        clients={clients}
+        clientLocations={clientLocations}
+        onSaveChanges={memoizedSaveChanges}
+      />
+    </div>
   );
 };
+
+export default React.memo(ScheduleView);
