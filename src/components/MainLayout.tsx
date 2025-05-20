@@ -126,7 +126,7 @@ const MainLayout = () => {
           
           <main 
             className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", 
-              isMobile ? "pt-11 sm:pt-14" : (sidebarOpen ? "ml-0" : "ml-0"))}
+              isMobile ? "pt-16 sm:pt-20" : (sidebarOpen ? "pt-16 ml-0" : "pt-16 ml-0"))}
             onClick={handleCloseCalendars}
           >
             <div className={`w-full ${mainBg} h-full rounded-md overflow-auto`}>

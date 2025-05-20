@@ -1,4 +1,3 @@
-
 /* Core styles */
 #root {
   width: 100%;
@@ -52,6 +51,17 @@
   height: 100%;
   display: flex;
   align-items: center;
+}
+
+/* Add padding to prevent content from being hidden under fixed elements */
+main {
+  padding-top: 4.5rem !important; /* Increased padding at the top to prevent overlap with the calendar button */
+}
+
+@media (min-width: 640px) {
+  main {
+    padding-top: 5rem !important; /* Larger padding on bigger screens */
+  }
 }
 
 /* Improved scrollbars */
@@ -117,6 +127,11 @@ button, a, input, select, textarea {
   
   .m-4, .m-6, .m-8 {
     margin: 0.75rem !important;
+  }
+  
+  /* Added extra space at the top for the calendar button */
+  .pt-4, .pt-6, .pt-8, .py-4, .py-6, .py-8 {
+    padding-top: 3.5rem !important;
   }
   
   /* Make buttons more touch-friendly */
