@@ -13,6 +13,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { Separator } from '@/components/ui/separator';
 import { PaymentVerifier } from './payment/PaymentVerifier';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 const OfficeManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState<'employees' | 'clients' | 'schedule' | 'invoices' | 'bookings' | 'settings'>('employees');
@@ -90,16 +91,38 @@ const OfficeManagerDashboard = () => {
               <span className="hidden sm:inline">Clients</span>
               <span className="sm:hidden">Cli</span>
             </Button>
+            
+            {/* Enhanced Schedule Button with animation and highlight effect */}
             <Button 
               variant={activeTab === 'schedule' ? 'default' : 'ghost'} 
               size="sm" 
-              className={`gap-1 md:gap-2 rounded-md transition-colors ${activeTab === 'schedule' ? tabActiveClass : tabHoverClass}`}
+              className={cn(
+                "gap-1 md:gap-2 rounded-md transition-all duration-300",
+                activeTab === 'schedule' 
+                  ? `${tabActiveClass} shadow-md scale-105` 
+                  : `${tabHoverClass} hover:scale-105`,
+                "relative overflow-hidden"
+              )}
               onClick={() => setActiveTab('schedule')}
             >
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Schedule</span>
-              <span className="sm:hidden">Sch</span>
+              <div className={cn(
+                "absolute inset-0 opacity-20 bg-gradient-to-r",
+                isDark 
+                  ? "from-blue-600/30 to-purple-600/30" 
+                  : "from-blue-400/30 to-purple-400/30",
+                activeTab === 'schedule' ? "opacity-40" : "opacity-0 group-hover:opacity-20"
+              )} />
+              <Calendar className={cn(
+                "h-4 w-4 transition-all",
+                activeTab === 'schedule' && "text-white"
+              )} />
+              <span className="hidden sm:inline relative z-10">Schedule</span>
+              <span className="sm:hidden relative z-10">Sch</span>
+              {activeTab !== 'schedule' && (
+                <span className="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+              )}
             </Button>
+            
             <Button 
               variant={activeTab === 'invoices' ? 'default' : 'ghost'} 
               size="sm" 
