@@ -1,4 +1,3 @@
-
 export interface Task {
   id: string;
   title: string;
@@ -87,7 +86,7 @@ export interface ScheduleFilter {
 }
 
 // Enhanced DragDrop Types
-export type DraggableItemType = 'task' | 'employee' | 'crew' | 'client' | 'location';
+export type DraggableItemType = 'task' | 'employee' | 'crew' | 'client' | 'location' | 'booking' | 'todo';
 
 export interface DragItem {
   id: string;

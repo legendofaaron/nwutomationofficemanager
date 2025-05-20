@@ -127,7 +127,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
             mode="single"
             selected={selectedDate}
             onSelect={onSelectDate}
-            className="rounded-md border"
+            className="rounded-md border pointer-events-auto"
             components={{
               Day: renderDayWithTasks
             }}

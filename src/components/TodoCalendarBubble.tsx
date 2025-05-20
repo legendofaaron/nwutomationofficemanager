@@ -64,6 +64,11 @@ const TodoCalendarBubble = () => {
     assignedCrew: ''
   });
   
+  // NEW: Add state to track which day is being dragged over
+  const [dragOverDay, setDragOverDay] = useState<string | null>(null);
+  // NEW: Track global dragging state
+  const [isDragging, setIsDragging] = useState(false);
+  
   // Ref to close popover when clicking outside
   const popoverRef = useRef<HTMLDivElement>(null);
   const popoverId = "todo-calendar-bubble";
@@ -109,6 +114,8 @@ const TodoCalendarBubble = () => {
         // If dragging over the calendar button when closed, open it
         if (calendarBubble && (calendarBubble === targetElement || calendarBubble.contains(targetElement))) {
           setIsOpen(true);
+          // NEW: Set dragging state
+          setIsDragging(true);
         }
       }
     };
@@ -120,10 +127,34 @@ const TodoCalendarBubble = () => {
     };
   }, [isOpen]);
 
+  // NEW: Listen for global drag start/end events
+  useEffect(() => {
+    const handleDragStart = () => {
+      setIsDragging(true);
+    };
+    
+    const handleDragEnd = () => {
+      setIsDragging(false);
+      setDragOverDay(null);
+    };
+    
+    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('dragend', handleDragEnd);
+    
+    return () => {
+      document.removeEventListener('dragstart', handleDragStart);
+      document.removeEventListener('dragend', handleDragEnd);
+    };
+  }, []);
+
   // Listen for drop events at the document level for handling external drops
   useEffect(() => {
     const handleDrop = (e: DragEvent) => {
       e.preventDefault();
+      
+      // NEW: Reset drag state on drop
+      setIsDragging(false);
+      setDragOverDay(null);
       
       try {
         const dragData = e.dataTransfer?.getData('application/json');
@@ -237,10 +268,15 @@ const TodoCalendarBubble = () => {
     setDraggedTodo(todo);
     e.dataTransfer.setData('text/plain', todo.id);
     e.dataTransfer.effectAllowed = 'move';
+    // NEW: Set global dragging state
+    setIsDragging(true);
   };
 
   const handleDragEnd = () => {
     setDraggedTodo(null);
+    // NEW: Reset dragging state
+    setIsDragging(false);
+    setDragOverDay(null);
   };
 
   // Handle date selection with user interaction
@@ -341,10 +377,19 @@ const TodoCalendarBubble = () => {
     const taskCount = getTaskCountForDay(date);
     const dateValue = date.getDate();
     const assignedEmployees = getAssignedEmployeesForDay(date);
+    const dateKey = date.toDateString();
+    
+    // NEW: Check if this day is currently being dragged over
+    const isBeingDraggedOver = dragOverDay === dateKey;
     
     return (
       <div 
-        className="relative w-full h-full flex items-center justify-center"
+        className={cn(
+          "relative w-full h-full flex items-center justify-center",
+          "transition-colors duration-150",
+          // NEW: Add highlight styling when dragging over the day
+          isBeingDraggedOver && isDragging && "bg-primary/20 outline-dashed outline-2 outline-primary"
+        )}
         data-calendar="day-cell"
         onClick={() => handleDateChange(date)}
         onDragOver={(e) => {
@@ -352,19 +397,25 @@ const TodoCalendarBubble = () => {
           e.preventDefault();
           e.stopPropagation();
           
-          // Add visual feedback
-          e.currentTarget.classList.add("bg-primary/20", "scale-105");
+          // NEW: Set this day as being dragged over
+          setDragOverDay(dateKey);
         }}
         onDragLeave={(e) => {
-          // Remove visual feedback
-          e.currentTarget.classList.remove("bg-primary/20", "scale-105");
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // NEW: If this is the day being dragged over, clear it
+          if (dateKey === dragOverDay) {
+            setDragOverDay(null);
+          }
         }}
         onDrop={(e) => {
           e.preventDefault();
           e.stopPropagation();
           
-          // Remove visual feedback
-          e.currentTarget.classList.remove("bg-primary/20", "scale-105");
+          // NEW: Reset drag state
+          setDragOverDay(null);
+          setIsDragging(false);
           
           try {
             // Check if we have a dragged JSON item first
