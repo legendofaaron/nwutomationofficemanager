@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from '@/components/Logo';
 import { useTheme } from '@/context/ThemeContext';
+import { useSidebar } from '@/components/ui/sidebar';
 
 interface SidebarTriggerButtonProps {
   triggerPosition: number;
@@ -14,6 +15,7 @@ export const SidebarTriggerButton: React.FC<SidebarTriggerButtonProps> = ({
   onDragStart 
 }) => {
   const { resolvedTheme } = useTheme();
+  const { setOpen } = useSidebar();
   const isDark = resolvedTheme === 'dark';
   const isSuperDark = resolvedTheme === 'superdark';
 
@@ -28,17 +30,22 @@ export const SidebarTriggerButton: React.FC<SidebarTriggerButtonProps> = ({
     : isDark
       ? 'hover:bg-[#171b24]'
       : 'hover:bg-gray-50';
+      
+  const handleMouseEnter = () => {
+    setOpen(true);
+  };
 
   return (
     <div 
-      className="absolute -right-12 z-20" 
+      className="absolute -right-7 z-20" 
       style={{ top: `${triggerPosition}px` }}
+      onMouseEnter={handleMouseEnter}
     >
       <SidebarTrigger 
-        className={`h-14 w-10 sm:h-16 sm:w-12 ${sidebarButtonBg} rounded-r-lg flex items-center justify-center ${sidebarHoverBg} transition-all group cursor-move`}
+        className={`h-8 w-6 sm:h-10 sm:w-7 ${sidebarButtonBg} rounded-r-lg flex items-center justify-center ${sidebarHoverBg} transition-all group cursor-move`}
         onMouseDown={onDragStart}
       >
-        <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg]">
+        <div className="transition-transform duration-700 ease-in-out group-hover:rotate-[360deg] scale-75">
           <Logo small />
         </div>
       </SidebarTrigger>
