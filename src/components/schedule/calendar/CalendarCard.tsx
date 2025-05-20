@@ -78,7 +78,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
         )}
         activeClassName="outline-dashed outline-2 outline-primary/50"
       >
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center text-white">
           {children}
           {dayTasks.length > 0 && (
             <div className="absolute bottom-1 flex justify-center space-x-0.5 mt-0.5">
