@@ -8,10 +8,12 @@ import TasksCard from './TasksCard';
 import { useCalendarSync } from '@/hooks/useCalendarSync';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { Download, Calendar, Plus } from 'lucide-react';
+import { Download, Calendar, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import ScheduleDownloadDialog from '../ScheduleDownloadDialog';
 import { useScheduleState } from '@/hooks/useScheduleState';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 interface TaskCalendarViewProps {
   tasks: Task[];
@@ -90,6 +92,20 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
       setCalendarDate(date);
     }
   }, [onSelectDate, setDate, setCalendarDate]);
+  
+  // Navigate to previous month
+  const handlePrevMonth = useCallback(() => {
+    const newDate = new Date(date);
+    newDate.setMonth(date.getMonth() - 1);
+    setDate(newDate);
+  }, [date, setDate]);
+
+  // Navigate to next month
+  const handleNextMonth = useCallback(() => {
+    const newDate = new Date(date);
+    newDate.setMonth(date.getMonth() + 1);
+    setDate(newDate);
+  }, [date, setDate]);
   
   // Handle moving a task to a new date with toast notification - memoized
   const handleMoveTask = useCallback((taskId: string, date: Date) => {
@@ -215,91 +231,109 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
           <Button 
             variant="outline" 
             onClick={handleOpenDownloadDialog}
-            className="flex items-center gap-2 bg-black/10 dark:bg-white/5 hover:bg-black/20 dark:hover:bg-white/10 transition-colors"
+            className="flex items-center gap-2 transition-colors"
           >
             <Download className="h-4 w-4" />
-            Download Schedule
+            Export Schedule
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <div className="lg:col-span-3 space-y-6">
-            <div className="bg-black/5 dark:bg-[#0D1117]/80 rounded-xl overflow-hidden border border-gray-200 dark:border-[#1a1e26] shadow-sm">
-              <div className="p-4 border-b border-gray-200 dark:border-[#1a1e26] flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-blue-500" />
-                  <h3 className="font-medium">Calendar</h3>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {format(date, 'MMMM yyyy')}
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
+          {/* Main Calendar - 5 columns */}
+          <Card className="lg:col-span-5 overflow-hidden shadow-sm border border-border/50">
+            <CardHeader className="bg-card border-b border-border/30 flex flex-row justify-between items-center py-3 px-4 h-14">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                <h3 className="font-medium">Calendar</h3>
               </div>
-              <div className="p-4">
-                <CalendarCard 
-                  tasks={tasks}
-                  selectedDate={date}
-                  onSelectDate={handleSelectDate}
-                  onMoveTask={handleMoveTask}
-                  onItemDrop={handleItemDrop}
-                  isDirectDrop={true}
-                />
-              </div>
-            </div>
-          </div>
-          
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-black/5 dark:bg-[#0D1117]/80 rounded-xl overflow-hidden border border-gray-200 dark:border-[#1a1e26] shadow-sm">
-              <div className="p-4 border-b border-gray-200 dark:border-[#1a1e26] flex items-center justify-between">
-                <div className="flex items-center">
-                  <h3 className="font-medium flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {format(date, 'MMMM d, yyyy')}
-                  </h3>
-                </div>
+              
+              <div className="flex items-center gap-2">
                 <Button 
-                  onClick={onAddNewTask} 
                   variant="ghost" 
-                  size="sm"
-                  className="h-8 w-8 p-0 rounded-full bg-blue-500 hover:bg-blue-600 text-white"
+                  size="icon" 
+                  onClick={handlePrevMonth}
+                  className="h-8 w-8 rounded-full"
                 >
-                  <Plus className="h-4 w-4" />
-                  <span className="sr-only">Add task</span>
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="sr-only">Previous Month</span>
+                </Button>
+                
+                <span className="text-sm font-medium min-w-24 text-center">
+                  {format(date, 'MMMM yyyy')}
+                </span>
+                
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={handleNextMonth}
+                  className="h-8 w-8 rounded-full"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                  <span className="sr-only">Next Month</span>
                 </Button>
               </div>
               
-              <div className="p-4">
-                <div className="flex gap-3 mb-4">
-                  <div className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium",
-                    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                  )}>
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                    </span>
-                    {pendingTasks} Pending
-                  </div>
-                  
-                  <div className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium",
-                    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                  )}>
-                    <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                    {completedTasks} Completed
-                  </div>
-                </div>
-                
-                <TasksCard
-                  tasks={tasks}
-                  selectedDate={date}
-                  onToggleTaskCompletion={onToggleTaskCompletion}
-                  crews={crews}
-                  onAddNewTask={onAddNewTask}
-                  onEditTask={onEditTask}
-                />
+              <Button 
+                onClick={onAddNewTask} 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-1.5"
+              >
+                <Plus className="h-4 w-4" />
+                Add Task
+              </Button>
+            </CardHeader>
+            
+            <CardContent className="p-4">
+              <CalendarCard 
+                tasks={tasks}
+                selectedDate={date}
+                onSelectDate={handleSelectDate}
+                onMoveTask={handleMoveTask}
+                onItemDrop={handleItemDrop}
+                isDirectDrop={true}
+              />
+            </CardContent>
+          </Card>
+          
+          {/* Task List - 2 columns */}
+          <Card className="lg:col-span-2 shadow-sm border border-border/50">
+            <CardHeader className="bg-card border-b border-border/30 flex flex-row justify-between items-center py-3 px-4 h-14">
+              <div className="text-sm font-medium">
+                {format(selectedDate, 'MMMM d, yyyy')}
               </div>
-            </div>
-          </div>
+              
+              <Button 
+                onClick={onAddNewTask} 
+                size="sm"
+                className="h-7 w-7 p-0 rounded-full"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="sr-only">Add Task</span>
+              </Button>
+            </CardHeader>
+            
+            <CardContent className="p-4">
+              <div className="flex gap-3 mb-4">
+                <Badge variant="outline" className="bg-primary/5">
+                  {pendingTasks} Pending
+                </Badge>
+                
+                <Badge variant="outline" className="bg-green-500/5">
+                  {completedTasks} Completed
+                </Badge>
+              </div>
+              
+              <TasksCard
+                tasks={tasks}
+                selectedDate={date}
+                onToggleTaskCompletion={onToggleTaskCompletion}
+                crews={crews}
+                onAddNewTask={onAddNewTask}
+                onEditTask={onEditTask}
+              />
+            </CardContent>
+          </Card>
         </div>
       </div>
       

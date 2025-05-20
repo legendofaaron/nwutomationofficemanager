@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -5,12 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronDown, ChevronUp, Plus, ListTodo, Calendar as CalendarIcon } from 'lucide-react';
+import { 
+  ChevronDown, ChevronUp, Plus, ListTodo, 
+  Calendar as CalendarIcon, Download, X, 
+  FileText, FileDown
+} from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { type DayProps } from 'react-day-picker';
 import { toast } from 'sonner';
+import { downloadScheduleAsPdf, downloadScheduleAsText } from '@/utils/downloadUtils';
 
 interface Todo {
   id: string;
@@ -26,17 +33,35 @@ interface Todo {
   location?: string;
 }
 
+// Define a function to convert Todos to Tasks format for download utilities
+const convertTodosToTasks = (todos: Todo[]) => {
+  return todos.map(todo => ({
+    id: todo.id,
+    title: todo.text, // Map text to title
+    date: todo.date,
+    completed: todo.completed,
+    assignedTo: todo.assignedTo || '',
+    crew: todo.crewMembers || [],
+    crewId: todo.crewId || '',
+    crewName: todo.crewName || '',
+    startTime: todo.startTime || '09:00',
+    endTime: todo.endTime || '10:00',
+    location: todo.location || '',
+  }));
+};
+
 const TodoCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(true);
   const [newTodoText, setNewTodoText] = useState('');
   const [draggedTodo, setDraggedTodo] = useState<Todo | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
   const dragImageRef = useRef<HTMLDivElement | null>(null);
   const [todos, setTodos] = useState<Todo[]>([
-    { id: '1', text: 'Team meeting', completed: false, date: new Date() },
-    { id: '2', text: 'Review project proposal', completed: true, date: new Date() },
-    { id: '3', text: 'Call with client', completed: false, date: new Date() },
+    { id: '1', text: 'Team meeting', completed: false, date: new Date(), startTime: '10:00', endTime: '11:00' },
+    { id: '2', text: 'Review project proposal', completed: true, date: new Date(), startTime: '13:00', endTime: '14:00' },
+    { id: '3', text: 'Call with client', completed: false, date: new Date(), startTime: '15:00', endTime: '16:00' },
   ]);
 
   // Create drag image element on mount
@@ -73,12 +98,14 @@ const TodoCalendar = () => {
       id: Date.now().toString(),
       text: newTodoText,
       completed: false,
-      date: selectedDate
+      date: selectedDate,
+      startTime: '09:00',
+      endTime: '10:00'
     };
     
     setTodos([...todos, newTodo]);
     setNewTodoText('');
-    toast?.success("Task added successfully");
+    toast.success("Task added successfully");
   };
 
   const toggleTodoCompletion = (id: string) => {
@@ -91,7 +118,26 @@ const TodoCalendar = () => {
 
   const deleteTodo = (id: string) => {
     setTodos(todos.filter(todo => todo.id !== id));
-    toast?.success("Task removed");
+    toast.success("Task removed");
+  };
+
+  // Handle downloading schedule
+  const handleDownloadSchedule = (format: 'pdf' | 'text') => {
+    try {
+      // Convert todos to tasks format required by download utilities
+      const tasks = convertTodosToTasks(todos);
+      
+      if (format === 'pdf') {
+        downloadScheduleAsPdf(tasks, [], []);
+      } else {
+        downloadScheduleAsText(tasks, [], []);
+      }
+      toast.success(`Schedule downloaded as ${format.toUpperCase()}`);
+    } catch (error) {
+      console.error('Error downloading schedule:', error);
+      toast.error("Failed to download schedule");
+    }
+    setDownloadMenuOpen(false);
   };
 
   // Enhanced drag and drop functionality
@@ -140,7 +186,7 @@ const TodoCalendar = () => {
         );
         setTodos(updatedTodos);
         setDraggedTodo(null);
-        toast?.success(`Task moved to ${format(date, 'MMM d, yyyy')}`);
+        toast.success(`Task moved to ${format(date, 'MMM d, yyyy')}`);
       }
     }
   };
@@ -195,7 +241,7 @@ const TodoCalendar = () => {
             setDraggedTodo(null);
             setIsDragging(false);
             setSelectedDate(date);
-            toast?.success(`Task moved to ${format(date, 'MMM d, yyyy')}`);
+            toast.success(`Task moved to ${format(date, 'MMM d, yyyy')}`);
           }
           
           // Add support for other dragged items from dashboard
@@ -213,7 +259,7 @@ const TodoCalendar = () => {
                 };
                 
                 setTodos([...todos, newTodo]);
-                toast?.success(`Item added to calendar on ${format(date, 'MMM d, yyyy')}`);
+                toast.success(`Item added to calendar on ${format(date, 'MMM d, yyyy')}`);
               }
             }
           } catch (error) {
@@ -241,17 +287,52 @@ const TodoCalendar = () => {
 
   return (
     <div className="fixed top-20 sm:top-24 right-4 sm:right-6 z-40 w-80">
-      <Card className="shadow-lg bg-background border-2 rounded-lg border-border">
+      <Card className="shadow-xl bg-background border-2 rounded-lg border-border overflow-hidden">
         <Collapsible defaultOpen={true}>
-          <CardHeader className="p-3 bg-card">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-base flex items-center">
-                <CalendarIcon className="h-4 w-4 mr-2" />
-                Calendar & Tasks
-              </CardTitle>
+          <CardHeader className="p-3 bg-card flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-base flex items-center">
+              <CalendarIcon className="h-4 w-4 mr-2 text-primary" />
+              Calendar & Tasks
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Popover open={downloadMenuOpen} onOpenChange={setDownloadMenuOpen}>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 rounded-full"
+                  >
+                    <Download className="h-4 w-4 text-muted-foreground" />
+                    <span className="sr-only">Download Schedule</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="left" className="w-56 p-2">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-medium mb-2">Download Schedule</h4>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleDownloadSchedule('text')} 
+                      className="w-full justify-start text-sm"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Download as Text
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleDownloadSchedule('pdf')} 
+                      className="w-full justify-start text-sm"
+                    >
+                      <FileDown className="h-4 w-4 mr-2" />
+                      Download as PDF
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
-                  {true ? (
+                <Button variant="ghost" size="sm" className="w-8 h-8 p-0 rounded-full">
+                  {isCalendarOpen ? (
                     <ChevronUp className="h-4 w-4" />
                   ) : (
                     <ChevronDown className="h-4 w-4" />
@@ -262,23 +343,26 @@ const TodoCalendar = () => {
           </CardHeader>
           
           <CollapsibleContent>
-            <CardContent className="p-3 bg-background">
+            <CardContent className="p-3">
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={handleDateChange}
-                className={cn("rounded-md border bg-[#2A2A2A] shadow-sm", "pointer-events-auto")}
+                className={cn("rounded-md border shadow-sm", "pointer-events-auto")}
                 components={{
                   Day: customDayRender
                 }}
               />
               
               <div className="mt-4 space-y-2">
-                <div className="flex items-center">
-                  <ListTodo className="h-4 w-4 mr-2" />
-                  <h3 className="text-sm font-medium">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium flex items-center">
+                    <ListTodo className="h-4 w-4 mr-2 text-primary" />
                     Tasks for {format(selectedDate, 'MMM d, yyyy')}
                   </h3>
+                  <Badge variant="outline" className="text-xs">
+                    {todaysTodos.length} {todaysTodos.length === 1 ? 'task' : 'tasks'}
+                  </Badge>
                 </div>
                 
                 <div className="flex space-x-2">
@@ -294,45 +378,56 @@ const TodoCalendar = () => {
                   </Button>
                 </div>
                 
-                <div className="space-y-1 max-h-36 overflow-y-auto py-1 bg-card rounded-md p-2">
+                <div className="space-y-1 max-h-40 overflow-y-auto py-1 rounded-md">
                   {todaysTodos.length > 0 ? (
                     todaysTodos.map((todo) => (
                       <div 
                         key={todo.id} 
-                        className="flex items-center justify-between space-x-2 text-sm bg-background rounded-sm p-1"
+                        className={cn(
+                          "flex items-center justify-between space-x-2 text-sm bg-background rounded-md p-2 border",
+                          todo.completed ? "border-green-500/20 bg-green-50/10" : "border-border"
+                        )}
                         draggable
                         onDragStart={(e) => handleDragStart(todo, e)}
                         onDragEnd={handleDragEnd}
                         style={{ cursor: 'grab' }}
                       >
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 min-w-0">
                           <Checkbox 
                             id={`todo-${todo.id}`}
                             checked={todo.completed}
                             onCheckedChange={() => toggleTodoCompletion(todo.id)}
+                            className={todo.completed ? "text-green-500" : ""}
                           />
-                          <label
-                            htmlFor={`todo-${todo.id}`}
-                            className={cn(
-                              "text-sm cursor-pointer",
-                              todo.completed && "line-through text-muted-foreground"
+                          <div className="flex flex-col min-w-0">
+                            <label
+                              htmlFor={`todo-${todo.id}`}
+                              className={cn(
+                                "text-sm cursor-pointer truncate",
+                                todo.completed && "line-through text-muted-foreground"
+                              )}
+                            >
+                              {todo.text}
+                            </label>
+                            {(todo.startTime || todo.endTime) && (
+                              <span className="text-xs text-muted-foreground">
+                                {todo.startTime} - {todo.endTime}
+                              </span>
                             )}
-                          >
-                            {todo.text}
-                          </label>
+                          </div>
                         </div>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0"
+                          className="h-6 w-6 p-0 rounded-full hover:bg-destructive/10"
                           onClick={() => deleteTodo(todo.id)}
                         >
-                          &times;
+                          <X className="h-3.5 w-3.5 text-muted-foreground" />
                         </Button>
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-muted-foreground text-center py-2 bg-background rounded-sm">
+                    <div className="text-sm text-muted-foreground text-center py-4 bg-background/50 rounded-md border border-dashed border-border">
                       No tasks for today
                     </div>
                   )}
