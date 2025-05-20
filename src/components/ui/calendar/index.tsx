@@ -25,10 +25,23 @@ function Calendar({
     }
   };
   
+  // Functions to increase and decrease month
+  const decreaseMonth = () => {
+    const newMonth = new Date(currentMonth);
+    newMonth.setMonth(newMonth.getMonth() - 1);
+    handleMonthChange(newMonth);
+  };
+
+  const increaseMonth = () => {
+    const newMonth = new Date(currentMonth);
+    newMonth.setMonth(newMonth.getMonth() + 1);
+    handleMonthChange(newMonth);
+  };
+  
   return (
     <DayPicker
       month={currentMonth}
-      onMonthChange={setCurrentMonth}
+      onMonthChange={handleMonthChange}
       showOutsideDays={showOutsideDays}
       className={cn("p-3 pointer-events-auto", className)}
       classNames={{
@@ -66,7 +79,14 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        Caption: (captionProps) => <CustomCaption {...captionProps} onMonthChange={handleMonthChange} />,
+        Caption: (captionProps) => (
+          <CustomCaption 
+            displayMonth={captionProps.displayMonth} 
+            decreaseMonth={decreaseMonth}
+            increaseMonth={increaseMonth}
+            onMonthChange={handleMonthChange}
+          />
+        ),
         ...props.components
       }}
       {...props}

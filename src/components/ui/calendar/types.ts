@@ -20,9 +20,8 @@ export interface CalendarDayProps {
 
 // Extended props for the custom caption component
 export interface CustomCaptionProps extends CaptionProps {
-  onPreviousClick: () => void;
-  onNextClick: () => void;
-  monthFormat?: string;
-  displayIndex?: number;
   onMonthChange?: (date: Date) => void;
+  // The following are already included in CaptionProps from react-day-picker
+  // decreaseMonth: () => void;
+  // increaseMonth: () => void;
 }
