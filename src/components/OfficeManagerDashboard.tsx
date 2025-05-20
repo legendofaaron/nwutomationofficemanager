@@ -7,7 +7,7 @@ import ClientsView from './ClientsView';
 import EmployeesView from './EmployeesView';
 import InvoicesView from './InvoicesView';
 import BookingView from './BookingView';
-import { Buildings, Users, ClipboardList, Calendar, Building, CreditCard } from "lucide-react";
+import { Building, Users, ClipboardList, Calendar, CreditCard } from "lucide-react";
 
 // Hide the DashboardCalendar component as we're moving all calendar functionality
 // to the TodoCalendar component in the top right corner
@@ -24,7 +24,7 @@ const OfficeManagerDashboard: React.FC = () => {
             <span>Schedule</span>
           </TabsTrigger>
           <TabsTrigger value="clients" className="flex flex-col items-center py-2 px-4 text-xs sm:text-sm sm:flex-row sm:gap-2">
-            <Buildings className="h-4 w-4" />
+            <Building className="h-4 w-4" />
             <span>Clients</span>
           </TabsTrigger>
           <TabsTrigger value="employees" className="flex flex-col items-center py-2 px-4 text-xs sm:text-sm sm:flex-row sm:gap-2">

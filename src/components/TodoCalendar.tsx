@@ -17,6 +17,13 @@ interface Todo {
   text: string;
   completed: boolean;
   date: Date;
+  assignedTo?: string;
+  crewMembers?: string[];
+  crewId?: string;
+  crewName?: string;
+  startTime?: string;
+  endTime?: string;
+  location?: string;
 }
 
 const TodoCalendar = () => {
