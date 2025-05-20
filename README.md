@@ -119,8 +119,8 @@ Key features of the Apple Silicon build:
 
 ## Support Development
 
-If you find Office Manager useful, please consider supporting its development with a tip at [Ko-fi](https://ko-fi.com/officemanager).
+If you find Office Manager useful, please consider supporting its development with a tip at https://www.paypal.me/aaronthelegend
 
 ## Contact
 
-For questions or support, please open an issue on the GitHub repository or contact us at contact@example.com.
+For questions or support, please open an issue on the GitHub repository or contact us at northwesternautomation@gmail.com
