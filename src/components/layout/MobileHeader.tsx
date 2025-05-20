@@ -25,33 +25,40 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
 }) => {
   return (
     <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between p-2 sm:p-3 border-b bg-background border-border">
-      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetTrigger asChild>
-          <Button variant="ghost" size="sm" className="md:hidden flex items-center justify-center p-1.5">
-            <Menu className="h-5 w-5" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-[80%] p-0">
-          <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <Logo onClick={() => {
-                handleViewChange('welcome');
-                setMobileMenuOpen(false);
-              }} />
-              <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
+      <div className="flex items-center gap-2">
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="sm" className="md:hidden flex items-center justify-center p-1.5">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[80%] p-0">
+            <div className="flex flex-col h-full">
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <Logo onClick={() => {
+                  handleViewChange('welcome');
+                  setMobileMenuOpen(false);
+                }} />
+                <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex-1 overflow-auto">
+                <AppSidebar />
+              </div>
             </div>
-            <div className="flex-1 overflow-auto">
-              <AppSidebar />
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+          </SheetContent>
+        </Sheet>
+        
+        {/* User menu moved to the left side */}
+        <UserMenu setViewMode={setViewMode} confirmLogout={confirmLogout} />
+      </div>
       
+      {/* Logo centered */}
       <Logo small onClick={() => handleViewChange('welcome')} />
       
-      <UserMenu setViewMode={setViewMode} confirmLogout={confirmLogout} />
+      {/* Empty div to balance the layout */}
+      <div className="w-[40px]"></div>
     </div>
   );
 };
