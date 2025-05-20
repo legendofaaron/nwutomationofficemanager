@@ -11,7 +11,7 @@ import SpreadsheetViewer from './SpreadsheetViewer';
 import WelcomeDashboard from './WelcomeDashboard';
 import TodoCalendarBubble from './TodoCalendarBubble';
 import { cn } from '@/lib/utils';
-import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DragDropProvider } from './schedule/DragDropContext';
@@ -54,7 +54,6 @@ const MainLayout = () => {
   // Custom hooks
   const { position: triggerPosition, handleDragStart } = useDrag(24);
   const { showLogoutConfirm, setShowLogoutConfirm, confirmLogout, handleLogout } = useLogout();
-  const { setOpen: setSidebarOpen } = useSidebar();
 
   // Handle view mode change
   const handleViewChange = useCallback((newView: ViewMode) => {
@@ -90,13 +89,6 @@ const MainLayout = () => {
     }));
   }, []);
 
-  // Handle sidebar close on mouse leave
-  const handleSidebarMouseLeave = useCallback(() => {
-    if (!isMobile && document.querySelector('.sidebar-container')?.contains(document.activeElement) === false) {
-      setSidebarOpen(false);
-    }
-  }, [isMobile, setSidebarOpen]);
-
   // Background style based on theme - memoized to prevent unnecessary recalculations
   const mainBg = useMemo(() => {
     return isSuperDark
@@ -106,70 +98,74 @@ const MainLayout = () => {
         : 'bg-gradient-to-br from-gray-50 to-gray-100 backdrop-blur-sm';
   }, [isSuperDark, isDark]);
 
-  return (
-    <DragDropProvider>
-      <SidebarProvider defaultOpen={!isMobile && sidebarOpen}>
-        <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gradient-to-br from-white to-gray-100'} flex w-full overflow-hidden`}>
-          {isMobile ? (
-            <MobileHeader
-              mobileMenuOpen={mobileMenuOpen}
-              setMobileMenuOpen={setMobileMenuOpen}
-              handleViewChange={handleViewChange}
+  // We need to use a sub-component within the SidebarProvider to use the useSidebar hook
+  const MainContent = () => {
+    return (
+      <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gradient-to-br from-white to-gray-100'} flex w-full overflow-hidden`}>
+        {isMobile ? (
+          <MobileHeader
+            mobileMenuOpen={mobileMenuOpen}
+            setMobileMenuOpen={setMobileMenuOpen}
+            handleViewChange={handleViewChange}
+            setViewMode={setViewMode}
+            confirmLogout={confirmLogout}
+          />
+        ) : (
+          <div className="relative sidebar-container">
+            <DesktopSidebar 
               setViewMode={setViewMode}
               confirmLogout={confirmLogout}
             />
-          ) : (
-            <div 
-              className="relative sidebar-container" 
-              onMouseLeave={handleSidebarMouseLeave}
-            >
-              <DesktopSidebar 
-                setViewMode={setViewMode}
-                confirmLogout={confirmLogout}
-              />
-              
-              <SidebarTriggerButton 
-                triggerPosition={triggerPosition}
-                onDragStart={handleDragStart}
-              />
-            </div>
-          )}
-          
-          <main 
-            className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", 
-              isMobile ? "pt-16 sm:pt-20" : (sidebarOpen ? "pt-16 ml-0" : "pt-16 ml-0"))}
-            onClick={handleCloseCalendars}
-          >
-            <div className={`w-full ${mainBg} h-full rounded-md overflow-auto`}>
-              {viewMode === 'document' && <DocumentViewer />}
-              {viewMode === 'database' && <DatabaseViewer />}
-              {viewMode === 'knowledge' && <KnowledgeBase />}
-              {viewMode === 'office' && <OfficeManagerDashboard />}
-              {viewMode === 'spreadsheet' && <SpreadsheetViewer />}
-              {viewMode === 'welcome' && <WelcomeDashboard />}
-              {viewMode === 'settings' && <SystemSettings />}
-              {!viewMode && <WelcomeDashboard />}
-            </div>
-          </main>
-          
-          <TodoCalendarBubble />
-          
-          {/* AI Assistant Button */}
-          <AiAssistantButton 
-            aiAssistantOpen={aiAssistantOpen} 
-            handleToggleAiAssistant={handleToggleAiAssistant} 
-          />
-          
-          {/* AI Assistant Panel */}
-          <AiAssistant />
-          
-          {/* Logout Confirmation Dialog */}
-          <LogoutDialog 
-            showLogoutConfirm={showLogoutConfirm}
-            setShowLogoutConfirm={setShowLogoutConfirm}
-            handleLogout={handleLogout}
-          />
-        </div>
+            
+            <SidebarTriggerButton 
+              triggerPosition={triggerPosition}
+              onDragStart={handleDragStart}
+            />
+          </div>
+        )}
+        
+        <main 
+          className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", 
+            isMobile ? "pt-16 sm:pt-20" : (sidebarOpen ? "pt-16 ml-0" : "pt-16 ml-0"))}
+          onClick={handleCloseCalendars}
+        >
+          <div className={`w-full ${mainBg} h-full rounded-md overflow-auto`}>
+            {viewMode === 'document' && <DocumentViewer />}
+            {viewMode === 'database' && <DatabaseViewer />}
+            {viewMode === 'knowledge' && <KnowledgeBase />}
+            {viewMode === 'office' && <OfficeManagerDashboard />}
+            {viewMode === 'spreadsheet' && <SpreadsheetViewer />}
+            {viewMode === 'welcome' && <WelcomeDashboard />}
+            {viewMode === 'settings' && <SystemSettings />}
+            {!viewMode && <WelcomeDashboard />}
+          </div>
+        </main>
+        
+        <TodoCalendarBubble />
+        
+        {/* AI Assistant Button */}
+        <AiAssistantButton 
+          aiAssistantOpen={aiAssistantOpen} 
+          handleToggleAiAssistant={handleToggleAiAssistant} 
+        />
+        
+        {/* AI Assistant Panel */}
+        <AiAssistant />
+        
+        {/* Logout Confirmation Dialog */}
+        <LogoutDialog 
+          showLogoutConfirm={showLogoutConfirm}
+          setShowLogoutConfirm={setShowLogoutConfirm}
+          handleLogout={handleLogout}
+        />
+      </div>
+    );
+  };
+
+  return (
+    <DragDropProvider>
+      <SidebarProvider defaultOpen={!isMobile && sidebarOpen}>
+        <MainContent />
       </SidebarProvider>
     </DragDropProvider>
   );
