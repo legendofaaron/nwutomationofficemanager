@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { downloadScheduleAsTxt, downloadScheduleAsPdf } from '@/utils/downloadUtils';
+import { Task } from '@/components/schedule/ScheduleTypes';
 
 interface Todo {
   id: string;
@@ -101,14 +102,34 @@ const TodoCalendar = () => {
     toast?.success("Task removed");
   };
 
+  // Convert Todo[] to Task[] for download functions
+  const convertTodosToTasks = (todos: Todo[]): Task[] => {
+    return todos.map(todo => ({
+      id: todo.id,
+      title: todo.text, // Map text to title
+      description: '',
+      date: todo.date,
+      completed: todo.completed,
+      assignedTo: todo.assignedTo,
+      crewId: todo.crewId,
+      crewName: todo.crewName,
+      crew: todo.crewMembers,
+      startTime: todo.startTime,
+      endTime: todo.endTime,
+      location: todo.location
+    }));
+  };
+
   // Handle schedule downloads
   const handleDownloadSchedule = (format: 'txt' | 'pdf') => {
     try {
+      const tasks = convertTodosToTasks(todos);
+      
       if (format === 'txt') {
-        downloadScheduleAsTxt(todos);
+        downloadScheduleAsTxt(tasks);
         toast.success("Schedule downloaded as text file");
       } else {
-        downloadScheduleAsPdf(todos);
+        downloadScheduleAsPdf(tasks);
         toast.success("Schedule downloaded as PDF");
       }
     } catch (error) {
