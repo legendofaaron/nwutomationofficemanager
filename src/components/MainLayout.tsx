@@ -101,8 +101,7 @@ const MainLayout = () => {
   return (
     <DragDropProvider>
       <SidebarProvider defaultOpen={!isMobile && sidebarOpen}>
-        {/* Fix: Properly type the children render prop */}
-        {(state: { open: boolean, setOpen: (open: boolean) => void }) => (
+        {({ open, setOpen }) => (
           <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gradient-to-br from-white to-gray-100'} flex w-full overflow-hidden`}>
             {isMobile ? (
               <MobileHeader
@@ -115,7 +114,7 @@ const MainLayout = () => {
             ) : (
               <div 
                 className="relative sidebar-container" 
-                onMouseLeave={() => !isMobile && document.querySelector('.sidebar-container')?.contains(document.activeElement) === false && state.setOpen(false)}
+                onMouseLeave={() => !isMobile && document.querySelector('.sidebar-container')?.contains(document.activeElement) === false && setOpen(false)}
               >
                 <DesktopSidebar 
                   setViewMode={setViewMode}
