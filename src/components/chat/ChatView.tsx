@@ -135,10 +135,10 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
   
   return (
     <div className="flex flex-col h-full">
-      <header className="p-4 border-b border-gray-800">
+      <header className="p-4 border-b border-gray-800 bg-black/40">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="h-6 w-6 rounded-full bg-white flex items-center justify-center">
+            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
               <div className="h-4 w-4 rounded-full bg-black"></div>
             </div>
             <h3 className="text-lg font-medium text-white">Chat</h3>
@@ -147,7 +147,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
           <Button 
             size="sm" 
             variant="ghost" 
-            className="h-8 w-8 p-0 text-gray-400 hover:text-white"
+            className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-800"
             onClick={() => setModelConfigOpen(true)}
           >
             <Settings className="h-4 w-4" />
@@ -164,7 +164,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
         isLocalModel={isLocalModel}
       />
       
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea className="flex-1 p-4 bg-black/20">
         <div className="space-y-4">
           {messages.map(message => (
             <MessageBubble key={message.id} message={message} />
@@ -194,4 +194,3 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
     </div>
   );
 };
-

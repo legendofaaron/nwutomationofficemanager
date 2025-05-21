@@ -1,16 +1,27 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from '@/hooks/use-toast';
 
-// API key configuration schema
-const apiFormSchema = z.object({
+const formSchema = z.object({
   apiKey: z.string().min(1, "API key is required"),
   baseUrl: z.string().optional(),
 });
@@ -19,118 +30,153 @@ interface ModelConfigDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   selectedModel: string;
-  onApiSubmit: (values: z.infer<typeof apiFormSchema>) => void;
-  isLocalModel: boolean;
+  onApiSubmit: (values: z.infer<typeof formSchema>) => void;
+  isLocalModel?: boolean;
 }
 
-export const ModelConfigDialog: React.FC<ModelConfigDialogProps> = ({ 
-  isOpen, 
+export const ModelConfigDialog: React.FC<ModelConfigDialogProps> = ({
+  isOpen,
   onOpenChange,
   selectedModel,
   onApiSubmit,
-  isLocalModel
+  isLocalModel = false,
 }) => {
-  // Form for API key configuration
-  const form = useForm({
-    resolver: zodResolver(apiFormSchema),
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       apiKey: "",
       baseUrl: "",
     },
   });
 
-  // Get placeholder text based on model type
-  const getApiFieldPlaceholder = () => {
-    if (selectedModel.includes('gpt')) return 'sk-...';
-    if (selectedModel.includes('claude')) return 'sk-ant-...';
-    if (selectedModel.includes('gemini')) return 'aig-...';
-    return 'API key';
-  };
-  
-  // Check if URL field should be visible
-  const getUrlFieldVisible = () => {
-    return !selectedModel.includes('gpt') && 
-           !selectedModel.includes('claude') && 
-           !selectedModel.includes('gemini');
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    onApiSubmit(values);
   };
 
-  const handleOpenSettings = () => {
-    onOpenChange(false);
-    toast({
-      title: "Local model settings",
-      description: "In a full implementation, this would open the local model configuration."
-    });
+  const getProviderInfo = () => {
+    if (selectedModel.startsWith('gpt')) {
+      return {
+        name: 'OpenAI',
+        docs: 'https://platform.openai.com/api-keys',
+        placeholder: 'sk-...',
+        needsBaseUrl: false,
+      };
+    }
+    if (selectedModel.startsWith('claude')) {
+      return {
+        name: 'Anthropic',
+        docs: 'https://console.anthropic.com/settings/keys',
+        placeholder: 'sk-ant-...',
+        needsBaseUrl: false,
+      };
+    }
+    return {
+      name: 'Provider',
+      docs: '#',
+      placeholder: 'API Key',
+      needsBaseUrl: true,
+    };
   };
+
+  const provider = getProviderInfo();
+
+  if (isLocalModel) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-gray-200 sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Local LLM Configuration</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Configure your local language model settings in the main settings panel.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end">
+            <Button onClick={() => onOpenChange(false)} className="bg-blue-600 hover:bg-blue-700">
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="bg-gray-900 border-gray-700 text-gray-200 sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Configure {selectedModel}</DialogTitle>
+          <DialogTitle>{selectedModel} Configuration</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Enter your {provider.name} API key to use {selectedModel}.
+            <a 
+              href={provider.docs} 
+              target="_blank" 
+              rel="noreferrer"
+              className="ml-1 text-blue-400 hover:text-blue-300"
+            >
+              Get API key
+            </a>
+          </DialogDescription>
         </DialogHeader>
-        
-        {isLocalModel ? (
-          <div className="py-4 space-y-4">
-            <p className="text-sm">
-              To configure {selectedModel}, please visit the settings page and set up your local language model.
-            </p>
-            <Button onClick={handleOpenSettings}>
-              Open Settings
-            </Button>
-          </div>
-        ) : (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onApiSubmit)} className="space-y-4">
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="apiKey"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>API Key</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder={provider.placeholder}
+                      type="password" 
+                      className="bg-gray-800 border-gray-700 text-gray-200"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-400" />
+                </FormItem>
+              )}
+            />
+
+            {provider.needsBaseUrl && (
               <FormField
                 control={form.control}
-                name="apiKey"
+                name="baseUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>API Key</FormLabel>
+                    <FormLabel>Base URL (Optional)</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder={getApiFieldPlaceholder()} 
-                        type="password" 
+                        placeholder="https://api.example.com" 
+                        className="bg-gray-800 border-gray-700 text-gray-200"
                         {...field} 
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400" />
                   </FormItem>
                 )}
               />
-              
-              {getUrlFieldVisible() && (
-                <FormField
-                  control={form.control}
-                  name="baseUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Base URL (Optional)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="https://api.example.com" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => onOpenChange(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">Save</Button>
-              </div>
-            </form>
-          </Form>
-        )}
+            )}
+
+            <div className="flex justify-end gap-3">
+              <Button 
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)} 
+                className="border-gray-700 text-gray-300 hover:bg-gray-800"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Save
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
