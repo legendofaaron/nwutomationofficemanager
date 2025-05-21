@@ -2,32 +2,7 @@
 /**
  * Utility functions for managing LLM model configurations
  */
-
-// Type definitions
-export interface LlmConfig {
-  endpoint?: string;
-  enabled: boolean;
-  model: string;
-  webhookUrl?: string;
-  openAi?: {
-    apiKey: string;
-    enabled: boolean;
-  };
-  customModel?: {
-    name: string;
-    apiKey?: string;
-    baseUrl?: string;
-    contextLength?: number;
-    isCustom: boolean;
-  };
-  localLlama?: {
-    enabled: boolean;
-    modelPath?: string;
-    threads?: number;
-    contextSize?: number;
-    batchSize?: number;
-  };
-}
+import { LlmConfig } from '@/types/llmConfig';
 
 /**
  * Get stored LLM configuration from localStorage
