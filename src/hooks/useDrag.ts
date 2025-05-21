@@ -14,12 +14,16 @@ export const useDrag = (initialPosition: number = 24) => {
 
   const handleDrag = useCallback((e: MouseEvent) => {
     if (isDragging.current) {
-      const sidebarElement = document.querySelector('.sidebar-container');
-      if (sidebarElement) {
-        const sidebarRect = sidebarElement.getBoundingClientRect();
-        const newPosition = Math.max(16, Math.min(e.clientY - sidebarRect.top, sidebarRect.height - 80));
-        setPosition(newPosition);
-      }
+      // Get the height of the viewport
+      const viewportHeight = window.innerHeight;
+      
+      // Calculate percentage based on mouse position
+      const percentage = (e.clientY / viewportHeight) * 100;
+      
+      // Limit the position to stay within reasonable bounds (10% - 90%)
+      const newPosition = Math.max(10, Math.min(percentage, 90));
+      
+      setPosition(newPosition);
     }
   }, []);
 

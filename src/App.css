@@ -1,3 +1,4 @@
+
 /* Core styles */
 #root {
   width: 100%;
@@ -116,6 +117,11 @@ select:focus {
 /* Professional transitions */
 button, a, input, select, textarea {
   transition: all 0.15s ease-in-out;
+}
+
+/* Draggable AI assistant button */
+.ai-assistant-draggable {
+  cursor: move !important;
 }
 
 /* Mobile optimizations */

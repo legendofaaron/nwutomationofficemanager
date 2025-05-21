@@ -53,6 +53,7 @@ const MainLayout = () => {
 
   // Custom hooks
   const { position: triggerPosition, handleDragStart } = useDrag(24);
+  const { position: assistantPosition, handleDragStart: handleAssistantDragStart } = useDrag(50);
   const { showLogoutConfirm, setShowLogoutConfirm, confirmLogout, handleLogout } = useLogout();
 
   // Handle view mode change
@@ -146,11 +147,20 @@ const MainLayout = () => {
           
           <TodoCalendarBubble />
           
-          {/* AI Assistant Button - moved to the sidebar style */}
-          <AiAssistantButton 
-            aiAssistantOpen={aiAssistantOpen} 
-            handleToggleAiAssistant={handleToggleAiAssistant} 
-          />
+          {/* AI Assistant Button with draggable positioning */}
+          <div style={{ 
+              position: 'absolute',
+              top: `${assistantPosition}%`,
+              right: 0,
+              transform: 'translateY(-50%)'
+            }}
+            onMouseDown={handleAssistantDragStart}
+          >
+            <AiAssistantButton 
+              aiAssistantOpen={aiAssistantOpen} 
+              handleToggleAiAssistant={handleToggleAiAssistant} 
+            />
+          </div>
           
           {/* AI Assistant Panel */}
           <AiAssistant />

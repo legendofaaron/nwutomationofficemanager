@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MessageSquare } from 'lucide-react';
+import { Atom } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { cn } from '@/lib/utils';
 
@@ -18,22 +18,20 @@ export const AiAssistantButton: React.FC<AiAssistantButtonProps> = ({
   const isSuperDark = resolvedTheme === 'superdark';
 
   return (
-    <div className="fixed bottom-20 left-4 sm:left-6 z-50">
+    <div className="fixed top-1/2 right-0 -translate-y-1/2 z-50">
       <button 
         onClick={handleToggleAiAssistant} 
         className={cn(
-          "h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg",
-          "relative flex items-center justify-center transition-colors",
-          "hover:shadow-xl hover:scale-105 active:scale-95 transition-transform duration-200",
-          isDark || isSuperDark 
-            ? "bg-blue-600 text-white hover:bg-blue-700" 
-            : "bg-blue-600 text-white hover:bg-blue-700"
+          "h-12 w-12 rounded-l-full shadow-lg",
+          "flex items-center justify-center transition-colors",
+          "hover:shadow-xl active:scale-95 transition-transform duration-200",
+          "bg-black text-white border-y border-l border-gray-700"
         )}
         aria-label="AI Assistant"
       >
-        <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
+        <Atom className="h-6 w-6 text-white" />
         {aiAssistantOpen && (
-          <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-background animate-pulse"></span>
+          <span className="absolute top-1 right-1 h-2 w-2 bg-blue-500 rounded-full animate-pulse"></span>
         )}
       </button>
     </div>
