@@ -108,7 +108,9 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => 
               <div className="flex-1 flex items-center justify-center text-gray-400 bg-black/20">
                 <div className="text-center p-6">
                   <div className="mb-4 inline-block p-3 bg-gray-800/50 rounded-full">
-                    <sidebarActions.find(item => item.id === activeView)?.icon className="w-6 h-6 text-blue-400" />
+                    {sidebarActions.find(item => item.id === activeView)?.icon && (
+                      <sidebarActions.find(item => item.id === activeView)?.icon className="w-6 h-6 text-blue-400" />
+                    )}
                   </div>
                   <p className="text-gray-300">{activeView} feature coming soon</p>
                   <p className="text-sm text-gray-500 mt-1">This feature is currently under development</p>
