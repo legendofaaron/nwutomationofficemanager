@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
@@ -24,6 +23,7 @@ import { DesktopSidebar } from './layout/DesktopSidebar';
 import { SidebarTriggerButton } from './layout/SidebarTriggerButton';
 import { AiAssistantButton } from './layout/AiAssistantButton';
 import { LogoutDialog } from './layout/LogoutDialog';
+import { ChatSidebar } from './chat/ChatSidebar';
 import type { ViewMode } from '@/context/AppContext';
 
 /**
@@ -53,7 +53,6 @@ const MainLayout = () => {
 
   // Custom hooks
   const { position: triggerPosition, handleDragStart } = useDrag(24);
-  const { position: assistantPosition, handleDragStart: handleAssistantDragStart } = useDrag(50);
   const { showLogoutConfirm, setShowLogoutConfirm, confirmLogout, handleLogout } = useLogout();
 
   // Handle view mode change
@@ -147,23 +146,21 @@ const MainLayout = () => {
           
           <TodoCalendarBubble />
           
-          {/* AI Assistant Button with draggable positioning */}
-          <div style={{ 
-              position: 'absolute',
-              top: `${assistantPosition}%`,
-              right: 0,
-              transform: 'translateY(-50%)'
-            }}
-            onMouseDown={handleAssistantDragStart}
-          >
-            <AiAssistantButton 
-              aiAssistantOpen={aiAssistantOpen} 
-              handleToggleAiAssistant={handleToggleAiAssistant} 
-            />
-          </div>
+          {/* AI Assistant Button - Show only when chat sidebar is closed */}
+          {!aiAssistantOpen && (
+            <div className="fixed top-1/2 right-0 -translate-y-1/2 z-50">
+              <AiAssistantButton 
+                aiAssistantOpen={aiAssistantOpen} 
+                handleToggleAiAssistant={handleToggleAiAssistant} 
+              />
+            </div>
+          )}
           
-          {/* AI Assistant Panel */}
-          <AiAssistant />
+          {/* Chat Sidebar based on the provided image */}
+          <ChatSidebar 
+            isOpen={aiAssistantOpen} 
+            onClose={() => setAiAssistantOpen(false)} 
+          />
           
           {/* Logout Confirmation Dialog */}
           <LogoutDialog 

@@ -1,4 +1,3 @@
-
 /* Core styles */
 #root {
   width: 100%;
@@ -122,6 +121,16 @@ button, a, input, select, textarea {
 /* Draggable AI assistant button */
 .ai-assistant-draggable {
   cursor: move !important;
+}
+
+/* Chat sidebar styles */
+.chat-sidebar {
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.chat-sidebar-icon {
+  @apply w-10 h-10 flex items-center justify-center rounded-lg;
+  @apply hover:bg-gray-800 transition-colors duration-200;
 }
 
 /* Mobile optimizations */
