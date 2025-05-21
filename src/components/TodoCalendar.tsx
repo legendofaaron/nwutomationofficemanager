@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -269,7 +268,7 @@ const TodoCalendar = () => {
       >
         <div className={cn(
           "flex flex-col items-center justify-center text-lg font-medium",
-          isSelected ? "text-white" : "text-gray-100"
+          "text-white" // Always make text white, regardless of selection state
         )}>
           {dateValue}
           {taskCount > 0 && (

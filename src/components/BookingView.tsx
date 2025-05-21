@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -430,7 +429,9 @@ const BookingView = () => {
                         }
                       }}
                     >
-                      {children}
+                      <div className="text-white">
+                        {children}
+                      </div>
                       
                       {/* Display indicators for bookings/tasks */}
                       {hasBookings && (

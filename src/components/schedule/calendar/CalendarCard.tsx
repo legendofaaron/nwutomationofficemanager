@@ -108,7 +108,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
             "h-8 w-8 flex items-center justify-center rounded-full hover:bg-[#333333]",
             isSelected && "bg-[#444444] text-white"
           )}>
-            <span className="text-lg font-medium">{dateValue}</span>
+            <span className="text-lg font-medium text-white">{dateValue}</span>
           </div>
           
           {dayTasks.length > 0 && (

@@ -62,14 +62,14 @@ function Calendar({
         cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-[#2A2A2A]/50 [&:has([aria-selected])]:bg-[#2A2A2A] first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 text-[#FFFFFF] hover:bg-[#333333] focus:bg-[#333333]"
+          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 text-white hover:bg-[#333333] focus:bg-[#333333]"
         ),
         day_range_end: "day-range-end",
-        day_selected: "bg-[#3A3A3A] text-[#FFFFFF] hover:bg-[#444444] hover:text-[#FFFFFF] focus:bg-[#444444] focus:text-[#FFFFFF]",
-        day_today: "bg-[#333333] text-[#FFFFFF] font-semibold",
-        day_outside: "day-outside text-[#666666] opacity-50 aria-selected:bg-[#2A2A2A]/50 aria-selected:text-[#888888] aria-selected:opacity-30",
-        day_disabled: "text-[#555555] opacity-30",
-        day_range_middle: "aria-selected:bg-[#2A2A2A] aria-selected:text-[#DDDDDD]",
+        day_selected: "bg-[#3A3A3A] text-white hover:bg-[#444444] hover:text-white focus:bg-[#444444] focus:text-white",
+        day_today: "bg-[#333333] text-white font-semibold",
+        day_outside: "day-outside text-white opacity-50 aria-selected:bg-[#2A2A2A]/50 aria-selected:text-white aria-selected:opacity-30",
+        day_disabled: "text-white opacity-30",
+        day_range_middle: "aria-selected:bg-[#2A2A2A] aria-selected:text-white",
         day_hidden: "invisible",
         ...classNames,
       }}
