@@ -47,6 +47,7 @@ const convertTodosToTasks = (todos: Todo[]) => {
     startTime: todo.startTime || '09:00',
     endTime: todo.endTime || '10:00',
     location: todo.location || '',
+    description: '',
   }));
 };
 
@@ -121,7 +122,7 @@ const TodoCalendar = () => {
     toast.success("Task removed");
   };
 
-  // Handle downloading schedule
+  // Handle downloading schedule - Fixed function call
   const handleDownloadSchedule = (format: 'pdf' | 'text') => {
     try {
       // Convert todos to tasks format required by download utilities

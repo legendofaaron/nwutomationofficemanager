@@ -1,3 +1,4 @@
+
 import React, { useEffect, useCallback, useState, useMemo } from 'react';
 import { Task, Crew, DragItem } from '../ScheduleTypes';
 import { toast } from '@/hooks/use-toast';
@@ -13,6 +14,7 @@ import { useScheduleState } from '@/hooks/useScheduleState';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+
 interface TaskCalendarViewProps {
   tasks: Task[];
   selectedDate: Date;
@@ -23,6 +25,7 @@ interface TaskCalendarViewProps {
   onMoveTask?: (taskId: string, newDate: Date) => void;
   onEditTask?: (taskId: string) => void;
 }
+
 const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
   tasks,
   selectedDate,
@@ -37,22 +40,13 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
 
   // Get access to the global calendar date setter and employees data
-  const {
-    setCalendarDate
-  } = useAppContext();
+  const { setCalendarDate } = useAppContext();
 
   // Get employees from useScheduleState
-  const {
-    employees,
-    handleAddNewTask
-  } = useScheduleState();
+  const { employees, handleAddNewTask } = useScheduleState();
 
   // Use the enhanced calendar sync hook
-  const {
-    date,
-    setDate,
-    createEventOnDate
-  } = useCalendarSync(selectedDate);
+  const { date, setDate, createEventOnDate } = useCalendarSync(selectedDate);
 
   // Sync local prop with hook's state
   useEffect(() => {
@@ -96,20 +90,6 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
     }
   }, [onSelectDate, setDate, setCalendarDate]);
 
-  // Navigate to previous month
-  const handlePrevMonth = useCallback(() => {
-    const newDate = new Date(date);
-    newDate.setMonth(date.getMonth() - 1);
-    setDate(newDate);
-  }, [date, setDate]);
-
-  // Navigate to next month
-  const handleNextMonth = useCallback(() => {
-    const newDate = new Date(date);
-    newDate.setMonth(date.getMonth() + 1);
-    setDate(newDate);
-  }, [date, setDate]);
-
   // Handle moving a task to a new date with toast notification - memoized
   const handleMoveTask = useCallback((taskId: string, date: Date) => {
     if (onMoveTask) {
@@ -139,6 +119,7 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
     setDate(date);
     onSelectDate(date);
     setCalendarDate(date);
+    
     if (item.type === 'employee') {
       // Get employee name from data
       const employeeName = item.data?.name || 'Employee';
@@ -209,16 +190,21 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
   const handleOpenDownloadDialog = useCallback(() => {
     setIsDownloadDialogOpen(true);
   }, []);
+  
   const handleCloseDownloadDialog = useCallback(() => {
     setIsDownloadDialogOpen(false);
   }, []);
+  
   const pendingTasks = useMemo(() => {
     return tasks.filter(task => !task.completed && task.date.toDateString() === selectedDate.toDateString()).length;
   }, [tasks, selectedDate]);
+  
   const completedTasks = useMemo(() => {
     return tasks.filter(task => task.completed && task.date.toDateString() === selectedDate.toDateString()).length;
   }, [tasks, selectedDate]);
-  return <>
+
+  return (
+    <>
       <div className="flex flex-col space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold">Schedule</h2>
@@ -230,37 +216,16 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
         
         <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
           {/* Main Calendar - 5 columns */}
-          <Card className="lg:col-span-5 overflow-hidden shadow-sm border border-border/50">
-            <CardHeader className="bg-card border-b border-border/30 flex flex-row justify-between items-center py-3 px-4 h-14">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
-                <h3 className="font-medium">Calendar</h3>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8 rounded-full">
-                  <ChevronLeft className="h-4 w-4" />
-                  <span className="sr-only">Previous Month</span>
-                </Button>
-                
-                <span className="text-sm font-medium min-w-24 text-center">
-                  {format(date, 'MMMM yyyy')}
-                </span>
-                
-                <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-8 w-8 rounded-full">
-                  <ChevronRight className="h-4 w-4" />
-                  <span className="sr-only">Next Month</span>
-                </Button>
-              </div>
-              
-              <Button onClick={onAddNewTask} variant="outline" size="sm" className="flex items-center gap-1.5">
-                <Plus className="h-4 w-4" />
-                Add Task
-              </Button>
-            </CardHeader>
-            
-            
-          </Card>
+          <div className="lg:col-span-5">
+            <CalendarCard 
+              tasks={tasks}
+              selectedDate={selectedDate}
+              onSelectDate={handleSelectDate}
+              onMoveTask={handleMoveTask}
+              onItemDrop={handleItemDrop}
+              onAddNewTask={onAddNewTask}
+            />
+          </div>
           
           {/* Task List - 2 columns */}
           <Card className="lg:col-span-2 shadow-sm border border-border/50">
@@ -286,14 +251,29 @@ const TaskCalendarView: React.FC<TaskCalendarViewProps> = React.memo(({
                 </Badge>
               </div>
               
-              <TasksCard tasks={tasks} selectedDate={date} onToggleTaskCompletion={onToggleTaskCompletion} crews={crews} onAddNewTask={onAddNewTask} onEditTask={onEditTask} />
+              <TasksCard 
+                tasks={tasks} 
+                selectedDate={date} 
+                onToggleTaskCompletion={onToggleTaskCompletion} 
+                crews={crews} 
+                onAddNewTask={onAddNewTask} 
+                onEditTask={onEditTask} 
+              />
             </CardContent>
           </Card>
         </div>
       </div>
       
-      <ScheduleDownloadDialog isOpen={isDownloadDialogOpen} onClose={handleCloseDownloadDialog} tasks={tasks} employees={employees || []} crews={crews || []} />
-    </>;
+      <ScheduleDownloadDialog 
+        isOpen={isDownloadDialogOpen} 
+        onClose={handleCloseDownloadDialog} 
+        tasks={tasks} 
+        employees={employees || []} 
+        crews={crews || []} 
+      />
+    </>
+  );
 });
+
 TaskCalendarView.displayName = 'TaskCalendarView';
 export default TaskCalendarView;
