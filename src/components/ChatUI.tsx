@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { Bot, Loader2, Settings } from 'lucide-react';
+import { MessageSquare, Loader2, Settings } from 'lucide-react';
 import { LlmSettings } from './LlmSettings';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -316,23 +316,19 @@ const ChatUI = () => {
 
   // Fixed visibility logic to correctly render chat or button
   if (!isOpen) {
-    const getButtonStyles = () => {
-      if (resolvedTheme === 'superdark') {
-        return 'bg-blue-600 hover:bg-blue-700 shadow-superdark text-white';
-      }
-      if (resolvedTheme === 'dark') {
-        return 'bg-[#4661F1] hover:bg-[#3A51D6] shadow-md text-white';
-      }
-      return 'bg-blue-500 hover:bg-blue-600 shadow-lg text-white';
-    };
-
     return (
       <Button
         onClick={handleToggleChat}
-        className={`fixed bottom-4 right-4 h-12 w-12 rounded-full p-0 hover:shadow-xl transition-all border-none z-50 ${getButtonStyles()}`}
+        className={`fixed left-4 sm:left-6 bottom-20 h-12 w-12 rounded-full p-0 hover:shadow-xl transition-all border-none z-50 ${
+          resolvedTheme === 'superdark'
+            ? 'bg-blue-600 hover:bg-blue-700 shadow-superdark text-white'
+            : resolvedTheme === 'dark'
+            ? 'bg-[#4661F1] hover:bg-[#3A51D6] shadow-md text-white'
+            : 'bg-blue-500 hover:bg-blue-600 shadow-lg text-white'
+        }`}
         aria-label="Open chat assistant"
       >
-        <Bot className="h-5 w-5" />
+        <MessageSquare className="h-5 w-5" />
       </Button>
     );
   }
@@ -350,9 +346,9 @@ const ChatUI = () => {
 
   return (
     <div 
-      className={`fixed right-0 bottom-0 ${isMobile ? 'w-full left-0' : 'right-4 bottom-4 w-[400px]'} 
+      className={`fixed left-4 sm:left-20 bottom-4 ${isMobile ? 'w-[calc(100%-32px)]' : 'w-[400px]'} 
         ${getChatContainerStyles()} rounded-xl border flex flex-col 
-        ${isMobile ? 'h-[90vh] z-50 rounded-b-none' : 'h-[550px] z-20'} overflow-hidden`}
+        ${isMobile ? 'h-[80vh] z-50' : 'h-[550px] z-20'} overflow-hidden`}
       onClick={(e) => e.stopPropagation()}
     >
       

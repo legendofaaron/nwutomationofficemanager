@@ -8,12 +8,17 @@ import { queryLlm } from '@/utils/llm';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from './Logo';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useTheme } from '@/context/ThemeContext';
+
 interface Message {
   id: string;
   type: 'user' | 'ai' | 'system';
   content: string;
 }
+
 type SetupStep = 'welcome' | 'name' | 'company' | 'purpose' | 'complete' | null;
+
 const AiAssistant = () => {
   const {
     aiAssistantOpen,
@@ -76,6 +81,8 @@ You can:
 
 Your data remains secure on your local system. Need assistance? Just ask me anything!`
   }]);
+  const { resolvedTheme } = useTheme();
+  const isMobile = useIsMobile();
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -972,49 +979,102 @@ For questions or further information, please contact [Name] at [Contact Informat
     setAiAssistantOpen(false);
   };
   if (!aiAssistantOpen) return null;
-  return <div className="fixed right-4 bottom-4 w-96 shadow-lg border border-black-200 flex flex-col h-[600px] z-20 bg-slate-800 rounded-lg px-0 my-[79px] mx-0">
+  
+  // Theme-specific styles for the sidebar
+  const getSidebarStyle = () => {
+    if (resolvedTheme === 'superdark') {
+      return 'bg-black border-r border-gray-800';
+    }
+    if (resolvedTheme === 'dark') {
+      return 'bg-[#1E1E2E] border-r border-gray-700';
+    }
+    return 'bg-white border-r';
+  };
+  
+  return (
+    <div 
+      className={`fixed top-0 right-0 h-full z-50 w-[350px] ${getSidebarStyle()} flex flex-col shadow-lg transition-transform duration-300`}
+      style={{ transform: aiAssistantOpen ? 'translateX(0)' : 'translateX(100%)' }}
+    >
       <div className="flex items-center justify-between p-3 border-b bg-slate-900">
         <div className="flex items-center gap-2">
           <Logo small />
           {assistantConfig?.name && <span className="text-sm font-medium text-gray-400">{assistantConfig.name}</span>}
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={handleEditBranding} className="h-6 w-6" title="Edit branding and settings">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleEditBranding} 
+            className="h-6 w-6" 
+            title="Edit branding and settings"
+          >
             <Edit className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setShowSettings(!showSettings)} className="h-6 w-6" title="AI settings">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setShowSettings(!showSettings)} 
+            className="h-6 w-6" 
+            title="AI settings"
+          >
             <Settings className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setAiAssistantOpen(false)} className="h-6 w-6">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setAiAssistantOpen(false)} 
+            className="h-6 w-6"
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
       </div>
       
-      {showSettings ? <LlmSettings /> : <>
-          {!isSetupMode && <div className="grid grid-cols-2 gap-2 p-3 border-b bg-slate-700">
-              {quickActions.map((action, index) => <Button key={index} variant="outline" size="sm" className="w-full justify-start" onClick={action.action}>
+      {showSettings ? (
+        <LlmSettings />
+      ) : (
+        <>
+          {!isSetupMode && (
+            <div className="grid grid-cols-2 gap-2 p-3 border-b bg-slate-700">
+              {quickActions.map((action, index) => (
+                <Button key={index} variant="outline" size="sm" className="w-full justify-start" onClick={action.action}>
                   <action.icon className="mr-2 h-4 w-4" />
                   {action.label}
-                </Button>)}
-            </div>}
+                </Button>
+              ))}
+            </div>
+          )}
           
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-700">
-            {messages.map(message => <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : message.type === 'system' ? 'justify-center' : 'justify-start'}`}>
+            {messages.map(message => (
+              <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : message.type === 'system' ? 'justify-center' : 'justify-start'}`}>
                 <div className={`${message.type === 'user' ? 'bg-blue-600 text-white max-w-[80%] p-3 rounded-lg' : message.type === 'system' ? 'bg-gray-200 text-gray-800 px-4 py-1 rounded-full text-xs font-medium' : 'bg-gray-100 text-gray-800 max-w-[80%] p-3 rounded-lg'} whitespace-pre-wrap`}>
                   {message.content}
                 </div>
-              </div>)}
+              </div>
+            ))}
             <div ref={messagesEndRef} />
           </div>
           
           <div className="p-3 border-t mx-0">
             <div className="flex gap-2 px-0 mx-0 my-0 py-0">
-              <Input value={input} onChange={e => setInput(e.target.value)} placeholder={isSetupMode ? "Type your response..." : "Type your message..."} onKeyDown={e => e.key === 'Enter' && handleSendMessage()} className="my-0 mx-0 py-0 px-0" />
-              <Button onClick={handleSendMessage} className="my-0 px-[10px] py-0 mx-0">Send</Button>
+              <Input 
+                value={input} 
+                onChange={e => setInput(e.target.value)} 
+                placeholder={isSetupMode ? "Type your response..." : "Type your message..."} 
+                onKeyDown={e => e.key === 'Enter' && handleSendMessage()} 
+                className="my-0 mx-0 py-0 px-0" 
+              />
+              <Button onClick={handleSendMessage} className="my-0 px-[10px] py-0 mx-0">
+                Send
+              </Button>
             </div>
           </div>
-        </>}
-    </div>;
+        </>
+      )}
+    </div>
+  );
 };
+
 export default AiAssistant;

@@ -146,7 +146,7 @@ const MainLayout = () => {
           
           <TodoCalendarBubble />
           
-          {/* AI Assistant Button */}
+          {/* AI Assistant Button - moved to the sidebar style */}
           <AiAssistantButton 
             aiAssistantOpen={aiAssistantOpen} 
             handleToggleAiAssistant={handleToggleAiAssistant} 
