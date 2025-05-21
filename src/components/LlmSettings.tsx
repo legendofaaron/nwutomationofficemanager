@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -435,6 +435,35 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
     }
   };
 
+  // New function to get API keys from localStorage
+  const loadApiKeysFromLocalStorage = useCallback(() => {
+    const savedKeys = localStorage.getItem('chatApiKeys');
+    if (savedKeys) {
+      try {
+        return JSON.parse(savedKeys);
+      } catch (e) {
+        console.error('Failed to parse saved API keys', e);
+        return {};
+      }
+    }
+    return {};
+  }, []);
+
+  // New function to save API key to localStorage
+  const saveApiKeyToLocalStorage = useCallback((model: string, apiKey: string, baseUrl?: string) => {
+    const savedKeys = loadApiKeysFromLocalStorage();
+    const updatedKeys = {
+      ...savedKeys,
+      [model]: { apiKey, baseUrl }
+    };
+    localStorage.setItem('chatApiKeys', JSON.stringify(updatedKeys));
+    toast({
+      title: "API Key Saved",
+      description: `API key for ${model} has been saved successfully.`
+    });
+  }, [loadApiKeysFromLocalStorage]);
+
+  // Add export methods to component
   return (
     <div className="space-y-6 p-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -828,4 +857,32 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
       <PremiumFeatureGate />
     </div>
   );
+};
+
+// Export a utility function to check if a specific model is configured
+export const isModelConfigured = (modelId: string): boolean => {
+  // For local models, check LLM configuration
+  if (modelId === 'local-llm' || modelId === 'ollama') {
+    const config = getLlmConfig();
+    return !!(config?.localLlama?.enabled && config?.localLlama?.modelPath);
+  }
+  
+  // For OpenAI models
+  if (modelId.startsWith('gpt-')) {
+    const config = getLlmConfig();
+    return !!(config?.openAi?.enabled && config?.openAi?.apiKey);
+  }
+  
+  // For other models, check saved API keys
+  const savedKeys = localStorage.getItem('chatApiKeys');
+  if (savedKeys) {
+    try {
+      const keys = JSON.parse(savedKeys);
+      return !!keys[modelId]?.apiKey;
+    } catch (e) {
+      console.error('Failed to parse saved API keys', e);
+    }
+  }
+  
+  return false;
 };
