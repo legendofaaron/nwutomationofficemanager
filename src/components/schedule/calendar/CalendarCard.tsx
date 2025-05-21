@@ -73,6 +73,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
     const dayTasks = tasksMap.get(dateKey) || [];
     const isBeingDraggedOver = dateKey === dragOverDay;
     const isSelected = selectedDate.toDateString() === date.toDateString();
+    const dateValue = date.getDate();
     
     return (
       <DroppableArea 
@@ -97,30 +98,30 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
         }}
         className={cn(
           "relative flex flex-col items-center justify-center w-full h-full transition-colors duration-150",
-          isSelected && "bg-primary/20 font-medium",
-          isBeingDraggedOver && isDragging && "bg-primary/30 outline-dashed outline-2 outline-primary"
+          isSelected && "bg-[#444444] rounded-full",
+          isBeingDraggedOver && isDragging && "bg-[#333333] outline-dashed outline-1 outline-[#555555] rounded-full"
         )}
-        activeClassName="outline-dashed outline-2 outline-primary/70"
+        activeClassName="outline-dashed outline-1 outline-[#555555] rounded-full"
       >
         <div className="flex flex-col items-center">
           <div className={cn(
-            "w-8 h-8 flex items-center justify-center rounded-full hover:bg-accent/60",
-            isSelected && "bg-primary text-primary-foreground"
+            "h-8 w-8 flex items-center justify-center rounded-full hover:bg-[#333333]",
+            isSelected && "bg-[#444444] text-white"
           )}>
-            {children}
+            <span className="text-lg font-medium">{dateValue}</span>
           </div>
           
           {dayTasks.length > 0 && (
-            <div className="absolute bottom-1 flex justify-center space-x-0.5 mt-0.5">
+            <div className="absolute -bottom-1 flex justify-center space-x-0.5 mt-0.5">
               {dayTasks.length <= 3 ? (
                 dayTasks.map((_, idx) => (
-                  <div key={idx} className="w-1 h-1 bg-primary rounded-full" />
+                  <div key={idx} className="w-1 h-1 bg-[#3366FF] rounded-full" />
                 ))
               ) : (
                 <>
-                  <div className="w-1 h-1 bg-primary rounded-full" />
-                  <div className="w-1 h-1 bg-primary rounded-full" />
-                  <div className="w-1 h-1 bg-primary rounded-full" />
+                  <div className="w-1 h-1 bg-[#3366FF] rounded-full" />
+                  <div className="w-1 h-1 bg-[#3366FF] rounded-full" />
+                  <div className="w-1 h-1 bg-[#3366FF] rounded-full" />
                 </>
               )}
             </div>
@@ -138,38 +139,38 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
   }, [isDragging]);
 
   return (
-    <Card className="bg-background border-border/50 shadow-sm overflow-hidden">
-      <CardHeader className="bg-card border-b border-border/30 flex flex-row justify-between items-center py-3 px-4 h-14">
+    <Card className="bg-[#1A1A1A] border-[#333333] shadow-sm overflow-hidden">
+      <CardHeader className="bg-[#222222] border-b border-[#333333] flex flex-row justify-between items-center py-3 px-4 h-14">
         <div className="flex items-center gap-2">
-          <CalendarIcon className="h-5 w-5 text-primary" />
-          <h3 className="font-medium">Calendar</h3>
+          <CalendarIcon className="h-5 w-5 text-[#3366FF]" />
+          <h3 className="font-medium text-[#EEEEEE]">Calendar</h3>
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8 rounded-full">
+          <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8 rounded-full text-[#DDDDDD]">
             <ChevronLeft className="h-4 w-4" />
             <span className="sr-only">Previous Month</span>
           </Button>
           
-          <span className="text-sm font-medium min-w-24 text-center">
+          <span className="text-sm font-medium min-w-24 text-center text-[#EEEEEE]">
             {format(currentMonth, 'MMMM yyyy')}
           </span>
           
-          <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-8 w-8 rounded-full">
+          <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-8 w-8 rounded-full text-[#DDDDDD]">
             <ChevronRight className="h-4 w-4" />
             <span className="sr-only">Next Month</span>
           </Button>
         </div>
         
         {onAddNewTask && (
-          <Button onClick={onAddNewTask} variant="outline" size="sm" className="flex items-center gap-1.5">
+          <Button onClick={onAddNewTask} variant="outline" size="sm" className="flex items-center gap-1.5 bg-[#2A2A2A] border-[#444444] text-[#DDDDDD]">
             <Plus className="h-4 w-4" />
             Add Task
           </Button>
         )}
       </CardHeader>
       
-      <CardContent className="p-0">
+      <CardContent className="p-0 bg-[#1A1A1A]">
         <Calendar
           mode="single"
           selected={selectedDate}

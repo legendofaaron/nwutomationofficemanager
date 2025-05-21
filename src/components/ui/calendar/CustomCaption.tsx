@@ -12,14 +12,14 @@ interface CustomCaptionProps {
 }
 
 export function CustomCaption({ displayMonth, decreaseMonth, increaseMonth, onMonthChange }: CustomCaptionProps) {
-  // Format the month name and year
+  // Format the month name and year in the format "May 2025"
   const formattedMonth = new Intl.DateTimeFormat("en-US", {
     month: "long",
     year: "numeric",
   }).format(displayMonth);
 
   return (
-    <div className="flex items-center justify-center gap-1">
+    <div className="flex items-center justify-center w-full px-6">
       <button
         onClick={(e) => {
           e.preventDefault();
@@ -27,13 +27,13 @@ export function CustomCaption({ displayMonth, decreaseMonth, increaseMonth, onMo
         }}
         className={cn(
           buttonVariants({ variant: "outline", size: "icon" }),
-          "h-7 w-7 bg-[#3A3A3A] p-0 opacity-75 hover:opacity-100 text-[#DDDDDD] border-[#505050]"
+          "h-9 w-9 bg-[#2A2A2A] p-0 rounded-full opacity-90 hover:opacity-100 text-[#DDDDDD] border-[#444444]"
         )}
         aria-label="Previous month"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-5 w-5" />
       </button>
-      <h2 className="text-center text-sm font-medium text-[#DDDDDD]">
+      <h2 className="flex-1 text-center text-md font-medium text-[#EEEEEE] px-4">
         {formattedMonth}
       </h2>
       <button
@@ -43,11 +43,11 @@ export function CustomCaption({ displayMonth, decreaseMonth, increaseMonth, onMo
         }}
         className={cn(
           buttonVariants({ variant: "outline", size: "icon" }),
-          "h-7 w-7 bg-[#3A3A3A] p-0 opacity-75 hover:opacity-100 text-[#DDDDDD] border-[#505050]"
+          "h-9 w-9 bg-[#2A2A2A] p-0 rounded-full opacity-90 hover:opacity-100 text-[#DDDDDD] border-[#444444]"
         )}
         aria-label="Next month"
       >
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="h-5 w-5" />
       </button>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
@@ -99,7 +100,7 @@ const MainLayout = () => {
 
   return (
     <DragDropProvider>
-      <SidebarProvider defaultOpen={!isMobile && sidebarOpen}>
+      <SidebarProvider>
         <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gradient-to-br from-white to-gray-100'} flex w-full overflow-hidden`}>
           {isMobile ? (
             <MobileHeader

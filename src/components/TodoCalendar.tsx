@@ -122,7 +122,7 @@ const TodoCalendar = () => {
     toast.success("Task removed");
   };
 
-  // Handle downloading schedule - Fixed function call
+  // Handle downloading schedule
   const handleDownloadSchedule = (format: 'pdf' | 'text') => {
     try {
       // Convert todos to tasks format required by download utilities
@@ -197,39 +197,38 @@ const TodoCalendar = () => {
     const date = day.date;
     if (!date) return null;
     
-    // Check if the current day is selected by comparing dates
+    // Check if the current day is selected
     const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
     const taskCount = getTaskCountForDay(date);
     const dateValue = date.getDate();
     
+    // Create a custom styling for the day cell that looks like the image
     return (
       <div 
         className={cn(
           "relative w-full h-full flex items-center justify-center",
           isDragging && "cursor-copy drop-shadow-sm",
-          "hover:bg-accent/10 transition-colors cursor-pointer"
+          isSelected && "bg-[#444444] rounded-full",
+          "hover:bg-[#333333] transition-colors cursor-pointer rounded-full"
         )}
         onClick={() => setSelectedDate(date)}
         onDragOver={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          // Add visual feedback (safely)
           if (e.currentTarget) {
-            e.currentTarget.classList.add("bg-accent/30");
+            e.currentTarget.classList.add("bg-[#333333]");
           }
         }}
         onDragLeave={(e) => {
-          // Remove visual feedback (safely)
           if (e.currentTarget) {
-            e.currentTarget.classList.remove("bg-accent/30");
+            e.currentTarget.classList.remove("bg-[#333333]");
           }
         }}
         onDrop={(e) => {
           e.preventDefault();
           
-          // Remove visual feedback (safely)
           if (e.currentTarget) {
-            e.currentTarget.classList.remove("bg-accent/30");
+            e.currentTarget.classList.remove("bg-[#333333]");
           }
           
           if (draggedTodo) {
@@ -269,14 +268,14 @@ const TodoCalendar = () => {
         }}
       >
         <div className={cn(
-          "flex flex-col items-center justify-center",
-          isSelected && "font-bold"
+          "flex flex-col items-center justify-center text-lg font-medium",
+          isSelected ? "text-white" : "text-gray-100"
         )}>
           {dateValue}
           {taskCount > 0 && (
             <Badge 
               variant="secondary" 
-              className="absolute -bottom-1 px-1 py-0 min-w-5 h-4 text-[0.65rem] flex items-center justify-center"
+              className="absolute -bottom-0 px-1.5 py-0 min-w-5 h-5 text-[0.65rem] flex items-center justify-center bg-[#3366FF]/70 text-white rounded-full"
             >
               {taskCount}
             </Badge>
@@ -288,11 +287,11 @@ const TodoCalendar = () => {
 
   return (
     <div className="fixed top-20 sm:top-24 right-4 sm:right-6 z-40 w-80">
-      <Card className="shadow-xl bg-background border-2 rounded-lg border-border overflow-hidden">
+      <Card className="shadow-xl bg-[#1A1A1A] border-2 rounded-xl border-[#333333] overflow-hidden">
         <Collapsible defaultOpen={true}>
-          <CardHeader className="p-3 bg-card flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-base flex items-center">
-              <CalendarIcon className="h-4 w-4 mr-2 text-primary" />
+          <CardHeader className="p-3 bg-[#222222] flex flex-row items-center justify-between space-y-0 border-b border-[#333333]">
+            <CardTitle className="text-base flex items-center text-[#EEEEEE]">
+              <CalendarIcon className="h-5 w-5 mr-2 text-[#3366FF]" />
               Calendar & Tasks
             </CardTitle>
             <div className="flex items-center gap-2">
@@ -303,18 +302,18 @@ const TodoCalendar = () => {
                     size="sm" 
                     className="h-8 w-8 p-0 rounded-full"
                   >
-                    <Download className="h-4 w-4 text-muted-foreground" />
+                    <Download className="h-4 w-4 text-[#AAAAAA]" />
                     <span className="sr-only">Download Schedule</span>
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent side="left" className="w-56 p-2">
+                <PopoverContent side="left" className="w-56 p-2 bg-[#222222] border-[#333333]">
                   <div className="space-y-1">
-                    <h4 className="text-sm font-medium mb-2">Download Schedule</h4>
+                    <h4 className="text-sm font-medium mb-2 text-[#DDDDDD]">Download Schedule</h4>
                     <Button 
                       variant="outline" 
                       size="sm" 
                       onClick={() => handleDownloadSchedule('text')} 
-                      className="w-full justify-start text-sm"
+                      className="w-full justify-start text-sm bg-[#2A2A2A] border-[#444444] text-[#DDDDDD]"
                     >
                       <FileText className="h-4 w-4 mr-2" />
                       Download as Text
@@ -323,7 +322,7 @@ const TodoCalendar = () => {
                       variant="outline" 
                       size="sm" 
                       onClick={() => handleDownloadSchedule('pdf')} 
-                      className="w-full justify-start text-sm"
+                      className="w-full justify-start text-sm bg-[#2A2A2A] border-[#444444] text-[#DDDDDD]"
                     >
                       <FileDown className="h-4 w-4 mr-2" />
                       Download as PDF
@@ -332,7 +331,7 @@ const TodoCalendar = () => {
                 </PopoverContent>
               </Popover>
               <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="w-8 h-8 p-0 rounded-full">
+                <Button variant="ghost" size="sm" className="w-8 h-8 p-0 rounded-full text-[#AAAAAA]">
                   {isCalendarOpen ? (
                     <ChevronUp className="h-4 w-4" />
                   ) : (
@@ -344,74 +343,81 @@ const TodoCalendar = () => {
           </CardHeader>
           
           <CollapsibleContent>
-            <CardContent className="p-3">
+            <CardContent className="p-3 bg-[#222222]">
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={handleDateChange}
-                className={cn("rounded-md border shadow-sm", "pointer-events-auto")}
+                className={cn("rounded-md border-none shadow-sm", "pointer-events-auto")}
                 components={{
                   Day: customDayRender
                 }}
               />
               
-              <div className="mt-4 space-y-2">
+              <div className="mt-4 space-y-2 bg-[#222222]">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium flex items-center">
-                    <ListTodo className="h-4 w-4 mr-2 text-primary" />
+                  <h3 className="text-sm font-medium flex items-center text-[#DDDDDD]">
+                    <ListTodo className="h-4 w-4 mr-2 text-[#3366FF]" />
                     Tasks for {format(selectedDate, 'MMM d, yyyy')}
                   </h3>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs text-[#AAAAAA] border-[#444444] bg-[#2A2A2A]">
                     {todaysTodos.length} {todaysTodos.length === 1 ? 'task' : 'tasks'}
                   </Badge>
                 </div>
                 
-                <div className="flex space-x-2">
+                <div className="flex space-x-1">
                   <Input
                     placeholder="Add new task..."
                     value={newTodoText}
                     onChange={(e) => setNewTodoText(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && addTodo()}
-                    className="h-8 text-sm bg-background"
+                    className="h-10 text-sm bg-[#1A1A1A] border-[#444444] text-[#DDDDDD] rounded-l-lg"
                   />
-                  <Button onClick={addTodo} size="sm" className="h-8 px-2">
-                    <Plus className="h-4 w-4" />
+                  <Button 
+                    onClick={addTodo} 
+                    size="sm" 
+                    className="h-10 px-3 bg-[#2E71F0] hover:bg-[#3366FF] rounded-r-lg"
+                  >
+                    <Plus className="h-5 w-5" />
                   </Button>
                 </div>
                 
-                <div className="space-y-1 max-h-40 overflow-y-auto py-1 rounded-md">
+                <div className="space-y-1 max-h-60 overflow-y-auto py-1 rounded-md">
                   {todaysTodos.length > 0 ? (
                     todaysTodos.map((todo) => (
                       <div 
                         key={todo.id} 
                         className={cn(
-                          "flex items-center justify-between space-x-2 text-sm bg-background rounded-md p-2 border",
-                          todo.completed ? "border-green-500/20 bg-green-50/10" : "border-border"
+                          "flex items-center justify-between space-x-2 text-sm bg-[#2A2A2A] rounded-md p-2 border",
+                          todo.completed ? "border-green-500/20 bg-green-950/10" : "border-[#444444]"
                         )}
                         draggable
                         onDragStart={(e) => handleDragStart(todo, e)}
                         onDragEnd={handleDragEnd}
                         style={{ cursor: 'grab' }}
                       >
-                        <div className="flex items-center space-x-2 min-w-0">
+                        <div className="flex items-center space-x-3 min-w-0">
                           <Checkbox 
                             id={`todo-${todo.id}`}
                             checked={todo.completed}
                             onCheckedChange={() => toggleTodoCompletion(todo.id)}
-                            className={todo.completed ? "text-green-500" : ""}
+                            className={cn(
+                              "rounded-full", 
+                              todo.completed ? "bg-green-600 text-white border-transparent" : "border-[#555555]"
+                            )}
                           />
                           <div className="flex flex-col min-w-0">
                             <label
                               htmlFor={`todo-${todo.id}`}
                               className={cn(
                                 "text-sm cursor-pointer truncate",
-                                todo.completed && "line-through text-muted-foreground"
+                                todo.completed ? "line-through text-[#888888]" : "text-[#EEEEEE]"
                               )}
                             >
                               {todo.text}
                             </label>
                             {(todo.startTime || todo.endTime) && (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-xs text-[#888888]">
                                 {todo.startTime} - {todo.endTime}
                               </span>
                             )}
@@ -420,15 +426,15 @@ const TodoCalendar = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0 rounded-full hover:bg-destructive/10"
+                          className="h-6 w-6 p-0 rounded-full hover:bg-[#444444]"
                           onClick={() => deleteTodo(todo.id)}
                         >
-                          <X className="h-3.5 w-3.5 text-muted-foreground" />
+                          <X className="h-3.5 w-3.5 text-[#999999]" />
                         </Button>
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-muted-foreground text-center py-4 bg-background/50 rounded-md border border-dashed border-border">
+                    <div className="text-sm text-[#888888] text-center py-4 bg-[#1A1A1A] rounded-md border border-dashed border-[#333333]">
                       No tasks for today
                     </div>
                   )}
