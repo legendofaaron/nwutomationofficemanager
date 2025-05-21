@@ -1,3 +1,4 @@
+
 import { LlmConfig } from '@/components/LlmSettings';
 import { toast } from '@/hooks/use-toast';
 
@@ -364,35 +365,6 @@ export function isLlmConfigured(): boolean {
     (config.openAi?.enabled && config.openAi?.apiKey) || 
     (config.customModel?.isCustom && config.customModel?.apiKey)
   ));
-}
-
-/**
- * Check if a specific model is configured
- */
-export function isModelConfigured(modelId: string): boolean {
-  // For local models, check LLM configuration
-  if (modelId === 'local-llm' || modelId === 'ollama') {
-    return isLlmConfigured();
-  }
-  
-  // For OpenAI models
-  if (modelId.startsWith('gpt-')) {
-    const config = getLlmConfig();
-    return !!(config?.openAi?.enabled && config?.openAi?.apiKey);
-  }
-  
-  // For other models, check if they have a saved API key in localStorage
-  const savedKeys = localStorage.getItem('chatApiKeys');
-  if (savedKeys) {
-    try {
-      const keys = JSON.parse(savedKeys);
-      return !!keys[modelId]?.apiKey;
-    } catch (e) {
-      console.error('Failed to parse saved API keys', e);
-    }
-  }
-  
-  return false;
 }
 
 /**

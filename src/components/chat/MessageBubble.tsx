@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { useTheme } from '@/context/ThemeContext';
+import { Bot, User } from 'lucide-react';
 
-interface Message {
+export interface Message {
   id: string;
   type: 'user' | 'ai' | 'system';
   content: string;
@@ -10,34 +11,52 @@ interface Message {
 
 interface MessageBubbleProps {
   message: Message;
-  className?: string;
 }
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, className }) => {
+export const MessageBubble = ({ message }: MessageBubbleProps) => {
+  // Stop propagation of click events
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+  
   if (message.type === 'system') {
     return (
-      <div className="flex justify-center my-2">
-        <div className="inline-block py-1 px-3 rounded-full bg-gray-800/60 text-xs font-medium text-gray-300 backdrop-blur-sm border border-gray-700/50">
+      <div className="flex justify-center mb-3" onClick={handleClick}>
+        <div className="px-3 py-1 rounded-full text-xs font-medium bg-gray-800 text-gray-400">
           {message.content}
         </div>
       </div>
     );
   }
-
+  
   return (
-    <div className={cn(
-      "flex",
-      message.type === 'user' ? "justify-end" : "justify-start",
-      className
-    )}>
-      <div className={cn(
-        "max-w-[85%] rounded-2xl px-4 py-2.5 shadow-sm",
-        message.type === 'user' 
-          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-br-sm" 
-          : "bg-gray-800/70 border border-gray-700/50 text-gray-100 rounded-bl-sm backdrop-blur-sm"
-      )}>
+    <div 
+      className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-3 group`}
+      onClick={handleClick}
+    >
+      {message.type === 'ai' && (
+        <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center mr-2 shrink-0">
+          <div className="h-6 w-6 rounded-full bg-black flex items-center justify-center">
+            <Bot className="h-4 w-4 text-white" />
+          </div>
+        </div>
+      )}
+      
+      <div 
+        className={`${
+          message.type === 'user' 
+            ? 'bg-blue-600 text-white rounded-xl rounded-br-sm' 
+            : 'bg-gray-800 text-white rounded-xl rounded-bl-sm'
+        } px-4 py-3 max-w-[80%] text-sm`}
+      >
         {message.content}
       </div>
+      
+      {message.type === 'user' && (
+        <div className="h-8 w-8 rounded-full bg-blue-700 flex items-center justify-center ml-2 shrink-0">
+          <User className="h-4 w-4 text-white" />
+        </div>
+      )}
     </div>
   );
 };
