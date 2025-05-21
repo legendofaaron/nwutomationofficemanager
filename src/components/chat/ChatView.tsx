@@ -194,3 +194,4 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
     </div>
   );
 };
+
