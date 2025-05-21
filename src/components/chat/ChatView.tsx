@@ -3,16 +3,19 @@ import React, { useState } from 'react';
 import ChatInput from './ChatInput';
 import { MessageBubble } from './MessageBubble';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ModelSelector } from './ModelSelector';
+import { Select } from '@/components/ui/select';
 
 interface ChatViewProps {
   className?: string;
 }
 
 export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
-  const [messages, setMessages] = useState([
-    { id: '1', type: 'ai' as const, content: "Hi! I'm GPT-4o Mini. How can I help you today?" }
+  const [messages, setMessages] = useState<Array<{id: string; type: 'user' | 'ai' | 'system'; content: string;}>>([
+    { id: '1', type: 'ai', content: "Hi! I'm GPT-4o Mini. How can I help you today?" }
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   
   const handleSendMessage = (message: string) => {
     // Add user message
@@ -26,11 +29,24 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
       const aiResponse = { 
         id: (Date.now() + 1).toString(), 
         type: 'ai' as const, 
-        content: "Sure! Please provide the link or details of the video content you would like me to analyze."
+        content: `Using ${selectedModel}: Please provide the link or details of the video content you would like me to analyze.`
       };
       setMessages(prev => [...prev, aiResponse]);
       setIsLoading(false);
     }, 1000);
+  };
+  
+  const handleModelChange = (model: string) => {
+    setSelectedModel(model);
+    
+    // Add system message when model is changed
+    const systemMessage = {
+      id: Date.now().toString(),
+      type: 'system' as const,
+      content: `Model switched to ${model}`
+    };
+    
+    setMessages(prev => [...prev, systemMessage]);
   };
   
   return (
@@ -60,10 +76,15 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
         </div>
       </ScrollArea>
       
+      <ModelSelector 
+        selectedModel={selectedModel}
+        onModelChange={handleModelChange}
+      />
+      
       <ChatInput 
         onSendMessage={handleSendMessage} 
         isLoading={isLoading} 
-        placeholder="Message GPT-4o Mini..."
+        placeholder={`Message ${selectedModel}...`}
       />
     </div>
   );

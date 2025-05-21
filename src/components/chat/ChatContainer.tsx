@@ -161,7 +161,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
           isLoading={isLoading} 
           disabled={isLoading} 
           placeholder="Send a message to your local LLM..."
-          useN8n={useN8n}
         />
         <PremiumFeatureGate />
       </div>
@@ -234,7 +233,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         isLoading={isLoading} 
         disabled={isLoading} 
         placeholder="Send a message to your local LLM..."
-        useN8n={useN8n}
       />
 
       <PremiumFeatureGate />
