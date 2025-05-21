@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -192,7 +191,7 @@ const TodoCalendar = () => {
     }
   };
 
-  // Custom day render to show task indicators and handle drops
+  // Custom day render to show task indicators and handle drops with prominent day numbers
   const customDayRender = (day: DayProps) => {
     const date = day.date;
     if (!date) return null;
@@ -272,7 +271,9 @@ const TodoCalendar = () => {
           "flex flex-col items-center justify-center",
           isSelected && "font-bold"
         )}>
-          {dateValue}
+          <span className="text-base">
+            {dateValue}
+          </span>
           {taskCount > 0 && (
             <Badge 
               variant="secondary" 

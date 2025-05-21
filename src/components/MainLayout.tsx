@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
@@ -100,67 +101,69 @@ const MainLayout = () => {
   return (
     <DragDropProvider>
       <SidebarProvider defaultOpen={!isMobile && sidebarOpen}>
-        <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gradient-to-br from-white to-gray-100'} flex w-full overflow-hidden`}>
-          {isMobile ? (
-            <MobileHeader
-              mobileMenuOpen={mobileMenuOpen}
-              setMobileMenuOpen={setMobileMenuOpen}
-              handleViewChange={handleViewChange}
-              setViewMode={setViewMode}
-              confirmLogout={confirmLogout}
-            />
-          ) : (
-            <div 
-              className="relative sidebar-container" 
-              onMouseLeave={() => !isMobile && document.querySelector('.sidebar-container')?.contains(document.activeElement) === false && useSidebar().setOpen(false)}
-            >
-              <DesktopSidebar 
+        {({ open, setOpen }) => (
+          <div className={`h-screen ${isSuperDark ? 'bg-black' : isDark ? 'bg-[#0a0c10]' : 'bg-gradient-to-br from-white to-gray-100'} flex w-full overflow-hidden`}>
+            {isMobile ? (
+              <MobileHeader
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+                handleViewChange={handleViewChange}
                 setViewMode={setViewMode}
                 confirmLogout={confirmLogout}
               />
-              
-              <SidebarTriggerButton 
-                triggerPosition={triggerPosition}
-                onDragStart={handleDragStart}
-              />
-            </div>
-          )}
-          
-          <main 
-            className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", 
-              isMobile ? "pt-16 sm:pt-20" : (sidebarOpen ? "pt-16 ml-0" : "pt-16 ml-0"))}
-            onClick={handleCloseCalendars}
-          >
-            <div className={`w-full ${mainBg} h-full rounded-md overflow-auto`}>
-              {viewMode === 'document' && <DocumentViewer />}
-              {viewMode === 'database' && <DatabaseViewer />}
-              {viewMode === 'knowledge' && <KnowledgeBase />}
-              {viewMode === 'office' && <OfficeManagerDashboard />}
-              {viewMode === 'spreadsheet' && <SpreadsheetViewer />}
-              {viewMode === 'welcome' && <WelcomeDashboard />}
-              {viewMode === 'settings' && <SystemSettings />}
-              {!viewMode && <WelcomeDashboard />}
-            </div>
-          </main>
-          
-          <TodoCalendarBubble />
-          
-          {/* AI Assistant Button */}
-          <AiAssistantButton 
-            aiAssistantOpen={aiAssistantOpen} 
-            handleToggleAiAssistant={handleToggleAiAssistant} 
-          />
-          
-          {/* AI Assistant Panel */}
-          <AiAssistant />
-          
-          {/* Logout Confirmation Dialog */}
-          <LogoutDialog 
-            showLogoutConfirm={showLogoutConfirm}
-            setShowLogoutConfirm={setShowLogoutConfirm}
-            handleLogout={handleLogout}
-          />
-        </div>
+            ) : (
+              <div 
+                className="relative sidebar-container" 
+                onMouseLeave={() => !isMobile && document.querySelector('.sidebar-container')?.contains(document.activeElement) === false && setOpen(false)}
+              >
+                <DesktopSidebar 
+                  setViewMode={setViewMode}
+                  confirmLogout={confirmLogout}
+                />
+                
+                <SidebarTriggerButton 
+                  triggerPosition={triggerPosition}
+                  onDragStart={handleDragStart}
+                />
+              </div>
+            )}
+            
+            <main 
+              className={cn("h-screen transition-all duration-300 flex-1 overflow-hidden", 
+                isMobile ? "pt-16 sm:pt-20" : (sidebarOpen ? "pt-16 ml-0" : "pt-16 ml-0"))}
+              onClick={handleCloseCalendars}
+            >
+              <div className={`w-full ${mainBg} h-full rounded-md overflow-auto`}>
+                {viewMode === 'document' && <DocumentViewer />}
+                {viewMode === 'database' && <DatabaseViewer />}
+                {viewMode === 'knowledge' && <KnowledgeBase />}
+                {viewMode === 'office' && <OfficeManagerDashboard />}
+                {viewMode === 'spreadsheet' && <SpreadsheetViewer />}
+                {viewMode === 'welcome' && <WelcomeDashboard />}
+                {viewMode === 'settings' && <SystemSettings />}
+                {!viewMode && <WelcomeDashboard />}
+              </div>
+            </main>
+            
+            <TodoCalendarBubble />
+            
+            {/* AI Assistant Button */}
+            <AiAssistantButton 
+              aiAssistantOpen={aiAssistantOpen} 
+              handleToggleAiAssistant={handleToggleAiAssistant} 
+            />
+            
+            {/* AI Assistant Panel */}
+            <AiAssistant />
+            
+            {/* Logout Confirmation Dialog */}
+            <LogoutDialog 
+              showLogoutConfirm={showLogoutConfirm}
+              setShowLogoutConfirm={setShowLogoutConfirm}
+              handleLogout={handleLogout}
+            />
+          </div>
+        )}
       </SidebarProvider>
     </DragDropProvider>
   );
