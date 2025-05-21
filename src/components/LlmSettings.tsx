@@ -19,6 +19,7 @@ import { Progress } from '@/components/ui/progress';
 import { ModelUploader } from './ModelUploader';
 import { initLlamaCpp } from '@/utils/llm';
 import { usePremiumFeature } from '@/hooks/usePremiumFeature';
+import { LlmConfig, getLlmConfig, saveLlmConfig, isLlmConfigured } from '@/utils/modelConfig';
 
 export interface LlmConfig {
   endpoint: string;
@@ -139,7 +140,7 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
 
   // Save config to localStorage when it changes
   useEffect(() => {
-    localStorage.setItem('llmConfig', JSON.stringify(config));
+    saveLlmConfig(config);
     
     // Check if the config should be considered "configured"
     const isConfigured = (
@@ -860,29 +861,4 @@ export const LlmSettings: React.FC<LlmSettingsProps> = ({ onConfigured }) => {
 };
 
 // Export a utility function to check if a specific model is configured
-export const isModelConfigured = (modelId: string): boolean => {
-  // For local models, check LLM configuration
-  if (modelId === 'local-llm' || modelId === 'ollama') {
-    const config = getLlmConfig();
-    return !!(config?.localLlama?.enabled && config?.localLlama?.modelPath);
-  }
-  
-  // For OpenAI models
-  if (modelId.startsWith('gpt-')) {
-    const config = getLlmConfig();
-    return !!(config?.openAi?.enabled && config?.openAi?.apiKey);
-  }
-  
-  // For other models, check saved API keys
-  const savedKeys = localStorage.getItem('chatApiKeys');
-  if (savedKeys) {
-    try {
-      const keys = JSON.parse(savedKeys);
-      return !!keys[modelId]?.apiKey;
-    } catch (e) {
-      console.error('Failed to parse saved API keys', e);
-    }
-  }
-  
-  return false;
-};
+export { isModelConfigured } from '@/utils/modelConfig';

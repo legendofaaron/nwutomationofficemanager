@@ -6,24 +6,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ModelSelector } from './ModelSelector';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
+import { ModelConfigDialog } from './ModelConfigDialog';
 import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { isLlmConfigured } from '@/utils/llm';
+import { isLlmConfigured, isModelConfigured } from '@/utils/modelConfig';
 
 interface ChatViewProps {
   className?: string;
 }
-
-// API key configuration schema
-const apiFormSchema = z.object({
-  apiKey: z.string().min(1, "API key is required"),
-  baseUrl: z.string().optional(),
-});
 
 export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
   const [messages, setMessages] = useState<Array<{id: string; type: 'user' | 'ai' | 'system'; content: string;}>>([]);
@@ -33,15 +23,6 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
   const [apiKeys, setApiKeys] = useState<Record<string, {apiKey: string; baseUrl?: string}>>({});
   const [modelConfigured, setModelConfigured] = useState<boolean>(false);
   
-  // Form for API key configuration
-  const form = useForm({
-    resolver: zodResolver(apiFormSchema),
-    defaultValues: {
-      apiKey: "",
-      baseUrl: "",
-    },
-  });
-
   // Check if model is configured on load and model change
   useEffect(() => {
     const checkModelConfig = () => {
@@ -125,7 +106,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
     }
   };
   
-  const handleApiSubmit = (values: z.infer<typeof apiFormSchema>) => {
+  const handleApiSubmit = (values: z.infer<typeof z.object({apiKey: z.string().min(1), baseUrl: z.string().optional()})>) => {
     setApiKeys(prev => ({
       ...prev,
       [selectedModel]: {
@@ -148,27 +129,9 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
       type: 'system' as const, 
       content: `${selectedModel} has been configured successfully`
     }]);
-    
-    // Reset form
-    form.reset({
-      apiKey: "",
-      baseUrl: "",
-    });
   };
   
-  // Get placeholder text based on model type
-  const getApiFieldPlaceholder = () => {
-    if (selectedModel.includes('gpt')) return 'sk-...';
-    if (selectedModel.includes('claude')) return 'sk-ant-...';
-    if (selectedModel.includes('gemini')) return 'aig-...';
-    return 'API key';
-  };
-  
-  const getUrlFieldVisible = () => {
-    return !selectedModel.includes('gpt') && 
-           !selectedModel.includes('claude') && 
-           !selectedModel.includes('gemini');
-  };
+  const isLocalModel = selectedModel === 'local-llm' || selectedModel === 'ollama';
   
   return (
     <div className="flex flex-col h-full">
@@ -181,97 +144,25 @@ export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
             <h3 className="text-lg font-medium text-white">Chat</h3>
           </div>
           
-          <Dialog open={modelConfigOpen} onOpenChange={setModelConfigOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                className="h-8 w-8 p-0 text-gray-400 hover:text-white"
-              >
-                <Settings className="h-4 w-4" />
-                <span className="sr-only">Settings</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Configure {selectedModel}</DialogTitle>
-              </DialogHeader>
-              
-              {(selectedModel === 'local-llm' || selectedModel === 'ollama') ? (
-                <div className="py-4 space-y-4">
-                  <p className="text-sm">
-                    To configure {selectedModel}, please visit the settings page and set up your local language model.
-                  </p>
-                  <Button 
-                    onClick={() => {
-                      setModelConfigOpen(false);
-                      // This would normally navigate to settings, but for now we'll just show a toast
-                      toast({
-                        title: "Local model settings",
-                        description: "In a full implementation, this would open the local model configuration."
-                      });
-                    }}
-                  >
-                    Open Settings
-                  </Button>
-                </div>
-              ) : (
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(handleApiSubmit)} className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="apiKey"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>API Key</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder={getApiFieldPlaceholder()} 
-                              type="password" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {getUrlFieldVisible() && (
-                      <FormField
-                        control={form.control}
-                        name="baseUrl"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Base URL (Optional)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="https://api.example.com" 
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-                    
-                    <div className="flex justify-end space-x-2 pt-4">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => setModelConfigOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button type="submit">Save</Button>
-                    </div>
-                  </form>
-                </Form>
-              )}
-            </DialogContent>
-          </Dialog>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-8 w-8 p-0 text-gray-400 hover:text-white"
+            onClick={() => setModelConfigOpen(true)}
+          >
+            <Settings className="h-4 w-4" />
+            <span className="sr-only">Settings</span>
+          </Button>
         </div>
       </header>
+      
+      <ModelConfigDialog 
+        isOpen={modelConfigOpen}
+        onOpenChange={setModelConfigOpen}
+        selectedModel={selectedModel}
+        onApiSubmit={handleApiSubmit}
+        isLocalModel={isLocalModel}
+      />
       
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
