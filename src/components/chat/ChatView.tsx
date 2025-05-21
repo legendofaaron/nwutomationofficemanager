@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
@@ -27,9 +26,7 @@ const apiFormSchema = z.object({
 });
 
 export const ChatView: React.FC<ChatViewProps> = ({ className }) => {
-  const [messages, setMessages] = useState<Array<{id: string; type: 'user' | 'ai' | 'system'; content: string;}>>([
-    { id: '1', type: 'ai', content: "Hi! I'm your AI assistant. How can I help you today?" }
-  ]);
+  const [messages, setMessages] = useState<Array<{id: string; type: 'user' | 'ai' | 'system'; content: string;}>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   const [modelConfigOpen, setModelConfigOpen] = useState(false);

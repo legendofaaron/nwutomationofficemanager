@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
-import { QuickActions } from './QuickActions';
 import ChatInput from './ChatInput';
 import { ArrowDown, MessageSquare, WifiOff, AlertCircle, Upload, HardDriveDownload } from 'lucide-react';
 import { usePremiumFeature } from '@/hooks/usePremiumFeature';
@@ -94,17 +93,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     onSendMessage(message);
   };
 
-  const handleCustomQuickAction = (action: string) => {
-    // For advanced actions, check premium access
-    if (action.toLowerCase().includes('customize') || 
-        action.toLowerCase().includes('advanced') || 
-        action.toLowerCase().includes('train')) {
-      if (!checkAccess('Advanced AI Features')) return;
-    }
-    
-    onQuickAction(action);
-  };
-
   // If model is not configured, show the LLM setup prompt
   if (!isModelConfigured) {
     return (
@@ -114,21 +102,14 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         </div>
         <h3 className="text-lg font-medium mb-2">No Language Model Available</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          To use the chat functionality, you need to configure a local language model.
+          To use the chat functionality, you need to configure a language model.
         </p>
         <div className="flex flex-col gap-3 w-full max-w-xs">
           <Button 
             onClick={onOpenModelSettings}
             className="flex items-center gap-2"
           >
-            <Upload className="h-4 w-4" /> Upload Model
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={onOpenModelSettings}
-            className="flex items-center gap-2"
-          >
-            <HardDriveDownload className="h-4 w-4" /> Download Model
+            <Upload className="h-4 w-4" /> Configure Model
           </Button>
         </div>
       </div>
@@ -139,18 +120,12 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   if (messages.length === 0) {
     return (
       <div className="flex flex-col h-full">
-        {!isSetupMode && (
-          <QuickActions 
-            onActionClick={handleCustomQuickAction} 
-            disabled={isLoading} 
-          />
-        )}
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="text-center">
             <div className="bg-blue-100 dark:bg-blue-900/20 p-4 rounded-full mx-auto mb-4">
               <MessageSquare className="h-8 w-8 text-blue-600 dark:text-blue-400 mx-auto" />
             </div>
-            <h3 className="text-lg font-medium mb-2">Local LLM Ready</h3>
+            <h3 className="text-lg font-medium mb-2">Ready</h3>
             <p className="text-sm text-muted-foreground">
               Send a message to begin
             </p>
@@ -160,7 +135,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
           onSendMessage={handleSendCustomMessage} 
           isLoading={isLoading} 
           disabled={isLoading} 
-          placeholder="Send a message to your local LLM..."
+          placeholder="Send a message..."
         />
         <PremiumFeatureGate />
       </div>
@@ -171,13 +146,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   if (useN8n) {
     return (
       <div className="flex flex-col h-full">
-        {!isSetupMode && (
-          <QuickActions 
-            onActionClick={handleCustomQuickAction} 
-            disabled={isLoading} 
-          />
-        )}
-        
         <div id="n8n-chat-container" className="flex-1 p-3 overflow-y-auto relative"></div>
         <PremiumFeatureGate />
       </div>
@@ -186,13 +154,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      {!isSetupMode && (
-        <QuickActions 
-          onActionClick={handleCustomQuickAction} 
-          disabled={isLoading} 
-        />
-      )}
-      
       <ScrollArea className="flex-1 p-3 overflow-y-auto relative" ref={scrollAreaRef}>
         <div className="space-y-4 pb-1">
           {messages.map((message) => (
@@ -232,7 +193,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         onSendMessage={handleSendCustomMessage} 
         isLoading={isLoading} 
         disabled={isLoading} 
-        placeholder="Send a message to your local LLM..."
+        placeholder="Send a message..."
       />
 
       <PremiumFeatureGate />

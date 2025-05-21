@@ -223,7 +223,7 @@ const ChatUI = () => {
     }
   };
 
-  // Handle quick actions
+  // Handle quick action
   const handleQuickAction = async (action: string) => {
     // For advanced AI actions, check premium access
     if (action.toLowerCase().includes('customize') || 
